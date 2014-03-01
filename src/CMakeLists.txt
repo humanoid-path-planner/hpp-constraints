@@ -18,6 +18,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   SHARED
   position.cc
   orientation.cc
+  relative-com.cc
   relative-orientation.cc
   relative-position.cc
   )

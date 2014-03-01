@@ -67,10 +67,19 @@ namespace hpp {
       if (tr < -1) tr = -1;
       theta = acos ((tr - 1)/2);
       assert (theta == theta);
-      result [0] = theta*(Rerror_ (2, 1) - Rerror_ (1, 2))/(2*sin(theta));
-      result [1] = theta*(Rerror_ (0, 2) - Rerror_ (2, 0))/(2*sin(theta));
-      if (!ignoreZ) {
-	result [2] = theta*(Rerror_ (1, 0) - Rerror_ (0, 1))/(2*sin(theta));
+      if (theta > 1e-6) {
+	result [0] = theta*(Rerror_ (2, 1) - Rerror_ (1, 2))/(2*sin(theta));
+	result [1] = theta*(Rerror_ (0, 2) - Rerror_ (2, 0))/(2*sin(theta));
+	if (!ignoreZ) {
+	  result [2] = theta*(Rerror_ (1, 0) - Rerror_ (0, 1))/(2*sin(theta));
+	}
+      }
+      else {
+	result [0] = (Rerror_ (2, 1) - Rerror_ (1, 2))/2;
+	result [1] = (Rerror_ (0, 2) - Rerror_ (2, 0))/2;
+	if (!ignoreZ) {
+	  result [2] = (Rerror_ (1, 0) - Rerror_ (0, 1))/2;
+	}
       }
     }
 

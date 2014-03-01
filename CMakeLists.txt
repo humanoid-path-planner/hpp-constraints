@@ -28,6 +28,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/orientation.hh
   include/hpp/constraints/position.hh
+  include/hpp/constraints/relative-com.hh
   include/hpp/constraints/relative-orientation.hh
   include/hpp/constraints/relative-position.hh
 )

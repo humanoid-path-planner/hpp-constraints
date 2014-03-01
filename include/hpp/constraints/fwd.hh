@@ -25,6 +25,7 @@
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (Orientation);
+    HPP_PREDEF_CLASS (RelativeCom);
     HPP_PREDEF_CLASS (RelativeOrientation);
     HPP_PREDEF_CLASS (RelativePosition);
     HPP_PREDEF_CLASS (Position);
@@ -39,6 +40,7 @@ namespace hpp {
     typedef OrientationShPtr OrientationPtr_t;
     typedef PositionShPtr PositionPtr_t;
     typedef RelativeOrientationShPtr RelativeOrientationPtr_t;
+    typedef RelativeComShPtr RelativeComPtr_t;
     typedef RelativePositionShPtr RelativePositionPtr_t;
   } // namespace constraints
 } // namespace hpp
