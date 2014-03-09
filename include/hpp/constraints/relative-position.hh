@@ -25,6 +25,10 @@
 # include <hpp/constraints/config.hh>
 
 namespace hpp {
+  namespace eigen {
+    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
+    typedef Eigen::Matrix <double, 3, 1> vector3_t;
+  } // namespace eigen
   namespace constraints {
     /// Constraint on the relative position of two robot joints
     ///
@@ -70,8 +74,8 @@ namespace hpp {
       static RelativePositionPtr_t create (const DevicePtr_t& robot,
 					   const JointPtr_t& joint1,
 					   const JointPtr_t& joint2,
-					   const vector3d& point1,
-					   const vector3d& point2);
+					   const vector3_t& point1,
+					   const vector3_t& point2);
       virtual ~RelativePosition () throw () {}
     protected:
       /// Constructor
@@ -84,8 +88,8 @@ namespace hpp {
       RelativePosition (const DevicePtr_t& robot,
 			const JointPtr_t& joint1,
 			const JointPtr_t& joint2,
-			const vector3d& point1,
-			const vector3d& point2);
+			const vector3_t& point1,
+			const vector3_t& point2);
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,
@@ -101,16 +105,14 @@ namespace hpp {
       DevicePtr_t robot_;
       JointPtr_t joint1_;
       JointPtr_t joint2_;
-      vector3d point1_;
-      vector3d point2_;
-      mutable vector3d global1_;
-      mutable vector3d global2_;
-      mutable vector3d R1x1_;
-      mutable vector3d R2x2_;
-      mutable matrix3d cross1_;
-      mutable matrix3d cross2_;
-      mutable matrix_t Jjoint1_;
-      mutable matrix_t Jjoint2_;
+      vector3_t point1_;
+      vector3_t point2_;
+      mutable vector3_t global1_;
+      mutable vector3_t global2_;
+      mutable vector3_t R1x1_;
+      mutable vector3_t R2x2_;
+      mutable eigen::matrix3_t cross1_;
+      mutable eigen::matrix3_t cross2_;
     }; // class RelativePosition
   } // namespace constraints
 } // namespace hpp

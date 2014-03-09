@@ -26,6 +26,11 @@
 # include <hpp/constraints/fwd.hh>
 
 namespace hpp {
+  namespace eigen {
+    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
+    typedef Eigen::Matrix <double, 3, 1> vector3_t;
+  } // namespace eigen
+
   namespace constraints {
     /// Constraint on the position of a robot point
     ///
@@ -64,6 +69,8 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI Position : public DifferentiableFunction_t
     {
     public:
+      /// Identity matrix of size 3
+      static matrix3_t I3;
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       ROBOPTIM_FUNCTION_FWD_TYPEDEFS (DifferentiableFunction_t);
       //      typedef parent_t::gradient_t gradient_t;
@@ -77,23 +84,23 @@ namespace hpp {
       /// \param rotation frame in which the error is expressed.
       static PositionPtr_t create (const DevicePtr_t& robot,
 				   const JointPtr_t& joint,
-				   const vector3d& pointInLocalFrame,
-				   const vector3d& targetInGlobalFrame,
-				   const matrix3d& rotation =
-				   Eigen::Matrix<double, 3, 3>::Identity(),
+				   const vector3_t& pointInLocalFrame,
+				   const vector3_t& targetInGlobalFrame,
+				   const matrix3_t& rotation =
+				   matrix3_t::getIdentity (),
 				   std::vector <bool> mask =
 				   boost::assign::list_of (true)(true)(true));
 
       virtual ~Position () throw () {}
 
       /// Set position of target point in global frame
-      void reference (const vector3d& reference)
+      void reference (const vector3_t& reference)
       {
 	targetInGlobalFrame_ = reference;
       }
 
       /// Get position of target point in global frame
-      const vector3d& reference () const
+      const vector3_t& reference () const
       {
 	return targetInGlobalFrame_;
       }
@@ -105,9 +112,9 @@ namespace hpp {
       /// \param pointInLocalFrame point in local frame,
       /// \param targetInGlobalFrame target point in globalframe.
       Position (const DevicePtr_t& robot, const JointPtr_t& joint,
-		const vector3d& pointInLocalFrame,
-		const vector3d& targetInGlobalFrame,
-		const matrix3d& rotation,
+		const vector3_t& pointInLocalFrame,
+		const vector3_t& targetInGlobalFrame,
+		const matrix3_t& rotation,
 		std::vector <bool> mask);
       /// Compute value of error
       ///
@@ -123,14 +130,13 @@ namespace hpp {
     private:
       DevicePtr_t robot_;
       JointPtr_t joint_;
-      vector3d pointInLocalFrame_;
-      vector3d targetInGlobalFrame_;
+      vector3_t pointInLocalFrame_;
+      vector3_t targetInGlobalFrame_;
       // Case where all degrees of freedom are seleted and rotation is identity
       bool nominalCase_;
       matrix_t SBT_;
-      mutable vector3d p_;
-      mutable matrix3d cross_;
-      mutable matrix_t Jjoint_;
+      mutable vector3_t p_;
+      mutable eigen::matrix3_t cross_;
     }; // class Position
   } // namespace constraints
 } // namespace hpp

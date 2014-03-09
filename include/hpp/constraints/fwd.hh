@@ -37,6 +37,10 @@ namespace hpp {
     typedef model::vector3_t vector3_t;
     typedef model::matrix3_t matrix3_t;
     typedef model::matrix_t matrix_t;
+    typedef model::vector_t vector_t;
+    typedef model::ComJacobian_t ComJacobian_t;
+    typedef model::JointJacobian_t JointJacobian_t;
+    typedef model::Transform3f Transform3f;
     typedef OrientationShPtr OrientationPtr_t;
     typedef PositionShPtr PositionPtr_t;
     typedef RelativeOrientationShPtr RelativeOrientationPtr_t;

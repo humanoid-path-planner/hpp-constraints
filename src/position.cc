@@ -19,30 +19,19 @@
 
 #include <vector>
 #include <hpp/model/device.hh>
+#include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/position.hh>
 
 namespace hpp {
   namespace constraints {
-
-    static vector3d zero3d (0, 0, 0);
-    void applyRigidBodyMotion (const matrix4d& M, const vector3d& v,
-				      vector3d& p)
-    {
-      p =  M.topLeftCorner <3,3> () * v + M.topRightCorner <3,1> ();
-    }
-
-    void applyRotation (const matrix4d& M, const vector3d& v,
-			vector3d& p)
-    {
-      p =  M.topLeftCorner <3,3> () * v;
-    }
-
+    static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
+    matrix3_t Position::I3 = identity ();
     PositionPtr_t Position::create (const DevicePtr_t& robot,
 				    const JointPtr_t& joint,
-				    const vector3d& pointInLocalFrame,
-				    const vector3d& targetInGlobalFrame,
-				    const matrix3d& rotation,
+				    const vector3_t& pointInLocalFrame,
+				    const vector3_t& targetInGlobalFrame,
+				    const matrix3_t& rotation,
 				    std::vector <bool> mask)
     {
       Position* ptr = new Position (robot, joint, pointInLocalFrame,
@@ -52,18 +41,16 @@ namespace hpp {
     }
 
     Position::Position (const DevicePtr_t& robot, const JointPtr_t& joint,
-			const vector3d& pointInLocalFrame,
-			const vector3d& targetInGlobalFrame,
-			const matrix3d& rotation,
+			const vector3_t& pointInLocalFrame,
+			const vector3_t& targetInGlobalFrame,
+			const matrix3_t& rotation,
 			std::vector <bool> mask) :
       parent_t (robot->numberDof (), mask [0] + mask [1] + mask [2],
 		"Position"),
       robot_ (robot), joint_ (joint), pointInLocalFrame_ (pointInLocalFrame),
-      targetInGlobalFrame_ (targetInGlobalFrame), SBT_ (),
-      Jjoint_ (6, robot->numberDof ())
+      targetInGlobalFrame_ (targetInGlobalFrame), SBT_ ()
     {
-      if (rotation == Eigen::Matrix<double, 3, 3>::Identity() &&
-	  mask [0] && mask [1] && mask [2]) {
+      if (rotation.isIdentity () && mask [0] && mask [1] && mask [2]) {
 	nominalCase_ = true;
       } else {
 	nominalCase_ = false;
@@ -86,9 +73,9 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      const matrix4d& M = joint_->currentTransformation ();
-      applyRigidBodyMotion (M, pointInLocalFrame_, p_);
-      result = targetInGlobalFrame_ - p_;
+      const Transform3f& M = joint_->currentTransformation ();
+      p_ = M.transform (pointInLocalFrame_);
+      model::toEigen (targetInGlobalFrame_ - p_, result);
       if (!nominalCase_) result = SBT_*result;
     }
 
@@ -97,17 +84,16 @@ namespace hpp {
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
-      const matrix4d& M = joint_->currentTransformation ();
-      applyRotation (M, pointInLocalFrame_, p_);
+      const Transform3f& M = joint_->currentTransformation ();
+      p_ = M.getRotation () * pointInLocalFrame_;
       cross_ (0,1) = -p_[2]; cross_ (1,0) = p_[2];
       cross_ (0,2) = p_[1]; cross_ (0,2) = -p_[1];
       cross_ (1,2) = -p_[0]; cross_ (2,1) = p_[0];
-      robot_->getJacobian (*(robot_->rootJoint ()), *(joint_->dynamic ()),
-			   zero3d, Jjoint_);
+      const JointJacobian_t& Jjoint (joint_->jacobian ());
       if (nominalCase_)
-	jacobian = cross_*Jjoint_.bottomRows (3) - Jjoint_.topRows (3);
+	jacobian = cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3);
       else
-	jacobian = SBT_*(cross_*Jjoint_.bottomRows (3) - Jjoint_.topRows (3));
+	jacobian = SBT_*(cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3));
 
     }
     void Position::impl_gradient (gradient_t &gradient,

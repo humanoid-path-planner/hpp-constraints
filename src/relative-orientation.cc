@@ -19,20 +19,19 @@
 
 #include <hpp/util/debug.hh>
 #include <hpp/model/device.hh>
+#include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/relative-orientation.hh>
 
 namespace hpp {
   namespace constraints {
 
-    static vector3d zero3d (0, 0, 0);
-    extern void extractRotation (const matrix4d& M, matrix3d& R);
-    extern void computeJlog (const double& theta, const vector3d& r,
-			     matrix3d& Jlog);
+    extern void computeJlog (const double& theta, const vector_t& r,
+			     eigen::matrix3_t& Jlog);
 
     RelativeOrientationPtr_t RelativeOrientation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const matrix3d& reference, bool ignoreZ)
+     const JointPtr_t& joint2, const matrix3_t& reference, bool ignoreZ)
     {
       RelativeOrientation* ptr =
 	new RelativeOrientation (robot, joint1, joint2, reference, ignoreZ);
@@ -42,12 +41,11 @@ namespace hpp {
 
     RelativeOrientation::RelativeOrientation
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const matrix3d& reference, bool ignoreZ) :
+     const JointPtr_t& joint2, const matrix3_t& reference, bool ignoreZ) :
       parent_t (robot->numberDof (), ignoreZ ? 2 : 3, "RelativeOrientation"),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       reference_ (reference), ignoreZ_ (ignoreZ), r_ (3),
-      Jlog_ (), jacobian_ (3, robot->numberDof ()),
-      Jjoint1_ (6, robot->numberDof ()), Jjoint2_ (6, robot->numberDof ())
+      Jlog_ (), jacobian_ (3, robot->numberDof ())
     {
     }
 
@@ -57,11 +55,11 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      const matrix4d& M1 = joint1_->currentTransformation ();
-      const matrix4d& M2 = joint2_->currentTransformation ();
-      extractRotation (M1, R1_);
-      extractRotation (M2, R2_);
-      Rerror_ = R2_.transpose () * R1_ * reference_;
+      const Transform3f& M1 = joint1_->currentTransformation ();
+      const Transform3f& M2 = joint2_->currentTransformation ();
+      const fcl::Matrix3f& R1 (M1.getRotation ());
+      fcl::Matrix3f R2T (M2.getRotation ()); R2T.transpose ();
+      Rerror_ = R2T * R1 * reference_;
       double tr = Rerror_ (0, 0) + Rerror_ (1, 1) + Rerror_ (2, 2);
       if (tr > 3) tr = 3;
       if (tr < -1) tr = -1;
@@ -95,6 +93,8 @@ namespace hpp {
 					     const argument_t &arg)
       const throw ()
     {
+      const Transform3f& M2 = joint2_->currentTransformation ();
+      fcl::Matrix3f R2T (M2.getRotation ()); R2T.transpose ();
       // Compute vector r
       double theta;
       computeError (r_, arg, theta, false);
@@ -104,19 +104,20 @@ namespace hpp {
       } else {
 	computeJlog (theta, r_, Jlog_);
       }
-      robot_->getJacobian (*(robot_->rootJoint ()), *(joint1_->dynamic ()),
-			   zero3d, Jjoint1_);
-      robot_->getJacobian (*(robot_->rootJoint ()), *(joint2_->dynamic ()),
-			   zero3d, Jjoint2_);
+      const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
+      const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
       hppDout (info, "Jlog_ = " << std::endl << Jlog_);
-      hppDout (info, "Jjoint1_ = " << std::endl << Jjoint1_);
-      hppDout (info, "Jjoint2_ = " << std::endl << Jjoint2_);
-      jacobian_ = Jlog_ * R2_.transpose () *
-	(Jjoint1_.bottomRows (3) - Jjoint2_.bottomRows (3));
-      if (ignoreZ_)
+      hppDout (info, "Jjoint1 = " << std::endl << Jjoint1);
+      hppDout (info, "Jjoint2 = " << std::endl << Jjoint2);
+      if (ignoreZ_) {
+	jacobian_ = Jlog_ * R2T *
+	  (Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
 	jacobian = jacobian_.topRows (2);
-      else
-	jacobian = jacobian_;
+      }
+      else {
+	jacobian = Jlog_ * R2T *
+	  (Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
+      }
     }
 
     void RelativeOrientation::impl_gradient (gradient_t &gradient,

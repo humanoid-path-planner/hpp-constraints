@@ -25,6 +25,10 @@
 # include <hpp/constraints/fwd.hh>
 
 namespace hpp {
+  namespace eigen {
+    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
+    typedef Eigen::Matrix <double, 3, 1> vector3_t;
+  } // namespace eigen
   namespace constraints {
     /// Constraint on the relative orientation of two robot joints
     ///
@@ -49,7 +53,7 @@ namespace hpp {
     ///                  \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|
     ///                  (1-\cos\|\mathbf{r}\|)}\right)
     ///                  \mathbf{r}\mathbf{r}^T
-    /// \f}
+   /// \f}
     class HPP_CONSTRAINTS_DLLAPI RelativeOrientation :
       public DifferentiableFunction_t
     {
@@ -68,16 +72,16 @@ namespace hpp {
       static RelativeOrientationPtr_t create (const DevicePtr_t& robot,
 					      const JointPtr_t& joint1,
 					      const JointPtr_t& joint2,
-					      const matrix3d& reference,
+					      const matrix3_t& reference,
 					      bool ignoreZ = false);
       virtual ~RelativeOrientation () throw () {}
       /// Set desired relative orientation as a rotation matrix
-      void reference (const matrix3d& reference)
+      void reference (const matrix3_t& reference)
       {
 	reference_ = reference;
       }
       /// Get desired relative orientation
-      const matrix3d& reference () const
+      const matrix3_t& reference () const
       {
 	return reference_;
       }
@@ -98,7 +102,7 @@ namespace hpp {
       ///        is not constrained
       RelativeOrientation (const DevicePtr_t&, const JointPtr_t& joint1,
 			   const JointPtr_t& joint2,
-			   const matrix3d& reference, bool ignoreZ);
+			   const matrix3_t& reference, bool ignoreZ);
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,
@@ -116,16 +120,12 @@ namespace hpp {
       DevicePtr_t robot_;
       JointPtr_t joint1_;
       JointPtr_t joint2_;
-      matrix3d reference_;
+      matrix3_t reference_;
       bool ignoreZ_;
-      mutable matrix3d R1_;
-      mutable matrix3d R2_;
-      mutable matrix3d Rerror_;
+      mutable matrix3_t Rerror_;
       mutable vector_t r_;
-      mutable matrix3d Jlog_;
+      mutable eigen::matrix3_t Jlog_;
       mutable matrix_t jacobian_;
-      mutable matrix_t Jjoint1_;
-      mutable matrix_t Jjoint2_;
     }; // class RelativeOrientation
   } // namespace constraints
 } // namespace hpp

@@ -25,6 +25,10 @@
 # include <hpp/constraints/fwd.hh>
 
 namespace hpp {
+  namespace eigen {
+    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
+    typedef Eigen::Matrix <double, 3, 1> vector3_t;
+  } // namespace eigen
   namespace constraints {
     /// Constraint on the orientation of a robot joint
     ///
@@ -60,16 +64,16 @@ namespace hpp {
       ///        is not constrained
       static OrientationPtr_t create (const DevicePtr_t& robot,
 				      const JointPtr_t& joint,
-				      const matrix3d& reference,
+				      const matrix3_t& reference,
 				      bool ignoreZ = false);
       virtual ~Orientation () throw () {}
       /// Set desired orientation as a rotation matrix
-      void reference (const matrix3d& reference)
+      void reference (const matrix3_t& reference)
       {
 	reference_ = reference;
       }
       /// Get desired orientation
-      const matrix3d& reference () const
+      const matrix3_t& reference () const
       {
 	return reference_;
       }
@@ -89,7 +93,7 @@ namespace hpp {
       /// \param ignoreZ it true rotation about z-axis of the reference frame
       ///        is not constrained
       Orientation (const DevicePtr_t&, const JointPtr_t& joint,
-		   const matrix3d& reference, bool ignoreZ);
+		   const matrix3_t& reference, bool ignoreZ);
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,
@@ -106,14 +110,12 @@ namespace hpp {
 			 double& theta, bool ignoreZ) const;
       DevicePtr_t robot_;
       JointPtr_t joint_;
-      matrix3d reference_;
+      matrix3_t reference_;
       bool ignoreZ_;
-      mutable matrix3d R_;
-      mutable matrix3d Rerror_;
+      mutable matrix3_t Rerror_;
       mutable vector_t r_;
-      mutable matrix3d Jlog_;
+      mutable eigen::matrix3_t Jlog_;
       mutable matrix_t jacobian_;
-      mutable matrix_t Jjoint_;
     }; // class Orientation
   } // namespace constraints
 } // namespace hpp

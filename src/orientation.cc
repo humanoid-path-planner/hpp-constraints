@@ -18,22 +18,17 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <hpp/model/device.hh>
+#include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/orientation.hh>
 
 namespace hpp {
   namespace constraints {
 
-    static vector3d zero3d (0, 0, 0);
+    static vector3_t zero3d (0, 0, 0);
 
-    void extractRotation (const matrix4d& M, matrix3d& R)
-    {
-      R (0,0) = M(0,0); R (0,1) = M(0,1); R (0,2) = M(0,2);
-      R (1,0) = M(1,0); R (1,1) = M(1,1); R (1,2) = M(1,2);
-      R (2,0) = M(2,0); R (2,1) = M(2,1); R (2,2) = M(2,2);
-    }
-
-    void computeJlog (const double& theta, const vector3d& r, matrix3d& Jlog)
+    void computeJlog (const double& theta, const vector_t& r,
+		      eigen::matrix3_t& Jlog)
     {
       if (theta < 1e-6)
 	Jlog.setIdentity ();
@@ -53,7 +48,7 @@ namespace hpp {
 
     OrientationPtr_t Orientation::create (const DevicePtr_t& robot,
 					  const JointPtr_t& joint,
-					  const matrix3d& reference,
+					  const matrix3_t& reference,
 					  bool ignoreZ)
     {
       Orientation* ptr = new Orientation (robot, joint, reference, ignoreZ);
@@ -61,11 +56,11 @@ namespace hpp {
       return shPtr;
     }
     Orientation::Orientation (const DevicePtr_t& robot, const JointPtr_t& joint,
-			      const matrix3d& reference, bool ignoreZ) :
+			      const matrix3_t& reference, bool ignoreZ) :
       parent_t (robot->numberDof (), ignoreZ ? 2 : 3, "Orientation"),
       robot_ (robot), joint_ (joint), reference_ (reference),
       ignoreZ_ (ignoreZ), r_ (3), Jlog_ (),
-      jacobian_ (3, robot->numberDof ()), Jjoint_ (6, robot->numberDof ())
+      jacobian_ (3, robot->numberDof ())
     {
     }
 
@@ -75,9 +70,9 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      const matrix4d& M = joint_->currentTransformation ();
-      extractRotation (M, R_);
-      Rerror_ = R_.transpose () * reference_;
+      const Transform3f& M = joint_->currentTransformation ();
+      fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
+      Rerror_ = RT * reference_;
       double tr = Rerror_ (0, 0) + Rerror_ (1, 1) + Rerror_ (2, 2);
       if (tr > 1) tr = 1;
       if (tr < -1) tr = -1;
@@ -98,6 +93,8 @@ namespace hpp {
     void Orientation::impl_jacobian (jacobian_t &jacobian,
 				     const argument_t &arg) const throw ()
     {
+      const Transform3f& M = joint_->currentTransformation ();
+      fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
       // Compute vector r
       double theta;
       computeError (r_, arg, theta, false);
@@ -106,13 +103,14 @@ namespace hpp {
 	Jlog_.setIdentity ();
       } else {
 	computeJlog (theta, r_, Jlog_);
-	robot_->getJacobian (*(robot_->rootJoint ()), *(joint_->dynamic ()),
-			     zero3d, Jjoint_);
-	jacobian_ = -Jlog_ * R_.transpose () * Jjoint_.bottomRows (3);
-	if (ignoreZ_)
+	const JointJacobian_t& Jjoint (joint_->jacobian ());
+	if (ignoreZ_) {
+	  jacobian_ = -Jlog_ * RT * Jjoint.bottomRows (3);
 	  jacobian = jacobian_.topRows (2);
-	else
-	  jacobian = jacobian_;
+	}
+	else {
+	  jacobian = -Jlog_ * RT * Jjoint.bottomRows (3);
+	}
       }
     }
 
