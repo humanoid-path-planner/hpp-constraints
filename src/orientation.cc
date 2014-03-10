@@ -57,15 +57,16 @@ namespace hpp {
     }
     Orientation::Orientation (const DevicePtr_t& robot, const JointPtr_t& joint,
 			      const matrix3_t& reference, bool ignoreZ) :
-      parent_t (robot->numberDof (), ignoreZ ? 2 : 3, "Orientation"),
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+		ignoreZ ? 2 : 3, "Orientation"),
       robot_ (robot), joint_ (joint), reference_ (reference),
       ignoreZ_ (ignoreZ), r_ (3), Jlog_ (),
       jacobian_ (3, robot->numberDof ())
     {
     }
 
-    void Orientation::computeError (result_t& result,
-				    const argument_t& argument,
+    void Orientation::computeError (vector_t& result,
+				    const vector_t& argument,
 				    double& theta, bool ignoreZ) const
     {
       robot_->currentConfiguration (argument);
@@ -84,14 +85,14 @@ namespace hpp {
       }
     }
 
-    void Orientation::impl_compute (result_t& result,
-				    const argument_t& argument) const throw ()
+    void Orientation::impl_compute (vector_t& result,
+				    const vector_t& argument) const throw ()
     {
       double theta;
       computeError (result, argument, theta, ignoreZ_);
     }
-    void Orientation::impl_jacobian (jacobian_t &jacobian,
-				     const argument_t &arg) const throw ()
+    void Orientation::impl_jacobian (matrix_t &jacobian,
+				     const vector_t &arg) const throw ()
     {
       const Transform3f& M = joint_->currentTransformation ();
       fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
@@ -112,15 +113,6 @@ namespace hpp {
 	  jacobian = -Jlog_ * RT * Jjoint.bottomRows (3);
 	}
       }
-    }
-
-    void Orientation::impl_gradient (gradient_t &gradient,
-				     const argument_t &argument,
-				     size_type functionId) const throw ()
-    {
-      matrix_t jacobian (outputSize (), inputSize ());
-      impl_jacobian (jacobian, argument);
-      gradient = jacobian.row (functionId);
     }
 
   } // namespace constraints

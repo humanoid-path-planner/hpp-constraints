@@ -21,7 +21,7 @@
 # define HPP_CONSTRAINTS_POSITION_HH
 
 # include <boost/assign/list_of.hpp>
-# include <roboptim/core/differentiable-function.hh>
+# include <hpp/core/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
 
@@ -72,9 +72,6 @@ namespace hpp {
       /// Identity matrix of size 3
       static matrix3_t I3;
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-      ROBOPTIM_FUNCTION_FWD_TYPEDEFS (DifferentiableFunction_t);
-      //      typedef parent_t::gradient_t gradient_t;
-      //      typedef parent_t::jacobian_t jacobian_t;
       /// Return a shared pointer to a new instance
       ///
       /// \param robot the robot the constraint applies to,
@@ -120,13 +117,10 @@ namespace hpp {
       ///
       /// \param argument configuration of the robot,
       /// \retval result error vector
-      virtual void impl_compute	(result_t& result,
-				 const argument_t& argument) const throw ();
-      virtual void impl_jacobian (jacobian_t &jacobian,
-				  const argument_t &arg) const throw ();
-      virtual void impl_gradient (gradient_t &gradient,
-				  const argument_t &argument,
-				  size_type functionId=0) const throw ();
+      virtual void impl_compute	(vector_t& result,
+				 const vector_t& argument) const throw ();
+      virtual void impl_jacobian (matrix_t &jacobian,
+				  const vector_t &arg) const throw ();
     private:
       DevicePtr_t robot_;
       JointPtr_t joint_;

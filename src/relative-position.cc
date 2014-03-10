@@ -48,7 +48,8 @@ namespace hpp {
 					const JointPtr_t& joint2,
 					const vector3_t& point1,
 					const vector3_t& point2) :
-      parent_t (robot->numberDof (), 3, "RelativePosition"),
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+		3, "RelativePosition"),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       point1_ (point1), point2_ (point2)
     {
@@ -57,7 +58,7 @@ namespace hpp {
     }
 
      void RelativePosition::impl_compute
-     (result_t& result, const argument_t& argument) const throw ()
+     (vector_t& result, const vector_t& argument) const throw ()
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -68,8 +69,8 @@ namespace hpp {
       model::toEigen (global1_ - global2_, result);
     }
 
-  void RelativePosition::impl_jacobian (jacobian_t &jacobian,
-					const argument_t &arg) const throw ()
+  void RelativePosition::impl_jacobian (matrix_t &jacobian,
+					const vector_t &arg) const throw ()
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
@@ -86,15 +87,6 @@ namespace hpp {
       jacobian = cross1_ * Jjoint1.bottomRows (3)
 	+ Jjoint1.topRows (3) + cross2_ * Jjoint2.bottomRows (3)
 	- Jjoint2.topRows (3);
-    }
-
-    void RelativePosition::impl_gradient (gradient_t &gradient,
-					  const argument_t &argument,
-					  size_type functionId) const throw ()
-    {
-      matrix_t jacobian (outputSize (), inputSize ());
-      impl_jacobian (jacobian, argument);
-      gradient = jacobian.row (functionId);
     }
 
   } // namespace constraints

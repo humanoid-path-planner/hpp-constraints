@@ -45,8 +45,8 @@ namespace hpp {
 			const vector3_t& targetInGlobalFrame,
 			const matrix3_t& rotation,
 			std::vector <bool> mask) :
-      parent_t (robot->numberDof (), mask [0] + mask [1] + mask [2],
-		"Position"),
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+		mask [0] + mask [1] + mask [2],	"Position"),
       robot_ (robot), joint_ (joint), pointInLocalFrame_ (pointInLocalFrame),
       targetInGlobalFrame_ (targetInGlobalFrame), SBT_ ()
     {
@@ -68,8 +68,8 @@ namespace hpp {
       cross_.setZero ();
     }
 
-    void Position::impl_compute (result_t& result,
-				 const argument_t& argument) const throw ()
+    void Position::impl_compute (vector_t& result,
+				 const vector_t& argument) const throw ()
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -79,8 +79,8 @@ namespace hpp {
       if (!nominalCase_) result = SBT_*result;
     }
 
-    void Position::impl_jacobian (jacobian_t &jacobian,
-				  const argument_t &arg) const throw ()
+    void Position::impl_jacobian (matrix_t &jacobian,
+				  const vector_t &arg) const throw ()
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
@@ -96,14 +96,5 @@ namespace hpp {
 	jacobian = SBT_*(cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3));
 
     }
-    void Position::impl_gradient (gradient_t &gradient,
-				  const argument_t &argument,
-				  size_type functionId) const throw ()
-    {
-      matrix_t jacobian (outputSize (), inputSize ());
-      impl_jacobian (jacobian, argument);
-      gradient = jacobian.row (functionId);
-    }
-
   } // namespace constraints
 } // namespace hpp

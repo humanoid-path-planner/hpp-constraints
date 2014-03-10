@@ -42,15 +42,16 @@ namespace hpp {
     RelativeOrientation::RelativeOrientation
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2, const matrix3_t& reference, bool ignoreZ) :
-      parent_t (robot->numberDof (), ignoreZ ? 2 : 3, "RelativeOrientation"),
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+		ignoreZ ? 2 : 3, "RelativeOrientation"),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       reference_ (reference), ignoreZ_ (ignoreZ), r_ (3),
       Jlog_ (), jacobian_ (3, robot->numberDof ())
     {
     }
 
-    void RelativeOrientation::computeError (result_t& result,
-					    const argument_t& argument,
+    void RelativeOrientation::computeError (vector_t& result,
+					    const vector_t& argument,
 					    double& theta, bool ignoreZ) const
     {
       robot_->currentConfiguration (argument);
@@ -81,16 +82,16 @@ namespace hpp {
       }
     }
 
-    void RelativeOrientation::impl_compute (result_t& result,
-					    const argument_t& argument)
+    void RelativeOrientation::impl_compute (vector_t& result,
+					    const vector_t& argument)
       const throw ()
     {
       double theta;
       computeError (result, argument, theta, ignoreZ_);
     }
 
-    void RelativeOrientation::impl_jacobian (jacobian_t &jacobian,
-					     const argument_t &arg)
+    void RelativeOrientation::impl_jacobian (matrix_t &jacobian,
+					     const vector_t &arg)
       const throw ()
     {
       const Transform3f& M2 = joint2_->currentTransformation ();
@@ -119,17 +120,6 @@ namespace hpp {
 	  (Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
       }
     }
-
-    void RelativeOrientation::impl_gradient (gradient_t &gradient,
-					     const argument_t &argument,
-					     size_type functionId)
-      const throw ()
-    {
-      matrix_t jacobian (outputSize (), inputSize ());
-      impl_jacobian (jacobian, argument);
-      gradient = jacobian.row (functionId);
-    }
-
   } // namespace constraints
 } // namespace hpp
 

@@ -31,8 +31,9 @@ namespace hpp {
     HPP_PREDEF_CLASS (Position);
 
     typedef core::DevicePtr_t DevicePtr_t;
-    typedef core::DifferentiableFunction_t DifferentiableFunction_t;
+    typedef core::DifferentiableFunction DifferentiableFunction_t;
     typedef core::DifferentiableFunctionPtr_t DifferentiableFunctionPtr_t;
+    typedef core::size_type size_type;
     typedef model::JointPtr_t JointPtr_t;
     typedef model::vector3_t vector3_t;
     typedef model::matrix3_t matrix3_t;

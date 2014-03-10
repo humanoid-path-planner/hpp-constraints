@@ -20,7 +20,7 @@
 #ifndef HPP_CONSTRAINTS_RELATIVE_POSITION_HH
 # define HPP_CONSTRAINTS_RELATIVE_POSITION_HH
 
-# include <roboptim/core/differentiable-function.hh>
+# include <hpp/core/differentiable-function.hh>
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 
@@ -63,7 +63,6 @@ namespace hpp {
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-      ROBOPTIM_FUNCTION_FWD_TYPEDEFS (DifferentiableFunction_t);
       /// Return a shared pointer to a new instance
       ///
       /// \param robot the robot the constraints is applied to,
@@ -94,13 +93,10 @@ namespace hpp {
       ///
       /// \param argument configuration of the robot,
       /// \retval result error vector
-      virtual void impl_compute	(result_t& result,
-				 const argument_t& argument) const throw ();
-      virtual void impl_jacobian (jacobian_t &jacobian,
-				  const argument_t &arg) const throw ();
-      virtual void impl_gradient (gradient_t &gradient,
-				  const argument_t &argument,
-				  size_type functionId=0) const throw ();
+      virtual void impl_compute	(vector_t& result,
+				 const vector_t& argument) const throw ();
+      virtual void impl_jacobian (matrix_t &jacobian,
+				  const vector_t &arg) const throw ();
     private:
       DevicePtr_t robot_;
       JointPtr_t joint1_;
