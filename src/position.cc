@@ -48,7 +48,7 @@ namespace hpp {
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
 		mask [0] + mask [1] + mask [2],	"Position"),
       robot_ (robot), joint_ (joint), pointInLocalFrame_ (pointInLocalFrame),
-      targetInGlobalFrame_ (targetInGlobalFrame), SBT_ ()
+      targetInGlobalFrame_ (targetInGlobalFrame), SBT_ (), result_ (3)
     {
       if (rotation.isIdentity () && mask [0] && mask [1] && mask [2]) {
 	nominalCase_ = true;
@@ -75,8 +75,9 @@ namespace hpp {
       robot_->computeForwardKinematics ();
       const Transform3f& M = joint_->currentTransformation ();
       p_ = M.transform (pointInLocalFrame_);
-      model::toEigen (targetInGlobalFrame_ - p_, result);
-      if (!nominalCase_) result = SBT_*result;
+      model::toEigen (targetInGlobalFrame_ - p_, result_);
+      if (!nominalCase_) result = SBT_*result_;
+      else result = result_;
     }
 
     void Position::impl_jacobian (matrix_t &jacobian,

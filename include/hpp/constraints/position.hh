@@ -131,6 +131,7 @@ namespace hpp {
       matrix_t SBT_;
       mutable vector3_t p_;
       mutable eigen::matrix3_t cross_;
+      mutable vector_t result_;
     }; // class Position
   } // namespace constraints
 } // namespace hpp

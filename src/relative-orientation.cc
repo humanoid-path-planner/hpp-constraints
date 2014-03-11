@@ -116,6 +116,7 @@ namespace hpp {
 	jacobian = jacobian_.topRows (2);
       }
       else {
+	hppDout (info, "Jlog_ * R2T = " << Jlog_ * R2T);
 	jacobian = Jlog_ * R2T *
 	  (Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
       }
