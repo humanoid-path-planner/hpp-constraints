@@ -32,7 +32,7 @@ namespace hpp {
     {
       RelativePosition* ptr = new RelativePosition
 	(robot, joint1, joint2, point1, point2);
-      RelativePositionShPtr shPtr (ptr);
+      RelativePositionPtr_t shPtr (ptr);
       return shPtr;
     }
 

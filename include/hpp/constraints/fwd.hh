@@ -42,11 +42,11 @@ namespace hpp {
     typedef model::ComJacobian_t ComJacobian_t;
     typedef model::JointJacobian_t JointJacobian_t;
     typedef model::Transform3f Transform3f;
-    typedef OrientationShPtr OrientationPtr_t;
-    typedef PositionShPtr PositionPtr_t;
-    typedef RelativeOrientationShPtr RelativeOrientationPtr_t;
-    typedef RelativeComShPtr RelativeComPtr_t;
-    typedef RelativePositionShPtr RelativePositionPtr_t;
+    typedef boost::shared_ptr<Orientation> OrientationPtr_t;
+    typedef boost::shared_ptr<Position> PositionPtr_t;
+    typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
+    typedef boost::shared_ptr<RelativeCom> RelativeComPtr_t;
+    typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

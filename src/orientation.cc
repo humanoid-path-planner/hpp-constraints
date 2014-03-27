@@ -52,7 +52,7 @@ namespace hpp {
 					  bool ignoreZ)
     {
       Orientation* ptr = new Orientation (robot, joint, reference, ignoreZ);
-      OrientationShPtr shPtr (ptr);
+      OrientationPtr_t shPtr (ptr);
       return shPtr;
     }
     Orientation::Orientation (const DevicePtr_t& robot, const JointPtr_t& joint,

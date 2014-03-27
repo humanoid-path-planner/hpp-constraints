@@ -35,7 +35,7 @@ namespace hpp {
     {
       RelativeOrientation* ptr =
 	new RelativeOrientation (robot, joint1, joint2, reference, ignoreZ);
-      RelativeOrientationShPtr shPtr (ptr);
+      RelativeOrientationPtr_t shPtr (ptr);
       return shPtr;
     }
 

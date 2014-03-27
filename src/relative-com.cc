@@ -46,7 +46,7 @@ namespace hpp {
 					  const vector3_t reference)
     {
       RelativeCom* ptr = new RelativeCom (robot, joint, reference);
-      RelativeComShPtr shPtr (ptr);
+      RelativeComPtr_t shPtr (ptr);
       return shPtr;
     }
 
