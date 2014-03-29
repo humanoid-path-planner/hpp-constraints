@@ -26,7 +26,7 @@
 namespace hpp {
   namespace constraints {
 
-    extern void computeJlog (const double& theta, const vector_t& r,
+    extern void computeJlog (const double& theta, vectorIn_t r,
 			     eigen::matrix3_t& Jlog);
 
     RelativeOrientationPtr_t RelativeOrientation::create
@@ -50,8 +50,8 @@ namespace hpp {
     {
     }
 
-    void RelativeOrientation::computeError (vector_t& result,
-					    const vector_t& argument,
+    void RelativeOrientation::computeError (vectorOut_t result,
+					    ConfigurationIn_t argument,
 					    double& theta, bool ignoreZ) const
     {
       robot_->currentConfiguration (argument);
@@ -82,8 +82,8 @@ namespace hpp {
       }
     }
 
-    void RelativeOrientation::impl_compute (vector_t& result,
-					    const vector_t& argument)
+    void RelativeOrientation::impl_compute (vectorOut_t result,
+					    ConfigurationIn_t argument)
       const throw ()
     {
       double theta;
@@ -91,7 +91,7 @@ namespace hpp {
     }
 
     void RelativeOrientation::impl_jacobian (matrix_t &jacobian,
-					     const vector_t &arg)
+					     ConfigurationIn_t arg)
       const throw ()
     {
       const Transform3f& M2 = joint2_->currentTransformation ();

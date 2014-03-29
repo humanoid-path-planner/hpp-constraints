@@ -27,7 +27,7 @@ namespace hpp {
 
     static vector3_t zero3d (0, 0, 0);
 
-    void computeJlog (const double& theta, const vector_t& r,
+    void computeJlog (const double& theta, vectorIn_t r,
 		      eigen::matrix3_t& Jlog)
     {
       if (theta < 1e-6)
@@ -65,8 +65,8 @@ namespace hpp {
     {
     }
 
-    void Orientation::computeError (vector_t& result,
-				    const vector_t& argument,
+    void Orientation::computeError (vectorOut_t result,
+				    ConfigurationIn_t argument,
 				    double& theta, bool ignoreZ) const
     {
       robot_->currentConfiguration (argument);
@@ -85,14 +85,15 @@ namespace hpp {
       }
     }
 
-    void Orientation::impl_compute (vector_t& result,
-				    const vector_t& argument) const throw ()
+    void Orientation::impl_compute (vectorOut_t result,
+				    ConfigurationIn_t argument)
+      const throw ()
     {
       double theta;
       computeError (result, argument, theta, ignoreZ_);
     }
     void Orientation::impl_jacobian (matrix_t &jacobian,
-				     const vector_t &arg) const throw ()
+				     ConfigurationIn_t arg) const throw ()
     {
       const Transform3f& M = joint_->currentTransformation ();
       fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();

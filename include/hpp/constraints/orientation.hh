@@ -97,12 +97,13 @@ namespace hpp {
       ///
       /// \param argument configuration of the robot,
       /// \retval result error vector
-      virtual void impl_compute	(vector_t& result,
-				 const vector_t& argument) const throw ();
+      virtual void impl_compute	(vectorOut_t result,
+				 ConfigurationIn_t argument)
+	const throw ();
       virtual void impl_jacobian (matrix_t &jacobian,
-				  const vector_t &arg) const throw ();
+				  ConfigurationIn_t arg) const throw ();
     private:
-      void computeError (vector_t& result, const vector_t& argument,
+      void computeError (vectorOut_t result, ConfigurationIn_t argument,
 			 double& theta, bool ignoreZ) const;
       DevicePtr_t robot_;
       JointPtr_t joint_;

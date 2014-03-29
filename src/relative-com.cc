@@ -24,7 +24,7 @@
 
 namespace hpp {
   namespace eigen {
-    void convert (const constraints::vector3_t& v, model::vector_t& res)
+    void convert (const constraints::vector3_t& v, model::vectorOut_t res)
     {
       res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
     }
@@ -58,8 +58,9 @@ namespace hpp {
       cross_.setZero ();
     }
 
-    void RelativeCom::impl_compute (vector_t& result,
-				    const vector_t& argument) const throw ()
+    void RelativeCom::impl_compute (vectorOut_t result,
+				    ConfigurationIn_t argument)
+      const throw ()
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -71,7 +72,7 @@ namespace hpp {
     }
 
     void RelativeCom::impl_jacobian (matrix_t &jacobian,
-				     const vector_t &arg) const throw ()
+				     ConfigurationIn_t arg) const throw ()
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();

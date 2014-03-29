@@ -30,6 +30,8 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativePosition);
     HPP_PREDEF_CLASS (Position);
 
+    typedef model::ConfigurationIn_t ConfigurationIn_t;
+    typedef model::ConfigurationOut_t ConfigurationOut_t;
     typedef core::DevicePtr_t DevicePtr_t;
     typedef core::DifferentiableFunction DifferentiableFunction_t;
     typedef core::DifferentiableFunctionPtr_t DifferentiableFunctionPtr_t;
@@ -39,6 +41,8 @@ namespace hpp {
     typedef model::matrix3_t matrix3_t;
     typedef model::matrix_t matrix_t;
     typedef model::vector_t vector_t;
+    typedef model::vectorIn_t vectorIn_t;
+    typedef model::vectorOut_t vectorOut_t;
     typedef model::ComJacobian_t ComJacobian_t;
     typedef model::JointJacobian_t JointJacobian_t;
     typedef model::Transform3f Transform3f;

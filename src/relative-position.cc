@@ -58,7 +58,7 @@ namespace hpp {
     }
 
      void RelativePosition::impl_compute
-     (vector_t& result, const vector_t& argument) const throw ()
+     (vectorOut_t result, ConfigurationIn_t argument) const throw ()
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -70,7 +70,7 @@ namespace hpp {
     }
 
   void RelativePosition::impl_jacobian (matrix_t &jacobian,
-					const vector_t &arg) const throw ()
+					ConfigurationIn_t arg) const throw ()
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
