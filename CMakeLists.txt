@@ -40,8 +40,8 @@ IF (HPP_DEBUG)
 ENDIF()
 
 SETUP_PROJECT()
-ADD_REQUIRED_DEPENDENCY("hpp-core")
-ADD_DOC_DEPENDENCY("roboptim-core")
+ADD_REQUIRED_DEPENDENCY("hpp-core >= 3")
+ADD_DOC_DEPENDENCY("roboptim-core >= 1")
 
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
 ADD_SUBDIRECTORY (src)
