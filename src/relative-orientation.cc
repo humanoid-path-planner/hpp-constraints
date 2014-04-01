@@ -90,7 +90,7 @@ namespace hpp {
       computeError (result, argument, theta, ignoreZ_);
     }
 
-    void RelativeOrientation::impl_jacobian (matrix_t &jacobian,
+    void RelativeOrientation::impl_jacobian (matrixOut_t jacobian,
 					     ConfigurationIn_t arg)
       const throw ()
     {

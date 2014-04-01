@@ -81,7 +81,7 @@ namespace hpp {
       else result = result_;
     }
 
-    void Position::impl_jacobian (matrix_t &jacobian,
+    void Position::impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ()
     {
       robot_->currentConfiguration (arg);

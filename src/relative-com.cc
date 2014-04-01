@@ -71,7 +71,7 @@ namespace hpp {
       eigen::convert (RT * (x - t) - reference_, result);
     }
 
-    void RelativeCom::impl_jacobian (matrix_t &jacobian,
+    void RelativeCom::impl_jacobian (matrixOut_t jacobian,
 				     ConfigurationIn_t arg) const throw ()
     {
       robot_->currentConfiguration (arg);

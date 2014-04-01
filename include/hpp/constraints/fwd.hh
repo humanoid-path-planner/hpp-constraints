@@ -40,6 +40,8 @@ namespace hpp {
     typedef model::vector3_t vector3_t;
     typedef model::matrix3_t matrix3_t;
     typedef model::matrix_t matrix_t;
+    typedef core::matrixIn_t matrixIn_t;
+    typedef core::matrixOut_t matrixOut_t;
     typedef model::vector_t vector_t;
     typedef model::vectorIn_t vectorIn_t;
     typedef model::vectorOut_t vectorOut_t;

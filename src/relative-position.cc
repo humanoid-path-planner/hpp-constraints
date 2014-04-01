@@ -69,7 +69,7 @@ namespace hpp {
       model::toEigen (global1_ - global2_, result);
     }
 
-  void RelativePosition::impl_jacobian (matrix_t &jacobian,
+  void RelativePosition::impl_jacobian (matrixOut_t jacobian,
 					ConfigurationIn_t arg) const throw ()
     {
       robot_->currentConfiguration (arg);

@@ -92,7 +92,7 @@ namespace hpp {
       double theta;
       computeError (result, argument, theta, ignoreZ_);
     }
-    void Orientation::impl_jacobian (matrix_t &jacobian,
+    void Orientation::impl_jacobian (matrixOut_t jacobian,
 				     ConfigurationIn_t arg) const throw ()
     {
       const Transform3f& M = joint_->currentTransformation ();
