@@ -101,7 +101,6 @@ namespace hpp {
       {
 	return targetInGlobalFrame_;
       }
-    protected:
       /// Constructor
       ///
       /// \param robot the robot the constraint applies to,
@@ -113,6 +112,7 @@ namespace hpp {
 		const vector3_t& targetInGlobalFrame,
 		const matrix3_t& rotation,
 		std::vector <bool> mask);
+    protected:
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,

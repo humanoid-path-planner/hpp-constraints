@@ -58,9 +58,9 @@ namespace hpp {
 				      const JointPtr_t& joint,
 				      const vector3_t reference);
       virtual ~RelativeCom () throw () {}
-    protected:
       RelativeCom (const DevicePtr_t& robot, const JointPtr_t& joint,
 		   const vector3_t reference);
+    protected:
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,

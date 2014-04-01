@@ -76,7 +76,6 @@ namespace hpp {
 					   const vector3_t& point1,
 					   const vector3_t& point2);
       virtual ~RelativePosition () throw () {}
-    protected:
       /// Constructor
       ///
       /// \param robot the robot the constraints is applied to,
@@ -89,6 +88,7 @@ namespace hpp {
 			const JointPtr_t& joint2,
 			const vector3_t& point1,
 			const vector3_t& point2);
+    protected:
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,

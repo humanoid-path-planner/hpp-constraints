@@ -83,7 +83,6 @@ namespace hpp {
       {
 	return ignoreZ_;
       }
-    protected:
       ///Constructor
       ///
       /// \param robot the robot the constraints is applied to,
@@ -93,6 +92,7 @@ namespace hpp {
       ///        is not constrained
       Orientation (const DevicePtr_t&, const JointPtr_t& joint,
 		   const matrix3_t& reference, bool ignoreZ);
+    protected:
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,
