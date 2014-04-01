@@ -88,6 +88,27 @@ namespace hpp {
 			const JointPtr_t& joint2,
 			const vector3_t& point1,
 			const vector3_t& point2);
+
+      /// Get reference point in joint 1
+      const vector3_t& pointInJoint1 () const
+      {
+	return point1_;
+      }
+      /// Set reference point in joint 1
+      void pointInJoint1 (const vector3_t& reference)
+      {
+	point1_ = reference;
+      }
+      /// Get reference point in joint 2
+      const vector3_t& pointInJoint2 () const
+      {
+	return point2_;
+      }
+      /// Set reference point in joint 2
+      void pointInJoint2 (const vector3_t& reference)
+      {
+	point2_ = reference;
+      }
     protected:
       /// Compute value of error
       ///
