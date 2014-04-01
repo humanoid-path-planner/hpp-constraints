@@ -25,10 +25,11 @@
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (Orientation);
+    HPP_PREDEF_CLASS (Position);
     HPP_PREDEF_CLASS (RelativeCom);
     HPP_PREDEF_CLASS (RelativeOrientation);
     HPP_PREDEF_CLASS (RelativePosition);
-    HPP_PREDEF_CLASS (Position);
+    HPP_PREDEF_CLASS (RelativeTransformation);
 
     typedef model::ConfigurationIn_t ConfigurationIn_t;
     typedef model::ConfigurationOut_t ConfigurationOut_t;
@@ -53,6 +54,8 @@ namespace hpp {
     typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
     typedef boost::shared_ptr<RelativeCom> RelativeComPtr_t;
     typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
+    typedef boost::shared_ptr<RelativeTransformation>
+    RelativeTransformationPtr_t;
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

@@ -21,6 +21,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   relative-com.cc
   relative-orientation.cc
   relative-position.cc
+  relative-transformation.cc
   )
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-core)
