@@ -49,7 +49,7 @@ namespace hpp {
     /// \li \f$\mathbf{x}\f$ is the position of the center of mass,
     /// \li \f$\mathbf{x}^{*}\f$ is the desired position of the center of mass
     ///     expressed in joint frame.
-    class HPP_CONSTRAINTS_DLLAPI RelativeCom : public DifferentiableFunction_t
+    class HPP_CONSTRAINTS_DLLAPI RelativeCom : public DifferentiableFunction
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -59,7 +59,7 @@ namespace hpp {
     /// where \f$\mathbf{x}_1\f$ and \f$\mathbf{x}_1\f$ are the position of
     /// the points to match expressed in the local frame of each joint.
     class HPP_CONSTRAINTS_DLLAPI RelativePosition :
-      public DifferentiableFunction_t
+      public DifferentiableFunction
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -66,7 +66,7 @@ namespace hpp {
     ///  selection of degrees of freedom enable users to define
     ///  constraints in a plane or along a line not necessarily
     ///  aligned with the world reference frame axes.
-    class HPP_CONSTRAINTS_DLLAPI Position : public DifferentiableFunction_t
+    class HPP_CONSTRAINTS_DLLAPI Position : public DifferentiableFunction
     {
     public:
       /// Identity matrix of size 3

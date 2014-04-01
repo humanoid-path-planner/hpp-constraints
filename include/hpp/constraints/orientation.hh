@@ -50,7 +50,7 @@ namespace hpp {
     ///                  (1-\cos\|\mathbf{r}\|)}\right)
     ///                  \mathbf{r}\mathbf{r}^T
     /// \f}
-    class HPP_CONSTRAINTS_DLLAPI Orientation : public DifferentiableFunction_t
+    class HPP_CONSTRAINTS_DLLAPI Orientation : public DifferentiableFunction
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW

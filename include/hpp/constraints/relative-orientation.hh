@@ -55,7 +55,7 @@ namespace hpp {
     ///                  \mathbf{r}\mathbf{r}^T
    /// \f}
     class HPP_CONSTRAINTS_DLLAPI RelativeOrientation :
-      public DifferentiableFunction_t
+      public DifferentiableFunction
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW

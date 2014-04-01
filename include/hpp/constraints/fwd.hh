@@ -33,7 +33,7 @@ namespace hpp {
     typedef model::ConfigurationIn_t ConfigurationIn_t;
     typedef model::ConfigurationOut_t ConfigurationOut_t;
     typedef core::DevicePtr_t DevicePtr_t;
-    typedef core::DifferentiableFunction DifferentiableFunction_t;
+    typedef core::DifferentiableFunction DifferentiableFunction;
     typedef core::DifferentiableFunctionPtr_t DifferentiableFunctionPtr_t;
     typedef core::size_type size_type;
     typedef model::JointPtr_t JointPtr_t;
