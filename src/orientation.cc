@@ -27,6 +27,15 @@ namespace hpp {
 
     static vector3_t zero3d (0, 0, 0);
 
+    size_type Orientation::size (std::vector<bool> mask)
+    {
+      size_type res = 0;
+      if (mask [0]) ++res;
+      if (mask [1]) ++res;
+      if (mask [2]) ++res;
+      return res;
+    }
+
     void computeJlog (const double& theta, vectorIn_t r,
 		      eigen::matrix3_t& Jlog)
     {
@@ -49,25 +58,26 @@ namespace hpp {
     OrientationPtr_t Orientation::create (const DevicePtr_t& robot,
 					  const JointPtr_t& joint,
 					  const matrix3_t& reference,
-					  bool ignoreZ)
+					  std::vector <bool> mask)
     {
-      Orientation* ptr = new Orientation (robot, joint, reference, ignoreZ);
+      Orientation* ptr = new Orientation (robot, joint, reference, mask);
       OrientationPtr_t shPtr (ptr);
       return shPtr;
     }
     Orientation::Orientation (const DevicePtr_t& robot, const JointPtr_t& joint,
-			      const matrix3_t& reference, bool ignoreZ) :
+			      const matrix3_t& reference,
+			      std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-		ignoreZ ? 2 : 3, "Orientation"),
+			      size (mask), "Orientation"),
       robot_ (robot), joint_ (joint), reference_ (reference),
-      ignoreZ_ (ignoreZ), r_ (3), Jlog_ (),
+      mask_ (mask), r_ (3), Jlog_ (),
       jacobian_ (3, robot->numberDof ())
     {
     }
 
     void Orientation::computeError (vectorOut_t result,
 				    ConfigurationIn_t argument,
-				    double& theta, bool ignoreZ) const
+				    double& theta, std::vector<bool> mask) const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -78,10 +88,17 @@ namespace hpp {
       if (tr > 1) tr = 1;
       if (tr < -1) tr = -1;
       theta = acos ((tr - 1)/2);
-      result [0] = theta*(Rerror_ (2, 1) - Rerror_ (1, 2))/(2*sin(theta));
-      result [1] = theta*(Rerror_ (0, 2) - Rerror_ (2, 0))/(2*sin(theta));
-      if (!ignoreZ) {
-	result [2] = theta*(Rerror_ (1, 0) - Rerror_ (0, 1))/(2*sin(theta));
+      size_type index = 0;
+      if (mask [0]) {
+	result [index] = theta*(Rerror_ (2, 1) - Rerror_ (1, 2))/(2*sin(theta));
+	++index;
+      }
+      if (mask [1]) {
+	result [index] = theta*(Rerror_ (0, 2) - Rerror_ (2, 0))/(2*sin(theta));
+	++index;
+      }
+      if (mask [2]) {
+	result [index] = theta*(Rerror_ (1, 0) - Rerror_ (0, 1))/(2*sin(theta));
       }
     }
 
@@ -90,7 +107,7 @@ namespace hpp {
       const throw ()
     {
       double theta;
-      computeError (result, argument, theta, ignoreZ_);
+      computeError (result, argument, theta, mask_);
     }
     void Orientation::impl_jacobian (matrixOut_t jacobian,
 				     ConfigurationIn_t arg) const throw ()
@@ -99,20 +116,24 @@ namespace hpp {
       fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
       // Compute vector r
       double theta;
-      computeError (r_, arg, theta, false);
+      computeError (r_, arg, theta, boost::assign::list_of (true)(true)(true));
       assert (theta >= 0);
       if (theta < 1e-3) {
 	Jlog_.setIdentity ();
       } else {
 	computeJlog (theta, r_, Jlog_);
-	const JointJacobian_t& Jjoint (joint_->jacobian ());
-	if (ignoreZ_) {
-	  jacobian_ = -Jlog_ * RT * Jjoint.bottomRows (3);
-	  jacobian = jacobian_.topRows (2);
-	}
-	else {
-	  jacobian = -Jlog_ * RT * Jjoint.bottomRows (3);
-	}
+      }
+      const JointJacobian_t& Jjoint (joint_->jacobian ());
+      jacobian_ = -Jlog_ * RT * Jjoint.bottomRows (3);
+      size_type index = 0;
+      if (mask_ [0]) {
+	jacobian.row (index) = jacobian_.row (0); ++index;
+      }
+      if (mask_ [1]) {
+	jacobian.row (index) = jacobian_.row (1); ++index;
+      }
+      if (mask_ [2]) {
+	jacobian.row (index) = jacobian_.row (2);
       }
     }
 

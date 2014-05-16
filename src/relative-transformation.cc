@@ -38,8 +38,7 @@ namespace hpp {
      const Transform3f& reference) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 6,
 			      "RelativeTransformation"),
-      relativeOrientation_ (robot, joint1, joint2, reference.getRotation (),
-			    false),
+      relativeOrientation_ (robot, joint1, joint2, reference.getRotation ()),
       relativePosition_ (robot, joint1, joint2, reference.getTranslation (),
 			 vector3_t (0, 0, 0)), reference_ (reference)
     {

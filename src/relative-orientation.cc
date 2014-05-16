@@ -22,6 +22,7 @@
 #include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/relative-orientation.hh>
+#include <hpp/constraints/orientation.hh>
 
 namespace hpp {
   namespace constraints {
@@ -31,28 +32,30 @@ namespace hpp {
 
     RelativeOrientationPtr_t RelativeOrientation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const matrix3_t& reference, bool ignoreZ)
+     const JointPtr_t& joint2, const matrix3_t& reference,
+     std::vector <bool> mask)
     {
       RelativeOrientation* ptr =
-	new RelativeOrientation (robot, joint1, joint2, reference, ignoreZ);
+	new RelativeOrientation (robot, joint1, joint2, reference, mask);
       RelativeOrientationPtr_t shPtr (ptr);
       return shPtr;
     }
 
     RelativeOrientation::RelativeOrientation
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const matrix3_t& reference, bool ignoreZ) :
+     const JointPtr_t& joint2, const matrix3_t& reference,
+     std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-		ignoreZ ? 2 : 3, "RelativeOrientation"),
+			      Orientation::size (mask), "RelativeOrientation"),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
-      reference_ (reference), ignoreZ_ (ignoreZ), r_ (3),
+      reference_ (reference), mask_ (mask), r_ (3),
       Jlog_ (), jacobian_ (3, robot->numberDof ())
     {
     }
 
-    void RelativeOrientation::computeError (vectorOut_t result,
-					    ConfigurationIn_t argument,
-					    double& theta, bool ignoreZ) const
+    void RelativeOrientation::computeError
+    (vectorOut_t result, ConfigurationIn_t argument, double& theta,
+     std::vector <bool> mask) const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -66,18 +69,30 @@ namespace hpp {
       if (tr < -1) tr = -1;
       theta = acos ((tr - 1)/2);
       assert (theta == theta);
+      size_type index = 0;
       if (theta > 1e-6) {
-	result [0] = theta*(Rerror_ (2, 1) - Rerror_ (1, 2))/(2*sin(theta));
-	result [1] = theta*(Rerror_ (0, 2) - Rerror_ (2, 0))/(2*sin(theta));
-	if (!ignoreZ) {
-	  result [2] = theta*(Rerror_ (1, 0) - Rerror_ (0, 1))/(2*sin(theta));
+	if (mask [0]) {
+	  result [index] = theta*(Rerror_ (2, 1) -
+				  Rerror_ (1, 2))/(2*sin(theta)); ++index;
+	}
+	if (mask [1]) {
+	  result [index] = theta*(Rerror_ (0, 2) -
+				  Rerror_ (2, 0))/(2*sin(theta)); ++index;
+	}
+	if (mask [2]) {
+	  result [index] = theta*(Rerror_ (1, 0) -
+				  Rerror_ (0, 1))/(2*sin(theta)); ++index;
 	}
       }
       else {
-	result [0] = (Rerror_ (2, 1) - Rerror_ (1, 2))/2;
-	result [1] = (Rerror_ (0, 2) - Rerror_ (2, 0))/2;
-	if (!ignoreZ) {
-	  result [2] = (Rerror_ (1, 0) - Rerror_ (0, 1))/2;
+	if (mask [0]) {
+	  result [index] = (Rerror_ (2, 1) - Rerror_ (1, 2))/2; ++index;
+	}
+	if (mask [1]) {
+	  result [index] = (Rerror_ (0, 2) - Rerror_ (2, 0))/2; ++index;
+	}
+	if (mask [2]) {
+	  result [index] = (Rerror_ (1, 0) - Rerror_ (0, 1))/2; ++index;
 	}
       }
     }
@@ -87,7 +102,7 @@ namespace hpp {
       const throw ()
     {
       double theta;
-      computeError (result, argument, theta, ignoreZ_);
+      computeError (result, argument, theta, mask_);
     }
 
     void RelativeOrientation::impl_jacobian (matrixOut_t jacobian,
@@ -98,7 +113,7 @@ namespace hpp {
       fcl::Matrix3f R2T (M2.getRotation ()); R2T.transpose ();
       // Compute vector r
       double theta;
-      computeError (r_, arg, theta, false);
+      computeError (r_, arg, theta, boost::assign::list_of (true)(true)(true));
       assert (theta >= 0);
       if (theta < 1e-3) {
 	Jlog_.setIdentity ();
@@ -110,15 +125,17 @@ namespace hpp {
       hppDout (info, "Jlog_ = " << std::endl << Jlog_);
       hppDout (info, "Jjoint1 = " << std::endl << Jjoint1);
       hppDout (info, "Jjoint2 = " << std::endl << Jjoint2);
-      if (ignoreZ_) {
-	jacobian_ = Jlog_ * R2T *
-	  (Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
-	jacobian = jacobian_.topRows (2);
+      jacobian_ = Jlog_ * R2T *
+	(Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
+      size_type index = 0;
+      if (mask_ [0]) {
+	jacobian.row (index) = jacobian_.row (0); ++index;
       }
-      else {
-	hppDout (info, "Jlog_ * R2T = " << Jlog_ * R2T);
-	jacobian = Jlog_ * R2T *
-	  (Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
+      if (mask_ [1]) {
+	jacobian.row (index) = jacobian_.row (1); ++index;
+      }
+      if (mask_ [2]) {
+	jacobian.row (index) = jacobian_.row (2);
       }
     }
   } // namespace constraints

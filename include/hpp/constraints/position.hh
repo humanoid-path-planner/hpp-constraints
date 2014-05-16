@@ -71,14 +71,16 @@ namespace hpp {
     public:
       /// Identity matrix of size 3
       static matrix3_t I3;
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
       /// Return a shared pointer to a new instance
       ///
       /// \param robot the robot the constraint applies to,
       /// \param joint the joint the position of which is constrained,
       /// \param pointInLocalFrame point in local frame,
-      /// \param targetInGlobalFrame target point in globalframe.
-      /// \param rotation frame in which the error is expressed.
+      /// \param targetInGlobalFrame target point in globalframe,
+      /// \param rotation frame in which the error is expressed,
+      /// \param mask which component of the error vector to take into
+      ///        account.
       static PositionPtr_t create (const DevicePtr_t& robot,
 				   const JointPtr_t& joint,
 				   const vector3_t& pointInLocalFrame,

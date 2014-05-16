@@ -20,6 +20,7 @@
 #ifndef HPP_RELATIVE_ORIENTATION_HH
 # define HPP_RELATIVE_ORIENTATION_HH
 
+# include <boost/assign/list_of.hpp>
 # include <hpp/core/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
@@ -66,13 +67,12 @@ namespace hpp {
       /// \param joint2 the second joint the orientation of which is constrained
       /// \param reference desired relative orientation
       ///        \f$R_1(\mathbf{q})^T R_2(\mathbf{q})\f$ between the joints,
-      /// \param ignoreZ it true rotation about z-axis of the reference frame
-      ///        is not constrained
-      static RelativeOrientationPtr_t create (const DevicePtr_t& robot,
-					      const JointPtr_t& joint1,
-					      const JointPtr_t& joint2,
-					      const matrix3_t& reference,
-					      bool ignoreZ = false);
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static RelativeOrientationPtr_t create
+	(const DevicePtr_t& robot, const JointPtr_t& joint1,
+	 const JointPtr_t& joint2, const matrix3_t& reference,
+	 std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
       virtual ~RelativeOrientation () throw () {}
       /// Set desired relative orientation as a rotation matrix
       void reference (const matrix3_t& reference)
@@ -84,23 +84,17 @@ namespace hpp {
       {
 	return reference_;
       }
-      /// Whether to ignore the last component of the error vector
-      ///
-      /// If true, \f$R\f$ will freely rotation about \f$z\f$ axis of \f$R^*\f$.
-      bool ignoreZ () const
-      {
-	return ignoreZ_;
-      }
       ///Constructor
       ///
       /// \param robot the robot the constraints is applied to,
       /// \param joint the joint the orientation of which is constrained
       /// \param reference reference orientation of the joint,
-      /// \param ignoreZ it true rotation about z-axis of the reference frame
-      ///        is not constrained
+      /// \param mask which component of the error vector to take into
+      ///        account.
       RelativeOrientation (const DevicePtr_t&, const JointPtr_t& joint1,
 			   const JointPtr_t& joint2,
-			   const matrix3_t& reference, bool ignoreZ);
+			   const matrix3_t& reference, std::vector <bool> mask =
+			   boost::assign::list_of (true)(true)(true));
     protected:
       /// Compute value of error
       ///
@@ -113,12 +107,12 @@ namespace hpp {
 				  ConfigurationIn_t arg) const throw ();
     private:
       void computeError (vectorOut_t result, ConfigurationIn_t argument,
-			 double& theta, bool ignoreZ) const;
+			 double& theta, std::vector<bool> mask) const;
       DevicePtr_t robot_;
       JointPtr_t joint1_;
       JointPtr_t joint2_;
       matrix3_t reference_;
-      bool ignoreZ_;
+      std::vector <bool> mask_;
       mutable matrix3_t Rerror_;
       mutable vector_t r_;
       mutable eigen::matrix3_t Jlog_;
