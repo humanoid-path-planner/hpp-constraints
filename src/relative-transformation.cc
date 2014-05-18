@@ -24,10 +24,11 @@ namespace hpp {
   namespace constraints {
     RelativeTransformationPtr_t RelativeTransformation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const Transform3f& reference)
+     const JointPtr_t& joint2, const Transform3f& reference,
+     std::vector <bool> mask)
     {
       RelativeTransformation* ptr = new RelativeTransformation
-	(robot, joint1,	joint2, reference);
+	(robot, joint1,	joint2, reference,mask);
       RelativeTransformationPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -35,12 +36,16 @@ namespace hpp {
     RelativeTransformation::RelativeTransformation
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2,
-     const Transform3f& reference) :
+     const Transform3f& reference,
+     std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 6,
 			      "RelativeTransformation"),
-      relativeOrientation_ (robot, joint1, joint2, reference.getRotation ()),
+      relativeOrientation_ (robot, joint1, joint2, reference.getRotation (),
+   			    boost::assign::list_of (mask [3])(mask [4])
+   			    (mask [5])),
       relativePosition_ (robot, joint1, joint2, reference.getTranslation (),
-			 vector3_t (0, 0, 0)), reference_ (reference)
+			 vector3_t (0, 0, 0)),
+			 reference_ (reference)
     {
     }
 
