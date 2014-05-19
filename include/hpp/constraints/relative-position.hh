@@ -20,6 +20,7 @@
 #ifndef HPP_CONSTRAINTS_RELATIVE_POSITION_HH
 # define HPP_CONSTRAINTS_RELATIVE_POSITION_HH
 
+# include <boost/assign/list_of.hpp>
 # include <hpp/core/differentiable-function.hh>
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
@@ -70,11 +71,13 @@ namespace hpp {
       ///                       constrained.
       /// \param point1, point2 the points on each joint that should coincide
       ///   expressed in joint local frames.
-      static RelativePositionPtr_t create (const DevicePtr_t& robot,
-					   const JointPtr_t& joint1,
-					   const JointPtr_t& joint2,
-					   const vector3_t& point1,
-					   const vector3_t& point2);
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static RelativePositionPtr_t create
+	(const DevicePtr_t& robot, const JointPtr_t& joint1,
+	 const JointPtr_t& joint2, const vector3_t& point1,
+	 const vector3_t& point2,
+	 std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
       virtual ~RelativePosition () throw () {}
       /// Constructor
       ///
@@ -83,11 +86,12 @@ namespace hpp {
       ///                       constrained.
       /// \param point1, point2 the points on each joint that should coincide
       ///   expressed in joint local frames.
-      RelativePosition (const DevicePtr_t& robot,
-			const JointPtr_t& joint1,
-			const JointPtr_t& joint2,
-			const vector3_t& point1,
-			const vector3_t& point2);
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      RelativePosition (const DevicePtr_t& robot, const JointPtr_t& joint1,
+			const JointPtr_t& joint2, const vector3_t& point1,
+			const vector3_t& point2, std::vector <bool> mask =
+			boost::assign::list_of (true)(true)(true));
 
       /// Get reference point in joint 1
       const vector3_t& pointInJoint1 () const
@@ -125,10 +129,13 @@ namespace hpp {
       JointPtr_t joint2_;
       vector3_t point1_;
       vector3_t point2_;
+      std::vector <bool> mask_;
       mutable vector3_t global1_;
       mutable vector3_t global2_;
       mutable vector3_t R1x1_;
       mutable vector3_t R2x2_;
+      mutable vector_t result_;
+      mutable ComJacobian_t jacobian_;
       mutable eigen::matrix3_t cross1_;
       mutable eigen::matrix3_t cross2_;
     }; // class RelativePosition

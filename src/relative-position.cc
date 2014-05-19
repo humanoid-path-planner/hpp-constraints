@@ -28,10 +28,10 @@ namespace hpp {
     RelativePositionPtr_t RelativePosition::create
     (const DevicePtr_t& robot, const JointPtr_t&  joint1,
      const JointPtr_t& joint2, const vector3_t& point1,
-     const vector3_t& point2)
+     const vector3_t& point2, std::vector <bool> mask)
     {
       RelativePosition* ptr = new RelativePosition
-	(robot, joint1, joint2, point1, point2);
+	(robot, joint1, joint2, point1, point2, mask);
       RelativePositionPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -47,14 +47,18 @@ namespace hpp {
 					const JointPtr_t& joint1,
 					const JointPtr_t& joint2,
 					const vector3_t& point1,
-					const vector3_t& point2) :
+					const vector3_t& point2,
+					std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
 		3, "RelativePosition"),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
-      point1_ (point1), point2_ (point2)
+      point1_ (point1), point2_ (point2), mask_ (mask),
+      jacobian_ (3, robot->numberDof ())
     {
       cross1_.setZero ();
       cross2_.setZero ();
+      result_.setZero ();
+      jacobian_.setZero ();
     }
 
      void RelativePosition::impl_compute
@@ -66,7 +70,17 @@ namespace hpp {
       const Transform3f& M2 = joint2_->currentTransformation ();
       global1_ = M1.transform (point1_);
       global2_ = M2.transform (point2_);
-      model::toEigen (global1_ - global2_, result);
+      model::toEigen (global1_ - global2_, result_);
+      size_type index = 0;
+      if (mask_ [0]) {
+	result [index] = result_ [0]; ++index;
+      }
+      if (mask_ [1]) {
+	result [index] = result_ [1]; ++index;
+      }
+      if (mask_ [2]) {
+	result [index] = result_ [2]; ++index;
+      }
     }
 
   void RelativePosition::impl_jacobian (matrixOut_t jacobian,
@@ -84,9 +98,19 @@ namespace hpp {
       R2x2_ = M2.getRotation () * point2_;
       // [R2 (q) x2]x
       cross (R2x2_, cross2_);
-      jacobian = cross1_ * Jjoint1.bottomRows (3)
+      jacobian_ = cross1_ * Jjoint1.bottomRows (3)
 	+ Jjoint1.topRows (3) + cross2_ * Jjoint2.bottomRows (3)
 	- Jjoint2.topRows (3);
+      size_type index = 0;
+      if (mask_ [0]) {
+	jacobian.row (index) = jacobian_.row (0); ++index;
+      }
+      if (mask_ [1]) {
+	jacobian.row (index) = jacobian_.row (1); ++index;
+      }
+      if (mask_ [2]) {
+	jacobian.row (index) = jacobian_.row (2); ++index;
+      }
     }
 
   } // namespace constraints

@@ -18,6 +18,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <hpp/model/device.hh>
+#include <hpp/constraints/orientation.hh>
 #include <hpp/constraints/relative-transformation.hh>
 
 namespace hpp {
@@ -28,7 +29,7 @@ namespace hpp {
      std::vector <bool> mask)
     {
       RelativeTransformation* ptr = new RelativeTransformation
-	(robot, joint1,	joint2, reference,mask);
+	(robot, joint1,	joint2, reference, mask);
       RelativeTransformationPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -38,14 +39,16 @@ namespace hpp {
      const JointPtr_t& joint2,
      const Transform3f& reference,
      std::vector <bool> mask) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 6,
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+			      Orientation::size (mask),
 			      "RelativeTransformation"),
       relativeOrientation_ (robot, joint1, joint2, reference.getRotation (),
-   			    boost::assign::list_of (mask [3])(mask [4])
-   			    (mask [5])),
+			    boost::assign::list_of (mask [3])(mask [4])
+			    (mask [5])),
       relativePosition_ (robot, joint1, joint2, reference.getTranslation (),
-			 vector3_t (0, 0, 0)),
-			 reference_ (reference)
+			 vector3_t (0, 0, 0),
+			 boost::assign::list_of (mask [0])(mask [1])
+			 (mask [2])), reference_ (reference)
     {
     }
 

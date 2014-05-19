@@ -56,17 +56,14 @@ namespace hpp {
       /// \param joint2 the second joint the transformation of which is
       ///               constrained,
       /// \param reference desired relative transformation
-      ///        \f$T_1(\mathbf{q})^{-1} T_2(\mathbf{q})\f$ between the joints,
-      /// \param mask vector of 6 boolean defining which coordinates of the
-      ///        error vector to take into account.
-      static RelativeTransformationPtr_t create (const DevicePtr_t& robot,
-						 const JointPtr_t& joint1,
-						 const JointPtr_t& joint2,
-						 const Transform3f& reference,
-						 std::vector <bool> mask=
-						 boost::assign::list_of (true)
-                                                 (true)(true)(true)(true)
-                                                 (true));
+      ///        \f$T_1(\mathbf{q})^{-1} T_2(\mathbf{q})\f$ between the joints.
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static RelativeTransformationPtr_t create
+	(const DevicePtr_t& robot, const JointPtr_t& joint1,
+	 const JointPtr_t& joint2, const Transform3f& reference,
+	 std::vector <bool> mask = boost::assign::list_of (true)(true)(true)
+	 (true)(true)(true));
       virtual ~RelativeTransformation () throw () {}
       /// Set desired relative transformation
       void reference (const Transform3f& reference)
