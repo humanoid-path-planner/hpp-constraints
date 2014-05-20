@@ -57,7 +57,7 @@ namespace hpp {
     {
       cross1_.setZero ();
       cross2_.setZero ();
-      result_.setZero ();
+      result_.resize (3); result_.setZero ();
       jacobian_.setZero ();
     }
 

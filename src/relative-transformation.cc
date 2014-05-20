@@ -23,6 +23,16 @@
 
 namespace hpp {
   namespace constraints {
+    static size_type size (std::vector<bool> mask)
+    {
+      size_type res = 0;
+      for (std::vector<bool>::iterator it = mask.begin (); it != mask.end ();
+	   ++it) {
+	if (*it) ++res;
+      }
+      return res;
+    }
+
     RelativeTransformationPtr_t RelativeTransformation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2, const Transform3f& reference,
@@ -40,8 +50,7 @@ namespace hpp {
      const Transform3f& reference,
      std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-			      Orientation::size (mask),
-			      "RelativeTransformation"),
+			      size (mask), "RelativeTransformation"),
       relativeOrientation_ (robot, joint1, joint2, reference.getRotation (),
 			    boost::assign::list_of (mask [3])(mask [4])
 			    (mask [5])),
@@ -50,21 +59,25 @@ namespace hpp {
 			 boost::assign::list_of (mask [0])(mask [1])
 			 (mask [2])), reference_ (reference)
     {
+      sizeTranslation_ = relativePosition_.outputSize ();
+      sizeOrientation_ = relativeOrientation_.outputSize ();
     }
 
     void RelativeTransformation::impl_compute (vectorOut_t result,
 					       ConfigurationIn_t argument)
       const throw ()
     {
-      relativePosition_ (result.segment (0, 3), argument);
-      relativeOrientation_ (result.segment (3, 3), argument);
+      relativePosition_ (result.segment (0, sizeTranslation_), argument);
+      relativeOrientation_ (result.segment (sizeTranslation_,
+					    sizeOrientation_), argument);
     }
 
     void RelativeTransformation::impl_jacobian
     (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
     {
-      relativePosition_.jacobian (jacobian.topRows <3> (), arg);
-      relativeOrientation_.jacobian (jacobian.bottomRows <3> (), arg);
+      relativePosition_.jacobian (jacobian.topRows (sizeTranslation_), arg);
+      relativeOrientation_.jacobian (jacobian.bottomRows (sizeOrientation_),
+				     arg);
     }
 
   } // namespace constraints

@@ -106,6 +106,10 @@ namespace hpp {
       RelativeOrientation relativeOrientation_;
       RelativePosition relativePosition_;
       Transform3f reference_;
+      /// Size of the translation constraint
+      size_type sizeTranslation_;
+      /// Size of the orientation constraint
+      size_type sizeOrientation_;
     }; // class RelativeTransformation
   } // namespace constraints
 } // namespace hpp
