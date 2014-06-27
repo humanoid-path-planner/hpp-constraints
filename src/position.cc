@@ -89,7 +89,7 @@ namespace hpp {
       const Transform3f& M = joint_->currentTransformation ();
       p_ = M.getRotation () * pointInLocalFrame_;
       cross_ (0,1) = -p_[2]; cross_ (1,0) = p_[2];
-      cross_ (0,2) = p_[1]; cross_ (0,2) = -p_[1];
+      cross_ (0,2) = p_[1]; cross_ (2,0) = -p_[1];
       cross_ (1,2) = -p_[0]; cross_ (2,1) = p_[0];
       const JointJacobian_t& Jjoint (joint_->jacobian ());
       if (nominalCase_)
