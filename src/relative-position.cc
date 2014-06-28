@@ -98,7 +98,7 @@ namespace hpp {
       R2x2_ = M2.getRotation () * point2_;
       // [R2 (q) x2]x
       cross (R2x2_, cross2_);
-      jacobian_ = cross1_ * Jjoint1.bottomRows (3)
+      jacobian_.leftCols (Jjoint1.cols ()) = cross1_ * Jjoint1.bottomRows (3)
 	+ Jjoint1.topRows (3) + cross2_ * Jjoint2.bottomRows (3)
 	- Jjoint2.topRows (3);
       size_type index = 0;

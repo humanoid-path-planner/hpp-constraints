@@ -86,8 +86,9 @@ namespace hpp {
       cross_ (0,2) = x [1] - t [1]; cross_ (2,0) = -x [1] + t [1];
       cross_ (1,2) = -x [0] + t [0]; cross_ (2,1) = x [0] - t [0];
       eigen::matrix3_t eigenRT; eigen::convert (RT, eigenRT);
-      jacobian =
+      jacobian.leftCols (Jjoint.cols ()) =
 	eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
+      jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
       hppDout (info, "Jcom = " << std::endl << Jcom);
       hppDout (info, "Jw = " << std::endl << Jjoint.bottomRows (3));
       hppDout (info, "Jv = " << std::endl << Jjoint.topRows (3));

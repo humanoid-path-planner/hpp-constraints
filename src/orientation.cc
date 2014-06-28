@@ -73,6 +73,7 @@ namespace hpp {
       mask_ (mask), r_ (3), Jlog_ (),
       jacobian_ (3, robot->numberDof ())
     {
+      jacobian_.setZero ();
     }
 
     void Orientation::computeError (vectorOut_t result,
@@ -124,7 +125,7 @@ namespace hpp {
 	computeJlog (theta, r_, Jlog_);
       }
       const JointJacobian_t& Jjoint (joint_->jacobian ());
-      jacobian_ = -Jlog_ * RT * Jjoint.bottomRows (3);
+      jacobian_.leftCols (Jjoint.cols ()) = -Jlog_ * RT * Jjoint.bottomRows (3);
       size_type index = 0;
       if (mask_ [0]) {
 	jacobian.row (index) = jacobian_.row (0); ++index;

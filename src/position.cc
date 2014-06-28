@@ -92,11 +92,16 @@ namespace hpp {
       cross_ (0,2) = p_[1]; cross_ (2,0) = -p_[1];
       cross_ (1,2) = -p_[0]; cross_ (2,1) = p_[0];
       const JointJacobian_t& Jjoint (joint_->jacobian ());
-      if (nominalCase_)
-	jacobian = cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3);
-      else
-	jacobian = SBT_*(cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3));
-
+      if (nominalCase_) {
+	jacobian.leftCols (Jjoint.cols ()) =
+	  cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3);
+	jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+      }
+      else {
+	jacobian.leftCols (Jjoint.cols ()) =
+	  SBT_*(cross_*Jjoint.bottomRows (3) - Jjoint.topRows (3));
+	jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+      }
     }
   } // namespace constraints
 } // namespace hpp

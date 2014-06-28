@@ -51,6 +51,7 @@ namespace hpp {
       reference_ (reference), mask_ (mask), r_ (3),
       Jlog_ (), jacobian_ (3, robot->numberDof ())
     {
+      jacobian_.setZero ();
     }
 
     void RelativeOrientation::computeError
@@ -125,7 +126,7 @@ namespace hpp {
       hppDout (info, "Jlog_ = " << std::endl << Jlog_);
       hppDout (info, "Jjoint1 = " << std::endl << Jjoint1);
       hppDout (info, "Jjoint2 = " << std::endl << Jjoint2);
-      jacobian_ = Jlog_ * R2T *
+      jacobian_.leftCols (Jjoint1.cols ()) = Jlog_ * R2T *
 	(Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
       size_type index = 0;
       if (mask_ [0]) {
