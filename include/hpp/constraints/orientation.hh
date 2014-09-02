@@ -36,21 +36,25 @@ namespace hpp {
     /// The value of the function is defined as the rotation vector of the
     /// reference orientation expressed in the frame of the current
     /// orientation.
-    /// \f{eqnarray*}
-    /// \mathbf{r} (\mathbf{q}) &=& \log \left(R(\mathbf{q})^TR^*)\right)\\
-    /// \mathbf{\dot{r}} &=& -J_{\log}(\left(R(\mathbf{q})^TR^*)\right))
-    /// R(\mathbf{q})^T J^{\omega}_{joint}(\mathbf{q}) \mathbf{\dot{q}}\\
-    /// \f}
+    /**
+     *  \f{eqnarray*}
+     *  \mathbf{r} (\mathbf{q}) &=& \log \left(R(\mathbf{q})^TR^*)\right)\\
+     *  \mathbf{\dot{r}} &=& -J_{\log}(\left(R(\mathbf{q})^TR^*)\right))
+     *  R(\mathbf{q})^T J^{\omega}_{joint}(\mathbf{q}) \mathbf{\dot{q}}\\
+     *  \f}
+    **/
     /// where
-    /// \f{eqnarray*}
-    /// J_{\log} (R) &=& \frac{\|\mathbf{r}\|\sin\|\mathbf{r}\|}
-    ///                  {2(1-\cos\|\mathbf{r}\|)}I_3 
-    ///                  -\frac{1}{2}[\mathbf{r}]_{\times} +
-    ///                  \left(\frac{1}{\|\mathbf{r}\|^2} -
-    ///                  \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|
-    ///                  (1-\cos\|\mathbf{r}\|)}\right)
-    ///                  \mathbf{r}\mathbf{r}^T
-    /// \f}
+    /**
+     *  \f{eqnarray*}
+     *  J_{\log} (R) &=& \frac{\|\mathbf{r}\|\sin\|\mathbf{r}\|}
+     *                   {2(1-\cos\|\mathbf{r}\|)}I_3
+     *                   -\frac{1}{2}[\mathbf{r}]_{\times} +
+     *                   \left(\frac{1}{\|\mathbf{r}\|^2} -
+     *                   \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|
+     *                   (1-\cos\|\mathbf{r}\|)}\right)
+     *                   \mathbf{r}\mathbf{r}^T
+     *  \f}
+    **/
     class HPP_CONSTRAINTS_DLLAPI Orientation : public DifferentiableFunction
     {
     public:

@@ -34,16 +34,18 @@ namespace hpp {
     /// Constraint on the relative orientation of two robot joints
     ///
     /// The value of the function is defined as follows:
-    /// \f{eqnarray*}
-    /// \mathbf{r} (\mathbf{q}) &=& \log
-    /// \left((R_1(\mathbf{q})^T R_2(\mathbf{q}))^T R^*\right) =
-    /// \log
-    /// \left(R_2(\mathbf{q})^T R_1(\mathbf{q}) R^*\right)\\
-    /// \mathbf{\dot{r}} &=&
-    /// J_{\log}\left(R_2(\mathbf{q})^T R_1(\mathbf{q}) R^*\right)
-    /// R_2(\mathbf{q})^T \left(J_{joint\ 1}^{\omega}(\mathbf{q}) -
-    /// J_{joint\ 2}^{\omega}(\mathbf{q})\right) \mathbf{\dot{q}}\	\
-    /// \f}
+    /**
+     *  \f{eqnarray*}
+     *  \mathbf{r} (\mathbf{q}) &=& \log
+     *  \left((R_1(\mathbf{q})^T R_2(\mathbf{q}))^T R^*\right) =
+     *  \log
+     *  \left(R_2(\mathbf{q})^T R_1(\mathbf{q}) R^*\right)\\
+     *  \mathbf{\dot{r}} &=&
+     *  J_{\log}\left(R_2(\mathbf{q})^T R_1(\mathbf{q}) R^*\right)
+     *  R_2(\mathbf{q})^T \left(J_{joint\ 1}^{\omega}(\mathbf{q}) -
+     *  J_{joint\ 2}^{\omega}(\mathbf{q})\right) \mathbf{\dot{q}}\	\
+     *  \f}
+    **/
     /// where \f$R^*\f$ is the desired value of
     /// \f$R_1(\mathbf{q})^T R_2(\mathbf{q})\f$ and
     /// \f{eqnarray*}
