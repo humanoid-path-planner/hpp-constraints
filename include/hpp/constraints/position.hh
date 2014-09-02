@@ -37,21 +37,23 @@ namespace hpp {
     /// The value of the function is defined as the vector from a local
     /// point in the joint frame to a target point in the world frame expressed
     /// in some frame:
-    /// \f{eqnarray*}
-    /// \mathbf{e} &=& S B^T \left(\mathbf{x}^* -
-    /// M(\mathbf{q})\mathbf{x}\right)
-    /// = S B^T \left(\mathbf{x}^* - R(\mathbf{q})\mathbf{x} -
-    ///   \mathbf{t}(\mathbf{q})\right)\\
-    /// \mathbf{\dot{e}} &=& S B^T \left( -
-    /// \left[\omega\right]_{\times}R(\mathbf{q})\mathbf{x}
-    ///                      - \mathbf{\dot{t}}\right)\\
-    ///                  &=& S B^T \left(
-    /// \left[R(\mathbf{q})\mathbf{x}\right]_{\times}\omega
-    ///                      - \mathbf{\dot{t}}\right)\\
-    ///                  &=& S B^T \left(
-    /// \left[R(\mathbf{q})\mathbf{x}\right]_{\times} J_{joint}^{\omega}
-    ///                      - J_{joint}^{\mathbf{v}}\right)\mathbf{\dot{q}}
-    /// \f}
+    /**
+     *  \f{eqnarray*}
+     *  \mathbf{e} &=& S B^T \left(\mathbf{x}^* -
+     *  M(\mathbf{q})\mathbf{x}\right)
+     *  = S B^T \left(\mathbf{x}^* - R(\mathbf{q})\mathbf{x} -
+     *    \mathbf{t}(\mathbf{q})\right)\\
+     *  \mathbf{\dot{e}} &=& S B^T \left( -
+     *  \left[\omega\right]_{\times}R(\mathbf{q})\mathbf{x}
+     *                       - \mathbf{\dot{t}}\right)\\
+     *                   &=& S B^T \left(
+     *  \left[R(\mathbf{q})\mathbf{x}\right]_{\times}\omega
+     *                       - \mathbf{\dot{t}}\right)\\
+     *                   &=& S B^T \left(
+     *  \left[R(\mathbf{q})\mathbf{x}\right]_{\times} J_{joint}^{\omega}
+     *                       - J_{joint}^{\mathbf{v}}\right)\mathbf{\dot{q}}
+     *  \f}
+    **/
     /// where
     ///   \li \f$S\f$ is a selection matrix (diagonal matrix with 1 or 0)
     ///       defining whether each dof is constrained,
@@ -71,7 +73,7 @@ namespace hpp {
     public:
       /// Identity matrix of size 3
       static matrix3_t I3;
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       /// Return a shared pointer to a new instance
       ///
       /// \param robot the robot the constraint applies to,

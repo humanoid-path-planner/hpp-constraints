@@ -34,13 +34,15 @@ namespace hpp {
     ///
     /// The value of the function is defined as the position of the center
     /// of mass in the reference frame of a joint.
-    /// \f{eqnarray*}
-    /// \mathbf{f}(\mathbf{q}) &=& R^T \left(\mathbf{x} - \mathbf{t}\right)
-    /// - \mathbf{x}^{*}\\
-    /// \mathbf{\dot{f}} &=& R^T \left(
-    /// J_{com} + [\mathbf{x}-\mathbf{t}]_{\times}J_{joint}^{\omega}
-    /// - J_{joint}^{\mathbf{v}}\right)\mathbf{\dot{q}}
-    /// \f}
+    /**
+     *  \f{eqnarray*}
+     *  \mathbf{f}(\mathbf{q}) &=& R^T \left(\mathbf{x} - \mathbf{t}\right)
+     *  - \mathbf{x}^{*}\\
+     *  \mathbf{\dot{f}} &=& R^T \left(
+     *  J_{com} + [\mathbf{x}-\mathbf{t}]_{\times}J_{joint}^{\omega}
+     *  - J_{joint}^{\mathbf{v}}\right)\mathbf{\dot{q}}
+     *  \f}
+    **/
     /// where
     /// \li \f$
     ///     \left(\begin{array}{cc} R & \mathbf{t} \\ 0 & 1\end{array}\right)

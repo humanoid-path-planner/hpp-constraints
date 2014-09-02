@@ -34,29 +34,31 @@ namespace hpp {
     /// Constraint on the relative position of two robot joints
     ///
     /// The value of the function is defined as follows:
-    /// \f{eqnarray*}
-    /// \mathbf{r} (\mathbf{q}) &=& M_1(\mathbf{q})\mathbf{x}_1 -
-    /// M_2 (\mathbf{q})\mathbf{x}_2\\
-    /// &=& R_1(\mathbf{q})\mathbf{x}_1 + \mathbf{t}_1 (\mathbf{q})
-    /// -R_2 (\mathbf{q})\mathbf{x}_2 -  \mathbf{t}_2 (\mathbf{q})\\
-    /// \mathbf{\dot{e}} &=&
-    /// \left[\omega_1\right]_{\times} R_1(\mathbf{q})\mathbf{x}_1
-    /// + \mathbf{\dot{t}}_1
-    /// -\left[\omega_2\right]_{\times}R_2 (\mathbf{q})\mathbf{x}_2
-    ///  - \mathbf{\dot{t}}_2\\
-    /// &=&
-    /// -\left[R_1(\mathbf{q})\mathbf{x}_1\right]_{\times} \omega_1
-    /// + \mathbf{\dot{t}}_1
-    /// +\left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times}\omega_2
-    ///  - \mathbf{\dot{t}}_2\\
-    /// &=&
-    /// \left(-\left[R_1(\mathbf{q})\mathbf{x}_1\right]_{\times}
-    /// J_{joint\ 1}^{\omega}(\mathbf{q})
-    /// + J_{joint\ 1}^{\mathbf{v}}(\mathbf{q})
-    /// +\left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times}J_{joint\ 2}^{\omega}
-    /// (\mathbf{q}) - J_{joint\ 2}^{\mathbf{v}}(\mathbf{q})\right)
-    /// \mathbf{\dot{q}}\\
-    /// \f}
+    /** \f{eqnarray*}
+     *
+     *  \mathbf{r} (\mathbf{q}) &=& M_1(\mathbf{q})\mathbf{x}_1 -
+     *  M_2 (\mathbf{q})\mathbf{x}_2\\
+     *  &=& R_1(\mathbf{q})\mathbf{x}_1 + \mathbf{t}_1 (\mathbf{q})
+     *  -R_2 (\mathbf{q})\mathbf{x}_2 -  \mathbf{t}_2 (\mathbf{q})\\
+     *  \mathbf{\dot{e}} &=&
+     *  \left[\omega_1\right]_{\times} R_1(\mathbf{q})\mathbf{x}_1
+     *  + \mathbf{\dot{t}}_1
+     *  -\left[\omega_2\right]_{\times}R_2 (\mathbf{q})\mathbf{x}_2
+     *   - \mathbf{\dot{t}}_2\\
+     *  &=&
+     *  -\left[R_1(\mathbf{q})\mathbf{x}_1\right]_{\times} \omega_1
+     *  + \mathbf{\dot{t}}_1
+     *  +\left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times}\omega_2
+     *   - \mathbf{\dot{t}}_2\\
+     *  &=&
+     *  \left(-\left[R_1(\mathbf{q})\mathbf{x}_1\right]_{\times}
+     *  J_{joint\ 1}^{\omega}(\mathbf{q})
+     *  + J_{joint\ 1}^{\mathbf{v}}(\mathbf{q})
+     *  +\left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times}J_{joint\ 2}^{\omega}
+     *  (\mathbf{q}) - J_{joint\ 2}^{\mathbf{v}}(\mathbf{q})\right)
+     *  \mathbf{\dot{q}}\\
+     *  \f}
+    **/
     /// where \f$\mathbf{x}_1\f$ and \f$\mathbf{x}_1\f$ are the position of
     /// the points to match expressed in the local frame of each joint.
     class HPP_CONSTRAINTS_DLLAPI RelativePosition :
