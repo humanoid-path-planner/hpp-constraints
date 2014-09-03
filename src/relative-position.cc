@@ -24,6 +24,16 @@
 
 namespace hpp {
   namespace constraints {
+    static size_type size (std::vector<bool> mask)
+    {
+      size_type res = 0;
+      for (std::vector<bool>::iterator it = mask.begin (); it != mask.end ();
+	   ++it) {
+	if (*it) ++res;
+      }
+      return res;
+    }
+
 
     RelativePositionPtr_t RelativePosition::create
     (const DevicePtr_t& robot, const JointPtr_t&  joint1,
@@ -50,7 +60,7 @@ namespace hpp {
 					const vector3_t& point2,
 					std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-		3, "RelativePosition"),
+		size (mask), "RelativePosition"),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       point1_ (point1), point2_ (point2), mask_ (mask),
       jacobian_ (3, robot->numberDof ())
