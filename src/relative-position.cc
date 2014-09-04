@@ -67,6 +67,8 @@ namespace hpp {
     {
       cross1_.setZero ();
       cross2_.setZero ();
+      R1T_.setZero ();
+      T1_.setZero ();
       result_.resize (3); result_.setZero ();
       jacobian_.setZero ();
     }
@@ -76,11 +78,11 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      const Transform3f& M1 = joint1_->currentTransformation ();
+      Transform3f M1I = joint1_->currentTransformation (); M1I.inverse();
       const Transform3f& M2 = joint2_->currentTransformation ();
-      global1_ = M1.transform (point1_);
       global2_ = M2.transform (point2_);
-      model::toEigen (global1_ - global2_, result_);
+      point2in1_ = M1I.transform (global2_);
+      model::toEigen (point1_ - point2in1_, result_);
       size_type index = 0;
       if (mask_ [0]) {
 	result [index] = result_ [0]; ++index;
@@ -89,7 +91,7 @@ namespace hpp {
 	result [index] = result_ [1]; ++index;
       }
       if (mask_ [2]) {
-	result [index] = result_ [2]; ++index;
+	result [index] = result_ [2];
       }
     }
 
@@ -102,15 +104,22 @@ namespace hpp {
       const Transform3f& M2 = joint2_->currentTransformation ();
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
-      R1x1_ = M1.getRotation () * point1_;
-      // -[R1 (q) x1]x
-      cross (-R1x1_, cross1_);
+      ::hpp::model::toEigen (M1.getRotation (),R1T_); R1T_.transposeInPlace ();
+
       R2x2_ = M2.getRotation () * point2_;
+      global2_ = R2x2_ + M2.getTranslation ();
       // [R2 (q) x2]x
-      cross (R2x2_, cross2_);
-      jacobian_.leftCols (Jjoint1.cols ()) = cross1_ * Jjoint1.bottomRows (3)
-	+ Jjoint1.topRows (3) + cross2_ * Jjoint2.bottomRows (3)
-	- Jjoint2.topRows (3);
+      cross (R2x2_, cross1_);
+
+      // [t1 - t2]x
+      cross (M1.getTranslation () - global2_, cross2_);
+
+      jacobian_.leftCols (Jjoint1.cols ()) = R1T_ * (
+            cross1_ * Jjoint2.bottomRows (3)
+          + cross2_ * Jjoint1.bottomRows (3)
+          + Jjoint1.topRows (3) - Jjoint2.topRows (3)
+          );
+      jacobian_.rightCols (jacobian_.cols () - Jjoint1.cols ()).setZero ();
       size_type index = 0;
       if (mask_ [0]) {
 	jacobian.row (index) = jacobian_.row (0); ++index;
@@ -119,7 +128,7 @@ namespace hpp {
 	jacobian.row (index) = jacobian_.row (1); ++index;
       }
       if (mask_ [2]) {
-	jacobian.row (index) = jacobian_.row (2); ++index;
+	jacobian.row (index) = jacobian_.row (2);
       }
     }
 

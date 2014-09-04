@@ -36,30 +36,27 @@ namespace hpp {
     /// The value of the function is defined as follows:
     /** \f{eqnarray*}
      *
-     *  \mathbf{r} (\mathbf{q}) &=& M_1(\mathbf{q})\mathbf{x}_1 -
+     *  \mathbf{r} (\mathbf{q}) &=& \mathbf{x}_1 - M_1^{-1}(\mathbf{q})
      *  M_2 (\mathbf{q})\mathbf{x}_2\\
-     *  &=& R_1(\mathbf{q})\mathbf{x}_1 + \mathbf{t}_1 (\mathbf{q})
-     *  -R_2 (\mathbf{q})\mathbf{x}_2 -  \mathbf{t}_2 (\mathbf{q})\\
-     *  \mathbf{\dot{e}} &=&
-     *  \left[\omega_1\right]_{\times} R_1(\mathbf{q})\mathbf{x}_1
-     *  + \mathbf{\dot{t}}_1
-     *  -\left[\omega_2\right]_{\times}R_2 (\mathbf{q})\mathbf{x}_2
-     *   - \mathbf{\dot{t}}_2\\
-     *  &=&
-     *  -\left[R_1(\mathbf{q})\mathbf{x}_1\right]_{\times} \omega_1
-     *  + \mathbf{\dot{t}}_1
-     *  +\left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times}\omega_2
-     *   - \mathbf{\dot{t}}_2\\
-     *  &=&
-     *  \left(-\left[R_1(\mathbf{q})\mathbf{x}_1\right]_{\times}
-     *  J_{joint\ 1}^{\omega}(\mathbf{q})
-     *  + J_{joint\ 1}^{\mathbf{v}}(\mathbf{q})
-     *  +\left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times}J_{joint\ 2}^{\omega}
-     *  (\mathbf{q}) - J_{joint\ 2}^{\mathbf{v}}(\mathbf{q})\right)
+     *  &=& \mathbf{x}_1
+     *  + R_1^T (\mathbf{q}) (\mathbf{t}_1 (\mathbf{q}) - \mathbf{t}_2 (\mathbf{q}))
+     *  - R_1^T (\mathbf{q}) R_2 (\mathbf{q}) \mathbf{x}_2 \\
+     *  \mathbf{\dot{e}} &=& R_1^T (\mathbf{q}) \left(
+     *    \left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times} (\omega_2 - \omega_1)
+     *  + \left[\mathbf{t}_1 - \mathbf{t}_2\right]_{\times} \omega_1
+     *  + \mathbf{\dot{t}}_1 - \mathbf{\dot{t}}_2 \right)\\
+     *  &=& R_1^T (\mathbf{q}) \left(
+     *    \left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times} \omega_2
+     *  + \left[\mathbf{t}_1 - (R_2 (\mathbf{q})\mathbf{x}_2 + \mathbf{t}_2)\right]_{\times} \omega_1
+     *  + \mathbf{\dot{t}}_1 - \mathbf{\dot{t}}_2 \right)\\
+     *  &=& R_1^T (\mathbf{q}) \left(
+     *    \left[R_2 (\mathbf{q})\mathbf{x}_2\right]_{\times} J_{joint\ 2}^{\omega}(\mathbf{q})
+     *  + \left[\mathbf{t}_1 - (R_2 (\mathbf{q})\mathbf{x}_2 + \mathbf{t}_2)\right]_{\times} J_{joint\ 1}^{\omega}(\mathbf{q})
+     *  + J_{joint\ 1}^{\mathbf{v}}(\mathbf{q}) - J_{joint\ 2}^{\mathbf{v}}(\mathbf{q}) \right)
      *  \mathbf{\dot{q}}\\
      *  \f}
     **/
-    /// where \f$\mathbf{x}_1\f$ and \f$\mathbf{x}_1\f$ are the position of
+    /// where \f$\mathbf{x}_1\f$ and \f$\mathbf{x}_2\f$ are the position of
     /// the points to match expressed in the local frame of each joint.
     class HPP_CONSTRAINTS_DLLAPI RelativePosition :
       public DifferentiableFunction
@@ -132,14 +129,16 @@ namespace hpp {
       vector3_t point1_;
       vector3_t point2_;
       std::vector <bool> mask_;
-      mutable vector3_t global1_;
       mutable vector3_t global2_;
-      mutable vector3_t R1x1_;
+      mutable vector3_t point2in1_;
+      mutable vector3_t global2minusT1_;
       mutable vector3_t R2x2_;
       mutable vector_t result_;
       mutable ComJacobian_t jacobian_;
       mutable eigen::matrix3_t cross1_;
       mutable eigen::matrix3_t cross2_;
+      mutable eigen::matrix3_t R1T_;
+      mutable eigen::vector3_t T1_;
     }; // class RelativePosition
   } // namespace constraints
 } // namespace hpp
