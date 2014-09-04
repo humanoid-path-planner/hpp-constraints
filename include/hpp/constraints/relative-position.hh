@@ -132,14 +132,16 @@ namespace hpp {
       vector3_t point1_;
       vector3_t point2_;
       std::vector <bool> mask_;
-      mutable vector3_t global1_;
       mutable vector3_t global2_;
-      mutable vector3_t R1x1_;
+      mutable vector3_t point2in1_;
+      mutable vector3_t global2minusT1_;
       mutable vector3_t R2x2_;
       mutable vector_t result_;
       mutable ComJacobian_t jacobian_;
       mutable eigen::matrix3_t cross1_;
       mutable eigen::matrix3_t cross2_;
+      mutable eigen::matrix3_t R1T_;
+      mutable eigen::vector3_t T1_;
     }; // class RelativePosition
   } // namespace constraints
 } // namespace hpp
