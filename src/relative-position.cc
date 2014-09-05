@@ -91,7 +91,7 @@ namespace hpp {
 	result [index] = result_ [1]; ++index;
       }
       if (mask_ [2]) {
-	result [index] = result_ [2]; ++index;
+	result [index] = result_ [2];
       }
     }
 
@@ -105,7 +105,6 @@ namespace hpp {
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
       ::hpp::model::toEigen (M1.getRotation (),R1T_); R1T_.transpose ();
-      ::hpp::model::toEigen (M1.getTranslation (),T1_);
       global2_ = M2.transform (point2_);
 
       global2minusT1_ = global2_ - M1.getTranslation ();
@@ -120,6 +119,7 @@ namespace hpp {
           - cross1_ * Jjoint1.bottomRows (3) + Jjoint1.topRows (3)
           + cross2_ * Jjoint2.bottomRows (3) - Jjoint2.topRows (3)
           );
+      jacobian_.rightCols (jacobian_.cols () - Jjoint1.cols ()).setZero ();
       size_type index = 0;
       if (mask_ [0]) {
 	jacobian.row (index) = jacobian_.row (0); ++index;
@@ -128,7 +128,7 @@ namespace hpp {
 	jacobian.row (index) = jacobian_.row (1); ++index;
       }
       if (mask_ [2]) {
-	jacobian.row (index) = jacobian_.row (2); ++index;
+	jacobian.row (index) = jacobian_.row (2);
       }
     }
 
