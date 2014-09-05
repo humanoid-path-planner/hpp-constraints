@@ -86,7 +86,7 @@ namespace hpp {
       fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
       Rerror_ = RT * reference_;
       double tr = Rerror_ (0, 0) + Rerror_ (1, 1) + Rerror_ (2, 2);
-      if (tr > 1) tr = 1;
+      if (tr > 3) tr = 3;
       if (tr < -1) tr = -1;
       theta = acos ((tr - 1)/2);
       size_type index = 0;
