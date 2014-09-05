@@ -104,7 +104,7 @@ namespace hpp {
       const Transform3f& M2 = joint2_->currentTransformation ();
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
-      ::hpp::model::toEigen (M1.getRotation (),R1T_); R1T_.transpose ();
+      ::hpp::model::toEigen (M1.getRotation (),R1T_); R1T_.transposeInPlace ();
 
       R2x2_ = M2.getRotation () * point2_;
       global2_ = R2x2_ + M2.getTranslation ();
