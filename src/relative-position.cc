@@ -105,19 +105,19 @@ namespace hpp {
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
       ::hpp::model::toEigen (M1.getRotation (),R1T_); R1T_.transpose ();
-      global2_ = M2.transform (point2_);
-
-      global2minusT1_ = global2_ - M1.getTranslation ();
-      // -[R1I (q) (M2*x2)]x
-      cross (global2minusT1_, cross1_);
 
       R2x2_ = M2.getRotation () * point2_;
+      global2_ = R2x2_ + M2.getTranslation ();
       // [R2 (q) x2]x
-      cross (R2x2_, cross2_);
+      cross (R2x2_, cross1_);
+
+      // [t1 - t2]x
+      cross (M1.getTranslation () - global2_, cross2_);
 
       jacobian_.leftCols (Jjoint1.cols ()) = R1T_ * (
-          - cross1_ * Jjoint1.bottomRows (3) + Jjoint1.topRows (3)
-          + cross2_ * Jjoint2.bottomRows (3) - Jjoint2.topRows (3)
+            cross1_ * Jjoint2.bottomRows (3)
+          + cross2_ * Jjoint1.bottomRows (3)
+          + Jjoint1.topRows (3) - Jjoint2.topRows (3)
           );
       jacobian_.rightCols (jacobian_.cols () - Jjoint1.cols ()).setZero ();
       size_type index = 0;
