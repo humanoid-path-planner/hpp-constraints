@@ -90,16 +90,33 @@ namespace hpp {
       if (tr < -1) tr = -1;
       theta = acos ((tr - 1)/2);
       size_type index = 0;
-      if (mask [0]) {
-	result [index] = theta*(Rerror_ (2, 1) - Rerror_ (1, 2))/(2*sin(theta));
-	++index;
-      }
-      if (mask [1]) {
-	result [index] = theta*(Rerror_ (0, 2) - Rerror_ (2, 0))/(2*sin(theta));
-	++index;
-      }
-      if (mask [2]) {
-	result [index] = theta*(Rerror_ (1, 0) - Rerror_ (0, 1))/(2*sin(theta));
+      if (theta > 1e-6) {
+	if (mask [0]) {
+	  result [index] = theta*(Rerror_ (2, 1) -
+				  Rerror_ (1, 2))/(2*sin(theta));
+	  ++index;
+	}
+	if (mask [1]) {
+	  result [index] = theta*(Rerror_ (0, 2) -
+				  Rerror_ (2, 0))/(2*sin(theta));
+	  ++index;
+	}
+	if (mask [2]) {
+	  result [index] = theta*(Rerror_ (1, 0) -
+				  Rerror_ (0, 1))/(2*sin(theta));
+	}
+      } else {
+	if (mask [0]) {
+	  result [index] = (Rerror_ (2, 1) - Rerror_ (1, 2))/2;
+	  ++index;
+	}
+	if (mask [1]) {
+	  result [index] = (Rerror_ (0, 2) - Rerror_ (2, 0))/2;
+	  ++index;
+	}
+	if (mask [2]) {
+	  result [index] = (Rerror_ (1, 0) - Rerror_ (0, 1))/2;
+	}
       }
     }
 
