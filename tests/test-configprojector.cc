@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE (ref_zero)
   invert[0] =  1;
   invert[1] = -1;
   invert[2] =  1;
-  InequalityPtr_t ineq (new InequalityRef (vector_t::Zero (3) , - invert));
+  InequalityPtr_t ineq (new InequalityVector (- invert));
   ConfigProjectorPtr_t projector =
     ConfigProjector::create (dev, "test", 1e-4, 20);
   projector->addConstraint (position, ineq);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE (ref_zero)
   cfg.segment (0,3) = vector_t::Ones (3);
   BOOST_CHECK (projector->apply (cfg));
   BOOST_CHECK_MESSAGE ((cfg.segment (0,1) - vector_t::Ones(1)).isZero (), "Dof 0 should not have been modified.");
-  BOOST_CHECK_MESSAGE ( cfg (1) < projector->errorThreshold ()          , "Dof 1 should have been modified.");
+  BOOST_CHECK_MESSAGE ( cfg (1) < 0                                     , "Dof 1 should have been modified.");
   BOOST_CHECK_MESSAGE ((cfg.segment (2,1) - vector_t::Ones(1)).isZero (), "Dof 2 should not have been modified.");
 }
 
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE (ref_not_zero)
   invert[0] = +1; ref[0] = 0;
   invert[1] = -1; ref[1] = 0;
   invert[2] = +1; ref[2] = 0;
-  InequalityPtr_t ineq (new InequalityRef (ref, - invert));
+  InequalityPtr_t ineq (new InequalityVector (- invert));
   ConfigProjectorPtr_t projector =
     ConfigProjector::create (dev, "test", 1e-4, 20);
   projector->addConstraint (position, ineq);
@@ -336,9 +336,9 @@ BOOST_AUTO_TEST_CASE (ref_not_zero)
   ref[2] = 0; 
   cfg.segment (0,3) = ref;
   BOOST_CHECK (projector->apply (cfg));
-  BOOST_CHECK_MESSAGE ( cfg (0) > 1 - projector->errorThreshold ()      , "Dof 0 should have been modified.");
+  BOOST_CHECK_MESSAGE ( cfg (0) > 1                                     , "Dof 0 should have been modified.");
   BOOST_CHECK_MESSAGE ((cfg.segment (1,1) - ref.segment (1,1)).isZero (), "Dof 1 should not have been modified.");
-  BOOST_CHECK_MESSAGE ( cfg (2) > 1 - projector->errorThreshold ()      , "Dof 2 should have been modified.");
+  BOOST_CHECK_MESSAGE ( cfg (2) > 1                                     , "Dof 2 should have been modified.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
