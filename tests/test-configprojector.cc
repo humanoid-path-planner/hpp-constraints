@@ -112,7 +112,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 1; orient (2,1) = 0; orient (2,2) =  0;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  JointPtr_t joint = objectFactory.createJointRotation (pos);
+  JointPtr_t joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("RLEG_0");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -125,7 +125,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("RLEG_1");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -138,7 +138,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("RLEG_2");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -151,7 +151,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, -0.35));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("RLEG_3");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -164,7 +164,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("RLEG_4");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -177,7 +177,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("RLEG_5");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -192,7 +192,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 1; orient (2,1) = 0; orient (2,2) =  0;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("LLEG_0");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -205,7 +205,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("LLEG_1");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -218,7 +218,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("LLEG_2");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -231,7 +231,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, -0.35));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("LLEG_3");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -244,7 +244,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("LLEG_4");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
@@ -257,7 +257,7 @@ DevicePtr_t createRobot ()
   orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
   pos.setRotation (orient);
   pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createJointRotation (pos);
+  joint = objectFactory.createBoundedJointRotation (pos);
   joint->name ("LLEG_5");
   parent->addChildJoint (joint);
   body = objectFactory.createBody ();
