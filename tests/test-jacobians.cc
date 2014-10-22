@@ -24,6 +24,7 @@
 #include "hpp/constraints/orientation.hh"
 #include "hpp/constraints/relative-position.hh"
 #include "hpp/constraints/relative-orientation.hh"
+#include "hpp/constraints/static-stability.hh"
 
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
@@ -278,6 +279,68 @@ DevicePtr_t createRobot ()
   return robot;
 }
 
+StaticStabilityGravityPtr_t createStaticStability (DevicePtr_t d, JointPtr_t j)
+{
+  fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
+  fcl::Vec3f p[3];
+  p[0] = fcl::Vec3f (-5,-5,0); p[1] = fcl::Vec3f (-5, 5,0); p[2] = fcl::Vec3f ( 5,-5,0);
+  p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[6] = fcl::Vec3f ( 5,-5,0);
+  p[6] = fcl::Vec3f ( 0, 0,1); p[7] = fcl::Vec3f (  1,0,1); p[8] = fcl::Vec3f (0,  1,1);
+  p[9] = fcl::Vec3f ( 0, 0,0); p[10] = fcl::Vec3f (0.1,0,0); p[11] = fcl::Vec3f (0,0.1,0);
+  Triangle f1 (p[0],p[1],p[2]),
+           f2 (p[3],p[4],p[5]),
+           th (p[6],p[7],p[8]),
+           o  (p[9],p[10],p[11]);
+  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d, j, o.center ());
+  StaticStabilityGravity& f = *fptr;
+  f.addObjectTriangle (o);
+  f.addFloorTriangle (th);
+  f.addFloorTriangle (f1);
+  f.addFloorTriangle (f2);
+  return fptr;
+}
+
+BOOST_AUTO_TEST_CASE (triangle) {
+  /// First test Triangle class
+  fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
+  fcl::Vec3f p[9];
+  p[0] = fcl::Vec3f (0,0,0);
+  p[1] = fcl::Vec3f (1,0,0);
+  p[2] = fcl::Vec3f (0,1,0);
+  p[3] = fcl::Vec3f (1,1,1);
+  p[4] = fcl::Vec3f (0.2,0.2,0);
+  p[5] = fcl::Vec3f (1,1,0);
+  p[6] = fcl::Vec3f (-1,-1,1);
+  Triangle t (p[0],p[1],p[2]);
+  BOOST_CHECK_MESSAGE ((t.normal () - z).isZero (), "Norm of triangle is wrong");
+  BOOST_CHECK_MESSAGE ((t.center () - (x+y)/3).isZero (), "Center of triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.planeXaxis ().dot (z)) < 1e-8, "X axis of triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (z)) < 1e-8, "Y axis of triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (t.planeXaxis ())) < 1e-8, "X axis of triangle is wrong");
+  BOOST_CHECK_MESSAGE ((t.intersection (p[6], y-z) + x).isZero (), "Wrong intersection of triangle and line is wrong");
+  BOOST_CHECK_MESSAGE (t.isInside (p[4]), "This point is inside");
+  BOOST_CHECK_MESSAGE (!t.isInside (p[5]), "This point is outside");
+  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[0])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[1])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[2])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[4]) + 0.2) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[5]) - 0.5 * std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.distance (t.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
+}
+
+BOOST_AUTO_TEST_CASE (static_stability) {
+  DevicePtr_t device = createRobot ();
+  JointPtr_t ee1 = device->getJointByName ("LLEG_5");
+  BOOST_REQUIRE (device);
+
+  StaticStabilityGravityPtr_t fptr = createStaticStability (device, ee1);
+  StaticStabilityGravity& f = *fptr;
+  vector_t value (f.outputSize ());
+  f (value, device->currentConfiguration ());
+  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
+  f.jacobian (j, device->currentConfiguration ());
+}
+
 BOOST_AUTO_TEST_CASE (jacobian) {
   DevicePtr_t device = createRobot ();
   JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
@@ -325,6 +388,10 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         "RelativePosition with mask (0,1,1)",
         RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0), list_of(false)(true)(true))
+      ));
+  functions.push_back ( DFptr (
+        "StaticStabilityGravity",
+        createStaticStability (device, ee1)
       ));
 
   ConfigurationPtr_t q1, q2 = cs.shoot ();
