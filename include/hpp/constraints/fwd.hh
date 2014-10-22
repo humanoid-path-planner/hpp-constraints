@@ -30,6 +30,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativeOrientation);
     HPP_PREDEF_CLASS (RelativePosition);
     HPP_PREDEF_CLASS (RelativeTransformation);
+    HPP_PREDEF_CLASS (StaticStabilityGravity);
 
     typedef model::ConfigurationIn_t ConfigurationIn_t;
     typedef model::ConfigurationOut_t ConfigurationOut_t;
@@ -37,6 +38,7 @@ namespace hpp {
     typedef core::DifferentiableFunction DifferentiableFunction;
     typedef core::DifferentiableFunctionPtr_t DifferentiableFunctionPtr_t;
     typedef core::size_type size_type;
+    typedef core::value_type value_type;
     typedef model::JointPtr_t JointPtr_t;
     typedef model::vector3_t vector3_t;
     typedef model::matrix3_t matrix3_t;
@@ -56,6 +58,8 @@ namespace hpp {
     typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
     typedef boost::shared_ptr<RelativeTransformation>
     RelativeTransformationPtr_t;
+    typedef boost::shared_ptr<StaticStabilityGravity>
+      StaticStabilityGravityPtr_t;
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

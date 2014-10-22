@@ -32,6 +32,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/relative-orientation.hh
   include/hpp/constraints/relative-position.hh
   include/hpp/constraints/relative-transformation.hh
+  include/hpp/constraints/static-stability.hh
 )
 
 # Activate hpp-util logging if requested
