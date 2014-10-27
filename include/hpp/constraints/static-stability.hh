@@ -38,6 +38,12 @@ namespace hpp {
           n1_ = (p0_ - p2_).cross (n_); n0_.normalize ();
           n2_ = (p1_ - p0_).cross (n_); n0_.normalize ();
           nxn0_ = n_.cross (n0_);
+          RLtoJ_ = fcl::Matrix3f (n_, n0_, nxn0_);
+          RLtoJ_.transpose ();
+          for (size_t i = 0; i < 3; i++) assert (RLtoJ_ (i, 0) == n_[i]);
+          for (size_t i = 0; i < 3; i++) assert (RLtoJ_ (i, 1) == n0_[i]);
+          for (size_t i = 0; i < 3; i++) assert (RLtoJ_ (i, 2) == nxn0_[i]);
+
         }
 
         /// Intersection with a line defined by a point and a vector.
@@ -79,6 +85,7 @@ namespace hpp {
         inline const fcl::Vec3f& planeYaxis () const { return nxn0_; }
         inline const fcl::Vec3f& normal () const { return n_; }
         inline const fcl::Vec3f& center () const { return c_; }
+        inline const fcl::Matrix3f& RLocalToJoint () const { return RLtoJ_; }
 
       private:
         /// Return the distance between the point A and the segment
@@ -99,6 +106,7 @@ namespace hpp {
         /// n_i is the vector of norm 1 perpendicular to
         /// P_{i+1}P_i and n_.
         fcl::Vec3f n0_, n1_, n2_, nxn0_;
+        fcl::Matrix3f RLtoJ_;
     };
 
     class StaticStabilityGravity : public DifferentiableFunction {
@@ -139,8 +147,13 @@ namespace hpp {
         Triangles floorTriangles_;
         mutable Triangles::const_iterator floor_;
 
-        mutable Eigen::Matrix <double, 3, 3> Rcx_;
+        mutable eigen::matrix3_t Rcx_;
         mutable vector_t n_;
+        mutable eigen::vector3_t r_;
+        mutable matrix3_t Rerror_;
+        mutable matrix3_t ref_;
+        mutable eigen::matrix3_t Jlog_;
+        mutable matrix_t jacobian_;
     };
   } // namespace constraints
 } // namespace hpp
