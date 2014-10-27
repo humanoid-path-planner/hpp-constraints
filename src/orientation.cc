@@ -21,6 +21,7 @@
 #include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/orientation.hh>
+#include <hpp/constraints/tool.hh>
 
 namespace hpp {
   namespace constraints {
@@ -34,25 +35,6 @@ namespace hpp {
       if (mask [1]) ++res;
       if (mask [2]) ++res;
       return res;
-    }
-
-    void computeJlog (const double& theta, vectorIn_t r,
-		      eigen::matrix3_t& Jlog)
-    {
-      if (theta < 1e-6)
-	Jlog.setIdentity ();
-      else {
-	Jlog.setZero ();
-	// Jlog = alpha I
-	double alpha = .5*theta*sin(theta)/(1-cos (theta));
-	Jlog (0,0) = Jlog (1,1) = Jlog (2,2) = alpha;
-	// Jlog += -r_{\times}/2
-	Jlog (0,1) = .5*r [2]; Jlog (1,0) = -.5*r [2];
-	Jlog (0,2) = -.5*r [1]; Jlog (2,0) = .5*r [1];
-	Jlog (1,2) = .5*r [0]; Jlog (2,1) = -.5*r [0];
-	alpha = 1/(theta*theta) - sin(theta)/(2*theta*(1-cos(theta)));
-	Jlog += alpha * r * r.transpose ();
-      }
     }
 
     OrientationPtr_t Orientation::create (const DevicePtr_t& robot,

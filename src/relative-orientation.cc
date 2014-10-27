@@ -23,13 +23,10 @@
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/relative-orientation.hh>
 #include <hpp/constraints/orientation.hh>
+#include <hpp/constraints/tool.hh>
 
 namespace hpp {
   namespace constraints {
-
-    extern void computeJlog (const double& theta, vectorIn_t r,
-			     eigen::matrix3_t& Jlog);
-
     RelativeOrientationPtr_t RelativeOrientation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2, const matrix3_t& reference,
@@ -119,7 +116,7 @@ namespace hpp {
       if (theta < 1e-3) {
 	Jlog_.setIdentity ();
       } else {
-	computeJlog (theta, r_, Jlog_);
+        computeJlog (theta, r_, Jlog_);
       }
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());

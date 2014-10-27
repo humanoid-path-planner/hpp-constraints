@@ -26,10 +26,6 @@
 # include <hpp/constraints/fwd.hh>
 
 namespace hpp {
-  namespace eigen {
-    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
-    typedef Eigen::Matrix <double, 3, 1> vector3_t;
-  } // namespace eigen
   namespace constraints {
     /// Constraint on the orientation of a robot joint
     ///
@@ -109,6 +105,7 @@ namespace hpp {
       DevicePtr_t robot_;
       JointPtr_t joint_;
       matrix3_t reference_;
+      matrix3_t ref_;
       std::vector <bool> mask_;
       mutable matrix3_t Rerror_;
       mutable vector_t r_;
