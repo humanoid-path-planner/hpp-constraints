@@ -148,8 +148,12 @@ namespace hpp {
         globalOC_ = M.transform (o_it->center ());
         for (Triangles::const_iterator f_it = floorTriangles_.begin ();
             f_it != floorTriangles_.end (); f_it++) {
-          dist = f_it->distance (f_it->intersection (o_it->center (), f_it->normal ()))
-            + f_it->normal ().dot (o_it->center () - f_it->center ());
+          value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
+                     dn = f_it->normal ().dot (globalOC_ - f_it->center ());
+          if (dp < 0)
+            dist = dn * dn;
+          else
+            dist = dp*dp + dn * dn;
           if (dist < minDist) {
             minDist = dist;
             object_ = o_it;
