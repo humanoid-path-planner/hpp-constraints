@@ -19,6 +19,7 @@
 
 # include <vector>
 # include <hpp/core/differentiable-function.hh>
+# include <fcl/math/transform.h>
 
 # include "hpp/constraints/fwd.hh"
 
@@ -38,12 +39,10 @@ namespace hpp {
           n1_ = (p0_ - p2_).cross (n_); n0_.normalize ();
           n2_ = (p1_ - p0_).cross (n_); n0_.normalize ();
           nxn0_ = n_.cross (n0_);
-          RLtoJ_ = fcl::Matrix3f (n_, n0_, nxn0_);
-          RLtoJ_.transpose ();
-          for (size_t i = 0; i < 3; i++) assert (RLtoJ_ (i, 0) == n_[i]);
-          for (size_t i = 0; i < 3; i++) assert (RLtoJ_ (i, 1) == n0_[i]);
-          for (size_t i = 0; i < 3; i++) assert (RLtoJ_ (i, 2) == nxn0_[i]);
-
+          M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_), - c_);
+          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (0, i) == n_[i]);
+          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (1, i) == n0_[i]);
+          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
         }
 
         /// Intersection with a line defined by a point and a vector.
@@ -68,7 +67,7 @@ namespace hpp {
         /// Return the shortest distance from a point to the triangle.
         /// A negative value means the point is inside the triangle.
         /// \param A a point already in the plane containing the triangle.
-        inline value_type distance (const fcl::Vec3f& A) {
+        inline value_type distance (const fcl::Vec3f& A) const {
           value_type d0 = dist (A-p0_, p1_-p0_, n2_),
                      d1 = dist (A-p1_, p2_-p1_, n0_),
                      d2 = dist (A-p2_, p0_-p2_, n1_);
@@ -85,7 +84,7 @@ namespace hpp {
         inline const fcl::Vec3f& planeYaxis () const { return nxn0_; }
         inline const fcl::Vec3f& normal () const { return n_; }
         inline const fcl::Vec3f& center () const { return c_; }
-        inline const fcl::Matrix3f& RLocalToJoint () const { return RLtoJ_; }
+        inline const fcl::Transform3f& transformation () const { return M_; }
 
       private:
         /// Return the distance between the point A and the segment
@@ -106,7 +105,7 @@ namespace hpp {
         /// n_i is the vector of norm 1 perpendicular to
         /// P_{i+1}P_i and n_.
         fcl::Vec3f n0_, n1_, n2_, nxn0_;
-        fcl::Matrix3f RLtoJ_;
+        fcl::Transform3f M_;
     };
 
     class StaticStabilityGravity : public DifferentiableFunction {

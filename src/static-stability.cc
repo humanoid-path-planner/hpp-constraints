@@ -39,7 +39,7 @@ namespace hpp {
 
     StaticStabilityGravity::StaticStabilityGravity (const DevicePtr_t& robot,
         const JointPtr_t& joint, const fcl::Vec3f& com):
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 3, "StaticStabilityGravity"),
+      DifferentiableFunction (robot->configSize (), robot->numberDof (), 5, "StaticStabilityGravity"),
       robot_ (robot), joint_ (joint), com_ (com),
       jacobian_ (3, robot->numberDof ())
     {
@@ -71,13 +71,22 @@ namespace hpp {
       selectTriangles ();
 
       const Transform3f& M = joint_->currentTransformation ();
-      result [0] = floor_->normal ().dot (M.transform (object_->center ()) - floor_->center ());
-      Rerror_ = floor_->RLocalToJoint ().transposeTimes (M.getRotation () * object_->RLocalToJoint ());
-      Rerror_.transpose ();
+      fcl::Vec3f p = floor_->transformation ().transform (M.transform (object_->center ()));
+      result [0] = p[0];
+      if (floor_->isInside (floor_->intersection (M.transform (object_->center ()), floor_->normal ()))) {
+        result [1] = 0;
+        result [2] = 0;
+      } else {
+        result [1] = p[1];
+        result [2] = p[2];
+      }
+
+      Rerror_ = object_->transformation ().getRotation () *
+        (floor_->transformation ().getRotation () * M.getRotation ()).transpose ();
       double theta;
       computeLog (r_, theta, Rerror_);
-      result [1] = r_[1];
-      result [2] = r_[2];
+      result [3] = r_[1];
+      result [4] = r_[2];
     }
 
     void StaticStabilityGravity::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
@@ -90,11 +99,24 @@ namespace hpp {
       const Transform3f& M = joint_->currentTransformation ();
       const JointJacobian_t& Jjoint (joint_->jacobian ());
       cross (M.getRotation () * object_->center (), Rcx_);
-      fclToEigen (floor_->normal (), n_);
-      jacobian.row (0).leftCols (Jjoint.cols ()) = n_.transpose () *
+      eigen::matrix3_t RTeigen;
+      do {
+        const fcl::Matrix3f& R = floor_->transformation ().getRotation ();
+        RTeigen << R (0,0), R (0, 1), R (0, 2),
+                   R (1,0), R (1, 1), R (1, 2),
+                   R (2,0), R (2, 1), R (2, 2);
+      } while (0);
+      jacobian_.leftCols (Jjoint.cols ()) = RTeigen *
         (- Rcx_ * Jjoint.bottomRows (3) + Jjoint.topRows (3));
-      Rerror_ = floor_->RLocalToJoint ().transposeTimes (M.getRotation () * object_->RLocalToJoint ());
-      Rerror_.transpose ();
+      jacobian.row (0) = jacobian_.row (0);
+      if (floor_->isInside (floor_->intersection (M.transform (object_->center ()), floor_->normal ()))) {
+        jacobian.row (1).setZero ();
+        jacobian.row (2).setZero ();
+      } else {
+        jacobian.row (1) = jacobian_.row (1);
+        jacobian.row (2) = jacobian_.row (2);
+      }
+      Rerror_ = object_->transformation ().getRotation () * (floor_->transformation ().getRotation () * M.getRotation ()).transpose ();
       double theta;
       computeLog (r_, theta, Rerror_);
       if (theta < 1e-3) {
@@ -102,61 +124,36 @@ namespace hpp {
       } else {
         computeJlog (theta, r_, Jlog_);
       }
-      const fcl::Matrix3f R = M.getRotation () * object_->RLocalToJoint ();
-      eigen::matrix3_t RTeigen;
-      RTeigen << R (0,0), R (1, 0), R (2, 0),
-                 R (0,1), R (1, 1), R (2, 1),
-                 R (0,2), R (1, 2), R (2, 2);
+      do {
+        fcl::Matrix3f RT = M.getRotation ();
+        RT.transpose ();
+        const fcl::Matrix3f R = object_->transformation ().getRotation () * RT;
+        RTeigen << R (0,0), R (0, 1), R (0, 2),
+                   R (1,0), R (1, 1), R (1, 2),
+                   R (2,0), R (2, 1), R (2, 2);
+      } while (0);
       jacobian_.leftCols (Jjoint.cols ()) = -Jlog_ * RTeigen * Jjoint.bottomRows (3);
-      jacobian.row (1) = jacobian_.row (1);
-      jacobian.row (2) = jacobian_.row (2);
+      jacobian.row (3) = jacobian_.row (1);
+      jacobian.row (4) = jacobian_.row (2);
     }
 
     void StaticStabilityGravity::selectTriangles () const
     {
       const Transform3f& M = joint_->currentTransformation ();
-      // Select the object triangle.
-      value_type scalar, maxScalar = - std::numeric_limits <value_type>::infinity();
-      for (Triangles::const_iterator it = objectTriangles_.begin ();
-          it != objectTriangles_.end (); it++) {
-        scalar = gravity.dot (M.getRotation () * it->normal ());
-        if (scalar > maxScalar) {
-          maxScalar = scalar;
-          object_ = it;
-        }
-      }
-      const fcl::Vec3f& c = object_->center ();
+      fcl::Vec3f globalOC_;
 
-      /// Then, select the triangle vertically aligned with this object triangle
-      bool hasOneInside = false;
-      comGlobalFrame_ = M.transform (com_);
-      std::vector <Triangles::const_iterator> selected;
-      //value_type dmin = std::numeric_limits <value_type>::infinity ();
-      for (Triangles::const_iterator i = floorTriangles_.begin ();
-          i != floorTriangles_.end (); i++) {
-        if (i->isInside (comGlobalFrame_, gravity)) {
-          selected.push_back (i);
-          hasOneInside = true;
-        }
-        /*if (!hasOneInside) {
-          value_type d = i->distance (i->intersection (comGlobalFrame_, gravity));
-          assert (d > 0);
-          if (d < dmin) {
-            dmin = a;
-            closest = it;
-          }
-        }*/
-      }
-
-      /// Then select the closest triangle along gravity axis.
-      assert (hasOneInside);
-      if (hasOneInside) {
-        maxScalar = - std::numeric_limits <value_type>::infinity();
-        for (size_t i = 0; i < selected.size (); i++) {
-          scalar = gravity.dot (selected [i]->center () - c);
-          if (std::abs (scalar) > maxScalar) {
-            maxScalar = std::abs (scalar);
-            floor_ = selected [i];
+      value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
+      for (Triangles::const_iterator o_it = objectTriangles_.begin ();
+          o_it != objectTriangles_.end (); o_it++) {
+        globalOC_ = M.transform (o_it->center ());
+        for (Triangles::const_iterator f_it = floorTriangles_.begin ();
+            f_it != floorTriangles_.end (); f_it++) {
+          dist = f_it->distance (f_it->intersection (o_it->center (), f_it->normal ()))
+            + f_it->normal ().dot (o_it->center () - f_it->center ());
+          if (dist < minDist) {
+            minDist = dist;
+            object_ = o_it;
+            floor_ = f_it;
           }
         }
       }
