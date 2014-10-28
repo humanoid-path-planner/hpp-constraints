@@ -117,11 +117,10 @@ namespace hpp {
         /// \param robot the robot the constraints is applied to,
         /// \param joint the joint to which the object is attached,
         /// \param com COM of the object in the joint frame.
-        StaticStabilityGravity (const DevicePtr_t& robot, const JointPtr_t& joint,
-            const fcl::Vec3f& com);
+        StaticStabilityGravity (const DevicePtr_t& robot, const JointPtr_t& joint);
 
         static StaticStabilityGravityPtr_t create (const DevicePtr_t& robot,
-            const JointPtr_t& joint, const fcl::Vec3f& com);
+            const JointPtr_t& joint);
 
         void addObjectTriangle (const Triangle& t);
 
@@ -136,8 +135,6 @@ namespace hpp {
 
         DevicePtr_t robot_;
         JointPtr_t joint_;
-        fcl::Vec3f com_;
-        mutable fcl::Vec3f comGlobalFrame_;
 
         typedef std::vector <Triangle> Triangles;
         /// Triangles with coordinates expressed in joint frame.

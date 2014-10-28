@@ -291,7 +291,7 @@ StaticStabilityGravityPtr_t createStaticStability (DevicePtr_t d, JointPtr_t j)
            f2 (p[3],p[4],p[5]),
            th (p[6],p[7],p[8]),
            o  (p[9],p[10],p[11]);
-  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d, j, o.center ());
+  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d, j);
   StaticStabilityGravity& f = *fptr;
   f.addObjectTriangle (o);
   f.addFloorTriangle (th);

@@ -38,19 +38,18 @@ namespace hpp {
     fcl::Vec3f StaticStabilityGravity::gravity (0,0,-1);
 
     StaticStabilityGravity::StaticStabilityGravity (const DevicePtr_t& robot,
-        const JointPtr_t& joint, const fcl::Vec3f& com):
+        const JointPtr_t& joint):
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5, "StaticStabilityGravity"),
-      robot_ (robot), joint_ (joint), com_ (com),
-      jacobian_ (3, robot->numberDof ())
+      robot_ (robot), joint_ (joint), jacobian_ (3, robot->numberDof ())
     {
       n_.resize (3);
       jacobian_.setZero ();
     }
 
     StaticStabilityGravityPtr_t StaticStabilityGravity::create (const DevicePtr_t& robot,
-        const JointPtr_t& joint, const fcl::Vec3f& com)
+        const JointPtr_t& joint)
     {
-      return StaticStabilityGravityPtr_t (new StaticStabilityGravity (robot, joint, com));
+      return StaticStabilityGravityPtr_t (new StaticStabilityGravity (robot, joint));
     }
 
     void StaticStabilityGravity::addObjectTriangle (const Triangle& t)
