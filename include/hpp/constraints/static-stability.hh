@@ -39,7 +39,8 @@ namespace hpp {
           n1_ = (p0_ - p2_).cross (n_); n0_.normalize ();
           n2_ = (p1_ - p0_).cross (n_); n0_.normalize ();
           nxn0_ = n_.cross (n0_);
-          M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_), - c_);
+          M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_));
+          M_.setTranslation (- (M_.getRotation () * c_));
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (0, i) == n_[i]);
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (1, i) == n0_[i]);
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
