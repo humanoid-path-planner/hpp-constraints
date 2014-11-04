@@ -20,6 +20,7 @@
 # include <vector>
 # include <hpp/core/differentiable-function.hh>
 # include <fcl/math/transform.h>
+# include <fcl/shape/geometric_shapes.h>
 
 # include "hpp/constraints/fwd.hh"
 
@@ -31,20 +32,14 @@ namespace hpp {
         Triangle (const fcl::Vec3f& p0, const fcl::Vec3f& p1, const fcl::Vec3f& p2):
           p0_ (p0), p1_ (p1), p2_ (p2)
         {
-          n_ = (p1_ - p0_).cross (p2_ - p0_);  
-          assert (!n_.isZero ());
-          n_.normalize ();
-          c_ = ( p0_ + p1_ + p2_ ) / 3;
-          n0_ = (p2_ - p1_).cross (n_); n0_.normalize ();
-          n1_ = (p0_ - p2_).cross (n_); n0_.normalize ();
-          n2_ = (p1_ - p0_).cross (n_); n0_.normalize ();
-          nxn0_ = n_.cross (n0_);
-          M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_));
-          M_.setTranslation (- (M_.getRotation () * c_));
-          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (0, i) == n_[i]);
-          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (1, i) == n0_[i]);
-          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
+          init ();
         }
+
+        Triangle (const fcl::TriangleP& t):
+          p0_ (t.a), p1_ (t.b), p2_ (t.c)
+      {
+        init ();
+      }
 
         /// Intersection with a line defined by a point and a vector.
         inline fcl::Vec3f intersection (const fcl::Vec3f& A, const fcl::Vec3f& u) const {
@@ -102,6 +97,23 @@ namespace hpp {
           return u.dot (w);
         }
 
+        void init ()
+        {
+          n_ = (p1_ - p0_).cross (p2_ - p0_);
+          assert (!n_.isZero ());
+          n_.normalize ();
+          c_ = ( p0_ + p1_ + p2_ ) / 3;
+          n0_ = (p2_ - p1_).cross (n_); n0_.normalize ();
+          n1_ = (p0_ - p2_).cross (n_); n0_.normalize ();
+          n2_ = (p1_ - p0_).cross (n_); n0_.normalize ();
+          nxn0_ = n_.cross (n0_);
+          M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_));
+          M_.setTranslation (- (M_.getRotation () * c_));
+          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (0, i) == n_[i]);
+          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (1, i) == n0_[i]);
+          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
+        }
+
         fcl::Vec3f p0_, p1_, p2_, n_, c_;
         /// n_i is the vector of norm 1 perpendicular to
         /// P_{i+1}P_i and n_.
@@ -122,9 +134,9 @@ namespace hpp {
         static StaticStabilityGravityPtr_t create (const DevicePtr_t& robot,
             const JointPtr_t& joint);
 
-        void addObjectTriangle (const Triangle& t);
+        void addObjectTriangle (const fcl::TriangleP& t);
 
-        void addFloorTriangle (const Triangle& t);
+        void addFloorTriangle (const fcl::TriangleP& t);
 
       private:
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;

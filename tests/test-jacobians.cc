@@ -287,10 +287,10 @@ StaticStabilityGravityPtr_t createStaticStability (DevicePtr_t d, JointPtr_t j)
   p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[6] = fcl::Vec3f ( 5,-5,0);
   p[6] = fcl::Vec3f ( 0, 0,1); p[7] = fcl::Vec3f (  1,0,1); p[8] = fcl::Vec3f (0,  1,1);
   p[9] = fcl::Vec3f ( 0, 0,0); p[10] = fcl::Vec3f (0.1,0,0); p[11] = fcl::Vec3f (0,0.1,0);
-  Triangle f1 (p[0],p[1],p[2]),
-           f2 (p[3],p[4],p[5]),
-           th (p[6],p[7],p[8]),
-           o  (p[9],p[10],p[11]);
+  fcl::TriangleP f1 (p[0],p[1],p[2]),
+                 f2 (p[3],p[4],p[5]),
+                 th (p[6],p[7],p[8]),
+                 o  (p[9],p[10],p[11]);
   StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d, j);
   StaticStabilityGravity& f = *fptr;
   f.addObjectTriangle (o);

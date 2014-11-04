@@ -52,14 +52,14 @@ namespace hpp {
       return StaticStabilityGravityPtr_t (new StaticStabilityGravity (robot, joint));
     }
 
-    void StaticStabilityGravity::addObjectTriangle (const Triangle& t)
+    void StaticStabilityGravity::addObjectTriangle (const fcl::TriangleP& t)
     {
-      objectTriangles_.push_back (t);
+      objectTriangles_.push_back (Triangle(t));
     }
 
-    void StaticStabilityGravity::addFloorTriangle (const Triangle& t)
+    void StaticStabilityGravity::addFloorTriangle (const fcl::TriangleP& t)
     {
-      floorTriangles_.push_back (t);
+      floorTriangles_.push_back (Triangle(t));
     }
 
     void StaticStabilityGravity::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
