@@ -143,10 +143,10 @@ namespace hpp {
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
       for (Triangles::const_iterator o_it = objectTriangles_.begin ();
-          o_it != objectTriangles_.end (); o_it++) {
+          o_it != objectTriangles_.end (); ++o_it) {
         globalOC_ = M.transform (o_it->center ());
         for (Triangles::const_iterator f_it = floorTriangles_.begin ();
-            f_it != floorTriangles_.end (); f_it++) {
+            f_it != floorTriangles_.end (); ++f_it) {
           value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
                      dn = f_it->normal ().dot (globalOC_ - f_it->center ());
           if (dp < 0)

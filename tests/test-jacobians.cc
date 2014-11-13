@@ -282,7 +282,7 @@ DevicePtr_t createRobot ()
 StaticStabilityGravityPtr_t createStaticStability (DevicePtr_t d, JointPtr_t j)
 {
   fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
-  fcl::Vec3f p[3];
+  fcl::Vec3f p[12];
   p[0] = fcl::Vec3f (-5,-5,0); p[1] = fcl::Vec3f (-5, 5,0); p[2] = fcl::Vec3f ( 5,-5,0);
   p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[6] = fcl::Vec3f ( 5,-5,0);
   p[6] = fcl::Vec3f ( 0, 0,1); p[7] = fcl::Vec3f (  1,0,1); p[8] = fcl::Vec3f (0,  1,1);
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   vector_t errorNorm (MAX_NB_ERROR);
   vector_t dq (device->numberDof ()); dq.setZero ();
   matrix_t jacobian;
-  for (DFs::iterator fit = functions.begin(); fit != functions.end(); fit++) {
+  for (DFs::iterator fit = functions.begin(); fit != functions.end(); ++fit) {
     DF& f = *(fit->second);
     value1 = vector_t (f.outputSize ());
     value2 = vector_t (f.outputSize ());
