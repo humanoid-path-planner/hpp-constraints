@@ -57,6 +57,21 @@ namespace hpp {
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       /// Return a shared pointer to a new instance
       ///
+      /// \param name the name of the constraints,
+      /// \param robot the robot the constraints is applied to,
+      /// \param joint the joint the orientation of which is constrained
+      /// \param reference reference orientation of the joint,
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static OrientationPtr_t create (const std::string& name,
+                                      const DevicePtr_t& robot,
+                                      const JointPtr_t& joint,
+                                      const matrix3_t& reference,
+                                      std::vector <bool> mask =
+                                      boost::assign::list_of (true)(true)(true));
+
+      /// Return a shared pointer to a new instance
+      ///
       /// \param robot the robot the constraints is applied to,
       /// \param joint the joint the orientation of which is constrained
       /// \param reference reference orientation of the joint,
@@ -78,15 +93,19 @@ namespace hpp {
       {
 	return reference_;
       }
+
       ///Constructor
       ///
+      /// \param name the name of the constraints,
       /// \param robot the robot the constraints is applied to,
       /// \param joint the joint the orientation of which is constrained
       /// \param reference reference orientation of the joint,
       /// \param mask which component of the error vector to take into
       ///        account.
-      Orientation (const DevicePtr_t&, const JointPtr_t& joint,
-		   const matrix3_t& reference, std::vector <bool> mask);
+      Orientation (const std::string& name, const DevicePtr_t&,
+                   const JointPtr_t& joint, const matrix3_t& reference,
+                   std::vector <bool> mask);
+
       /// Get size of error with respect to mask.
       static size_type size (std::vector<bool> mask);
     protected:

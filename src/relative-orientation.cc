@@ -28,22 +28,30 @@
 namespace hpp {
   namespace constraints {
     RelativeOrientationPtr_t RelativeOrientation::create
-    (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const matrix3_t& reference,
-     std::vector <bool> mask)
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const matrix3_t& reference, std::vector <bool> mask)
     {
       RelativeOrientation* ptr =
-	new RelativeOrientation (robot, joint1, joint2, reference, mask);
+	new RelativeOrientation (name, robot, joint1, joint2, reference, mask);
       RelativeOrientationPtr_t shPtr (ptr);
       return shPtr;
     }
 
-    RelativeOrientation::RelativeOrientation
+    RelativeOrientationPtr_t RelativeOrientation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2, const matrix3_t& reference,
-     std::vector <bool> mask) :
+     std::vector <bool> mask)
+    {
+      return create ("RelativeOrientation", robot, joint1, joint2, reference, mask);
+    }
+
+    RelativeOrientation::RelativeOrientation
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const matrix3_t& reference, std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-			      Orientation::size (mask), "RelativeOrientation"),
+			      Orientation::size (mask), name),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       reference_ (reference), mask_ (mask), r_ (3),
       Jlog_ (), jacobian_ (3, robot->numberDof ())

@@ -34,14 +34,25 @@ namespace hpp {
       return res;
     }
 
-
     RelativePositionPtr_t RelativePosition::create
     (const DevicePtr_t& robot, const JointPtr_t&  joint1,
      const JointPtr_t& joint2, const vector3_t& point1,
      const vector3_t& point2, std::vector <bool> mask)
     {
       RelativePosition* ptr = new RelativePosition
-	(robot, joint1, joint2, point1, point2, mask);
+	("RelativePosition", robot, joint1, joint2, point1, point2, mask);
+      RelativePositionPtr_t shPtr (ptr);
+      return shPtr;
+    }
+
+    RelativePositionPtr_t RelativePosition::create
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t&  joint1, const JointPtr_t& joint2,
+     const vector3_t& point1, const vector3_t& point2,
+     std::vector <bool> mask)
+    {
+      RelativePosition* ptr = new RelativePosition
+	(name, robot, joint1, joint2, point1, point2, mask);
       RelativePositionPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -53,14 +64,15 @@ namespace hpp {
       m (1,2) = -v [0]; m (2,1) = v [0];
     }
 
-    RelativePosition::RelativePosition (const DevicePtr_t& robot,
-					const JointPtr_t& joint1,
-					const JointPtr_t& joint2,
-					const vector3_t& point1,
-					const vector3_t& point2,
-					std::vector <bool> mask) :
+    RelativePosition::RelativePosition (const std::string& name,
+                                        const DevicePtr_t& robot,
+                                        const JointPtr_t& joint1,
+                                        const JointPtr_t& joint2,
+                                        const vector3_t& point1,
+                                        const vector3_t& point2,
+                                        std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-		size (mask), "RelativePosition"),
+		size (mask), name),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       point1_ (point1), point2_ (point2), mask_ (mask),
       jacobian_ (3, robot->numberDof ())

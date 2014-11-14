@@ -48,6 +48,29 @@ namespace hpp {
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+      /// Return a shared pointer to a new instance
+      ///
+      /// \param name the name of the constraints,
+      /// \param robot the robot the constraints is applied to,
+      /// \param joint1 the first joint the transformation of which is
+      ///               constrained,
+      /// \param joint2 the second joint the transformation of which is
+      ///               constrained,
+      /// \param reference desired relative transformation
+      ///        \f$T_1(\mathbf{q})^{-1} T_2(\mathbf{q})\f$ between the joints.
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static RelativeTransformationPtr_t create (
+          const std::string& name,
+          const DevicePtr_t& robot,
+          const JointPtr_t& joint1,
+          const JointPtr_t& joint2,
+          const Transform3f& reference,
+          std::vector <bool> mask =
+            boost::assign::list_of (true)(true)(true)
+                                   (true)(true)(true));
+
       /// Return a shared pointer to a new instance
       ///
       /// \param robot the robot the constraints is applied to,
@@ -80,6 +103,7 @@ namespace hpp {
     protected:
       ///Constructor
       ///
+      /// \param name the name of the constraints,
       /// \param robot the robot the constraints is applied to,
       /// \param joint1 the first joint the transformation of which is
       ///               constrained,
@@ -89,10 +113,12 @@ namespace hpp {
       ///        \f$T_1(\mathbf{q})^{-1} T_2(\mathbf{q})\f$ between the joints.
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
-      RelativeTransformation (const DevicePtr_t&, const JointPtr_t& joint1,
-			      const JointPtr_t& joint2,
-			      const Transform3f& reference,
-			      std::vector <bool> mask);
+      RelativeTransformation (const std::string& name,
+                              const DevicePtr_t&,
+                              const JointPtr_t& joint1,
+                              const JointPtr_t& joint2,
+                              const Transform3f& reference,
+                              std::vector <bool> mask);
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,

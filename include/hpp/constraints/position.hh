@@ -76,6 +76,24 @@ namespace hpp {
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       /// Return a shared pointer to a new instance
       ///
+      /// \param name the name of the constraints,
+      /// \param robot the robot the constraint applies to,
+      /// \param joint the joint the position of which is constrained,
+      /// \param pointInLocalFrame point in local frame,
+      /// \param targetInGlobalFrame target point in globalframe,
+      /// \param rotation frame in which the error is expressed,
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static PositionPtr_t create (const std::string& name,
+                                   const DevicePtr_t& robot,
+                                   const JointPtr_t& joint,
+                                   const vector3_t& pointInLocalFrame,
+                                   const vector3_t& targetInGlobalFrame,
+                                   const matrix3_t& rotation = matrix3_t::getIdentity (),
+                                   std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
+
+      /// Return a shared pointer to a new instance
+      ///
       /// \param robot the robot the constraint applies to,
       /// \param joint the joint the position of which is constrained,
       /// \param pointInLocalFrame point in local frame,
@@ -107,14 +125,14 @@ namespace hpp {
       }
       /// Constructor
       ///
+      /// \param name the name of the constraints,
       /// \param robot the robot the constraint applies to,
       /// \param joint the joint the position of which is constrained,
       /// \param pointInLocalFrame point in local frame,
       /// \param targetInGlobalFrame target point in globalframe.
-      Position (const DevicePtr_t& robot, const JointPtr_t& joint,
-		const vector3_t& pointInLocalFrame,
-		const vector3_t& targetInGlobalFrame,
-		const matrix3_t& rotation,
+      Position (const std::string& name, const DevicePtr_t& robot,
+               const JointPtr_t& joint, const vector3_t& pointInLocalFrame,
+		const vector3_t& targetInGlobalFrame, const matrix3_t& rotation,
 		std::vector <bool> mask);
     protected:
       /// Compute value of error

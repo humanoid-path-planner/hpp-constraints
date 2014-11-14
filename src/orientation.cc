@@ -37,20 +37,35 @@ namespace hpp {
       return res;
     }
 
+
     OrientationPtr_t Orientation::create (const DevicePtr_t& robot,
 					  const JointPtr_t& joint,
 					  const matrix3_t& reference,
 					  std::vector <bool> mask)
     {
-      Orientation* ptr = new Orientation (robot, joint, reference, mask);
+      Orientation* ptr = new Orientation
+        ("Orientation", robot, joint, reference, mask);
       OrientationPtr_t shPtr (ptr);
       return shPtr;
     }
-    Orientation::Orientation (const DevicePtr_t& robot, const JointPtr_t& joint,
-			      const matrix3_t& reference,
+
+    OrientationPtr_t Orientation::create (const std::string& name,
+                                          const DevicePtr_t& robot,
+                                          const JointPtr_t& joint,
+                                          const matrix3_t& reference,
+                                          std::vector <bool> mask)
+    {
+      Orientation* ptr = new Orientation
+        (name, robot, joint, reference, mask);
+      OrientationPtr_t shPtr (ptr);
+      return shPtr;
+    }
+
+    Orientation::Orientation (const std::string& name, const DevicePtr_t& robot,
+                              const JointPtr_t& joint, const matrix3_t& reference,
 			      std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-			      size (mask), "Orientation"),
+			      size (mask), name),
       robot_ (robot), joint_ (joint), reference_ (reference),
       mask_ (mask), r_ (3), Jlog_ (),
       jacobian_ (3, robot->numberDof ())
