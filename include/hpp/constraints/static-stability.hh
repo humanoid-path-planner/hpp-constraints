@@ -54,9 +54,9 @@ namespace hpp {
           return isInside (Ap);
         }
         inline bool isInside (const fcl::Vec3f& Ap) const {
-          if (n2_.dot (Ap-p0_) >= 0) return false;
-          if (n0_.dot (Ap-p1_) >= 0) return false;
-          if (n1_.dot (Ap-p2_) >= 0) return false;
+          if (n2_.dot (Ap-p0_) > 0) return false;
+          if (n0_.dot (Ap-p1_) > 0) return false;
+          if (n1_.dot (Ap-p2_) > 0) return false;
           return true;
         }
 
