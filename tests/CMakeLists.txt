@@ -47,3 +47,4 @@ ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-jacobians FALSE)
 ADD_TESTCASE (test-configprojector FALSE)
+ADD_TESTCASE (triangles FALSE)
