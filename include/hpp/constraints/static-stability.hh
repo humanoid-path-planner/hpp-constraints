@@ -67,13 +67,23 @@ namespace hpp {
           value_type d0 = dist (A-p0_, p1_-p0_, n2_),
                      d1 = dist (A-p1_, p2_-p1_, n0_),
                      d2 = dist (A-p2_, p0_-p2_, n1_);
-          /// We should return the smallest in norm.
-          if (std::abs (d0) > std::abs (d1)) {
-            if (std::abs (d1) > std::abs (d2)) return d2;
-            else return d1;
+          // We should return the shortest positive distance
+          bool d0p = d0 >= 0;
+          bool d1p = d1 >= 0;
+          bool d2p = d2 >= 0;
+          if (d0p) {
+            if (d2 > d1) return (d2 > d0)?d2:d0;
+            else return (d1 > d0)?d1:d0;
+          } else if (d1p) {
+            if (d2 > d0) return (d2 > d1)?d2:d1;
+            else return (d0 > d1)?d0:d1;
+          } else if (d2p) {
+            if (d1 > d0) return (d1 > d2)?d1:d2;
+            else return (d0 > d2)?d0:d2;
+          } else {
+            if (d0 < d1) return (d2 > d1)?d2:d1;
+            else return (d0 > d2)?d0:d2;
           }
-          if (std::abs (d0) > std::abs (d2)) return d2;
-          else return d0;
         }
 
         inline const fcl::Vec3f& planeXaxis () const { return   n0_; }
@@ -93,7 +103,7 @@ namespace hpp {
             return (u.dot (w) > 0)?(w.norm()):(- w.norm());
           c2 = v.norm ();
           if (c2 <= c1)
-            return (u.dot (w) > 0)?((w - v).norm()):((v-w).norm());
+            return (u.dot (w) > 0)?((w-v).norm()):(-(w-v).norm());
           return u.dot (w);
         }
 
@@ -104,8 +114,8 @@ namespace hpp {
           n_.normalize ();
           c_ = ( p0_ + p1_ + p2_ ) / 3;
           n0_ = (p2_ - p1_).cross (n_); n0_.normalize ();
-          n1_ = (p0_ - p2_).cross (n_); n0_.normalize ();
-          n2_ = (p1_ - p0_).cross (n_); n0_.normalize ();
+          n1_ = (p0_ - p2_).cross (n_); n1_.normalize ();
+          n2_ = (p1_ - p0_).cross (n_); n2_.normalize ();
           nxn0_ = n_.cross (n0_);
           M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_));
           M_.setTranslation (- (M_.getRotation () * c_));
