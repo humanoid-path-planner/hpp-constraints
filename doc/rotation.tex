@@ -7,7 +7,7 @@
 \newcommand\rot{\mathbf{r}}
 \newcommand\x{\mathbf{x}}
 \newcommand\y{\mathbf{y}}
-\newcommand\rcross{[\rot]_{\times}}
+\newcommand\rcross[1]{[\rot_{#1}]_{\times}}
 \newcommand\xcross{[\mathbf{x}]_{\times}}
 \newcommand\ycross{[\mathbf{y}]_{\times}}
 \newcommand\omegacross{[\omega]_{\times}}
@@ -15,6 +15,7 @@
 \newcommand\normr{\|\rot\|}
 \newcommand\e{\mathbf{e}}
 \newcommand\alphap{\alpha^{\prime}}
+\newcommand\cross[1]{[#1]_{\times}}
 \begin {document}
 \maketitle
 
@@ -23,20 +24,20 @@
 Let $\rot\in\reals^3$ be a vector. We denote by
 \begin{itemize}
 \item $$
-\rcross = \left(\begin{array}{ccc}
+\rcross{} = \left(\begin{array}{ccc}
 0 & -\rot_3 & \rot_2 \\
 \rot_3 & 0 & -\rot_1 \\
 -\rot_2 & \rot_1 & 0
 \end{array}\right)
 $$
 the antisymmetric matrix corresponding to the cross product by $\rot$,
-\item $R = \exp (\rcross)$ the rotation matrix corresponding to the rotation about
+\item $R = \exp (\rcross{})$ the rotation matrix corresponding to the rotation about
 $\rot$.
 \end{itemize}
 According to Rodrigues formula, we have
 \begin{equation}\label{eq:rodrigues}
-R = \exp (\rcross) = I + \frac{\sin \normr}{\normr}\rcross +
-\frac{1 - \cos \normr}{\normr^2}\rcross^2
+R = \exp (\rcross{}) = I + \frac{\sin \normr}{\normr}\rcross{} +
+\frac{1 - \cos \normr}{\normr^2}\rcross{}^2
 \end{equation}
 We define
 \begin{eqnarray}
@@ -51,26 +52,28 @@ We define
 \end{eqnarray}
 With this notation, we can write
 \begin{equation}\label{eq:rodrigues2}
-R = I + \alpha_1 (\normr) \rcross + \alpha_2 (\normr) \rcross^2
+R = I + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rcross{}^2
 \end{equation}
-\subsection {Powers of $\rcross$}
+\subsection {Powers of $\rcross{}$}
 
-Let us compute the powers of $\rcross$:
-\begin{eqnarray*}
-\rcross^2 &=& \left(\begin{array}{ccc}
+Let us compute the powers of $\rcross{}$:
+\begin{eqnarray}
+\rcross{}^2 &=& \left(\begin{array}{ccc}
 -\rot_2^2-\rot_3^2 & \rot_2\rot_1 & \rot_3\rot_1 \\
 \rot_1\rot_2 & -\rot_1^2-\rot_3^2 & \rot_3\rot_2 \\
 \rot_1\rot_3 & \rot_2\rot_3 & -\rot_1^2-\rot_2^2
 \end{array}\right) =
 \rot\rot^T - \normr^2 I_3\\
-\rcross^3 &=& \rcross\rot\rot^T - \normr^2 \rcross = - \normr^2 \rcross\\
-\rcross^4 &=& - \normr^2 \rcross^2
-\end{eqnarray*}
+\label{eq:rcross2}
+\rcross{}^3 &=& \rcross{}\rot\rot^T - \normr^2 \rcross{} = - \normr^2 \rcross{}\\
+\label{eq:rcross3}
+\rcross{}^4 &=& - \normr^2 \rcross{}^2
+\end{eqnarray}
 Replacing in~(\ref{eq:rodrigues2}), we get
 \begin{eqnarray}
-R &=& I + \alpha_1 (\normr) \rcross + \alpha_2 (\normr) \rot\rot^T - \alpha_2 (\normr) \normr^2 I_3\\
+R &=& I + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rot\rot^T - \alpha_2 (\normr) \normr^2 I_3\\
 \label{eq:rodrigues3}
-&=&I + \alpha_1 (\normr) \rcross + \alpha_2 (\normr) \rot\rot^T + (\cos\normr-1) I_3
+&=&I + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rot\rot^T + (\cos\normr-1) I_3
 \end{eqnarray}
 
 \section {Derivative}
@@ -84,36 +87,36 @@ $$
 \end{eqnarray*}
 Let us differentiate~(\ref{eq:rodrigues2})
 $$
-\dot{R} = \frac{\dot{\rot}^T\rot}{\normr} \alphap_1 (\normr) \rcross + \frac{\dot{\rot}^T\rot}{\normr}\alphap_2 (\normr) \rot\rot^T -\frac{\dot{\rot}^T\rot}{\normr} \sin\normr I_3 + \alpha_1 (\normr) \rdotcross + \alpha_2 (\normr) (\dot{\rot}\rot^T + \rot\dot{\rot}^T)
+\dot{R} = \frac{\dot{\rot}^T\rot}{\normr} \alphap_1 (\normr) \rcross{} + \frac{\dot{\rot}^T\rot}{\normr}\alphap_2 (\normr) \rot\rot^T -\frac{\dot{\rot}^T\rot}{\normr} \sin\normr I_3 + \alpha_1 (\normr) \rdotcross + \alpha_2 (\normr) (\dot{\rot}\rot^T + \rot\dot{\rot}^T)
 $$
 To make notation lighter, we set $u = \frac{\rot^T\dot{\rot}}{\normr}$. Then
 \begin{eqnarray*}
 \omegacross &=& \dot{R}R^T\\
-&=& \left(u \alphap_1 \rcross + u\alphap_2 \rot\rot^T -u \sin\normr I_3 + \alpha_1 \rdotcross + \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\right)\\
-&&\left(I - \alpha_1 \rcross + \alpha_2 \rot\rot^T + (\cos\normr-1) I_3\right)\\
-&=& u \alphap_1 \rcross - u \alphap_1\alpha_1 \rcross^2 + u \alphap_1\alpha_2 \rcross\rot\rot^T + u \alphap_1 (\cos\normr-1) \rcross\\
-&& +u\alphap_2 \rot\rot^T - u\alpha_1\alphap_2\rot\rot^T\rcross + u\alphap_2\alpha_2\normr^2\rot\rot^T + u\alphap_2 (\cos\normr-1) \rot\rot^T\\
-&& -u \sin\normr I_3 + u \sin\normr\alpha_1 \rcross - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr(\cos\normr-1) I_3\\
-&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
-&&+\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T) - \alpha_1 \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\rcross + \alpha_2 \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\rot\rot^T + (\cos\normr-1)\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\\
+&=& \left(u \alphap_1 \rcross{} + u\alphap_2 \rot\rot^T -u \sin\normr I_3 + \alpha_1 \rdotcross + \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\right)\\
+&&\left(I - \alpha_1 \rcross{} + \alpha_2 \rot\rot^T + (\cos\normr-1) I_3\right)\\
+&=& u \alphap_1 \rcross{} - u \alphap_1\alpha_1 \rcross{}^2 + u \alphap_1\alpha_2 \rcross{}\rot\rot^T + u \alphap_1 (\cos\normr-1) \rcross{}\\
+&& +u\alphap_2 \rot\rot^T - u\alpha_1\alphap_2\rot\rot^T\rcross{} + u\alphap_2\alpha_2\normr^2\rot\rot^T + u\alphap_2 (\cos\normr-1) \rot\rot^T\\
+&& -u \sin\normr I_3 + u \sin\normr\alpha_1 \rcross{} - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr(\cos\normr-1) I_3\\
+&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
+&&+\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T) - \alpha_1 \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\rcross{} + \alpha_2 \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\rot\rot^T + (\cos\normr-1)\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\\
 \end{eqnarray*}
-We notice that $\rcross \rot = 0$ and that $\rot^T\rcross = 0$. Thus by substituting $\rcross^2$ by $\rot\rot^T-\normr^2 I_3$,
+We notice that $\rcross{} \rot = 0$ and that $\rot^T\rcross{} = 0$. Thus by substituting $\rcross{}^2$ by $\rot\rot^T-\normr^2 I_3$,
 \begin{eqnarray*}
 \omegacross &=&
-u \alphap_1 \rcross - u \alphap_1\alpha_1 (\rot\rot^T-\normr^2 I_3) + u \alphap_1 (\cos\normr-1) \rcross\\
+u \alphap_1 \rcross{} - u \alphap_1\alpha_1 (\rot\rot^T-\normr^2 I_3) + u \alphap_1 (\cos\normr-1) \rcross{}\\
 && + u\alphap_2 \rot\rot^T + u\alphap_2\alpha_2\normr^2\rot\rot^T + u\alphap_2 (\cos\normr-1) \rot\rot^T\\
-&& -u \sin\normr I_3 + u \sin\normr\alpha_1 \rcross - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr(\cos\normr-1) I_3\\
-&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
-&&+\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T) - \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2\rot\dot{\rot}^T\rot\rot^T + (\cos\normr-1)\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)
+&& -u \sin\normr I_3 + u \sin\normr\alpha_1 \rcross{} - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr(\cos\normr-1) I_3\\
+&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
+&&+\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T) - \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2\rot\dot{\rot}^T\rot\rot^T + (\cos\normr-1)\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)
 \end{eqnarray*}
 We notice that $\rot\dot{\rot}^T\rot\rot^T=u\normr\rot\rot^T$
 \begin{eqnarray*}
 \omegacross &=&
-- u \alphap_1\alpha_1 (\rot\rot^T-\normr^2 I_3) + u \alphap_1 \cos\normr \rcross\\
+- u \alphap_1\alpha_1 (\rot\rot^T-\normr^2 I_3) + u \alphap_1 \cos\normr \rcross{}\\
 && + u\alphap_2 \rot\rot^T + u\alphap_2\alpha_2\normr^2\rot\rot^T + u\alphap_2 (\cos\normr-1) \rot\rot^T\\
-&& + u \sin\normr\alpha_1 \rcross - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr\cos\normr I_3\\
-&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2u\normr\rot\rot^T + \cos\normr\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)
+&& + u \sin\normr\alpha_1 \rcross{} - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr\cos\normr I_3\\
+&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2u\normr\rot\rot^T + \cos\normr\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)
 \end{eqnarray*}
 $$
 u\alphap_2\alpha_2\normr^2\rot\rot^T + u\alphap_2 (\cos\normr-1) \rot\rot^T =
@@ -121,19 +124,19 @@ u\alphap_2((1-\cos\normr)+(\cos\normr-1)) \rot\rot^T = 0
 $$
 \begin{eqnarray*}
 \omegacross &=&
-- u \alphap_1\alpha_1 (\rot\rot^T-\normr^2 I_3) + u \alphap_1 \cos\normr \rcross + u\alphap_2 \rot\rot^T\\
-&& + u \sin\normr\alpha_1 \rcross - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr\cos\normr I_3\\
-&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2u\normr\rot\rot^T + \cos\normr\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\\
-&=& - u \alphap_1\alpha_1 \rot\rot^T + u \alphap_1\alpha_1\normr^2 I_3 + u \alphap_1 \cos\normr \rcross + u\alphap_2 \rot\rot^T\\
-&& + u \sin\normr\alpha_1 \rcross - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr\cos\normr I_3\\
-&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2u\normr\rot\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
+- u \alphap_1\alpha_1 (\rot\rot^T-\normr^2 I_3) + u \alphap_1 \cos\normr \rcross{} + u\alphap_2 \rot\rot^T\\
+&& + u \sin\normr\alpha_1 \rcross{} - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr\cos\normr I_3\\
+&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2u\normr\rot\rot^T + \cos\normr\alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\\
+&=& - u \alphap_1\alpha_1 \rot\rot^T + u \alphap_1\alpha_1\normr^2 I_3 + u \alphap_1 \cos\normr \rcross{} + u\alphap_2 \rot\rot^T\\
+&& + u \sin\normr\alpha_1 \rcross{} - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr\cos\normr I_3\\
+&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \alpha_2^2u\normr\rot\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
 &=& u \left(-\alphap_1\alpha_1 + \alphap_2 - \sin\normr\alpha_2 + \alpha_2^2\normr\right)\rot\rot^T \\
-&&+ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross\\
+&&+ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{}\\
 &&+ u\left(\alphap_1\alpha_1\normr^2 - \sin\normr\cos\normr\right) I_3\\
-&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
+&& +\alpha_1 \rdotcross - \alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1(\cos\normr-1)\rdotcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
 \end{eqnarray*}
 \begin{eqnarray*}
 -\alphap_1\alpha_1 + \alphap_2 - \sin\normr\alpha_2 + \alpha_2^2\normr
@@ -154,9 +157,9 @@ $$
 
 \begin{eqnarray*}
 \omegacross &=&
-+ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross -u \frac{\sin^2\normr}{\normr} I_3\\
-&& -\alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
++ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} -u \frac{\sin^2\normr}{\normr} I_3\\
+&& -\alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} +  \alpha_2^2\normr^2\dot{\rot}\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
 \end{eqnarray*}
 \begin{eqnarray*}
 \alpha_2^2\normr^2\dot{\rot}\rot^T + \cos\normr\alpha_2\dot{\rot}\rot^T &=&
@@ -165,19 +168,19 @@ $$
 \end{eqnarray*}
 \begin{eqnarray*}
 \omegacross &=&
-+ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross -u \frac{\sin^2\normr}{\normr} I_3\\
-&& -\alpha_1^2 \rdotcross\rcross + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
++ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} -u \frac{\sin^2\normr}{\normr} I_3\\
+&& -\alpha_1^2 \rdotcross\rcross{} + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
 \end{eqnarray*}
 Using~(\ref{eq:xcrossycross}),
 \begin{eqnarray*}
 \omegacross &=&
-u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross -u \frac{\sin^2\normr}{\normr} I_3\\
+u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} -u \frac{\sin^2\normr}{\normr} I_3\\
 && -\alpha_1^2 (\rot\dot{\rot}^T-\rot^T\dot{\rot} I_3) + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
-&=& u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross -u \frac{\sin^2\normr}{\normr} I_3\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
+&=& u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} -u \frac{\sin^2\normr}{\normr} I_3\\
 && -\alpha_1^2\rot\dot{\rot}^T+\alpha_1^2\rot^T\dot{\rot} I_3 + \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
 \end{eqnarray*}
 \begin{eqnarray*}
 -u \frac{\sin^2\normr}{\normr} I_3 + \alpha_1^2\rot^T\dot{\rot} I_3 &=&
@@ -185,9 +188,9 @@ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross -u \frac{\sin^2\
 \end{eqnarray*}
 \begin{eqnarray*}
 \omegacross &=&
-u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross\\
+u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{}\\
 && -\alpha_1^2\rot\dot{\rot}^T+ \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{} + \alpha_2\dot{\rot}\rot^T + \cos\normr\alpha_2\rot\dot{\rot}^T\\
 \end{eqnarray*}
 \begin{eqnarray*}
 -\alpha_1^2\rot\dot{\rot}^T+ \cos\normr\alpha_2\rot\dot{\rot}^T &=&
@@ -197,25 +200,25 @@ u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross\\
 \end{eqnarray*}
 \begin{eqnarray*}
 \omegacross &=&
-u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross\\
+u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{}\\
 && + \alpha_2\left(\dot{\rot}\rot^T -\rot\dot{\rot}^T\right)+ \alpha_1 \alpha_2 \rdotcross\rot\rot^T + \alpha_1\cos\normr\rdotcross\\
-&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross\\
+&&- \alpha_1 \alpha_2 \rot\dot{\rot}^T\rcross{}\\
 \end{eqnarray*}
 Using~(\ref{eq:dotrrT-rdotrT}),
 \begin{eqnarray*}
 \omegacross &=&
-u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\cos\normr\rdotcross\\
-&& + \alpha_1 \alpha_2 \left(\rdotcross\rot\rot^T - \rot\dot{\rot}^T\rcross\right)\\
+u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\cos\normr\rdotcross\\
+&& + \alpha_1 \alpha_2 \left(\rdotcross\rot\rot^T - \rot\dot{\rot}^T\rcross{}\right)\\
 \end{eqnarray*}
 Finally, using~(\ref{eq:ouf}),
 \begin{eqnarray*}
 \omegacross &=&
-u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\cos\normr\rdotcross\\
+u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\cos\normr\rdotcross\\
 && + \alpha_1 \alpha_2 \left(\normr^2\rdotcross - \left[\rot\rot^T\dot{\rot}\right]_{\times}\right)\\
-&=&u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times}\\
+&=&u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times}\\
 && + \alpha_1\left(\cos\normr + \alpha_2\normr^2\right)\rdotcross - \alpha_1 \alpha_2\left[\rot\rot^T\dot{\rot}\right]_{\times}\\
-&=&u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\rdotcross - \alpha_1 \alpha_2\left[\rot\rot^T\dot{\rot}\right]_{\times}\\
-&=&u\frac{\normr -\sin\normr\cos\normr}{\normr^2} \rcross + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\rdotcross - \alpha_1 \alpha_2\left[\rot\rot^T\dot{\rot}\right]_{\times}\\
+&=&u\left(\alphap_1 \cos\normr + \alpha_1\sin\normr\right) \rcross{} + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\rdotcross - \alpha_1 \alpha_2\left[\rot\rot^T\dot{\rot}\right]_{\times}\\
+&=&u\frac{\normr -\sin\normr\cos\normr}{\normr^2} \rcross{} + \alpha_2\left[\rot\times\dot{\rot}\right]_{\times} + \alpha_1\rdotcross - \alpha_1 \alpha_2\left[\rot\rot^T\dot{\rot}\right]_{\times}\\
 \end{eqnarray*}
 we get an expression of $\omega$ as a vector:
 \begin{eqnarray*}
@@ -225,32 +228,32 @@ we get an expression of $\omega$ as a vector:
 &=&\frac{\normr -\sin\normr}{\normr^3}\rot\rot^T\dot{\rot} + \alpha_2\rot\times\dot{\rot} + \alpha_1\dot{\rot}\\
 \end{eqnarray*}
 If we define the Jacobian matrix $J(\rot)$  such that
-$$
+\begin{equation}\label{eq:jacobian}
 \dot{\rot} = J(\rot)\omega
-$$
+\end{equation}
 we have
 \begin{eqnarray*}
-J^{-1} &=& \frac{\normr -\sin\normr}{\normr^3}\rot\rot^T + \alpha_2\rcross + \alpha_1 I_3\\
-&=& \frac{\normr -\sin\normr}{\normr^3}\rot\rot^T + \frac{1 - \cos \normr}{\normr^2}\rcross + \frac{\sin \normr}{\normr} I_3\\
-&=& \frac{\normr -\sin\normr}{\normr^3}(\rcross^2 + \normr^2 I_3) + \frac{1 - \cos \normr}{\normr^2}\rcross + \frac{\sin \normr}{\normr} I_3\\
-&=& I_3  + \frac{1 - \cos \normr}{\normr^2}\rcross + \frac{\normr -\sin\normr}{\normr^3}\rcross^2\\
+J^{-1} &=& \frac{\normr -\sin\normr}{\normr^3}\rot\rot^T + \alpha_2\rcross{} + \alpha_1 I_3\\
+&=& \frac{\normr -\sin\normr}{\normr^3}\rot\rot^T + \frac{1 - \cos \normr}{\normr^2}\rcross{} + \frac{\sin \normr}{\normr} I_3\\
+&=& \frac{\normr -\sin\normr}{\normr^3}(\rcross{}^2 + \normr^2 I_3) + \frac{1 - \cos \normr}{\normr^2}\rcross{} + \frac{\sin \normr}{\normr} I_3\\
+&=& I_3  + \frac{1 - \cos \normr}{\normr^2}\rcross{} + \frac{\normr -\sin\normr}{\normr^3}\rcross{}^2\\
 \end{eqnarray*}
 
 \section{Computation of the Jacobian}
 
 We need to inverse $J^{-1}$. For that, we make the assumption that $J$ is of the following form:
 \begin{eqnarray*}
-J &=& I_3 + \beta_1 \rcross + \beta_2 \rcross^2\\
-JJ^{-1} &=& \left(I_3 + \beta_1 \rcross + \beta_2 \rcross^2\right)\left(I_3  + \frac{1 - \cos \normr}{\normr^2}\rcross + \frac{\normr -\sin\normr}{\normr^3}\rcross^2\right)\\
-&=& I_3  + \frac{1 - \cos \normr}{\normr^2}\rcross + \frac{\normr -\sin\normr}{\normr^3}\rcross^2\\
-&& +  \beta_1 \rcross  + \beta_1 \frac{1 - \cos \normr}{\normr^2}\rcross^2 + \beta_1 \frac{\normr -\sin\normr}{\normr^3}\rcross^3\\
-&& +  \beta_2 \rcross^2  + \beta_2 \frac{1 - \cos \normr}{\normr^2}\rcross^3 + \beta_2 \frac{\normr -\sin\normr}{\normr^3}\rcross^4\\
-&=& I_3 + \left(\frac{1 - \cos \normr}{\normr^2} + \beta_1\right)\rcross + \left(\frac{\normr -\sin\normr}{\normr^3} + \beta_1 \frac{1 - \cos \normr}{\normr^2} + \beta_2\right)\rcross^2\\
-&& + \left(\beta_1 \frac{\normr -\sin\normr}{\normr^3} + \beta_2 \frac{1 - \cos \normr}{\normr^2}\right)(- \normr^2 \rcross) + \beta_2 \frac{\normr -\sin\normr}{\normr^3}(- \normr^2 \rcross^2)\\
-&=& I_3 + \left(\frac{1 - \cos \normr}{\normr^2} + \beta_1\right)\rcross + \left(\frac{\normr -\sin\normr}{\normr^3} + \beta_1 \frac{1 - \cos \normr}{\normr^2} + \beta_2\right)\rcross^2\\
-&& + \left(- \beta_1 \frac{\normr -\sin\normr}{\normr} - \beta_2 (1 - \cos \normr)\right)\rcross - \beta_2 \frac{\normr -\sin\normr}{\normr}\rcross^2\\
-&=& I_3 + \left(\frac{1 - \cos \normr}{\normr^2} + \beta_1 \frac{\sin\normr}{\normr} - \beta_2 (1 - \cos \normr)\right)\rcross \\
-&& + \left(\frac{\normr -\sin\normr}{\normr^3} + \beta_1 \frac{1 - \cos \normr}{\normr^2} + \beta_2 \frac{\sin\normr}{\normr}\right)\rcross^2 \\
+J &=& I_3 + \beta_1 \rcross{} + \beta_2 \rcross{}^2\\
+JJ^{-1} &=& \left(I_3 + \beta_1 \rcross{} + \beta_2 \rcross{}^2\right)\left(I_3  + \frac{1 - \cos \normr}{\normr^2}\rcross{} + \frac{\normr -\sin\normr}{\normr^3}\rcross{}^2\right)\\
+&=& I_3  + \frac{1 - \cos \normr}{\normr^2}\rcross{} + \frac{\normr -\sin\normr}{\normr^3}\rcross{}^2\\
+&& +  \beta_1 \rcross{}  + \beta_1 \frac{1 - \cos \normr}{\normr^2}\rcross{}^2 + \beta_1 \frac{\normr -\sin\normr}{\normr^3}\rcross{}^3\\
+&& +  \beta_2 \rcross{}^2  + \beta_2 \frac{1 - \cos \normr}{\normr^2}\rcross{}^3 + \beta_2 \frac{\normr -\sin\normr}{\normr^3}\rcross{}^4\\
+&=& I_3 + \left(\frac{1 - \cos \normr}{\normr^2} + \beta_1\right)\rcross{} + \left(\frac{\normr -\sin\normr}{\normr^3} + \beta_1 \frac{1 - \cos \normr}{\normr^2} + \beta_2\right)\rcross{}^2\\
+&& + \left(\beta_1 \frac{\normr -\sin\normr}{\normr^3} + \beta_2 \frac{1 - \cos \normr}{\normr^2}\right)(- \normr^2 \rcross{}) + \beta_2 \frac{\normr -\sin\normr}{\normr^3}(- \normr^2 \rcross{}^2)\\
+&=& I_3 + \left(\frac{1 - \cos \normr}{\normr^2} + \beta_1\right)\rcross{} + \left(\frac{\normr -\sin\normr}{\normr^3} + \beta_1 \frac{1 - \cos \normr}{\normr^2} + \beta_2\right)\rcross{}^2\\
+&& + \left(- \beta_1 \frac{\normr -\sin\normr}{\normr} - \beta_2 (1 - \cos \normr)\right)\rcross{} - \beta_2 \frac{\normr -\sin\normr}{\normr}\rcross{}^2\\
+&=& I_3 + \left(\frac{1 - \cos \normr}{\normr^2} + \beta_1 \frac{\sin\normr}{\normr} - \beta_2 (1 - \cos \normr)\right)\rcross{} \\
+&& + \left(\frac{\normr -\sin\normr}{\normr^3} + \beta_1 \frac{1 - \cos \normr}{\normr^2} + \beta_2 \frac{\sin\normr}{\normr}\right)\rcross{}^2 \\
 \end{eqnarray*}
 We get the following linear system
 \begin{eqnarray*}
@@ -269,10 +272,10 @@ Hence
 \end{eqnarray*}
 and finally
 \begin{eqnarray*}
-J &=& I_3 -\frac{1}{2}\rcross +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rcross^2\\
-&=& \frac{\normr\sin\normr}{2(1-\cos\normr)} I_3 - \frac{1}{2}\rcross +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rot\rot^T\\
+J &=& I_3 -\frac{1}{2}\rcross{} +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rcross{}^2\\
+%% &=& \frac{\normr\sin\normr}{2(1-\cos\normr)} I_3 - \frac{1}{2}\rcross{} +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rot\rot^T\\
+&=& I_3 -\frac{1}{2}\rcross{} +  \left(\frac{2(1-\cos\normr) - \normr\sin\normr}{2\normr^2(1-\cos\normr)}\right)\rcross{}^2\\
 \end{eqnarray*}
-
 
 
 \section{Appendix}
@@ -298,7 +301,7 @@ x_1y_3 & x_2y_3 & -x_1y_1 - x_2y_2
 \end{eqnarray}
 {\tiny
 \begin{eqnarray*}
-&\rdotcross\rot\rot^T-\rot\dot{\rot}^T\rcross&\\
+&\rdotcross\rot\rot^T-\rot\dot{\rot}^T\rcross{}&\\
 &=&\\
 &\left(\begin{array}{ccc}
 0&-(\rot_1^2+\rot_2^2)\dot{\rot}_3+\rot_2\rot_3\dot{\rot}_2+\rot_1\rot_3\dot{\rot}_1 & (\rot_1^2+\rot_3^2)\dot{\rot}_2-\rot_1\rot_2\dot{\rot}_1-\rot_2\rot_3\dot{\rot}_3\\
@@ -308,7 +311,7 @@ x_1y_3 & x_2y_3 & -x_1y_1 - x_2y_2
 \end{eqnarray*}
 }
 \begin{eqnarray*}
-\rdotcross\rot\rot^T-\rot\dot{\rot}^T\rcross&=&
+\rdotcross\rot\rot^T-\rot\dot{\rot}^T\rcross{}&=&
 \left[\begin{array}{c}
 (\rot_2^2+\rot_3^2)\dot{\rot}_1-\rot_1\rot_2\dot{\rot}_2-\rot_1\rot_3\dot{\rot}_3\\
 -\rot_1\rot_2\dot{\rot}_1+(\rot_1^2+\rot_3^2)\dot{\rot}_2-\rot_2\rot_3\dot{\rot}_3\\
@@ -330,7 +333,7 @@ x_1y_3 & x_2y_3 & -x_1y_1 - x_2y_2
 \end{eqnarray*}
 Hence
 \begin{eqnarray}\label{eq:ouf}
-\rdotcross\rot\rot^T-\rot\dot{\rot}^T\rcross&=&
+\rdotcross\rot\rot^T-\rot\dot{\rot}^T\rcross{}&=&
 \normr^2\rdotcross - \left[\rot\rot^T\dot{\rot}\right]_{\times}
 \end{eqnarray}
 \end {document}
