@@ -23,6 +23,7 @@
 #include "hpp/constraints/orientation.hh"
 #include "hpp/constraints/relative-position.hh"
 #include "hpp/constraints/relative-orientation.hh"
+#include "hpp/constraints/relative-transformation.hh"
 #include "hpp/constraints/static-stability.hh"
 
 #define BOOST_TEST_MODULE hpp_constraints
@@ -51,6 +52,7 @@ const static double DQ_MAX = 1e-2;
 const static size_t MAX_NB_ERROR = 5;
 
 static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
+static fcl::Transform3f transform3f_id () { fcl::Transform3f T; T.setIdentity (); return T;}
 
 hpp::model::ObjectFactory objectFactory;
 
@@ -408,6 +410,10 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         "RelativePosition with mask (0,1,1)",
         RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0), list_of(false)(true)(true))
+      ));
+  functions.push_back ( DFptr (
+        "RelativeTransformation",
+        RelativeTransformation::create (device, ee1, ee2, transform3f_id ())
       ));
   functions.push_back ( DFptr (
         "StaticStabilityGravity",
