@@ -21,9 +21,7 @@
 # define HPP_RELATIVE_ORIENTATION_HH
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/core/differentiable-function.hh>
-# include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/constraints/differentiable-function.hh>
 
 namespace hpp {
   namespace eigen {

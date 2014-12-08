@@ -22,7 +22,7 @@
 
 # include <boost/assign/list_of.hpp>
 # include <fcl/math/transform.h>
-# include <hpp/core/differentiable-function.hh>
+# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/relative-orientation.hh>
 # include <hpp/constraints/relative-position.hh>
 # include <hpp/constraints/config.hh>

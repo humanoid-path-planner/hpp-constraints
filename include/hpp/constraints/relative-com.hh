@@ -20,7 +20,7 @@
 #ifndef HPP_CONSTRAINTS_RELATIVE_COM_HH
 # define HPP_CONSTRAINTS_RELATIVE_COM_HH
 
-# include <hpp/core/differentiable-function.hh>
+# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
 

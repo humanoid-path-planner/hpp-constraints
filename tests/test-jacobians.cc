@@ -18,7 +18,6 @@
 #include <hpp/model/joint.hh>
 #include <hpp/model/configuration.hh>
 #include <hpp/model/object-factory.hh>
-#include <hpp/core/basic-configuration-shooter.hh>
 
 #include "hpp/constraints/position.hh"
 #include "hpp/constraints/orientation.hh"
@@ -32,13 +31,13 @@
 #include <limits>
 #include <math.h>
 
+using hpp::model::Configuration_t;
+using hpp::model::ConfigurationPtr_t;
 using hpp::model::Device;
 using hpp::model::DevicePtr_t;
 using hpp::model::JointPtr_t;
+using hpp::model::JointVector_t;
 using hpp::model::BodyPtr_t;
-
-using hpp::core::ConfigurationPtr_t;
-using hpp::core::BasicConfigurationShooter;
 
 using std::numeric_limits;
 using boost::assign::list_of;
@@ -53,6 +52,27 @@ const static size_t MAX_NB_ERROR = 5;
 static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
 
 hpp::model::ObjectFactory objectFactory;
+
+class BasicConfigurationShooter
+{
+public:
+  BasicConfigurationShooter (const DevicePtr_t& robot) : robot_ (robot)
+  {
+  }
+  virtual ConfigurationPtr_t shoot () const
+  {
+    JointVector_t jv = robot_->getJointVector ();
+    ConfigurationPtr_t config (new Configuration_t (robot_->configSize ()));
+    for (JointVector_t::const_iterator itJoint = jv.begin ();
+	 itJoint != jv.end (); itJoint++) {
+      std::size_t rank = (*itJoint)->rankInConfiguration ();
+      (*itJoint)->configuration ()->uniformlySample (rank, *config);
+    }
+    return config;
+  }
+private:
+  const DevicePtr_t& robot_;
+}; // class BasicConfigurationShooter
 
 JointPtr_t createFreeflyerJoint (DevicePtr_t robot)
 {

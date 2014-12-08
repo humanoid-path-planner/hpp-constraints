@@ -20,10 +20,11 @@
 #ifndef HPP_CONSTRAINTS_FWD_HH
 # define HPP_CONSTRAINTS_FWD_HH
 
-# include <hpp/core/fwd.hh>
+# include <hpp/model/fwd.hh>
 
 namespace hpp {
   namespace constraints {
+    HPP_PREDEF_CLASS (DifferentiableFunction);
     HPP_PREDEF_CLASS (Orientation);
     HPP_PREDEF_CLASS (Position);
     HPP_PREDEF_CLASS (RelativeCom);
@@ -33,16 +34,16 @@ namespace hpp {
 
     typedef model::ConfigurationIn_t ConfigurationIn_t;
     typedef model::ConfigurationOut_t ConfigurationOut_t;
-    typedef core::DevicePtr_t DevicePtr_t;
-    typedef core::DifferentiableFunction DifferentiableFunction;
-    typedef core::DifferentiableFunctionPtr_t DifferentiableFunctionPtr_t;
-    typedef core::size_type size_type;
+    typedef model::DevicePtr_t DevicePtr_t;
+    typedef boost::shared_ptr <DifferentiableFunction>
+    DifferentiableFunctionPtr_t;
+    typedef model::size_type size_type;
     typedef model::JointPtr_t JointPtr_t;
     typedef model::vector3_t vector3_t;
     typedef model::matrix3_t matrix3_t;
     typedef model::matrix_t matrix_t;
-    typedef core::matrixIn_t matrixIn_t;
-    typedef core::matrixOut_t matrixOut_t;
+    typedef Eigen::Ref <const matrix_t> matrixIn_t;
+    typedef Eigen::Ref <matrix_t> matrixOut_t;
     typedef model::vector_t vector_t;
     typedef model::vectorIn_t vectorIn_t;
     typedef model::vectorOut_t vectorOut_t;

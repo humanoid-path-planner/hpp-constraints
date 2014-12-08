@@ -36,7 +36,6 @@ MACRO(ADD_TESTCASE NAME GENERATED)
   ENDIF()
   ADD_TEST(${NAME} ${RUNTIME_OUTPUT_DIRECTORY}/${NAME})
 
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-core)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-model)
 
   # Link against Boost and project library.

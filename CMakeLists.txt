@@ -25,6 +25,7 @@ SET(PROJECT_DESCRIPTION
 SET(PROJECT_URL "https://github.com/laas/hpp-constraints")
 
 SET(${PROJECT_NAME}_HEADERS
+  include/hpp/constraints/differentiable-function.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/orientation.hh
   include/hpp/constraints/position.hh
@@ -41,10 +42,7 @@ IF (HPP_DEBUG)
 ENDIF()
 
 SETUP_PROJECT()
-ADD_REQUIRED_DEPENDENCY("hpp-core >= 3")
 ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
-ADD_DOC_DEPENDENCY("roboptim-core >= 1")
-
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
 
 ADD_SUBDIRECTORY (src)

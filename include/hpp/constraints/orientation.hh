@@ -21,7 +21,7 @@
 # define HPP_CONSTRAINTS_ORIENTATION_HH
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/core/differentiable-function.hh>
+# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
 
