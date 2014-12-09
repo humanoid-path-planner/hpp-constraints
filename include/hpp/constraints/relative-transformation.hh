@@ -21,7 +21,7 @@
 # define HPP_RELATIVE_TRANSFORMATION_HH
 
 # include <boost/assign/list_of.hpp>
-# include <fcl/math/transform.h>
+# include <hpp/fcl/math/transform.h>
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/relative-orientation.hh>
 # include <hpp/constraints/relative-position.hh>
