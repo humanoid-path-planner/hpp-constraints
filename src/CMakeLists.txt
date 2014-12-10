@@ -16,12 +16,14 @@
 SET(LIBRARY_NAME ${PROJECT_NAME})
 ADD_LIBRARY(${LIBRARY_NAME}
   SHARED
+  tool.cc
   position.cc
   orientation.cc
   relative-com.cc
   relative-orientation.cc
   relative-position.cc
   relative-transformation.cc
+  static-stability.cc
   )
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)

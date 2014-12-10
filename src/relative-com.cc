@@ -23,21 +23,20 @@
 #include <hpp/model/joint.hh>
 
 namespace hpp {
-  namespace eigen {
-    void convert (const constraints::vector3_t& v, model::vectorOut_t res)
-    {
-      res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
-    }
-
-    void convert (const constraints::matrix3_t& m, matrix3_t& res)
-    {
-      res (0,0) = m (0,0); res (0,1) = m (0,1); res (0,2) = m (0,2);
-      res (1,0) = m (1,0); res (1,1) = m (1,1); res (1,2) = m (1,2);
-      res (2,0) = m (2,0); res (2,1) = m (2,1); res (2,2) = m (2,2);
-    }
-  } // namespace eigen
-
   namespace constraints {
+    namespace eigen {
+      void convert (const constraints::vector3_t& v, model::vectorOut_t res)
+      {
+        res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
+      }
+
+      void convert (const constraints::matrix3_t& m, matrix3_t& res)
+      {
+        res (0,0) = m (0,0); res (0,1) = m (0,1); res (0,2) = m (0,2);
+        res (1,0) = m (1,0); res (1,1) = m (1,1); res (1,2) = m (1,2);
+        res (2,0) = m (2,0); res (2,1) = m (2,1); res (2,2) = m (2,2);
+      }
+    } // namespace eigen
     
     static vector3_t zero3d (0, 0, 0);
 

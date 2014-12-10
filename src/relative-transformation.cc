@@ -34,27 +34,37 @@ namespace hpp {
     }
 
     RelativeTransformationPtr_t RelativeTransformation::create
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const Transform3f& reference, std::vector <bool> mask)
+    {
+      RelativeTransformation* ptr = new RelativeTransformation
+	(name, robot, joint1, joint2, reference, mask);
+      RelativeTransformationPtr_t shPtr (ptr);
+      return shPtr;
+    }
+
+    RelativeTransformationPtr_t RelativeTransformation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2, const Transform3f& reference,
      std::vector <bool> mask)
     {
       RelativeTransformation* ptr = new RelativeTransformation
-	(robot, joint1,	joint2, reference, mask);
+	("RelativeTransformation", robot, joint1, joint2, reference, mask);
       RelativeTransformationPtr_t shPtr (ptr);
       return shPtr;
     }
 
     RelativeTransformation::RelativeTransformation
-    (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2,
-     const Transform3f& reference,
-     std::vector <bool> mask) :
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const Transform3f& reference, std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-			      size (mask), "RelativeTransformation"),
-      relativeOrientation_ (robot, joint1, joint2, reference.getRotation (),
+			      size (mask), name),
+      relativeOrientation_ ("", robot, joint1, joint2, reference.getRotation (),
 			    boost::assign::list_of (mask [3])(mask [4])
 			    (mask [5])),
-      relativePosition_ (robot, joint1, joint2, reference.getTranslation (),
+      relativePosition_ ("", robot, joint1, joint2, reference.getTranslation (),
 			 vector3_t (0, 0, 0),
 			 boost::assign::list_of (mask [0])(mask [1])
 			 (mask [2])), reference_ (reference)

@@ -26,10 +26,6 @@
 # include <hpp/constraints/fwd.hh>
 
 namespace hpp {
-  namespace eigen {
-    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
-    typedef Eigen::Matrix <double, 3, 1> vector3_t;
-  } // namespace eigen
   namespace constraints {
     /// Constraint on the orientation of a robot joint
     ///
@@ -61,6 +57,21 @@ namespace hpp {
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       /// Return a shared pointer to a new instance
       ///
+      /// \param name the name of the constraints,
+      /// \param robot the robot the constraints is applied to,
+      /// \param joint the joint the orientation of which is constrained
+      /// \param reference reference orientation of the joint,
+      /// \param mask which component of the error vector to take into
+      ///        account.
+      static OrientationPtr_t create (const std::string& name,
+                                      const DevicePtr_t& robot,
+                                      const JointPtr_t& joint,
+                                      const matrix3_t& reference,
+                                      std::vector <bool> mask =
+                                      boost::assign::list_of (true)(true)(true));
+
+      /// Return a shared pointer to a new instance
+      ///
       /// \param robot the robot the constraints is applied to,
       /// \param joint the joint the orientation of which is constrained
       /// \param reference reference orientation of the joint,
@@ -82,15 +93,19 @@ namespace hpp {
       {
 	return reference_;
       }
+
       ///Constructor
       ///
+      /// \param name the name of the constraints,
       /// \param robot the robot the constraints is applied to,
       /// \param joint the joint the orientation of which is constrained
       /// \param reference reference orientation of the joint,
       /// \param mask which component of the error vector to take into
       ///        account.
-      Orientation (const DevicePtr_t&, const JointPtr_t& joint,
-		   const matrix3_t& reference, std::vector <bool> mask);
+      Orientation (const std::string& name, const DevicePtr_t&,
+                   const JointPtr_t& joint, const matrix3_t& reference,
+                   std::vector <bool> mask);
+
       /// Get size of error with respect to mask.
       static size_type size (std::vector<bool> mask);
     protected:
@@ -109,6 +124,7 @@ namespace hpp {
       DevicePtr_t robot_;
       JointPtr_t joint_;
       matrix3_t reference_;
+      matrix3_t ref_;
       std::vector <bool> mask_;
       mutable matrix3_t Rerror_;
       mutable vector_t r_;

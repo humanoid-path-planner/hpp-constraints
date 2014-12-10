@@ -27,6 +27,21 @@ namespace hpp {
   namespace constraints {
     static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
     matrix3_t Position::I3 = identity ();
+
+    PositionPtr_t Position::create (const std::string& name,
+                                    const DevicePtr_t& robot,
+				    const JointPtr_t& joint,
+				    const vector3_t& pointInLocalFrame,
+				    const vector3_t& targetInGlobalFrame,
+				    const matrix3_t& rotation,
+				    std::vector <bool> mask)
+    {
+      Position* ptr = new Position
+        (name, robot, joint, pointInLocalFrame, targetInGlobalFrame, rotation, mask);
+      PositionPtr_t shPtr (ptr);
+      return shPtr;
+    }
+
     PositionPtr_t Position::create (const DevicePtr_t& robot,
 				    const JointPtr_t& joint,
 				    const vector3_t& pointInLocalFrame,
@@ -34,19 +49,18 @@ namespace hpp {
 				    const matrix3_t& rotation,
 				    std::vector <bool> mask)
     {
-      Position* ptr = new Position (robot, joint, pointInLocalFrame,
-				    targetInGlobalFrame, rotation, mask);
+      Position* ptr = new Position
+        ("Position", robot, joint, pointInLocalFrame, targetInGlobalFrame, rotation, mask);
       PositionPtr_t shPtr (ptr);
       return shPtr;
     }
 
-    Position::Position (const DevicePtr_t& robot, const JointPtr_t& joint,
-			const vector3_t& pointInLocalFrame,
-			const vector3_t& targetInGlobalFrame,
-			const matrix3_t& rotation,
-			std::vector <bool> mask) :
+    Position::Position (const std::string& name, const DevicePtr_t& robot,
+                        const JointPtr_t& joint, const vector3_t& pointInLocalFrame,
+                        const vector3_t& targetInGlobalFrame, const matrix3_t& rotation,
+                        std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-		mask [0] + mask [1] + mask [2],	"Position"),
+		mask [0] + mask [1] + mask [2],	name),
       robot_ (robot), joint_ (joint), pointInLocalFrame_ (pointInLocalFrame),
       targetInGlobalFrame_ (targetInGlobalFrame), SBT_ (), result_ (3)
     {

@@ -23,30 +23,35 @@
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/relative-orientation.hh>
 #include <hpp/constraints/orientation.hh>
+#include <hpp/constraints/tool.hh>
 
 namespace hpp {
   namespace constraints {
-
-    extern void computeJlog (const double& theta, vectorIn_t r,
-			     eigen::matrix3_t& Jlog);
+    RelativeOrientationPtr_t RelativeOrientation::create
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const matrix3_t& reference, std::vector <bool> mask)
+    {
+      RelativeOrientation* ptr =
+	new RelativeOrientation (name, robot, joint1, joint2, reference, mask);
+      RelativeOrientationPtr_t shPtr (ptr);
+      return shPtr;
+    }
 
     RelativeOrientationPtr_t RelativeOrientation::create
     (const DevicePtr_t& robot, const JointPtr_t& joint1,
      const JointPtr_t& joint2, const matrix3_t& reference,
      std::vector <bool> mask)
     {
-      RelativeOrientation* ptr =
-	new RelativeOrientation (robot, joint1, joint2, reference, mask);
-      RelativeOrientationPtr_t shPtr (ptr);
-      return shPtr;
+      return create ("RelativeOrientation", robot, joint1, joint2, reference, mask);
     }
 
     RelativeOrientation::RelativeOrientation
-    (const DevicePtr_t& robot, const JointPtr_t& joint1,
-     const JointPtr_t& joint2, const matrix3_t& reference,
-     std::vector <bool> mask) :
+    (const std::string& name, const DevicePtr_t& robot,
+     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const matrix3_t& reference, std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-			      Orientation::size (mask), "RelativeOrientation"),
+			      Orientation::size (mask), name),
       robot_ (robot), joint1_ (joint1), joint2_ (joint2),
       reference_ (reference), mask_ (mask), r_ (3),
       Jlog_ (), jacobian_ (3, robot->numberDof ())
@@ -119,7 +124,7 @@ namespace hpp {
       if (theta < 1e-3) {
 	Jlog_.setIdentity ();
       } else {
-	computeJlog (theta, r_, Jlog_);
+        computeJlog (theta, r_, Jlog_);
       }
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
