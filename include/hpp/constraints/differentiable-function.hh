@@ -24,16 +24,19 @@
 
 namespace hpp {
   namespace constraints {
-    /// Differentiable function of the robot configuration
-    class DifferentiableFunction
+    /// Differentiable function
+    class HPP_CONSTRAINTS_DLLAPI DifferentiableFunction
     {
     public:
+      typedef std::pair <size_type, size_type> Interval_t;
+      typedef std::vector <Interval_t> Intervals_t;
+
       virtual ~DifferentiableFunction () {}
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
       void operator () (vectorOut_t result,
-			ConfigurationIn_t argument) const
+			vectorIn_t argument) const
       {
 	assert (result.size () == outputSize ());
 	assert (argument.size () == inputSize ());
@@ -43,12 +46,14 @@ namespace hpp {
       ///
       /// \retval jacobian jacobian will be stored in this argument
       /// \param argument point at which the jacobian will be computed
-      void jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
+      void jacobian (matrixOut_t jacobian, vectorIn_t argument) const
       {
 	assert (argument.size () == inputSize ());
 	assert (jacobian.rows () == outputSize ());
 	assert (jacobian.cols () == inputDerivativeSize ());
 	impl_jacobian (jacobian, argument);
+        for (size_t i = 0; i < passiveDofs_.size(); i++)
+          jacobian.middleCols (passiveDofs_[i].first, passiveDofs_[i].second).setZero ();
       }
 
       /// Get dimension of input vector
@@ -86,6 +91,47 @@ namespace hpp {
 	return o;
       }
 
+      /// Check whether this function is parametric.
+      /// \return True if parametric.
+      bool isParametric () const
+      {
+        return isParametric_;
+      }
+
+      /// Make the function parametric or non-parametric.
+      /// \param value True if you want a parametric projector.
+      /// \note When change from true to false, the level set parameters of any
+      /// ConfigProjector containing the function should be recomputed using
+      /// ConfigProjector::offset.
+      void isParametric (const bool& value)
+      {
+        isParametric_ = value;
+      }
+
+      /// Set passive DOFs. Passive DOF cannot be modified by this function.
+      /// Corresponding columns of the jacobian are set to zero.
+      const Intervals_t& passiveDofs (std::vector <size_type> dofs)
+      {
+        passiveDofs_.clear ();
+        if (dofs.size () == 0) return passiveDofs_;
+        std::sort (dofs.begin (), dofs.end ());
+        std::vector <size_type>::iterator it =
+          std::unique (dofs.begin (), dofs.end ());
+        dofs.resize (std::distance (dofs.begin (), it));
+        dofs.push_back (inputDerivativeSize_ + 1);
+        size_type intStart = dofs[0], intEnd = dofs[0];
+        for (size_t i = 1; i < dofs.size (); i++) {
+          intEnd ++;
+          if (intEnd == dofs[i]) {
+            continue;
+          } else {
+            passiveDofs_.push_back (Interval_t (intStart, intEnd - intStart));
+            intStart = intEnd = dofs[i];
+          }
+        }
+        return passiveDofs_;
+      }
+
     protected:
       /// \brief Concrete class constructor should call this constructor.
       ///
@@ -97,16 +143,17 @@ namespace hpp {
 			      size_type outputSize,
 			      std::string name = std::string ()) :
 	inputSize_ (inputSize), inputDerivativeSize_ (inputDerivativeSize),
-	outputSize_ (outputSize), name_ (name)
+	outputSize_ (outputSize), isParametric_ (false),
+       passiveDofs_ (0), name_ (name)
       {
       }
 
       /// User implementation of function evaluation
       virtual void impl_compute (vectorOut_t result,
-				 ConfigurationIn_t argument) const = 0;
+				 vectorIn_t argument) const = 0;
 
       virtual void impl_jacobian (matrixOut_t jacobian,
-				  ConfigurationIn_t arg) const = 0;
+				  vectorIn_t arg) const = 0;
 
     private:
       /// Dimension of input vector.
@@ -115,6 +162,10 @@ namespace hpp {
       size_type inputDerivativeSize_;
       /// Dimension of output vector
       size_type outputSize_;
+      /// Whether this function is parametric
+      bool isParametric_;
+      /// Intervals of passive dofs
+      Intervals_t passiveDofs_;
       std::string name_;
     }; // class DifferentiableFunction
     inline std::ostream&
