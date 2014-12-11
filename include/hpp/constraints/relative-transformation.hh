@@ -34,6 +34,9 @@ namespace hpp {
     typedef Eigen::Matrix <double, 3, 1> vector3_t;
   } // namespace eigen
   namespace constraints {
+    /// \addtogroup constraints
+    /// \{
+
     /// Constraint on the relative transformation of two robot joints
     ///
     /// The 3 first coordinates of the error is computed by a RelativePosition
@@ -111,6 +114,7 @@ namespace hpp {
       /// Size of the orientation constraint
       size_type sizeOrientation_;
     }; // class RelativeTransformation
+    /// \}
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_RELATIVE_TRANSFORMATION_HH

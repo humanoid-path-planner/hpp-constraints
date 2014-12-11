@@ -32,6 +32,9 @@ namespace hpp {
   } // namespace eigen
 
   namespace constraints {
+    /// \addtogroup constraints
+    /// \{
+
     /// Constraint on the position of a robot point
     ///
     /// The value of the function is defined as the vector from a local
@@ -138,6 +141,7 @@ namespace hpp {
       mutable eigen::matrix3_t cross_;
       mutable vector_t result_;
     }; // class Position
+    /// \}
   } // namespace constraints
 } // namespace hpp
 

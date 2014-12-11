@@ -24,8 +24,11 @@
 
 namespace hpp {
   namespace constraints {
-    /// Differentiable function of the robot configuration
-    class DifferentiableFunction
+    /// \addtogroup constraints
+    /// \{
+
+    /// Differentiable function
+    class HPP_CONSTRAINTS_DLLAPI DifferentiableFunction
     {
     public:
       virtual ~DifferentiableFunction () {}
@@ -122,6 +125,7 @@ namespace hpp {
     {
       return f.print (os);
     }
+    /// \}
   } // namespace constraints
 } // namespace hpp
 
