@@ -131,6 +131,9 @@ namespace hpp {
         fcl::Transform3f M_;
     };
 
+    /// \addtogroup constraints
+    /// \{
+
     class StaticStabilityGravity : public DifferentiableFunction {
       public:
         static fcl::Vec3f gravity;
@@ -180,6 +183,7 @@ namespace hpp {
         mutable eigen::matrix3_t Jlog_;
         mutable matrix_t jacobian_;
     };
+    /// \}
   } // namespace constraints
 } // namespace hpp
 

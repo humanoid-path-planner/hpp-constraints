@@ -30,6 +30,9 @@ namespace hpp {
     typedef Eigen::Matrix <double, 3, 1> vector3_t;
   } // namespace eigen
   namespace constraints {
+    /// \addtogroup constraints
+    /// \{
+
     /// Constraint on the relative position of the center of mass
     ///
     /// The value of the function is defined as the position of the center
@@ -78,6 +81,7 @@ namespace hpp {
       vector3_t reference_;
       mutable eigen::matrix3_t cross_;
     }; // class RelativeCom
+    /// \}
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_RELATIVE_COM_HH

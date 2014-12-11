@@ -29,6 +29,9 @@ namespace hpp {
     typedef Eigen::Matrix <double, 3, 1> vector3_t;
   } // namespace eigen
   namespace constraints {
+    /// \addtogroup constraints
+    /// \{
+
     /// Constraint on the relative orientation of two robot joints
     ///
     /// The value of the function is defined as follows:
@@ -134,6 +137,7 @@ namespace hpp {
       mutable eigen::matrix3_t Jlog_;
       mutable matrix_t jacobian_;
     }; // class RelativeOrientation
+    /// \}
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_RELATIVE_ORIENTATION_HH

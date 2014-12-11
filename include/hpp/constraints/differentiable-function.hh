@@ -24,6 +24,9 @@
 
 namespace hpp {
   namespace constraints {
+    /// \addtogroup constraints
+    /// \{
+
     /// Differentiable function
     class HPP_CONSTRAINTS_DLLAPI DifferentiableFunction
     {
@@ -173,6 +176,7 @@ namespace hpp {
     {
       return f.print (os);
     }
+    /// \}
   } // namespace constraints
 } // namespace hpp
 

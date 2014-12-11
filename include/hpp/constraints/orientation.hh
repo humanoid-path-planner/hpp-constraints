@@ -27,6 +27,9 @@
 
 namespace hpp {
   namespace constraints {
+    /// \addtogroup constraints
+    /// \{
+
     /// Constraint on the orientation of a robot joint
     ///
     /// The value of the function is defined as the rotation vector of the
@@ -131,6 +134,7 @@ namespace hpp {
       mutable eigen::matrix3_t Jlog_;
       mutable matrix_t jacobian_;
     }; // class Orientation
+    /// \}
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_ORIENTATION_HH
