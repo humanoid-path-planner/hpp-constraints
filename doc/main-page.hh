@@ -6,6 +6,11 @@
 ///
 /// \defgroup constraints Constraints
 ///
-/// Path planning problems can define constraints that the resulting path
-/// should satisfy.
+/// Some robots can be subject to constraints.
+/// \li closed kinematic chains,
+/// \li quasi-static equilibrium for legged robots
 ///
+/// are examples of such constraints. These constraints can be defined
+/// implicitely by an equation the left hand side of which is a \link
+/// DifferentiableFunction differentiable function \endlink of the
+/// robot configuration.
