@@ -37,24 +37,40 @@ namespace hpp {
         res (2,0) = m (2,0); res (2,1) = m (2,1); res (2,2) = m (2,2);
       }
     } // namespace eigen
-    
+
+    static size_type size (std::vector<bool> mask)
+    {
+      size_type res = 0;
+      for (std::vector<bool>::iterator it = mask.begin ();
+          it != mask.end (); ++it) {
+        if (*it) ++res;
+      }
+      return res;
+    }
+
     static vector3_t zero3d (0, 0, 0);
 
     RelativeComPtr_t RelativeCom::create (const DevicePtr_t& robot,
 					  const JointPtr_t& joint,
-					  const vector3_t reference)
+					  const vector3_t reference,
+                                          std::vector <bool> mask)
     {
-      RelativeCom* ptr = new RelativeCom (robot, joint, reference);
+      RelativeCom* ptr = new RelativeCom (robot, joint, reference, mask);
       RelativeComPtr_t shPtr (ptr);
       return shPtr;
     }
 
     RelativeCom::RelativeCom (const DevicePtr_t& robot, const JointPtr_t& joint,
-			      const vector3_t reference) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 3, "RelativeCom"),
-      robot_ (robot), joint_ (joint), reference_ (reference)
+			      const vector3_t reference, std::vector <bool> mask) :
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                               size (mask), "RelativeCom"),
+      robot_ (robot), joint_ (joint), reference_ (reference), mask_ (mask),
+      nominalCase_ (false), result_ (3), jacobian_ (3, robot->numberDof ())
     {
       cross_.setZero ();
+      if (mask[0] && mask[1] && mask[2])
+        nominalCase_ = true;
+      jacobian_.setZero ();
     }
 
     void RelativeCom::impl_compute (vectorOut_t result,
@@ -67,7 +83,18 @@ namespace hpp {
       const vector3_t& x = robot_->positionCenterOfMass ();
       fcl::Matrix3f RT = M.getRotation (); RT.transpose ();
       const fcl::Vec3f& t = M.getTranslation ();
-      eigen::convert (RT * (x - t) - reference_, result);
+
+      if (nominalCase_)
+        eigen::convert (RT * (x - t) - reference_, result);
+      else {
+        eigen::convert (RT * (x - t) - reference_, result_);
+        size_t index = 0;
+        for (size_t i = 0; i < 3; ++i)
+          if (mask_[i]) {
+            result [index] = result_ [i];
+            index++;
+          }
+      }
     }
 
     void RelativeCom::impl_jacobian (matrixOut_t jacobian,
@@ -85,9 +112,21 @@ namespace hpp {
       cross_ (0,2) = x [1] - t [1]; cross_ (2,0) = -x [1] + t [1];
       cross_ (1,2) = -x [0] + t [0]; cross_ (2,1) = x [0] - t [0];
       eigen::matrix3_t eigenRT; eigen::convert (RT, eigenRT);
-      jacobian.leftCols (Jjoint.cols ()) =
-	eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
-      jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+      if (nominalCase_) {
+        jacobian.leftCols (Jjoint.cols ()) =
+          eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
+        jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+      } else {
+        jacobian_.leftCols (Jjoint.cols ()) =
+          eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
+        jacobian_.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+        size_t index = 0;
+        for (size_t i = 0; i < 3; ++i)
+          if (mask_[i]) {
+            jacobian.row (index) = jacobian_.row (i);
+            index++;
+          }
+      }
       hppDout (info, "Jcom = " << std::endl << Jcom);
       hppDout (info, "Jw = " << std::endl << Jjoint.bottomRows (3));
       hppDout (info, "Jv = " << std::endl << Jjoint.topRows (3));
