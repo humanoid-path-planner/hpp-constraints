@@ -20,6 +20,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   position.cc
   orientation.cc
   relative-com.cc
+  com-between-feet.cc
   relative-orientation.cc
   relative-position.cc
   relative-transformation.cc
