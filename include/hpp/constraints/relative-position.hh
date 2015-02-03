@@ -26,10 +26,6 @@
 # include <hpp/constraints/config.hh>
 
 namespace hpp {
-  namespace eigen {
-    typedef Eigen::Matrix <double, 3, 3> matrix3_t;
-    typedef Eigen::Matrix <double, 3, 1> vector3_t;
-  } // namespace eigen
   namespace constraints {
     /// \addtogroup constraints
     /// \{

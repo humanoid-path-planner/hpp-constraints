@@ -24,31 +24,28 @@
 
 namespace hpp {
   namespace constraints {
-    namespace eigen {
-      void convert (const constraints::vector3_t& v, model::vectorOut_t res)
+    namespace {
+      static void convert (const constraints::vector3_t& v, model::vectorOut_t res)
       {
         res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
       }
 
-      void convert (const constraints::matrix3_t& m, matrix3_t& res)
+      static void convert (const constraints::matrix3_t& m, eigen::matrix3_t& res)
       {
         res (0,0) = m (0,0); res (0,1) = m (0,1); res (0,2) = m (0,2);
         res (1,0) = m (1,0); res (1,1) = m (1,1); res (1,2) = m (1,2);
         res (2,0) = m (2,0); res (2,1) = m (2,1); res (2,2) = m (2,2);
       }
-    } // namespace eigen
 
-    static size_type size (std::vector<bool> mask)
-    {
-      size_type res = 0;
-      for (std::vector<bool>::iterator it = mask.begin ();
-          it != mask.end (); ++it) {
-        if (*it) ++res;
+      static size_type size (std::vector<bool> mask)
+      {
+        size_type res = 0;
+        for (std::vector<bool>::iterator it = mask.begin ();
+            it != mask.end (); ++it)
+          if (*it) ++res;
+        return res;
       }
-      return res;
-    }
-
-    static vector3_t zero3d (0, 0, 0);
+    } // namespace
 
     RelativeComPtr_t RelativeCom::create (const DevicePtr_t& robot,
 					  const JointPtr_t& joint,
@@ -85,9 +82,9 @@ namespace hpp {
       const fcl::Vec3f& t = M.getTranslation ();
 
       if (nominalCase_)
-        eigen::convert (RT * (x - t) - reference_, result);
+        convert (RT * (x - t) - reference_, result);
       else {
-        eigen::convert (RT * (x - t) - reference_, result_);
+        convert (RT * (x - t) - reference_, result_);
         size_t index = 0;
         for (size_t i = 0; i < 3; ++i)
           if (mask_[i]) {
@@ -111,7 +108,7 @@ namespace hpp {
       cross_ (0,1) = -x [2] + t [2]; cross_ (1,0) = x [2] - t [2];
       cross_ (0,2) = x [1] - t [1]; cross_ (2,0) = -x [1] + t [1];
       cross_ (1,2) = -x [0] + t [0]; cross_ (2,1) = x [0] - t [0];
-      eigen::matrix3_t eigenRT; eigen::convert (RT, eigenRT);
+      eigen::matrix3_t eigenRT; convert (RT, eigenRT);
       if (nominalCase_) {
         jacobian.leftCols (Jjoint.cols ()) =
           eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
