@@ -41,7 +41,10 @@ namespace hpp {
 
     typedef model::ConfigurationIn_t ConfigurationIn_t;
     typedef model::ConfigurationOut_t ConfigurationOut_t;
+    typedef model::Device Device;
     typedef model::DevicePtr_t DevicePtr_t;
+    typedef model::CenterOfMassComputation CenterOfMassComputation;
+    typedef model::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
     typedef boost::shared_ptr <DifferentiableFunction>
     DifferentiableFunctionPtr_t;
     typedef model::size_type size_type;

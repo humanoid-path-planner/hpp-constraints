@@ -61,9 +61,17 @@ namespace hpp {
 				      const vector3_t reference,
                                       std::vector <bool> mask =
                                       boost::assign::list_of (true)(true)(true));
+      static RelativeComPtr_t create (const DevicePtr_t& robot,
+                                      const CenterOfMassComputationPtr_t& comc,
+				      const JointPtr_t& joint,
+				      const vector3_t reference,
+                                      std::vector <bool> mask =
+                                      boost::assign::list_of (true)(true)(true));
       virtual ~RelativeCom () throw () {}
-      RelativeCom (const DevicePtr_t& robot, const JointPtr_t& joint,
-		   const vector3_t reference, std::vector <bool> mask);
+      RelativeCom (const DevicePtr_t& robot,
+          const CenterOfMassComputationPtr_t& comc,
+          const JointPtr_t& joint, const vector3_t reference,
+          std::vector <bool> mask);
     protected:
       /// Compute value of error
       ///
@@ -76,6 +84,7 @@ namespace hpp {
 				  ConfigurationIn_t arg) const throw ();
     private:
       DevicePtr_t robot_;
+      CenterOfMassComputationPtr_t comc_;
       JointPtr_t joint_;
       vector3_t reference_;
       mutable eigen::matrix3_t cross_;

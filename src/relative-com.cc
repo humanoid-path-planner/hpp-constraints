@@ -17,10 +17,12 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/util/debug.hh>
 #include <hpp/constraints/relative-com.hh>
+
+#include <hpp/util/debug.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/model/center-of-mass-computation.hh>
 
 namespace hpp {
   namespace constraints {
@@ -52,16 +54,31 @@ namespace hpp {
 					  const vector3_t reference,
                                           std::vector <bool> mask)
     {
-      RelativeCom* ptr = new RelativeCom (robot, joint, reference, mask);
+      CenterOfMassComputationPtr_t comc =
+        CenterOfMassComputation::create (robot);
+      comc->add (robot->rootJoint ());
+      comc->computeMass ();
+      return create (robot, comc, joint, reference, mask);
+    }
+
+    RelativeComPtr_t RelativeCom::create (
+        const DevicePtr_t& robot,
+        const CenterOfMassComputationPtr_t& comc,
+        const JointPtr_t& joint, const vector3_t reference,
+        std::vector <bool> mask)
+    {
+      RelativeCom* ptr = new RelativeCom (robot, comc, joint, reference, mask);
       RelativeComPtr_t shPtr (ptr);
       return shPtr;
     }
 
-    RelativeCom::RelativeCom (const DevicePtr_t& robot, const JointPtr_t& joint,
-			      const vector3_t reference, std::vector <bool> mask) :
+    RelativeCom::RelativeCom (const DevicePtr_t& robot,
+        const CenterOfMassComputationPtr_t& comc,
+        const JointPtr_t& joint, const vector3_t reference,
+        std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                                size (mask), "RelativeCom"),
-      robot_ (robot), joint_ (joint), reference_ (reference), mask_ (mask),
+      robot_ (robot), comc_ (comc), joint_ (joint), reference_ (reference), mask_ (mask),
       nominalCase_ (false), result_ (3), jacobian_ (3, robot->numberDof ())
     {
       cross_.setZero ();
@@ -76,8 +93,9 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
+      comc_->compute (Device::COM);
       const Transform3f& M = joint_->currentTransformation ();
-      const vector3_t& x = robot_->positionCenterOfMass ();
+      const vector3_t& x = comc_->com ();
       fcl::Matrix3f RT = M.getRotation (); RT.transpose ();
       const fcl::Vec3f& t = M.getTranslation ();
 
@@ -99,11 +117,12 @@ namespace hpp {
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
-      const ComJacobian_t& Jcom = robot_->jacobianCenterOfMass ();
+      comc_->compute (Device::ALL);
+      const ComJacobian_t& Jcom = comc_->jacobian ();
       const JointJacobian_t& Jjoint (joint_->jacobian ());
       const Transform3f& M = joint_->currentTransformation ();
       fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
-      const vector3_t& x = robot_->positionCenterOfMass ();
+      const vector3_t& x = comc_->com ();
       const vector3_t& t (M.getTranslation ());
       cross_ (0,1) = -x [2] + t [2]; cross_ (1,0) = x [2] - t [2];
       cross_ (0,2) = x [1] - t [1]; cross_ (2,0) = -x [1] + t [1];

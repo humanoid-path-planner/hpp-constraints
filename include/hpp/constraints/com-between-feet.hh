@@ -63,9 +63,18 @@ namespace hpp {
             const JointPtr_t& jointReference, const vector3_t reference,
             std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
 
+        /// Return a shared pointer to a new instance
+        static ComBetweenFeetPtr_t create (
+            const std::string& name, const DevicePtr_t& robot,
+            const CenterOfMassComputationPtr_t& comc,
+            const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
+            const JointPtr_t& jointReference, const vector3_t reference,
+            std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
+
         virtual ~ComBetweenFeet () throw () {}
 
         ComBetweenFeet (const std::string& name, const DevicePtr_t& robot,
+            const CenterOfMassComputationPtr_t& comc,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
             const JointPtr_t& jointReference, const vector3_t reference,
             std::vector <bool> mask);
@@ -82,6 +91,7 @@ namespace hpp {
             ConfigurationIn_t arg) const throw ();
       private:
         DevicePtr_t robot_;
+        CenterOfMassComputationPtr_t comc_;
         JointPtr_t jointL_, jointR_, jointRef_;
         vector3_t reference_;
         std::vector <bool> mask_;

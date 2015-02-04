@@ -17,10 +17,12 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/util/debug.hh>
 #include <hpp/constraints/com-between-feet.hh>
+
+#include <hpp/util/debug.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/model/center-of-mass-computation.hh>
 
 namespace hpp {
   namespace constraints {
@@ -54,22 +56,38 @@ namespace hpp {
         const JointPtr_t& jointRef, const vector3_t reference,
         std::vector <bool> mask)
     {
+      CenterOfMassComputationPtr_t comc =
+        CenterOfMassComputation::create (robot);
+      comc->add (robot->rootJoint ());
+      comc->computeMass ();
+      return create (name, robot, comc,
+                     jointL, jointR, jointRef, reference, mask);
+    }
+
+    ComBetweenFeetPtr_t ComBetweenFeet::create (
+        const std::string& name, const DevicePtr_t& robot,
+        const CenterOfMassComputationPtr_t& comc,
+        const JointPtr_t& jointL, const JointPtr_t& jointR,
+        const JointPtr_t& jointRef, const vector3_t reference,
+        std::vector <bool> mask)
+    {
       ComBetweenFeet* ptr = new ComBetweenFeet
-        (name, robot, jointL, jointR, jointRef, reference, mask);
+        (name, robot, comc, jointL, jointR, jointRef, reference, mask);
       ComBetweenFeetPtr_t shPtr (ptr);
       return shPtr;
     }
 
     ComBetweenFeet::ComBetweenFeet (
         const std::string& name, const DevicePtr_t& robot,
+        const CenterOfMassComputationPtr_t& comc,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
         const JointPtr_t& jointRef, const vector3_t reference,
         std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
           size (mask), name),
-      robot_ (robot), jointL_ (jointL), jointR_ (jointR), jointRef_ (jointRef),
-      reference_ (reference) , mask_ (mask), nominalCase_ (false), result_ (3),
-      jacobian_ (3, robot->numberDof ())
+      robot_ (robot), comc_ (comc), jointL_ (jointL), jointR_ (jointR),
+      jointRef_ (jointRef), reference_ (reference), mask_ (mask),
+      nominalCase_ (false), result_ (3), jacobian_ (3, robot->numberDof ())
     {
       cross_.setZero ();
       if (mask[0] && mask[1] && mask[2])
@@ -83,10 +101,11 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
+      comc_->compute (Device::COM);
       const Transform3f& Ml = jointL_->currentTransformation ();
       const Transform3f& Mr = jointR_->currentTransformation ();
       const Transform3f& Mref = jointRef_->currentTransformation ();
-      const vector3_t& x = robot_->positionCenterOfMass ();
+      const vector3_t& x = comc_->com ();
       fcl::Matrix3f RT = Mref.getRotation (); RT.transpose ();
 
       const fcl::Vec3f& pl = Ml.getTranslation ();
@@ -110,11 +129,11 @@ namespace hpp {
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
-      const ComJacobian_t& Jcom = robot_->jacobianCenterOfMass ();
+      const ComJacobian_t& Jcom = comc_->jacobian ();
       const JointJacobian_t& Jl (jointL_->jacobian ());
       const JointJacobian_t& Jr (jointR_->jacobian ());
       const JointJacobian_t& Jref (jointRef_->jacobian ());
-      const vector3_t& x = robot_->positionCenterOfMass ();
+      const vector3_t& x = comc_->com ();
 
       const Transform3f& Ml = jointL_->currentTransformation ();
       const Transform3f& Mr = jointR_->currentTransformation ();
