@@ -46,3 +46,4 @@ ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-jacobians FALSE)
 ADD_TESTCASE (triangles FALSE)
+ADD_TESTCASE (symbolic-calculus FALSE)
