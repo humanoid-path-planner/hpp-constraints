@@ -24,6 +24,7 @@
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
+# include <hpp/constraints/tool.hh>
 
 namespace hpp {
   namespace constraints {
@@ -34,8 +35,14 @@ namespace hpp {
     /**
      *  \f{eqnarray*}
      *  \mathbf{f}(\mathbf{q}) &=&
-     *  R^T \left(\mathbf{x} - \frac{x_L + x_R}{2}\right) - \mathbf{x}^{*}\\
-     *  \mathbf{\dot{f}} &=& R^T \left(
+     *  \left(\begin{array}{c}
+     *    ( R^T e \wedge t ) \cdot u_z \\
+     *    ( x - x_R ) \cdot (x_L - x_R)\\
+     *    ( x - x_L ) \cdot (x_R - x_L)\\
+     *  \end{array}\right)\\
+     *  \mathbf{\dot{f}} &=& \left(\begin{array}{c}
+     *  R^T 
+     *  \end{array}\right)
      *  J_{com} - \frac{J_L^{\mathbf{v}} + J_R^{\mathbf{v}}}{2}
      *  + [\mathbf{x}-\frac{x_L + x_R}{2}]_{\times}J_{ref}^{\omega}
      *  \right) \mathbf{\dot{q}}
@@ -60,7 +67,8 @@ namespace hpp {
         static ComBetweenFeetPtr_t create (
             const std::string& name, const DevicePtr_t& robot,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
-            const JointPtr_t& jointReference, const vector3_t reference,
+            const vector3_t   pointLeft, const vector3_t   pointRight,
+            const JointPtr_t& jointReference,
             std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
 
         /// Return a shared pointer to a new instance
@@ -68,7 +76,8 @@ namespace hpp {
             const std::string& name, const DevicePtr_t& robot,
             const CenterOfMassComputationPtr_t& comc,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
-            const JointPtr_t& jointReference, const vector3_t reference,
+            const vector3_t   pointLeft, const vector3_t   pointRight,
+            const JointPtr_t& jointReference,
             std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
 
         virtual ~ComBetweenFeet () throw () {}
@@ -76,7 +85,8 @@ namespace hpp {
         ComBetweenFeet (const std::string& name, const DevicePtr_t& robot,
             const CenterOfMassComputationPtr_t& comc,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
-            const JointPtr_t& jointReference, const vector3_t reference,
+            const vector3_t   pointLeft, const vector3_t   pointRight,
+            const JointPtr_t& jointReference,
             std::vector <bool> mask);
 
       protected:
@@ -91,11 +101,20 @@ namespace hpp {
             ConfigurationIn_t arg) const throw ();
       private:
         DevicePtr_t robot_;
-        CenterOfMassComputationPtr_t comc_;
-        JointPtr_t jointL_, jointR_, jointRef_;
-        vector3_t reference_;
+        PointCom com_;
+        PointInJoint left_, right_;
+        JointPtr_t jointRef_;
+        typedef Difference < PointCom, PointInJoint > DiffPCPiJ;
+        typedef Difference < PointInJoint, PointInJoint > DiffPiJPiJ;
+        typedef Sum < PointInJoint, PointInJoint > SumPiJPiJ;
+        typedef CrossProduct < Difference < PointCom,
+                                            ScalarMultiply < SumPiJPiJ > >,
+                               DiffPiJPiJ > ECrossU_t;
+        mutable DiffPCPiJ xmxl_, xmxr_;
+        mutable DiffPiJPiJ u_;
+        mutable ECrossU_t ecrossu_;
+        mutable RotationMultiply <ECrossU_t> expr_;
         std::vector <bool> mask_;
-        bool nominalCase_;
         mutable eigen::matrix3_t cross_;
         mutable vector_t result_;
         mutable ComJacobian_t jacobian_;

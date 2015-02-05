@@ -27,18 +27,6 @@
 namespace hpp {
   namespace constraints {
     namespace {
-      static void convert (const constraints::vector3_t& v, model::vectorOut_t res)
-      {
-        res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
-      }
-
-      static void convert (const constraints::matrix3_t& m, eigen::matrix3_t& res)
-      {
-        res (0,0) = m (0,0); res (0,1) = m (0,1); res (0,2) = m (0,2);
-        res (1,0) = m (1,0); res (1,1) = m (1,1); res (1,2) = m (1,2);
-        res (2,0) = m (2,0); res (2,1) = m (2,1); res (2,2) = m (2,2);
-      }
-
       static size_type size (std::vector<bool> mask)
       {
         size_type res = 0;
@@ -53,26 +41,26 @@ namespace hpp {
     ComBetweenFeetPtr_t ComBetweenFeet::create (
         const std::string& name, const DevicePtr_t& robot,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
-        const JointPtr_t& jointRef, const vector3_t reference,
-        std::vector <bool> mask)
+        const vector3_t   pointL, const vector3_t   pointR,
+        const JointPtr_t& jointRef, std::vector <bool> mask)
     {
       CenterOfMassComputationPtr_t comc =
         CenterOfMassComputation::create (robot);
       comc->add (robot->rootJoint ());
       comc->computeMass ();
-      return create (name, robot, comc,
-                     jointL, jointR, jointRef, reference, mask);
+      return create (name, robot, comc, jointL, jointR,
+          pointL, pointR, jointRef, mask);
     }
 
     ComBetweenFeetPtr_t ComBetweenFeet::create (
         const std::string& name, const DevicePtr_t& robot,
         const CenterOfMassComputationPtr_t& comc,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
-        const JointPtr_t& jointRef, const vector3_t reference,
-        std::vector <bool> mask)
+        const vector3_t   pointL, const vector3_t   pointR,
+        const JointPtr_t& jointRef, std::vector <bool> mask)
     {
       ComBetweenFeet* ptr = new ComBetweenFeet
-        (name, robot, comc, jointL, jointR, jointRef, reference, mask);
+        (name, robot, comc, jointL, jointR, pointL, pointR, jointRef, mask);
       ComBetweenFeetPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -81,18 +69,23 @@ namespace hpp {
         const std::string& name, const DevicePtr_t& robot,
         const CenterOfMassComputationPtr_t& comc,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
-        const JointPtr_t& jointRef, const vector3_t reference,
+        const vector3_t   pointL, const vector3_t   pointR,
+        const JointPtr_t& jointRef,
         std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
           size (mask), name),
-      robot_ (robot), comc_ (comc), jointL_ (jointL), jointR_ (jointR),
-      jointRef_ (jointRef), reference_ (reference), mask_ (mask),
-      nominalCase_ (false), result_ (3), jacobian_ (3, robot->numberDof ())
+      robot_ (robot), com_ (comc), left_ (jointL, pointL),
+      right_ (jointR, pointR), jointRef_ (jointRef),
+      mask_ (mask),
+      result_ (3), jacobian_ (3, robot->numberDof ())
     {
       cross_.setZero ();
-      if (mask[0] && mask[1] && mask[2])
-        nominalCase_ = true;
       jacobian_.setZero ();
+      u_ = right_ - left_;
+      xmxl_ = com_ - left_;
+      xmxr_ = com_ - right_;
+      ecrossu_ = (com_ - ((left_ + right_) * 0.5))^(u_);
+      expr_ = RotationMultiply <ECrossU_t> (jointRef_, ecrossu_, true);
     }
 
     void ComBetweenFeet::impl_compute (vectorOut_t result,
@@ -101,27 +94,36 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      comc_->compute (Device::COM);
-      const Transform3f& Ml = jointL_->currentTransformation ();
-      const Transform3f& Mr = jointR_->currentTransformation ();
-      const Transform3f& Mref = jointRef_->currentTransformation ();
-      const vector3_t& x = comc_->com ();
-      fcl::Matrix3f RT = Mref.getRotation (); RT.transpose ();
-
-      const fcl::Vec3f& pl = Ml.getTranslation ();
-      const fcl::Vec3f& pr = Mr.getTranslation ();
-      const fcl::Vec3f& center = (pl + pr)*0.5;
-      if (nominalCase_)
-        convert (RT * (x - center) - reference_, result);
-      else {
-        convert (RT * (x - center) - reference_, result_);
-        size_t index = 0;
-        for (size_t i = 0; i < 3; ++i)
-          if (mask_[i]) {
-            result [index] = result_ [i];
-            index++;
-          }
+      size_t index = 0;
+      u_.computeValue ();
+      if (mask_[0]) {
+        expr_.computeValue ();
+        result[index++] = expr_.value ()[0];
       }
+      if (mask_[1]) {
+        xmxr_.computeValue ();
+        result[index++] = - xmxr_.value().dot(u_.value ());
+      }
+      if (mask_[2]) {
+        xmxl_.computeValue ();
+        result[index  ] =   xmxl_.value().dot(u_.value ());
+      }
+
+      // com_->compute (Device::COM);
+      // left_ .computeGlobal ();
+      // right_.computeGlobal ();
+      // const Transform3f& Mref = jointRef_->currentTransformation ();
+      // eigen::matrix3_t RT; convert (Mref.getRotation (), RT);
+      // RT.transposeInPlace ();
+      // eigen::vector3_t x; convert (comc_->com (), x);
+      // const eigen::vector3_t&
+        // xl =  left_.global (), xr = right_.global (),
+        // e = x  - (xl + xr)*0.5, u = xr - xl;
+      // computeCrossMatrix (e, cross_);
+      // size_t index = 0;
+      // if (mask_[0]) result[index++] = (RT.row (0)*cross_*u);
+      // if (mask_[1]) result[index++] = - (x - xr).dot(u);
+      // if (mask_[2]) result[index  ] =   (x - xl).dot(u);
     }
 
     void ComBetweenFeet::impl_jacobian (matrixOut_t jacobian,
@@ -129,41 +131,59 @@ namespace hpp {
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
-      const ComJacobian_t& Jcom = comc_->jacobian ();
-      const JointJacobian_t& Jl (jointL_->jacobian ());
-      const JointJacobian_t& Jr (jointR_->jacobian ());
-      const JointJacobian_t& Jref (jointRef_->jacobian ());
-      const vector3_t& x = comc_->com ();
-
-      const Transform3f& Ml = jointL_->currentTransformation ();
-      const Transform3f& Mr = jointR_->currentTransformation ();
-      const Transform3f& Mref = jointRef_->currentTransformation ();
-      fcl::Matrix3f RT = Mref.getRotation (); RT.transpose ();
-      eigen::matrix3_t eigenRT; convert (RT, eigenRT);
-      const vector3_t& xr (Mr.getTranslation ());
-      const vector3_t& xl (Ml.getTranslation ());
-      const vector3_t c = (xl + xr) / 2;
-      cross_ (0,1) = -x [2] + c [2]; cross_ (1,0) =  x [2] - c [2];
-      cross_ (0,2) =  x [1] - c [1]; cross_ (2,0) = -x [1] + c [1];
-      cross_ (1,2) = -x [0] + c [0]; cross_ (2,1) =  x [0] - c [0];
-
-      if (nominalCase_) {
-        jacobian.leftCols (Jref.cols ()) = eigenRT * (
-            Jcom - 0.5 * ( Jl.topRows (3) + Jr.topRows (3) )
-            - cross_ * Jref.bottomRows (3));
-        jacobian.rightCols (jacobian.cols () - Jref.cols ()).setZero ();
-      } else {
-        jacobian_.leftCols (Jref.cols ()) = eigenRT * (
-            Jcom - 0.5 * ( Jl.topRows (3) + Jr.topRows (3) )
-            - cross_ * Jref.bottomRows (3));
-        jacobian_.rightCols (jacobian.cols () - Jref.cols ()).setZero ();
-        size_t index = 0;
-        for (size_t i = 0; i < 3; ++i)
-          if (mask_[i]) {
-            jacobian.row (index) = jacobian_.row (i);
-            index++;
-          }
+      size_t index = 0;
+      u_.computeJacobian ();
+      if (mask_[0]) {
+        expr_.computeJacobian ();
+        jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
+          = expr_.jacobian ().row (0);
       }
+      if (mask_[1]) {
+        xmxr_.computeJacobian ();
+        jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
+          = - u_.value ().transpose () * xmxr_.jacobian ()
+            - xmxr_.value ().transpose () * u_.jacobian ();
+      }
+      if (mask_[2]) {
+        xmxl_.computeJacobian ();
+        jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
+          = - u_.value ().transpose () * xmxl_.jacobian ()
+            - xmxl_.value ().transpose () * u_.jacobian ();
+      }
+      // comc_->compute (Device::JACOBIAN);
+      // CrossProduct cp = left_ ^ rigth_;
+      // left_ .computeGlobal (); left_ .computeJacobian ();
+      // right_.computeGlobal (); right_.computeJacobian ();
+      // const ComJacobian_t& Jcom = comc_->jacobian ();
+      // const JointJacobian_t& Jref (jointRef_->jacobian ());
+      // eigen::vector3_t x; convert (comc_->com (), x);
+      // const Transform3f& Mref = jointRef_->currentTransformation ();
+      // eigen::matrix3_t RT; convert (Mref.getRotation (), RT);
+      // RT.transposeInPlace ();
+
+      // const eigen::vector3_t&
+        // xl =  left_.global (), xr = right_.global (),
+        // e = x  - (xl + xr) / 2, u = xr - xl;
+      // eigen::matrix3_t ucross, eucross; ucross.setZero (); eucross.setZero ();
+      // cross (u, ucross); cross (- ucross * e, eucross);
+      // eigen::matrix3_t xcross; x.setZero ();
+      // cross (c, xcross);
+      // eigen::matrix3_t xmxrcross, xmxlcross; xmxrcross.setZero (); xmxlcross.setZero ();
+      // cross (x - xr, xmxrcross); cross (x - xl, xmxlcross);
+      // eigen::matrix3_t Rrprcross, Rlplcross; Rrprcross.setZero (); Rlplcross.setZero ();
+      // cross (Mr.getRotation () * pointR_, Rrprcross);
+      // cross (Ml.getRotation () * pointL_, Rlplcross);
+
+      // size_t index = 0;
+      // if (mask_[0])
+        // jacobian.row (index++).leftCols (Jref.cols ()) = eigenRT.row(0) * (
+            // eucross * Jref.bottomRows (3)
+            // - ucross * Jcom
+            // + xmxlcross * ( - Rrprcross * Jr.bottomRows (3) + Jr.topRows (3) )
+            // - xmxrcross * ( - Rlplcross * Jl.bottomRows (3) + Jl.topRows (3) )
+            // );
+      // if (mask_[1])
+      // jacobian.rightCols (jacobian.cols () - Jref.cols ()).setZero ();
     }
   } // namespace constraints
 } // namespace hpp
