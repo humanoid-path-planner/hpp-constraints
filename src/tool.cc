@@ -14,10 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_TOOL_HH
-#define HPP_CONSTRAINTS_TOOL_HH
-
-#include "hpp/constraints/fwd.hh"
+#include "hpp/constraints/tool.hh"
 
 namespace hpp {
   namespace constraints {
@@ -57,4 +54,3 @@ namespace hpp {
     }
   } // namespace constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_TOOL_HH
