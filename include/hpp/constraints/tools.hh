@@ -46,8 +46,17 @@ namespace hpp {
     typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> JacobianMatrix;
 
 
+    class CalculusBaseAbstract
+    {
+      public:
+        virtual const eigen::vector3_t& value () const = 0;
+        virtual const JacobianMatrix& jacobian () const = 0;
+        virtual void computeValue () = 0;
+        virtual void computeJacobian () = 0;
+    };
+
     template <class T>
-    class CalculusBase
+    class CalculusBase : public CalculusBaseAbstract
     {
       public:
         CalculusBase () : cross_ (CrossMatrix::Zero()) {}
