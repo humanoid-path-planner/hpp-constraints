@@ -21,7 +21,7 @@
 #include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/orientation.hh>
-#include <hpp/constraints/tool.hh>
+#include <hpp/constraints/tools.hh>
 
 namespace hpp {
   namespace constraints {

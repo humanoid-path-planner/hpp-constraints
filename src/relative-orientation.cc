@@ -23,7 +23,7 @@
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/relative-orientation.hh>
 #include <hpp/constraints/orientation.hh>
-#include <hpp/constraints/tool.hh>
+#include <hpp/constraints/tools.hh>
 
 namespace hpp {
   namespace constraints {

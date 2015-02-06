@@ -19,7 +19,7 @@
 #include <hpp/model/configuration.hh>
 #include <hpp/model/object-factory.hh>
 
-#include <hpp/constraints/tool.hh>
+#include <hpp/constraints/tools.hh>
 
 #define BOOST_TEST_MODULE SymbolicCalculus
 #include <boost/test/included/unit_test.hpp>

@@ -24,7 +24,7 @@
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/tool.hh>
+# include <hpp/constraints/tools.hh>
 
 namespace hpp {
   namespace constraints {

@@ -19,7 +19,7 @@
 #include <limits>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
-#include "hpp/constraints/tool.hh"
+#include "hpp/constraints/tools.hh"
 
 namespace hpp {
   namespace constraints {
