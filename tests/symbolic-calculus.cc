@@ -106,6 +106,8 @@ BOOST_AUTO_TEST_CASE (CrossProductTest) {
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
   }
+  delete d1;
+  delete d2;
 }
 
 namespace difference {
@@ -153,6 +155,8 @@ BOOST_AUTO_TEST_CASE (DifferenceTest) {
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
   }
+  delete d1;
+  delete d2;
 }
 
 namespace sum {
@@ -199,6 +203,8 @@ BOOST_AUTO_TEST_CASE (SumTest) {
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
   }
+  delete d1;
+  delete d2;
 }
 
 namespace scalarMultiply {
@@ -244,4 +250,6 @@ BOOST_AUTO_TEST_CASE (ScalarMultiplyTest) {
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
   }
+  delete d1;
+  delete d2;
 }
