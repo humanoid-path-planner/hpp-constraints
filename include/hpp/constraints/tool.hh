@@ -36,6 +36,7 @@ namespace hpp {
       m (1,2) = -v [0]; m (2,1) = v [0];
     }
 
+    template <typename LhsValue, typename RhsValue> class Expression;
     template <typename LhsValue, typename RhsValue> class CrossProduct;
     template <typename LhsValue, typename RhsValue> class Difference;
     template <typename LhsValue, typename RhsValue> class Sum;
@@ -101,6 +102,33 @@ namespace hpp {
     class Expression
     {
       public:
+        typedef boost::shared_ptr <
+          Expression < LhsValue, RhsValue >
+          > Ptr_t;
+        typedef boost::weak_ptr <
+          Expression < LhsValue, RhsValue >
+          > WkPtr_t;
+
+        static Ptr_t create () {
+          Ptr_t p (new Expression ());
+          p->init (p);
+          return p;
+        }
+
+        static Ptr_t create (const LhsValue& lhs, const RhsValue& rhs) {
+          Ptr_t p (new Expression (lhs, rhs));
+          p->init (p);
+          return p;
+        }
+
+        const LhsValue& lhs () const {
+          return lhs_;
+        }
+
+        const RhsValue& rhs () const {
+          return rhs_;
+        }
+
         Expression () {}
 
         Expression (const Expression& other):
@@ -111,176 +139,188 @@ namespace hpp {
           rhs_ (rhs), lhs_ (lhs)
         {}
 
-        const LhsValue& lhs () const {
-          return lhs_;
+        inline void init (Ptr_t self) {
+          self_ = self;
         }
 
-        const RhsValue& rhs () const {
-          return rhs_;
-        }
-
-      protected:
         RhsValue rhs_;
         LhsValue lhs_;
+        WkPtr_t self_;
     };
 
     template <typename LhsValue, typename RhsValue>
     class CrossProduct :
-      public CalculusBase < CrossProduct < LhsValue, RhsValue > >,
-      public Expression < LhsValue, RhsValue >
+      public CalculusBase < CrossProduct < LhsValue, RhsValue > >
     {
       public:
         CrossProduct () {}
 
-        CrossProduct (const CalculusBase <CrossProduct>& other) {
-          const CrossProduct& o = static_cast <const CrossProduct&> (other);
-          this->rhs_ = o.rhs ();
-          this->lhs_ = o.lhs ();
-        }
+        CrossProduct (const CalculusBase <CrossProduct>& other) :
+          e_ (static_cast <const CrossProduct&>(other).e_)
+        {}
 
         CrossProduct (const LhsValue& lhs, const RhsValue& rhs):
-          Expression < LhsValue, RhsValue > (lhs, rhs)
+          e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void computeValue () {
-          this->lhs_.computeCrossValue ();
-          this->rhs_.computeValue ();
-          this->value_ = this->lhs_.cross () * this->rhs_.value ();
+          e_->lhs_.computeCrossValue ();
+          e_->rhs_.computeValue ();
+          this->value_ = e_->lhs_.cross () * e_->rhs_.value ();
         }
         void computeJacobian () {
-          this->lhs_.computeCrossValue ();
-          this->rhs_.computeCrossValue ();
-          this->lhs_.computeJacobian ();
-          this->rhs_.computeJacobian ();
-          this->jacobian_ = this->lhs_.cross () * this->rhs_.jacobian ()
-                          - this->rhs_.cross () * this->lhs_.jacobian ();
+          e_->lhs_.computeCrossValue ();
+          e_->rhs_.computeCrossValue ();
+          e_->lhs_.computeJacobian ();
+          e_->rhs_.computeJacobian ();
+          this->jacobian_ = e_->lhs_.cross () * e_->rhs_.jacobian ()
+                          - e_->rhs_.cross () * e_->lhs_.jacobian ();
         }
+
+      protected:
+        typename Expression < LhsValue, RhsValue >::Ptr_t e_;
+
+        // friend class CrossProduct <LhsValue, RhsValue>;
+        friend class Expression <LhsValue, RhsValue>;
     };
 
     template <typename LhsValue, typename RhsValue>
     class Difference :
-      public CalculusBase < Difference < LhsValue, RhsValue > >,
-      public Expression < LhsValue, RhsValue >
+      public CalculusBase < Difference < LhsValue, RhsValue > >
     {
       public:
         Difference () {}
 
-        Difference (const CalculusBase <Difference>& other) {
-          const Difference& o = static_cast <const Difference&> (other);
-          this->rhs_ = o.rhs ();
-          this->lhs_ = o.lhs ();
-        }
+        Difference (const CalculusBase <Difference>& other) :
+          e_ (static_cast <const Difference&>(other).e_)
+        {}
 
         Difference (const LhsValue& lhs, const RhsValue& rhs):
-          Expression < LhsValue, RhsValue > (lhs, rhs)
+          e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void computeValue () {
-          this->lhs_.computeValue ();
-          this->rhs_.computeValue ();
-          this->value_ = this->lhs_.value () - this->rhs_.value ();
+          e_->lhs_.computeValue ();
+          e_->rhs_.computeValue ();
+          this->value_ = e_->lhs_.value () - e_->rhs_.value ();
         }
         void computeJacobian () {
-          this->lhs_.computeJacobian ();
-          this->rhs_.computeJacobian ();
-          this->jacobian_ = this->lhs_.jacobian () - this->rhs_.jacobian ();
+          e_->lhs_.computeJacobian ();
+          e_->rhs_.computeJacobian ();
+          this->jacobian_ = e_->lhs_.jacobian () - e_->rhs_.jacobian ();
         }
+
+      protected:
+        typename Expression < LhsValue, RhsValue >::Ptr_t e_;
+
+        // friend class Difference <LhsValue, RhsValue>;
+        friend class Expression <LhsValue, RhsValue>;
     };
 
     template <typename LhsValue, typename RhsValue>
     class Sum :
-      public CalculusBase < Sum < LhsValue, RhsValue > >,
-      public Expression < LhsValue, RhsValue >
+      public CalculusBase < Sum < LhsValue, RhsValue > >
     {
       public:
         Sum () {}
 
-        Sum (const CalculusBase < Sum >& other) {
-          const Sum& o = static_cast <const Sum&> (other);
-          this->rhs_ = o.rhs ();
-          this->lhs_ = o.lhs ();
-        }
+        Sum (const CalculusBase < Sum >& other) :
+          e_ (static_cast <const Sum&>(other).e_)
+        {}
 
         Sum (const RhsValue& rhs, const LhsValue& lhs):
-          Expression < LhsValue, RhsValue > (lhs, rhs)
+          e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void computeValue () {
-          this->lhs_.computeValue ();
-          this->rhs_.computeValue ();
-          this->value_ = this->lhs_.value () + this->rhs_.value ();
+          e_->lhs_.computeValue ();
+          e_->rhs_.computeValue ();
+          this->value_ = e_->lhs_.value () + e_->rhs_.value ();
         }
         void computeJacobian () {
-          this->lhs_.computeJacobian ();
-          this->rhs_.computeJacobian ();
-          this->jacobian_ = this->lhs_.jacobian () + this->rhs_.jacobian ();
+          e_->lhs_.computeJacobian ();
+          e_->rhs_.computeJacobian ();
+          this->jacobian_ = e_->lhs_.jacobian () + e_->rhs_.jacobian ();
         }
+
+      protected:
+        typename Expression < LhsValue, RhsValue >::Ptr_t e_;
+
+        // friend class Sum <LhsValue, RhsValue>;
+        friend class Expression <LhsValue, RhsValue>;
     };
 
     template <typename RhsValue>
     class ScalarMultiply :
-      public CalculusBase < ScalarMultiply < RhsValue > >,
-      public Expression < value_type, RhsValue >
+      public CalculusBase < ScalarMultiply < RhsValue > >
     {
       public:
         ScalarMultiply () {}
 
-        ScalarMultiply (const CalculusBase < ScalarMultiply >& other) {
-          const ScalarMultiply& o = static_cast <const ScalarMultiply&> (other);
-          this->rhs_ = o.rhs ();
-          this->lhs_ = o.lhs ();
-        }
+        ScalarMultiply (const CalculusBase < ScalarMultiply >& other) :
+          e_ (static_cast <const ScalarMultiply&>(other).e_)
+        {}
 
         ScalarMultiply (const value_type& scalar, const RhsValue& rhs):
-          Expression < value_type, RhsValue > (scalar, rhs)
+          e_ (Expression < value_type, RhsValue >::create (scalar, rhs))
         {}
 
         void computeValue () {
-          this->rhs_.computeValue ();
-          this->value_ = this->lhs_ * this->rhs_.value ();
+          e_->rhs_.computeValue ();
+          this->value_ = e_->lhs_ * e_->rhs_.value ();
         }
         void computeJacobian () {
-          this->rhs_.computeJacobian ();
-          this->jacobian_ = this->lhs_ * this->rhs_.jacobian ();
+          e_->rhs_.computeJacobian ();
+          this->jacobian_ = e_->lhs_ * e_->rhs_.jacobian ();
         }
+
+      protected:
+        typename Expression < value_type, RhsValue >::Ptr_t e_;
+
+        // friend class ScalarMultiply <RhsValue>;
+        friend class Expression <value_type, RhsValue>;
     };
 
     template <typename RhsValue>
     class RotationMultiply :
-      public CalculusBase < ScalarMultiply < RhsValue > >,
-      public Expression < JointPtr_t, RhsValue >
+      public CalculusBase < ScalarMultiply < RhsValue > >
     {
       public:
         RotationMultiply () {}
 
-        RotationMultiply (const CalculusBase < RotationMultiply >& other) {
-          const RotationMultiply& o = static_cast <const RotationMultiply&> (other);
-          this->rhs_ = o.rhs ();
-          this->lhs_ = o.lhs ();
-        }
+        RotationMultiply (const CalculusBase < RotationMultiply >& other) :
+          e_ (static_cast <const RotationMultiply&>(other).e_),
+          transpose_ (other.transpose_)
+        {}
 
         RotationMultiply (const JointPtr_t& joint, const RhsValue& rhs,
             bool transpose = false):
-          Expression < JointPtr_t, RhsValue > (joint, rhs),
+          e_ (Expression < JointPtr_t, RhsValue >::create (joint, rhs)),
           transpose_ (transpose)
         {}
 
         void computeValue () {
-          this->rhs_.computeValue ();
+          e_->rhs_.computeValue ();
           computeRotationMatrix ();
-          this->value_ = R * this->rhs_.value ();
+          this->value_ = R * e_->rhs_.value ();
         }
         void computeJacobian () {
-          this->rhs_.computeJacobian ();
+          e_->rhs_.computeJacobian ();
           computeRotationMatrix ();
-          const JointJacobian_t& J = this->lhs_->jacobian ();
-          this->jacobian_ = R * (this->rhs_.cross () * J.bottomRows (3) * this->rhs_.jacobian ());
+          const JointJacobian_t& J = e_->lhs_->jacobian ();
+          this->jacobian_ = R * (e_->rhs_.cross () * J.bottomRows (3) * e_->rhs_.jacobian ());
         }
+
+      protected:
+        typename Expression < JointPtr_t, RhsValue >::Ptr_t e_;
+
+        // friend class RotationMultiply <RhsValue>;
+        friend class Expression <JointPtr_t, RhsValue>;
 
       private:
         void computeRotationMatrix () {
           const fcl::Matrix3f& Rfcl =
-            this->lhs_->currentTransformation ().getRotation ();
+            e_->lhs_->currentTransformation ().getRotation ();
           if (transpose_) {
             R (0,0) = Rfcl (0,0); R (1,0) = Rfcl (0,1); R (2,0) = Rfcl (0,2);
             R (0,1) = Rfcl (1,0); R (1,1) = Rfcl (1,1); R (2,1) = Rfcl (1,2);
