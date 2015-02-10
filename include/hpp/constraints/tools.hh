@@ -61,12 +61,6 @@ namespace hpp {
         const CrossMatrix& cross () const {
           return cross_;
         }
-        // void computeValue () {
-          // return static_cast <T*> (this)->computeValue ();
-        // }
-        // void computeJacobian () {
-          // return static_cast <T*> (this)->computeJacobian ();
-        // }
         void computeCrossValue () {
           T& derived = static_cast <T&> (*this);
           derived.computeValue ();
@@ -180,7 +174,6 @@ namespace hpp {
       protected:
         typename Expression < LhsValue, RhsValue >::Ptr_t e_;
 
-        // friend class CrossProduct <LhsValue, RhsValue>;
         friend class Expression <LhsValue, RhsValue>;
     };
 
@@ -213,7 +206,6 @@ namespace hpp {
       protected:
         typename Expression < LhsValue, RhsValue >::Ptr_t e_;
 
-        // friend class Difference <LhsValue, RhsValue>;
         friend class Expression <LhsValue, RhsValue>;
     };
 
@@ -246,7 +238,6 @@ namespace hpp {
       protected:
         typename Expression < LhsValue, RhsValue >::Ptr_t e_;
 
-        // friend class Sum <LhsValue, RhsValue>;
         friend class Expression <LhsValue, RhsValue>;
     };
 
@@ -277,7 +268,6 @@ namespace hpp {
       protected:
         typename Expression < value_type, RhsValue >::Ptr_t e_;
 
-        // friend class ScalarMultiply <RhsValue>;
         friend class Expression <value_type, RhsValue>;
     };
 
@@ -314,7 +304,6 @@ namespace hpp {
       protected:
         typename Expression < JointPtr_t, RhsValue >::Ptr_t e_;
 
-        // friend class RotationMultiply <RhsValue>;
         friend class Expression <JointPtr_t, RhsValue>;
 
       private:
@@ -416,7 +405,7 @@ namespace hpp {
         }
         void computeJacobian () {
           comc_->compute (Device::JACOBIAN);
-          // TODO: there is memory and time to be save here as this copy is
+          // TODO: there is memory and time to be saved here as this copy is
           // not important.
           this->jacobian_ = comc_->jacobian ();
         }
