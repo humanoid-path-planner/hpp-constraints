@@ -297,8 +297,9 @@ namespace hpp {
         void computeJacobian () {
           e_->rhs_.computeJacobian ();
           computeRotationMatrix ();
+          e_->rhs_.computeCrossValue ();
           const JointJacobian_t& J = e_->lhs_->jacobian ();
-          this->jacobian_ = R * (e_->rhs_.cross () * J.bottomRows (3) * e_->rhs_.jacobian ());
+          this->jacobian_ = R * (e_->rhs_.cross () * J.bottomRows (3) + e_->rhs_.jacobian ());
         }
 
       protected:
@@ -372,7 +373,7 @@ namespace hpp {
             return;
           }
           computeCrossMatrix (
-              joint_->currentTransformation ().getRotation () * (- local_),
+              joint_->currentTransformation ().getRotation () * (local_),
               this->cross_);
         }
 
