@@ -36,6 +36,9 @@ namespace hpp {
       m (1,2) = -v [0]; m (2,1) = v [0];
     }
 
+    class CalculusBaseAbstract;
+    typedef boost::shared_ptr <CalculusBaseAbstract> CalculusPtr_t;
+
     template <typename LhsValue, typename RhsValue> class Expression;
     template <typename LhsValue, typename RhsValue> class CrossProduct;
     template <typename LhsValue, typename RhsValue> class Difference;
@@ -53,6 +56,12 @@ namespace hpp {
         virtual const JacobianMatrix& jacobian () const = 0;
         virtual void computeValue () = 0;
         virtual void computeJacobian () = 0;
+
+        template <typename Type>
+        static boost::shared_ptr <Type> create (const Type& copy) {
+          Type* ptr = new Type (copy);
+          return boost::shared_ptr <Type> (ptr);
+        }
     };
 
     template <class T>
