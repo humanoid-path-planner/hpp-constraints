@@ -25,6 +25,7 @@
 #include "hpp/constraints/relative-orientation.hh"
 #include "hpp/constraints/relative-transformation.hh"
 #include "hpp/constraints/static-stability.hh"
+#include "hpp/constraints/tools.hh"
 
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
@@ -459,5 +460,39 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         dq(idof) = 0;
       }
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
+  DevicePtr_t device = createRobot ();
+  JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
+             ee2 = device->getJointByName ("RLEG_5");
+  BOOST_REQUIRE (device);
+  BasicConfigurationShooter cs (device);
+
+  /// Create the constraints
+  typedef DifferentiableFunction DF;
+  typedef DifferentiableFunctionPtr_t DFptr;
+  DFptr pos = Position::create (device, ee1, vector3_t (0,0,0),
+          vector3_t (0,0,0), identity ());
+  PointInJoint pij (ee1, vector3_t(0,0,0));
+  DFptr relpos = RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
+          vector3_t (0,0,0));
+
+  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  vector_t value = vector_t (pos->outputSize ());
+  matrix_t jacobian = matrix_t (pos->outputSize (), device->numberDof ());
+  for (int i = 0; i < 100; i++) {
+      q1 = cs.shoot ();
+      /// Position
+      (*pos) (value, *q1);
+      device->currentConfiguration (*q1);
+      device->computeForwardKinematics ();
+      pij.computeValue ();
+      BOOST_CHECK (pij.value ().isApprox (-value));
+      jacobian.setZero ();
+      pos->jacobian (jacobian, *q1);
+      pij.computeJacobian ();
+      BOOST_CHECK (pij.jacobian ().isApprox (-jacobian));
   }
 }
