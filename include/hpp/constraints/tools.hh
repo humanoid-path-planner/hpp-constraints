@@ -52,13 +52,13 @@ namespace hpp {
       public:
         CalculusBase () : cross_ (CrossMatrix::Zero()) {}
 
-        const eigen::vector3_t& value () const {
+        inline const eigen::vector3_t& value () const {
           return value_;
         }
-        const JacobianMatrix& jacobian () const {
+        inline const JacobianMatrix& jacobian () const {
           return jacobian_;
         }
-        const CrossMatrix& cross () const {
+        inline const CrossMatrix& cross () const {
           return cross_;
         }
         void computeCrossValue () {
