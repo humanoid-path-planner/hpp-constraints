@@ -36,28 +36,21 @@ namespace hpp {
      *  \f{eqnarray*}
      *  \mathbf{f}(\mathbf{q}) &=&
      *  \left(\begin{array}{c}
-     *    ( R^T e \wedge t ) \cdot u_z \\
-     *    ( x - x_R ) \cdot (x_L - x_R)\\
-     *    ( x - x_L ) \cdot (x_R - x_L)\\
-     *  \end{array}\right)\\
-     *  \mathbf{\dot{f}} &=& \left(\begin{array}{c}
-     *  R^T 
+     *    ( x_{com} - x_{ref} ) \cdot u_z \\
+     *    ( R^T (e \wedge u) ) \cdot u_z \\
+     *    ( x_{com} - x_L ) \cdot (u)\\
+     *    ( x_{com} - x_R ) \cdot (u)\\
      *  \end{array}\right)
-     *  J_{com} - \frac{J_L^{\mathbf{v}} + J_R^{\mathbf{v}}}{2}
-     *  + [\mathbf{x}-\frac{x_L + x_R}{2}]_{\times}J_{ref}^{\omega}
-     *  \right) \mathbf{\dot{q}}
      *  \f}
     **/
     /// where
-    /// \li \f$
-    ///     \left(\begin{array}{cc} R & \mathbf{t} \\ 0 & 1\end{array}\right)
-    ///     \f$
-    /// is the position of the reference joint,
-    /// \li \f$\mathbf{x}\f$ is the position of the center of mass,
+    /// \li \f$\mathbf{x}_{com}\f$ is the position of the center of mass,
     /// \li \f$\mathbf{x_L}\f$ is the position of the left joint,
     /// \li \f$\mathbf{x_R}\f$ is the position of the right joint,
-    /// \li \f$\mathbf{x}^{*}\f$ is the desired position of the center of mass
+    /// \li \f$\mathbf{x}_{ref}\f$ is the desired position of the center of mass
     ///     expressed in reference joint frame.
+    /// \li \f$ u = x_R - x_L \f$
+    /// \li \f$ e = x_{com} - (\frac{x_L + x_R}{2})\f$
     class HPP_CONSTRAINTS_DLLAPI ComBetweenFeet : public DifferentiableFunction
     {
       public:
@@ -68,8 +61,8 @@ namespace hpp {
             const std::string& name, const DevicePtr_t& robot,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
             const vector3_t   pointLeft, const vector3_t   pointRight,
-            const JointPtr_t& jointReference,
-            std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
+            const JointPtr_t& jointReference, const vector3_t pointRef,
+            std::vector <bool> mask = boost::assign::list_of (true)(true)(true)(true));
 
         /// Return a shared pointer to a new instance
         static ComBetweenFeetPtr_t create (
@@ -77,8 +70,8 @@ namespace hpp {
             const CenterOfMassComputationPtr_t& comc,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
             const vector3_t   pointLeft, const vector3_t   pointRight,
-            const JointPtr_t& jointReference,
-            std::vector <bool> mask = boost::assign::list_of (true)(true)(true));
+            const JointPtr_t& jointReference, const vector3_t pointRef,
+            std::vector <bool> mask = boost::assign::list_of (true)(true)(true)(true));
 
         virtual ~ComBetweenFeet () throw () {}
 
@@ -86,7 +79,7 @@ namespace hpp {
             const CenterOfMassComputationPtr_t& comc,
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
             const vector3_t   pointLeft, const vector3_t   pointRight,
-            const JointPtr_t& jointReference,
+            const JointPtr_t& jointReference, const vector3_t pointRef,
             std::vector <bool> mask);
 
       protected:
@@ -101,8 +94,9 @@ namespace hpp {
             ConfigurationIn_t arg) const throw ();
       private:
         DevicePtr_t robot_;
-        PointCom com_;
+        mutable PointCom com_;
         PointInJoint left_, right_;
+        eigen::vector3_t pointRef_;
         JointPtr_t jointRef_;
         typedef Difference < PointCom, PointInJoint > DiffPCPiJ;
         typedef Difference < PointInJoint, PointInJoint > DiffPiJPiJ;
@@ -116,8 +110,6 @@ namespace hpp {
         mutable RotationMultiply <ECrossU_t> expr_;
         std::vector <bool> mask_;
         mutable eigen::matrix3_t cross_;
-        mutable vector_t result_;
-        mutable ComJacobian_t jacobian_;
     }; // class ComBetweenFeet
   } // namespace constraints
 } // namespace hpp

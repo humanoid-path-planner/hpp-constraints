@@ -42,14 +42,15 @@ namespace hpp {
         const std::string& name, const DevicePtr_t& robot,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
         const vector3_t   pointL, const vector3_t   pointR,
-        const JointPtr_t& jointRef, std::vector <bool> mask)
+        const JointPtr_t& jointRef, const vector3_t pointRef,
+        std::vector <bool> mask)
     {
       CenterOfMassComputationPtr_t comc =
         CenterOfMassComputation::create (robot);
       comc->add (robot->rootJoint ());
       comc->computeMass ();
       return create (name, robot, comc, jointL, jointR,
-          pointL, pointR, jointRef, mask);
+          pointL, pointR, jointRef, pointRef, mask);
     }
 
     ComBetweenFeetPtr_t ComBetweenFeet::create (
@@ -57,10 +58,12 @@ namespace hpp {
         const CenterOfMassComputationPtr_t& comc,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
         const vector3_t   pointL, const vector3_t   pointR,
-        const JointPtr_t& jointRef, std::vector <bool> mask)
+        const JointPtr_t& jointRef, const vector3_t pointRef,
+        std::vector <bool> mask)
     {
       ComBetweenFeet* ptr = new ComBetweenFeet
-        (name, robot, comc, jointL, jointR, pointL, pointR, jointRef, mask);
+        (name, robot, comc, jointL, jointR, pointL, pointR, jointRef,
+         pointRef, mask);
       ComBetweenFeetPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -70,22 +73,20 @@ namespace hpp {
         const CenterOfMassComputationPtr_t& comc,
         const JointPtr_t& jointL, const JointPtr_t& jointR,
         const vector3_t   pointL, const vector3_t   pointR,
-        const JointPtr_t& jointRef,
+        const JointPtr_t& jointRef, const vector3_t pointRef,
         std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
           size (mask), name),
       robot_ (robot), com_ (comc), left_ (jointL, pointL),
-      right_ (jointR, pointR), jointRef_ (jointRef),
-      mask_ (mask),
-      result_ (3), jacobian_ (3, robot->numberDof ())
+      right_ (jointR, pointR), pointRef_ (), jointRef_ (jointRef), mask_ (mask)
     {
       cross_.setZero ();
-      jacobian_.setZero ();
       u_ = right_ - left_;
       xmxl_ = com_ - left_;
       xmxr_ = com_ - right_;
       ecrossu_ = (com_ - ((left_ + right_) * 0.5))^(u_);
       expr_ = RotationMultiply <ECrossU_t> (jointRef_, ecrossu_, true);
+      for (int i=0; i<3; i++) pointRef_[i] = pointRef[i];
     }
 
     void ComBetweenFeet::impl_compute (vectorOut_t result,
@@ -97,33 +98,21 @@ namespace hpp {
       size_t index = 0;
       u_.computeValue ();
       if (mask_[0]) {
-        expr_.computeValue ();
-        result[index++] = expr_.value ()[0];
+        com_.computeValue ();
+        result[index++] = (com_.value () - pointRef_)[2];
       }
       if (mask_[1]) {
-        xmxr_.computeValue ();
-        result[index++] = - xmxr_.value().dot(u_.value ());
+        expr_.computeValue ();
+        result[index++] = expr_.value ()[2];
       }
       if (mask_[2]) {
         xmxl_.computeValue ();
-        result[index  ] =   xmxl_.value().dot(u_.value ());
+        result[index++] =   xmxl_.value().dot(u_.value ());
       }
-
-      // com_->compute (Device::COM);
-      // left_ .computeGlobal ();
-      // right_.computeGlobal ();
-      // const Transform3f& Mref = jointRef_->currentTransformation ();
-      // eigen::matrix3_t RT; convert (Mref.getRotation (), RT);
-      // RT.transposeInPlace ();
-      // eigen::vector3_t x; convert (comc_->com (), x);
-      // const eigen::vector3_t&
-        // xl =  left_.global (), xr = right_.global (),
-        // e = x  - (xl + xr)*0.5, u = xr - xl;
-      // computeCrossMatrix (e, cross_);
-      // size_t index = 0;
-      // if (mask_[0]) result[index++] = (RT.row (0)*cross_*u);
-      // if (mask_[1]) result[index++] = - (x - xr).dot(u);
-      // if (mask_[2]) result[index  ] =   (x - xl).dot(u);
+      if (mask_[3]) {
+        xmxr_.computeValue ();
+        result[index  ] =   xmxr_.value().dot(u_.value ());
+      }
     }
 
     void ComBetweenFeet::impl_jacobian (matrixOut_t jacobian,
@@ -134,56 +123,27 @@ namespace hpp {
       size_t index = 0;
       u_.computeJacobian ();
       if (mask_[0]) {
-        expr_.computeJacobian ();
+        com_.computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
-          = expr_.jacobian ().row (0);
+          = com_.jacobian ().row (2);
       }
       if (mask_[1]) {
-        xmxr_.computeJacobian ();
+        expr_.computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
-          = - u_.value ().transpose () * xmxr_.jacobian ()
-            - xmxr_.value ().transpose () * u_.jacobian ();
+          = expr_.jacobian ().row (2);
       }
       if (mask_[2]) {
         xmxl_.computeJacobian ();
-        jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
-          = - u_.value ().transpose () * xmxl_.jacobian ()
-            - xmxl_.value ().transpose () * u_.jacobian ();
+        jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
+          =   u_.value ().transpose () * xmxl_.jacobian ()
+            + xmxl_.value ().transpose () * u_.jacobian ();
       }
-      // comc_->compute (Device::JACOBIAN);
-      // CrossProduct cp = left_ ^ rigth_;
-      // left_ .computeGlobal (); left_ .computeJacobian ();
-      // right_.computeGlobal (); right_.computeJacobian ();
-      // const ComJacobian_t& Jcom = comc_->jacobian ();
-      // const JointJacobian_t& Jref (jointRef_->jacobian ());
-      // eigen::vector3_t x; convert (comc_->com (), x);
-      // const Transform3f& Mref = jointRef_->currentTransformation ();
-      // eigen::matrix3_t RT; convert (Mref.getRotation (), RT);
-      // RT.transposeInPlace ();
-
-      // const eigen::vector3_t&
-        // xl =  left_.global (), xr = right_.global (),
-        // e = x  - (xl + xr) / 2, u = xr - xl;
-      // eigen::matrix3_t ucross, eucross; ucross.setZero (); eucross.setZero ();
-      // cross (u, ucross); cross (- ucross * e, eucross);
-      // eigen::matrix3_t xcross; x.setZero ();
-      // cross (c, xcross);
-      // eigen::matrix3_t xmxrcross, xmxlcross; xmxrcross.setZero (); xmxlcross.setZero ();
-      // cross (x - xr, xmxrcross); cross (x - xl, xmxlcross);
-      // eigen::matrix3_t Rrprcross, Rlplcross; Rrprcross.setZero (); Rlplcross.setZero ();
-      // cross (Mr.getRotation () * pointR_, Rrprcross);
-      // cross (Ml.getRotation () * pointL_, Rlplcross);
-
-      // size_t index = 0;
-      // if (mask_[0])
-        // jacobian.row (index++).leftCols (Jref.cols ()) = eigenRT.row(0) * (
-            // eucross * Jref.bottomRows (3)
-            // - ucross * Jcom
-            // + xmxlcross * ( - Rrprcross * Jr.bottomRows (3) + Jr.topRows (3) )
-            // - xmxrcross * ( - Rlplcross * Jl.bottomRows (3) + Jl.topRows (3) )
-            // );
-      // if (mask_[1])
-      // jacobian.rightCols (jacobian.cols () - Jref.cols ()).setZero ();
+      if (mask_[3]) {
+        xmxr_.computeJacobian ();
+        jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
+          =   u_.value ().transpose () * xmxr_.jacobian ()
+            + xmxr_.value ().transpose () * u_.jacobian ();
+      }
     }
   } // namespace constraints
 } // namespace hpp
