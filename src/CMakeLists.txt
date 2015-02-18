@@ -19,6 +19,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   tools.cc
   position.cc
   orientation.cc
+  transformation.cc
   relative-com.cc
   com-between-feet.cc
   relative-orientation.cc
