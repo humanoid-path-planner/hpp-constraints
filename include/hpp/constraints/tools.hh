@@ -36,6 +36,11 @@ namespace hpp {
       m (1,2) = -v [0]; m (2,1) = v [0];
     }
 
+    /// \defgroup symbolic_calculus Symbolic calculus
+
+    /// \addtogroup symbolic_calculus
+    /// \{
+
     class CalculusBaseAbstract;
     typedef boost::shared_ptr <CalculusBaseAbstract> CalculusPtr_t;
 
@@ -48,7 +53,16 @@ namespace hpp {
     typedef eigen::matrix3_t CrossMatrix;
     typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> JacobianMatrix;
 
-
+    /// Abstract class defining a basic common interface.
+    ///
+    /// The purpose of this class is to allow the user to define an expression
+    /// without requiring to explicitly write its type. The type will be
+    /// automatically deduced by the compiler.
+    ///
+    /// \code
+    ///   // First define a, b and c with basic elements.
+    ///   CalculusPtr_t myExpression_ptr = CalculusBaseAbstract::create (a + b * c)
+    /// \endcode
     class CalculusBaseAbstract
     {
       public:
@@ -64,6 +78,17 @@ namespace hpp {
         }
     };
 
+    /// Main abstract class.
+    ///
+    /// The framework is using CRTP to virtual function calls overload.
+    /// Keep in mind, so far, no mathematical simplification is done on the
+    /// expression you provide. It means that you may have a more efficient
+    /// expression by calculating and simplifying the jacobian yourself.
+    /// These classes provide:
+    /// \li a fast way of defining new constraints,
+    /// \li a robust way of calculation of jacobians -
+    ///     hand calculation error proof
+    /// \li a fast way to check the results of your calculations.
     template <class T>
     class CalculusBase : public CalculusBaseAbstract
     {
@@ -110,6 +135,7 @@ namespace hpp {
         CrossMatrix cross_;
     };
 
+    /// Base class for classes representing an operation.
     template <typename LhsValue, typename RhsValue>
     class Expression
     {
@@ -160,6 +186,7 @@ namespace hpp {
         WkPtr_t self_;
     };
 
+    /// Cross product of two expressions.
     template <typename LhsValue, typename RhsValue>
     class CrossProduct :
       public CalculusBase < CrossProduct < LhsValue, RhsValue > >
@@ -195,6 +222,7 @@ namespace hpp {
         friend class Expression <LhsValue, RhsValue>;
     };
 
+    /// Difference of two expressions.
     template <typename LhsValue, typename RhsValue>
     class Difference :
       public CalculusBase < Difference < LhsValue, RhsValue > >
@@ -227,6 +255,7 @@ namespace hpp {
         friend class Expression <LhsValue, RhsValue>;
     };
 
+    /// Sum of two expressions.
     template <typename LhsValue, typename RhsValue>
     class Sum :
       public CalculusBase < Sum < LhsValue, RhsValue > >
@@ -259,6 +288,7 @@ namespace hpp {
         friend class Expression <LhsValue, RhsValue>;
     };
 
+    /// Multiplication of an expression by a scalar.
     template <typename RhsValue>
     class ScalarMultiply :
       public CalculusBase < ScalarMultiply < RhsValue > >
@@ -289,6 +319,7 @@ namespace hpp {
         friend class Expression <value_type, RhsValue>;
     };
 
+    /// Multiplication of an expression by a rotation matrix.
     template <typename RhsValue>
     class RotationMultiply :
       public CalculusBase < ScalarMultiply < RhsValue > >
@@ -344,6 +375,7 @@ namespace hpp {
         eigen::matrix3_t R;
     };
 
+    /// Basic expression representing a point in a joint frame.
     class PointInJoint : public CalculusBase <PointInJoint>
     {
       public:
@@ -403,6 +435,7 @@ namespace hpp {
         vector3_t g_;
     };
 
+    /// Basic expression representing a COM.
     class PointCom : public CalculusBase <PointCom>
     {
       public:
@@ -432,6 +465,8 @@ namespace hpp {
       protected:
         CenterOfMassComputationPtr_t comc_;
     };
+
+    /// \}
   } // namespace constraints
 } // namespace hpp
 
