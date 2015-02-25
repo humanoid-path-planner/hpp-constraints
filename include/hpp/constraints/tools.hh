@@ -435,6 +435,38 @@ namespace hpp {
         vector3_t g_;
     };
 
+    /// Basic expression representing a static point
+    ///
+    /// Its value is constant and its jacobian is a zero matrix.
+    class Point : public CalculusBase <Point>
+    {
+      public:
+        Point () {}
+
+        Point (const CalculusBase<Point>& other) {
+          const Point& o = static_cast <const Point&>(other);
+          this->value_ = o.value ();
+          this->jacobian_ = o.jacobian ();
+        }
+
+        Point (const Point& point) {
+          this->value_ = point.value ();
+          this->jacobian_ = point.jacobian ();
+        }
+
+        /// Constructor
+        ///
+        /// \param point the static point
+        /// \param jacobianNbCols number of column of the jacobian
+        Point (const vector3_t& point, size_t jacobianNbCols) {
+          for (int i = 0; i < 3; ++i) this->value_[i] = point[i];
+          this->jacobian_ = JacobianMatrix::Zero (3, jacobianNbCols);
+        }
+
+        void computeValue () {}
+        void computeJacobian () {}
+    };
+
     /// Basic expression representing a COM.
     class PointCom : public CalculusBase <PointCom>
     {
