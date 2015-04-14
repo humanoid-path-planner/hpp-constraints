@@ -176,10 +176,8 @@ namespace hpp {
         mutable Triangles::const_iterator floor_;
 
         mutable eigen::matrix3_t Rcx_;
-        mutable vector_t n_;
         mutable eigen::vector3_t r_;
         mutable matrix3_t Rerror_;
-        mutable matrix3_t ref_;
         mutable eigen::matrix3_t Jlog_;
         mutable matrix_t jacobian_;
     };

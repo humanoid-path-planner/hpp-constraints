@@ -43,7 +43,6 @@ namespace hpp {
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5, name),
       robot_ (robot), joint_ (joint), jacobian_ (3, robot->numberDof ())
     {
-      n_.resize (3);
       jacobian_.setZero ();
     }
 
