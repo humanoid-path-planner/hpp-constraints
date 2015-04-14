@@ -28,6 +28,7 @@ namespace hpp {
       m (0,1) = -v [2]; m (1,0) =  v [2];
       m (0,2) =  v [1]; m (2,0) = -v [1];
       m (1,2) = -v [0]; m (2,1) =  v [0];
+      m (0,0) = m (1,1) = m (2,2) = 0;
     }
 
     void fclToEigen (const fcl::Vec3f& v, vectorOut_t res)
