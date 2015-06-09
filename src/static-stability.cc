@@ -31,11 +31,6 @@ namespace hpp {
       m (0,0) = m (1,1) = m (2,2) = 0;
     }
 
-    void fclToEigen (const fcl::Vec3f& v, vectorOut_t res)
-    {
-      res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
-    }
-
     fcl::Vec3f StaticStabilityGravity::gravity (0,0,-1);
 
     StaticStabilityGravity::StaticStabilityGravity ( const std::string& name,
