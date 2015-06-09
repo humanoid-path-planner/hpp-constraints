@@ -30,6 +30,7 @@ namespace hpp {
       typedef Eigen::Matrix <double, 3, 1> vector3_t;
     } // namespace eigen
 
+    HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (Orientation);
     HPP_PREDEF_CLASS (Position);
     HPP_PREDEF_CLASS (Transformation);
@@ -40,6 +41,9 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativeTransformation);
     HPP_PREDEF_CLASS (StaticStabilityGravity);
 
+    typedef model::ObjectVector_t ObjectVector_t;
+    typedef model::CollisionObjectPtr_t CollisionObjectPtr_t;
+    typedef model::Configuration_t Configuration_t;
     typedef model::ConfigurationIn_t ConfigurationIn_t;
     typedef model::ConfigurationOut_t ConfigurationOut_t;
     typedef model::Device Device;
@@ -62,6 +66,8 @@ namespace hpp {
     typedef model::ComJacobian_t ComJacobian_t;
     typedef model::JointJacobian_t JointJacobian_t;
     typedef model::Transform3f Transform3f;
+    typedef boost::shared_ptr <DistanceBetweenBodies>
+    DistanceBetweenBodiesPtr_t;
     typedef boost::shared_ptr<Orientation> OrientationPtr_t;
     typedef boost::shared_ptr<Position> PositionPtr_t;
     typedef boost::shared_ptr<Transformation> TransformationPtr_t;

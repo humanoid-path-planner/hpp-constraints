@@ -27,6 +27,7 @@ SET(PROJECT_URL "https://github.com/laas/hpp-constraints")
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
+  include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/tools.hh
   include/hpp/constraints/orientation.hh
