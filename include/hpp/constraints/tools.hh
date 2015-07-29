@@ -36,21 +36,29 @@ namespace hpp {
       m (1,2) = -v [0]; m (2,1) = v [0];
     }
 
+    template <typename InType, typename OutType>
+    static OutType convert (const InType& in, const std::size_t s) {
+      OutType out(s);
+      for (size_t i = 0; i < s; ++i) out[i] = in[i];
+      return out;
+    }
+
     /// \defgroup symbolic_calculus Symbolic calculus
 
     /// \addtogroup symbolic_calculus
     /// \{
 
-    class CalculusBaseAbstract;
-    typedef boost::shared_ptr <CalculusBaseAbstract> CalculusPtr_t;
+    template <typename ValueType, typename JacobianType> class CalculusBaseAbstract;
 
     template <typename LhsValue, typename RhsValue> class Expression;
     template <typename LhsValue, typename RhsValue> class CrossProduct;
+    template <typename LhsValue, typename RhsValue> class ScalarProduct;
     template <typename LhsValue, typename RhsValue> class Difference;
     template <typename LhsValue, typename RhsValue> class Sum;
     template <typename RhsValue> class ScalarMultiply;
     template <typename RhsValue> class RotationMultiply;
     typedef eigen::matrix3_t CrossMatrix;
+    typedef Eigen::Matrix <value_type, 1, Eigen::Dynamic> RowJacobianMatrix;
     typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> JacobianMatrix;
 
     /// Abstract class defining a basic common interface.
@@ -61,13 +69,17 @@ namespace hpp {
     ///
     /// \code
     ///   // First define a, b and c with basic elements.
-    ///   CalculusPtr_t myExpression_ptr = CalculusBaseAbstract::create (a + b * c)
+    ///   CalculusBaseAbstract<OutValueType, OutJacobianType>::Ptr_t myExpression_ptr =
+    ///     CalculusBaseAbstract<OutValueType, OutJacobianType>::create (a + b * c)
     /// \endcode
+    template <class ValueType = eigen::vector3_t,
+             class JacobianType = JacobianMatrix >
     class CalculusBaseAbstract
     {
       public:
-        virtual const eigen::vector3_t& value () const = 0;
-        virtual const JacobianMatrix& jacobian () const = 0;
+        typedef boost::shared_ptr <CalculusBaseAbstract> Ptr_t;
+        virtual const ValueType& value () const = 0;
+        virtual const JacobianType& jacobian () const = 0;
         virtual void computeValue () = 0;
         virtual void computeJacobian () = 0;
 
@@ -89,19 +101,31 @@ namespace hpp {
     /// \li a robust way of calculation of jacobians -
     ///     hand calculation error proof
     /// \li a fast way to check the results of your calculations.
-    template <class T>
-    class CalculusBase : public CalculusBaseAbstract
+    template <class T,
+             class ValueType = eigen::vector3_t,
+             class JacobianType = JacobianMatrix,
+             class CrossType = CrossMatrix >
+    class CalculusBase : public CalculusBaseAbstract <ValueType, JacobianType>
     {
       public:
         CalculusBase () : cross_ (CrossMatrix::Zero()) {}
 
-        inline const eigen::vector3_t& value () const {
+        CalculusBase (const ValueType& value, const JacobianType& jacobian) :
+          value_ (value), jacobian_ (jacobian),
+          cross_ (CrossMatrix::Zero()) {}
+
+        CalculusBase (const CalculusBase& o) :
+          value_ (o.value()), jacobian_ (o.jacobian_)
+        {
+        }
+
+        inline const ValueType& value () const {
           return value_;
         }
-        inline const JacobianMatrix& jacobian () const {
+        inline const JacobianType& jacobian () const {
           return jacobian_;
         }
-        inline const CrossMatrix& cross () const {
+        inline const CrossType& cross () const {
           return cross_;
         }
         void computeCrossValue () {
@@ -125,14 +149,19 @@ namespace hpp {
           return Sum < T, RhsType> (static_cast<const T>(*this), rhs);
         }
 
+        template < typename RhsType >
+        ScalarProduct < T, RhsType > operator* (const RhsType& rhs) const {
+          return ScalarProduct < T, RhsType> (static_cast<const T>(*this), rhs);
+        }
+
         ScalarMultiply < T > operator* (const value_type& scalar) const {
           return ScalarMultiply < T > (scalar, static_cast<const T>(*this));
         }
 
       protected:
-        eigen::vector3_t value_;
-        JacobianMatrix jacobian_;
-        CrossMatrix cross_;
+        ValueType value_;
+        JacobianType jacobian_;
+        CrossType cross_;
     };
 
     /// Base class for classes representing an operation.
@@ -195,6 +224,7 @@ namespace hpp {
         CrossProduct () {}
 
         CrossProduct (const CalculusBase <CrossProduct>& other) :
+          CalculusBase <CrossProduct> (other),
           e_ (static_cast <const CrossProduct&>(other).e_)
         {}
 
@@ -222,6 +252,43 @@ namespace hpp {
         friend class Expression <LhsValue, RhsValue>;
     };
 
+    /// Scalar product of two expressions.
+    template <typename LhsValue, typename RhsValue>
+    class ScalarProduct :
+      public CalculusBase < ScalarProduct < LhsValue, RhsValue >, value_type, RowJacobianMatrix >
+    {
+      public:
+        ScalarProduct () {}
+
+        ScalarProduct (const CalculusBase <ScalarProduct>& other) :
+          CalculusBase <ScalarProduct> (other),
+          e_ (static_cast <const ScalarProduct&>(other).e_)
+        {}
+
+        ScalarProduct (const LhsValue& lhs, const RhsValue& rhs):
+          e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
+        {}
+
+        void computeValue () {
+          e_->lhs_.computeValue ();
+          e_->rhs_.computeValue ();
+          this->value_ = e_->lhs_.value ().dot (e_->rhs_.value ());
+        }
+        void computeJacobian () {
+          e_->lhs_.computeValue ();
+          e_->rhs_.computeValue ();
+          e_->lhs_.computeJacobian ();
+          e_->rhs_.computeJacobian ();
+          this->jacobian_ = e_->lhs_.value ().transpose () * e_->rhs_.jacobian ()
+                          + e_->rhs_.value ().transpose () * e_->lhs_.jacobian ();
+        }
+
+      protected:
+        typename Expression < LhsValue, RhsValue >::Ptr_t e_;
+
+        friend class Expression <LhsValue, RhsValue>;
+    };
+
     /// Difference of two expressions.
     template <typename LhsValue, typename RhsValue>
     class Difference :
@@ -231,6 +298,7 @@ namespace hpp {
         Difference () {}
 
         Difference (const CalculusBase <Difference>& other) :
+          CalculusBase <Difference> (other),
           e_ (static_cast <const Difference&>(other).e_)
         {}
 
@@ -264,6 +332,7 @@ namespace hpp {
         Sum () {}
 
         Sum (const CalculusBase < Sum >& other) :
+          CalculusBase < Sum > (other),
           e_ (static_cast <const Sum&>(other).e_)
         {}
 
@@ -297,6 +366,7 @@ namespace hpp {
         ScalarMultiply () {}
 
         ScalarMultiply (const CalculusBase < ScalarMultiply >& other) :
+          CalculusBase < ScalarMultiply > (other),
           e_ (static_cast <const ScalarMultiply&>(other).e_)
         {}
 
@@ -328,6 +398,7 @@ namespace hpp {
         RotationMultiply () {}
 
         RotationMultiply (const CalculusBase < RotationMultiply >& other) :
+          CalculusBase < RotationMultiply > (other),
           e_ (static_cast <const RotationMultiply&>(other).e_),
           transpose_ (other.transpose_)
         {}
@@ -381,14 +452,17 @@ namespace hpp {
       public:
         PointInJoint () {}
 
-        PointInJoint (const CalculusBase<PointInJoint>& other) {
-          const PointInJoint& o = static_cast <const PointInJoint&>(other);
+        PointInJoint (const CalculusBase<PointInJoint>& other) :
+          CalculusBase<PointInJoint> (other)
+        {
+            const PointInJoint& o = static_cast <const PointInJoint&>(other);
           joint_ = o.joint ();
           local_ = o.local ();
           center_= local_.isZero ();
         }
 
         PointInJoint (const PointInJoint& pointInJoint) :
+          CalculusBase<PointInJoint> (pointInJoint),
           joint_ (pointInJoint.joint ()), local_ (pointInJoint.local ()),
           center_ (local_.isZero ())
         {}
@@ -438,29 +512,29 @@ namespace hpp {
     /// Basic expression representing a static point
     ///
     /// Its value is constant and its jacobian is a zero matrix.
-    class Point : public CalculusBase <Point>
+    class Point : public CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix>
     {
       public:
         Point () {}
 
-        Point (const CalculusBase<Point>& other) {
-          const Point& o = static_cast <const Point&>(other);
-          this->value_ = o.value ();
-          this->jacobian_ = o.jacobian ();
+        Point (const CalculusBase<Point, const eigen::vector3_t, const JacobianMatrix>& other) :
+          CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix> (other)
+        {
         }
 
-        Point (const Point& point) {
-          this->value_ = point.value ();
-          this->jacobian_ = point.jacobian ();
+        Point (const Point& point) :
+          CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix> (point)
+        {
         }
 
         /// Constructor
         ///
         /// \param point the static point
         /// \param jacobianNbCols number of column of the jacobian
-        Point (const vector3_t& point, size_t jacobianNbCols) {
-          for (int i = 0; i < 3; ++i) this->value_[i] = point[i];
-          this->jacobian_ = JacobianMatrix::Zero (3, jacobianNbCols);
+        Point (const vector3_t& point, size_t jacobianNbCols) :
+          CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix>
+          (convert <vector3_t, eigen::vector3_t> (point, 3), JacobianMatrix::Zero (3, jacobianNbCols))
+        {
         }
 
         void computeValue () {}
@@ -473,12 +547,18 @@ namespace hpp {
       public:
         PointCom () {}
 
-        PointCom (const CalculusBase<PointCom>& other) {
-          comc_ = static_cast <const PointCom&>(other).centerOfMassComputation ();
+        PointCom (const CalculusBase<PointCom>& other):
+          CalculusBase <PointCom> (other),
+          comc_ (static_cast <const PointCom&>(other).centerOfMassComputation ())
+        {
         }
 
         PointCom (const CenterOfMassComputationPtr_t& comc): comc_ (comc)
         {}
+
+        inline const JacobianMatrix& jacobian () const {
+          return comc_->jacobian();
+        }
 
         const CenterOfMassComputationPtr_t& centerOfMassComputation () const {
           return comc_;
@@ -491,7 +571,7 @@ namespace hpp {
           comc_->compute (Device::JACOBIAN);
           // TODO: there is memory and time to be saved here as this copy is
           // not important.
-          this->jacobian_ = comc_->jacobian ();
+          //this->jacobian_ = comc_->jacobian ();
         }
 
       protected:

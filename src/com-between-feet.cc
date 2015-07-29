@@ -86,6 +86,8 @@ namespace hpp {
       xmxr_ = com_ - right_;
       ecrossu_ = (com_ - ((left_ + right_) * 0.5))^(u_);
       expr_ = RotationMultiply <ECrossU_t> (jointRef_, ecrossu_, true);
+      xmxlDotu_ = CalculusBaseAbstract<value_type, RowJacobianMatrix >::create (xmxl_ * u_);
+      xmxrDotu_ = CalculusBaseAbstract<value_type, RowJacobianMatrix >::create (xmxr_ * u_);
       for (int i=0; i<3; i++) pointRef_[i] = pointRef[i];
     }
 

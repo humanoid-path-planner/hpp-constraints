@@ -108,6 +108,7 @@ namespace hpp {
         mutable DiffPiJPiJ u_;
         mutable ECrossU_t ecrossu_;
         mutable RotationMultiply <ECrossU_t> expr_;
+        mutable CalculusBaseAbstract<value_type, RowJacobianMatrix >::Ptr_t xmxlDotu_, xmxrDotu_;
         std::vector <bool> mask_;
         mutable eigen::matrix3_t cross_;
     }; // class ComBetweenFeet
