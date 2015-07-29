@@ -108,12 +108,12 @@ namespace hpp {
         result[index++] = expr_.value ()[2];
       }
       if (mask_[2]) {
-        xmxl_.computeValue ();
-        result[index++] =   xmxl_.value().dot(u_.value ());
+        xmxlDotu_->computeValue ();
+        result[index++] =   xmxlDotu_->value();
       }
       if (mask_[3]) {
-        xmxr_.computeValue ();
-        result[index  ] =   xmxr_.value().dot(u_.value ());
+        xmxrDotu_->computeValue ();
+        result[index  ] =   xmxrDotu_->value();
       }
     }
 
@@ -135,16 +135,14 @@ namespace hpp {
           = expr_.jacobian ().row (2);
       }
       if (mask_[2]) {
-        xmxl_.computeJacobian ();
+        xmxlDotu_->computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
-          =   u_.value ().transpose () * xmxl_.jacobian ()
-            + xmxl_.value ().transpose () * u_.jacobian ();
+          = xmxlDotu_->jacobian ();
       }
       if (mask_[3]) {
-        xmxr_.computeJacobian ();
+        xmxrDotu_->computeJacobian ();
         jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
-          =   u_.value ().transpose () * xmxr_.jacobian ()
-            + xmxr_.value ().transpose () * u_.jacobian ();
+          = xmxrDotu_->jacobian ();
       }
     }
   } // namespace constraints
