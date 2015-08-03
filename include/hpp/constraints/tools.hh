@@ -578,6 +578,99 @@ namespace hpp {
         CenterOfMassComputationPtr_t comc_;
     };
 
+    /// Matrix having Expression elements
+    template < std::size_t nRow, std::size_t nCol,
+             typename ValueType, typename JacobianType>
+    class MatrixOfExpressions :
+      public CalculusBase <MatrixOfExpressions <nRow, nCol, ValueType, JacobianType > ,
+                           Eigen::Matrix<value_type,    ValueType::RowsAtCompileTime * nRow,    ValueType::ColsAtCompileTime * nCol >,
+                           Eigen::Matrix<value_type, JacobianType::RowsAtCompileTime * nRow, JacobianType::ColsAtCompileTime * nCol > >
+    {
+      public:
+        typedef Eigen::Matrix<value_type , ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol >
+          Value_t;
+        typedef Eigen::Matrix<value_type , JacobianType::RowsAtCompileTime * nRow, JacobianType::ColsAtCompileTime * nCol >
+          Jacobian_t;
+        typedef Eigen::Matrix<value_type, ValueType::ColsAtCompileTime * nCol, ValueType::RowsAtCompileTime * nRow >
+          PseudoInv_t;
+        typedef Eigen::Matrix<value_type, JacobianType::ColsAtCompileTime * nCol, JacobianType::RowsAtCompileTime * nRow >
+          PseudoInvJacobian_t;
+        typedef CalculusBase <MatrixOfExpressions, Value_t, Jacobian_t > Parent_t;
+        typedef CalculusBaseAbstract <ValueType, JacobianType> Element_t;
+        typedef typename Element_t::Ptr_t ElementPtr_t;
+
+        MatrixOfExpressions () :
+          svd_ (ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol, Eigen::ComputeFullU | Eigen::ComputeFullV)
+        {}
+
+        MatrixOfExpressions (const Parent_t& other) :
+          Parent_t (other),
+          svd_ (ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol, Eigen::ComputeFullU | Eigen::ComputeFullV)
+        {
+        }
+
+        MatrixOfExpressions (const MatrixOfExpressions& matrix) :
+          Parent_t (matrix),
+          svd_ (ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol, Eigen::ComputeFullU | Eigen::ComputeFullV)
+        {
+        }
+
+        ElementPtr_t& operator() (std::size_t i, std::size_t j) {
+          return elements[i][j];
+        }
+
+        void computeValue () {
+          for (std::size_t i = 0; i < nRow; ++i)
+            for (std::size_t j = 0; j < nCol; ++j) {
+              elements[i][j].computeValue ();
+              this->value_.block <ValueType::RowsAtCompileTime, ValueType::ColsAtCompileTime>
+                (ValueType::RowsAtCompileTime * i, ValueType::ColsAtCompileTime * j)
+                = elements[i][j]->value();
+            }
+        }
+        void computeJacobian () {
+          for (std::size_t i = 0; i < nRow; ++i)
+            for (std::size_t j = 0; j < nCol; ++j) {
+              elements[i][j].computeJacobian ();
+              this->jacobian_.block <JacobianType::RowsAtCompileTime, JacobianType::ColsAtCompileTime>
+                (JacobianType::RowsAtCompileTime * i, JacobianType::ColsAtCompileTime * j)
+                = elements[i][j]->jacobian();
+            }
+        }
+
+        inline const PseudoInv_t& pinv () const {
+          return pi_;
+        }
+        inline const PseudoInvJacobian_t& pinvJacobian () const {
+          return pij_;
+        }
+        void computePseudoInverse () {
+          computeValue ();
+          svd_.compute (this->value_);
+          Eigen::VectorXd singularValues_inv = svd_.singularValues ();
+          for (typename Value_t::Index i=0; i < singularValues_inv.cols(); ++i) {
+            if (i < svd_.rank ())
+              singularValues_inv(i)=1.0/m_singularValues(i);
+            else
+              singularValues_inv(i)=0;
+          }
+          pi_ = svd_.matrixV () * singularValues_inv.asDiagonal () * svd_.matrixU ().transpose();
+        }
+        void computePseudoInverseJacobian () {
+          computeJacobian ();
+          computePseudoInverse ();
+          pij_ = - pi_ * ( this->jacobian_ * pi_ + pi_.transpose() * this->jacobian_.transpose() * ( 1 - this->value_ * pi_) ) * pi_
+                 + ( 1 - pi_ * this->value_ ) * this->jacobian_.transpose() * pi_.tranpose() * pi_;
+        }
+
+      private:
+        ElementPtr_t elements[nRow][nCol];
+
+        Eigen::JacobiSVD <Value_t> svd_;
+        PseudoInv_t pi_;
+        PseudoInvJacobian_t pij_;
+    };
+
     /// \}
   } // namespace constraints
 } // namespace hpp
