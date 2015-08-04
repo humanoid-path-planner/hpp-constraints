@@ -164,5 +164,69 @@ namespace hpp {
         }
       }
     }
+
+    eigen::vector3_t StaticStability::gravity (0,0,-9.81);
+
+    StaticStability::StaticStability ( const std::string& name,
+        const DevicePtr_t& robot, const Contacts_t& contacts,
+        const CenterOfMassComputationPtr_t& com):
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+          contacts.size() * 2, name),
+      robot_ (robot), contacts_ (contacts), com_ (com),
+      phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()),
+          Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()*robot->numberDof()))
+    {
+      phi_.setSize (2,contacts.size());
+      for (std::size_t i = 0; i < contacts.size(); ++i) {
+        phi_ (0,i) = CalculusBaseAbstract<eigen::vector3_t, JacobianMatrix>::create (
+            PointInJoint (contacts[i].joint,contacts[i].normal));
+        phi_ (1,i) = CalculusBaseAbstract<eigen::vector3_t, JacobianMatrix>::create (
+            (PointCom (com) - PointInJoint (contacts[i].joint,contacts[i].point)) ^ PointInJoint (contacts[i].joint,contacts[i].normal)
+            );
+      }
+    }
+
+    StaticStabilityPtr_t StaticStability::create ( const std::string& name,
+        const DevicePtr_t& robot, const Contacts_t& contacts,
+        const CenterOfMassComputationPtr_t& com)
+    {
+      return StaticStabilityPtr_t (new StaticStability (name, robot, contacts, com));
+    }
+
+    StaticStabilityPtr_t StaticStability::create (const DevicePtr_t& robot,
+        const Contacts_t& contacts,
+        const CenterOfMassComputationPtr_t& com)
+    {
+      return create ("StaticStability", robot, contacts, com);
+    }
+
+    void StaticStability::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
+    {
+      robot_->currentConfiguration (argument);
+      robot_->computeForwardKinematics ();
+
+      //phi_->computeValue (); //done in computePseudoInverse()
+      phi_.computePseudoInverse ();
+      result.segment (0, contacts_.size()) = - com_->mass() * phi_.pinv() * gravity;
+      result.segment (contacts_.size(), 2*contacts_.size()) = gravity - phi_.value() * (phi_.pinv() * gravity);
+    }
+
+    void StaticStability::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
+    {
+      robot_->currentConfiguration (argument);
+      robot_->computeForwardKinematics ();
+
+      phi_.computePseudoInverseJacobian (gravity);
+      jacobian.block (0, 0, contacts_.size(), robot_->numberDof()) =
+        - com_->mass() * phi_.pinvJacobian();
+      phi_.jacobianTimes (- phi_.pinv() * gravity,
+          jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof()));
+      jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof())
+        += - phi_.value() * phi_.pinvJacobian ();
+      //jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof()) =
+        //- phi_.jacobianTimes (phi_.pinv() * gravity)
+        //- phi_.value() * phi_.pinvJacobian ();
+    }
+
   } // namespace constraints
 } // namespace hpp

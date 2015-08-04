@@ -21,6 +21,7 @@
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
+# include <hpp/constraints/tools.hh>
 
 # include "hpp/constraints/fwd.hh"
 
@@ -180,6 +181,52 @@ namespace hpp {
         mutable matrix3_t Rerror_;
         mutable eigen::matrix3_t Jlog_;
         mutable matrix_t jacobian_;
+    };
+    /// \}
+
+    /// \addtogroup constraints
+    /// \{
+
+    class StaticStability : public DifferentiableFunction {
+      public:
+        static eigen::vector3_t gravity;
+
+        struct Contact_t {
+          JointPtr_t joint;
+          vector3_t point;
+          vector3_t normal;
+        };
+        typedef std::vector <Contact_t> Contacts_t;
+
+        /// Constructor
+        /// \param robot the robot the constraints is applied to,
+        /// \param joint the joint to which the object is attached,
+        /// \param com COM of the object in the joint frame.
+        StaticStability (const std::string& name, const DevicePtr_t& robot,
+            const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+        static StaticStabilityPtr_t create (
+            const std::string& name,
+            const DevicePtr_t& robot,
+            const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+        static StaticStabilityPtr_t create (
+            const DevicePtr_t& robot,
+            const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+      private:
+        void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+
+        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
+
+        DevicePtr_t robot_;
+        Contacts_t contacts_;
+        CenterOfMassComputationPtr_t com_;
+
+        mutable MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> phi_;
     };
     /// \}
   } // namespace constraints
