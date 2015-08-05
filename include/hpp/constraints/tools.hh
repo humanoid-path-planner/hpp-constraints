@@ -460,10 +460,10 @@ namespace hpp {
     /// Multiplication of an expression by a rotation matrix.
     template <typename RhsValue>
     class RotationMultiply :
-      public CalculusBase < ScalarMultiply < RhsValue > >
+      public CalculusBase < RotationMultiply < RhsValue > >
     {
       public:
-        typedef CalculusBase < ScalarMultiply < RhsValue > >
+        typedef CalculusBase < RotationMultiply < RhsValue > >
           Parent_t;
 
         RotationMultiply () {}
