@@ -33,6 +33,7 @@ namespace hpp {
     template < typename VectorType, typename MatrixType >
     static void computeCrossMatrix (const VectorType& v, MatrixType& m)
     {
+      m.diagonal ().setZero ();
       m (0,1) = -v [2]; m (1,0) = v [2];
       m (0,2) = v [1]; m (2,0) = -v [1];
       m (1,2) = -v [0]; m (2,1) = v [0];
@@ -117,7 +118,8 @@ namespace hpp {
           cross_ (CrossMatrix::Zero()) {}
 
         CalculusBase (const CalculusBase& o) :
-          value_ (o.value()), jacobian_ (o.jacobian_)
+          value_ (o.value()), jacobian_ (o.jacobian_),
+          cross_ (o.cross())
         {
         }
 
