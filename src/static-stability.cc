@@ -33,8 +33,6 @@ namespace hpp {
       }
     }
 
-    fcl::Vec3f StaticStabilityGravity::gravity (0,0,-1);
-
     StaticStabilityGravity::StaticStabilityGravity ( const std::string& name,
         const DevicePtr_t& robot, const JointPtr_t& joint):
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5, name),

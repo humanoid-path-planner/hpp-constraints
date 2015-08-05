@@ -137,8 +137,6 @@ namespace hpp {
 
     class StaticStabilityGravity : public DifferentiableFunction {
       public:
-        static fcl::Vec3f gravity;
-
         /// Constructor
         /// \param robot the robot the constraints is applied to,
         /// \param joint the joint to which the object is attached,
