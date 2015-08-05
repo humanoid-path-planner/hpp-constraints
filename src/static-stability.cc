@@ -23,12 +23,14 @@
 
 namespace hpp {
   namespace constraints {
-    static void cross (const fcl::Vec3f& v, eigen::matrix3_t& m)
-    {
-      m (0,1) = -v [2]; m (1,0) =  v [2];
-      m (0,2) =  v [1]; m (2,0) = -v [1];
-      m (1,2) = -v [0]; m (2,1) =  v [0];
-      m (0,0) = m (1,1) = m (2,2) = 0;
+    namespace {
+      static void cross (const fcl::Vec3f& v, eigen::matrix3_t& m)
+      {
+        m (0,1) = -v [2]; m (1,0) =  v [2];
+        m (0,2) =  v [1]; m (2,0) = -v [1];
+        m (1,2) = -v [0]; m (2,1) =  v [0];
+        m (0,0) = m (1,1) = m (2,2) = 0;
+      }
     }
 
     fcl::Vec3f StaticStabilityGravity::gravity (0,0,-1);
