@@ -476,6 +476,9 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
   DFptr pos = Position::create (device, ee1, vector3_t (0,0,0),
           vector3_t (0,0,0), identity ());
   PointInJoint pij (ee1, vector3_t(0,0,0));
+  PointInJoint pij2 (ee2, vector3_t(0,0,0));
+  typedef Difference <PointInJoint,PointInJoint> PiJmPiJ_t;
+  RotationMultiply<PiJmPiJ_t> relpos_sb (ee1,pij - pij2,true);
   DFptr relpos = RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0));
 
@@ -484,16 +487,27 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
   matrix_t jacobian = matrix_t (pos->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
       q1 = cs.shoot ();
-      /// Position
-      (*pos) (value, *q1);
       device->currentConfiguration (*q1);
       device->computeForwardKinematics ();
+
       pij.invalidate ();
+      relpos_sb.invalidate ();
+
+      /// Position
+      (*pos) (value, *q1);
       pij.computeValue ();
       BOOST_CHECK (pij.value ().isApprox (-value));
       jacobian.setZero ();
       pos->jacobian (jacobian, *q1);
       pij.computeJacobian ();
       BOOST_CHECK (pij.jacobian ().isApprox (-jacobian));
+      // Relative position
+      (*relpos) (value, *q1);
+      relpos_sb.computeValue ();
+      BOOST_CHECK (relpos_sb.value ().isApprox (value));
+      jacobian.setZero ();
+      relpos->jacobian (jacobian, *q1);
+      relpos_sb.computeJacobian ();
+      BOOST_CHECK (relpos_sb.jacobian ().isApprox (jacobian));
   }
 }
