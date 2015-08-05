@@ -488,6 +488,7 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
       (*pos) (value, *q1);
       device->currentConfiguration (*q1);
       device->computeForwardKinematics ();
+      pij.invalidate ();
       pij.computeValue ();
       BOOST_CHECK (pij.value ().isApprox (-value));
       jacobian.setZero ();

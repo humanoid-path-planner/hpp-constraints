@@ -55,10 +55,10 @@ class PointTesterT : public CalculusBase <PointTesterT<ValueType, JacobianType>,
     {
     }
 
-    void computeValue () {
+    void impl_value () {
       this->value_ = datas->value;
     }
-    void computeJacobian () {
+    void impl_jacobian () {
       this->jacobian_ = datas->jacobian;
     }
 
@@ -108,6 +108,7 @@ BOOST_AUTO_TEST_CASE (CrossProductTest) {
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
+    cp.invalidate ();
     setWrappers (cfg, d1, d2);
     cp.computeValue ();
     value (cfg, v);
@@ -160,6 +161,7 @@ BOOST_AUTO_TEST_CASE (DifferenceTest) {
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
+    cp.invalidate ();
     setWrappers (cfg, d1, d2);
     cp.computeValue ();
     value (cfg, v);
@@ -211,6 +213,7 @@ BOOST_AUTO_TEST_CASE (SumTest) {
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
+    cp.invalidate ();
     setWrappers (cfg, d1, d2);
     cp.computeValue ();
     value (cfg, v);
@@ -261,6 +264,7 @@ BOOST_AUTO_TEST_CASE (ScalarMultiplyTest) {
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     cfg[3] = scalar;
+    cp.invalidate ();
     setWrappers (cfg, d1, d2);
     cp.computeValue ();
     value (cfg, v);
@@ -314,6 +318,7 @@ BOOST_AUTO_TEST_CASE (ScalarProductTest) {
   OutputJacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
+    sp.invalidate ();
     setWrappers (cfg, d1, d2);
     sp.computeValue ();
     value (cfg, v);
@@ -400,6 +405,7 @@ BOOST_AUTO_TEST_CASE (MatrixOfExpTest) {
   moe.set(1,1,CBA_t::create (p1 + p2));
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
+    moe.invalidate ();
     setWrappers (cfg, d1, d2);
     moe.computeValue ();
     value (cfg, v);

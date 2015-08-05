@@ -98,20 +98,23 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
       size_t index = 0;
-      u_.computeValue ();
       if (mask_[0]) {
+        com_.invalidate ();
         com_.computeValue ();
         result[index++] = (com_.value () - pointRef_)[2];
       }
       if (mask_[1]) {
+        expr_.invalidate ();
         expr_.computeValue ();
         result[index++] = expr_.value ()[2];
       }
       if (mask_[2]) {
+        xmxlDotu_->invalidate ();
         xmxlDotu_->computeValue ();
         result[index++] =   xmxlDotu_->value();
       }
       if (mask_[3]) {
+        xmxrDotu_->invalidate ();
         xmxrDotu_->computeValue ();
         result[index  ] =   xmxrDotu_->value();
       }
@@ -123,23 +126,26 @@ namespace hpp {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
       size_t index = 0;
-      u_.computeJacobian ();
       if (mask_[0]) {
+        com_.invalidate ();
         com_.computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = com_.jacobian ().row (2);
       }
       if (mask_[1]) {
+        expr_.invalidate ();
         expr_.computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = expr_.jacobian ().row (2);
       }
       if (mask_[2]) {
+        xmxlDotu_->invalidate ();
         xmxlDotu_->computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = xmxlDotu_->jacobian ();
       }
       if (mask_[3]) {
+        xmxrDotu_->invalidate ();
         xmxrDotu_->computeJacobian ();
         jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
           = xmxrDotu_->jacobian ();

@@ -216,7 +216,8 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
-      //phi_->computeValue (); //done in computePseudoInverse()
+      phi_.invalidate ();
+      phi_.computeValue (); //done in computePseudoInverse()
       phi_.computePseudoInverse ();
       result.segment (0, contacts_.size()) = - com_->mass() * phi_.pinv() * Gravity;
       result.segment <6> (contacts_.size()) = Gravity - phi_.value() * (phi_.pinv() * Gravity);
@@ -227,6 +228,7 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
+      phi_.invalidate ();
       phi_.computePseudoInverseJacobian (Gravity);
       jacobian.block (0, 0, contacts_.size(), robot_->numberDof()) =
         - com_->mass() * phi_.pinvJacobian();
