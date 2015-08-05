@@ -175,6 +175,10 @@ namespace hpp {
           return ScalarProduct < T, RhsType> (static_cast<const T>(*this), rhs);
         }
 
+        RotationMultiply < T > rotate (const JointPtr_t& joint, bool transpose = false) const {
+          return RotationMultiply < T > (joint, static_cast<const T>(*this), transpose);
+        }
+
         ScalarMultiply < T > operator* (const value_type& scalar) const {
           return ScalarMultiply < T > (scalar, static_cast<const T>(*this));
         }
