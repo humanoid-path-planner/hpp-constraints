@@ -520,6 +520,60 @@ namespace hpp {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
+    /// Basic expression representing a vector in a joint frame.
+    class VectorInJoint : public CalculusBase <VectorInJoint>
+    {
+      public:
+        VectorInJoint () {}
+
+        VectorInJoint (const CalculusBase<VectorInJoint>& other) :
+          CalculusBase<VectorInJoint> (other),
+          joint_ (static_cast <const VectorInJoint&>(other).joint()),
+          vector_ (static_cast <const VectorInJoint&>(other).vector())
+        {}
+
+        VectorInJoint (const VectorInJoint& vectorInJoint) :
+          CalculusBase<VectorInJoint> (vectorInJoint),
+          joint_ (vectorInJoint.joint ()),
+          vector_ (vectorInJoint.vector())
+        {}
+
+        VectorInJoint (const JointPtr_t& joint,
+            const vector3_t& vectorInLocalFrame) :
+          joint_ (joint), vector_ (vectorInLocalFrame)
+        {}
+
+        const JointPtr_t& joint () const {
+          return joint_;
+        }
+        const vector3_t& vector () const {
+          return vector_;
+        }
+        void computeValue () {
+          g_ = joint_->currentTransformation ().getRotation () * vector_;
+          for (int i = 0; i < 3; ++i) this->value_[i] = g_[i];
+        }
+        void computeJacobian () {
+          const JointJacobian_t& j (joint_->jacobian ());
+          computeCrossRXl ();
+          this->jacobian_ = - this->cross_ * j.bottomRows (3);
+        }
+        void computeCrossRXl () {
+          computeCrossMatrix (
+              joint_->currentTransformation ().getRotation () * vector_,
+              this->cross_);
+        }
+
+      protected:
+        JointPtr_t joint_;
+        vector3_t vector_;
+
+        vector3_t g_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
+
     /// Basic expression representing a static point
     ///
     /// Its value is constant and its jacobian is a zero matrix.
