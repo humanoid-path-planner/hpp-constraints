@@ -180,11 +180,20 @@ namespace hpp {
     {
       phi_.setSize (2,contacts.size());
       for (std::size_t i = 0; i < contacts.size(); ++i) {
-        phi_ (0,i) = CalculusBaseAbstract<eigen::vector3_t, JacobianMatrix>::create (
-            PointInJoint (contacts[i].joint,contacts[i].normal));
-        phi_ (1,i) = CalculusBaseAbstract<eigen::vector3_t, JacobianMatrix>::create (
-            (PointCom (com) - PointInJoint (contacts[i].joint,contacts[i].point)) ^ PointInJoint (contacts[i].joint,contacts[i].normal)
-            );
+        PointCom OG (com);
+        if (contacts[i].joint == NULL) {
+          Point n (contacts[i].normal, robot->numberDof()); 
+          phi_ (0,i) = CalculusBaseAbstract<>::create (n);
+
+          Point OP (contacts[i].point, robot->numberDof());
+          phi_ (1,i) = CalculusBaseAbstract<>::create ( (OG - OP) ^ n);
+        } else {
+          VectorInJoint n (contacts[i].joint,contacts[i].normal); 
+          phi_ (0,i) = CalculusBaseAbstract<>::create (n);
+
+          PointInJoint OP (contacts[i].joint,contacts[i].point);
+          phi_ (1,i) = CalculusBaseAbstract<>::create ( (OG - OP) ^ n);
+        }
       }
     }
 
