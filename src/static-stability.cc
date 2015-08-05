@@ -165,13 +165,15 @@ namespace hpp {
       }
     }
 
-    eigen::vector3_t StaticStability::gravity (0,0,-9.81);
+    const eigen::vector3_t StaticStability::gravity (0,0,-9.81);
+    const Eigen::Matrix <value_type, 6, 1> StaticStability::Gravity
+      = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-9.81, 0, 0, 0).finished();
 
     StaticStability::StaticStability ( const std::string& name,
         const DevicePtr_t& robot, const Contacts_t& contacts,
         const CenterOfMassComputationPtr_t& com):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          contacts.size() * 2, name),
+          contacts.size() + 6, name),
       robot_ (robot), contacts_ (contacts), com_ (com),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()),
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()*robot->numberDof()))
@@ -207,8 +209,8 @@ namespace hpp {
 
       //phi_->computeValue (); //done in computePseudoInverse()
       phi_.computePseudoInverse ();
-      result.segment (0, contacts_.size()) = - com_->mass() * phi_.pinv() * gravity;
-      result.segment (contacts_.size(), 2*contacts_.size()) = gravity - phi_.value() * (phi_.pinv() * gravity);
+      result.segment (0, contacts_.size()) = - com_->mass() * phi_.pinv() * Gravity;
+      result.segment <6> (contacts_.size()) = Gravity - phi_.value() * (phi_.pinv() * Gravity);
     }
 
     void StaticStability::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
@@ -216,15 +218,15 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
-      phi_.computePseudoInverseJacobian (gravity);
+      phi_.computePseudoInverseJacobian (Gravity);
       jacobian.block (0, 0, contacts_.size(), robot_->numberDof()) =
         - com_->mass() * phi_.pinvJacobian();
-      phi_.jacobianTimes (- phi_.pinv() * gravity,
-          jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof()));
-      jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof())
+      phi_.jacobianTimes (- phi_.pinv() * Gravity,
+          jacobian.block (contacts_.size(), 0, 6, robot_->numberDof()));
+      jacobian.block (contacts_.size(), 0, 6, robot_->numberDof())
         += - phi_.value() * phi_.pinvJacobian ();
       //jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof()) =
-        //- phi_.jacobianTimes (phi_.pinv() * gravity)
+        //- phi_.jacobianTimes (phi_.pinv() * Gravity)
         //- phi_.value() * phi_.pinvJacobian ();
     }
 

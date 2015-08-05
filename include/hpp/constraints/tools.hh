@@ -613,7 +613,7 @@ namespace hpp {
             const Eigen::Ref<const Jacobian_t>& jacobian) :
           Parent_t (value, jacobian),
           nRows_ (0), nCols_ (0),
-          svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV)
+          svd_ (value.rows(), value.cols(), Eigen::ComputeThinU | Eigen::ComputeThinV)
         {}
 
         MatrixOfExpressions (const Parent_t& other) :
@@ -706,11 +706,11 @@ namespace hpp {
           Jacobian_t cache (this->jacobian_.rows(), elements_[0][0]->jacobian().cols());
           jacobianTimes (pi_ * rhs, cache);
           pij_ = - pi_ * cache;
-          jacobianTimes (rhs, cache);
-          pij_ += (
-              (pi_ * pi_.transpose()) * (Jacobian_t::Identity (this->value_.rows(), pi_.cols()) - this->value_ * pi_).transpose()
-              + (Jacobian_t::Identity (pi_.rows(), this->value_.cols()) - pi_ * this->value_) * (pi_ * pi_.transpose())
-            ) * cache;
+          cache.resize (this->value_.cols(), elements_[0][0]->jacobian().cols());
+          jacobianTransposeTimes (rhs - this->value_ * pi_ * rhs, cache);
+          pij_ += (pi_ * pi_.transpose()) * cache;
+          jacobianTransposeTimes (pi_.transpose() * pi_ * rhs , cache);
+          pij_ += (Jacobian_t::Identity (pi_.rows(), this->value_.cols()) - pi_ * this->value_) * cache;
         }
 
         void jacobianTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
@@ -729,6 +729,24 @@ namespace hpp {
             r += nr;
           }
         }
+
+        void jacobianTransposeTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
+          size_type r = 0, c = 0, nr = 0, nc = 0;
+          cache.setZero();
+          for (std::size_t i = 0; i < nRows_; ++i) {
+            c = 0;
+            nr = elements_[i][0]->jacobian().rows();
+            for (std::size_t j = 0; j < nCols_; ++j) {
+              elements_[i][j]->computeJacobian ();
+              assert (nr == elements_[i][j]->jacobian().rows());
+              nc = elements_[i][j]->jacobian().cols();
+              cache.row (j) += rhs.segment (r, nr).transpose() * this->jacobian_.block (r, c, nr, nc);
+              c += nc;
+            }
+            r += nr;
+          }
+        }
+
 
         Eigen::JacobiSVD <Value_t>& svd () { return svd_; }
 
