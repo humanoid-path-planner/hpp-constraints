@@ -579,18 +579,18 @@ namespace hpp {
     /// Basic expression representing a static point
     ///
     /// Its value is constant and its jacobian is a zero matrix.
-    class Point : public CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix>
+    class Point : public CalculusBase <Point, eigen::vector3_t, JacobianMatrix>
     {
       public:
         Point () {}
 
-        Point (const CalculusBase<Point, const eigen::vector3_t, const JacobianMatrix>& other) :
-          CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix> (other)
+        Point (const CalculusBase<Point, eigen::vector3_t, JacobianMatrix>& other) :
+          CalculusBase <Point, eigen::vector3_t, JacobianMatrix> (other)
         {
         }
 
         Point (const Point& point) :
-          CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix> (point)
+          CalculusBase <Point, eigen::vector3_t, JacobianMatrix> (point)
         {
         }
 
@@ -599,7 +599,7 @@ namespace hpp {
         /// \param point the static point
         /// \param jacobianNbCols number of column of the jacobian
         Point (const vector3_t& point, size_t jacobianNbCols) :
-          CalculusBase <Point, const eigen::vector3_t, const JacobianMatrix>
+          CalculusBase <Point, eigen::vector3_t, JacobianMatrix>
           (convert <vector3_t, eigen::vector3_t> (point, 3), JacobianMatrix::Zero (3, jacobianNbCols))
         {
         }
