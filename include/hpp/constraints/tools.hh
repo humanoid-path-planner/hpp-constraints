@@ -529,6 +529,8 @@ namespace hpp {
     class PointInJoint : public CalculusBase <PointInJoint>
     {
       public:
+        typedef CalculusBase <PointInJoint> Parent_t;
+
         PointInJoint () {}
 
         PointInJoint (const CalculusBase<PointInJoint>& other) :
@@ -550,7 +552,25 @@ namespace hpp {
             const vector3_t& pointInLocalFrame) :
           joint_ (joint), local_ (pointInLocalFrame),
           center_ (pointInLocalFrame.isZero ())
-        {}
+        {
+          assert (joint_ != NULL);
+        }
+
+        PointInJoint (const JointPtr_t& joint,
+            const vector3_t& pointInLocalFrame,
+            size_type nbDof) :
+          joint_ (joint), local_ (pointInLocalFrame),
+          center_ (pointInLocalFrame.isZero ())
+        {
+          if (joint_ == NULL) {
+            for (int i = 0; i < 3; ++i) this->value_[i] = local_[i];
+            this->jacobian_.resize (3, nbDof);
+            this->jacobian_.setZero ();
+            this->cross_.setZero ();
+          }
+        }
+
+
         const JointPtr_t& joint () const {
           return joint_;
         }
@@ -558,10 +578,12 @@ namespace hpp {
           return local_;
         }
         void impl_value () {
+          if (joint_ == NULL) return;
           g_ = joint_->currentTransformation ().transform (local_);
           for (int i = 0; i < 3; ++i) this->value_[i] = g_[i];
         }
         void impl_jacobian () {
+          if (joint_ == NULL) return;
           const JointJacobian_t& j (joint_->jacobian ());
           if (!center_) {
             computeCrossRXl ();
@@ -571,6 +593,7 @@ namespace hpp {
           }
         }
         void computeCrossRXl () {
+          if (joint_ == NULL) return;
           if (center_) {
             this->cross_.setZero ();
             return;
@@ -614,6 +637,19 @@ namespace hpp {
           joint_ (joint), vector_ (vectorInLocalFrame)
         {}
 
+        VectorInJoint (const JointPtr_t& joint,
+            const vector3_t& vectorInLocalFrame,
+            const size_type& nbDof) :
+          joint_ (joint), vector_ (vectorInLocalFrame)
+        {
+          if (joint_ == NULL) {
+            for (int i = 0; i < 3; ++i) this->value_[i] = vector_[i];
+            this->jacobian_.resize (3, nbDof);
+            this->jacobian_.setZero ();
+            this->cross_.setZero ();
+          }
+        }
+
         const JointPtr_t& joint () const {
           return joint_;
         }
@@ -621,15 +657,18 @@ namespace hpp {
           return vector_;
         }
         void impl_value () {
+          if (joint_ == NULL) return;
           g_ = joint_->currentTransformation ().getRotation () * vector_;
           for (int i = 0; i < 3; ++i) this->value_[i] = g_[i];
         }
         void impl_jacobian () {
+          if (joint_ == NULL) return;
           const JointJacobian_t& j (joint_->jacobian ());
           computeCrossRXl ();
           this->jacobian_ = - this->cross_ * j.bottomRows (3);
         }
         void computeCrossRXl () {
+          if (joint_ == NULL) return;
           computeCrossMatrix (
               joint_->currentTransformation ().getRotation () * vector_,
               this->cross_);
