@@ -17,6 +17,8 @@
 #ifndef HPP_CONSTRAINTS_TOOL_HH
 #define HPP_CONSTRAINTS_TOOL_HH
 
+#include <Eigen/SVD>
+
 #include "hpp/constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
@@ -588,63 +590,96 @@ namespace hpp {
     };
 
     /// Matrix having Expression elements
-    template < std::size_t nRow, std::size_t nCol,
-             typename ValueType, typename JacobianType>
+    template <typename ValueType = eigen::vector3_t, typename JacobianType = JacobianMatrix>
     class MatrixOfExpressions :
-      public CalculusBase <MatrixOfExpressions <nRow, nCol, ValueType, JacobianType > ,
-                           Eigen::Matrix<value_type,    ValueType::RowsAtCompileTime * nRow,    ValueType::ColsAtCompileTime * nCol >,
-                           Eigen::Matrix<value_type, JacobianType::RowsAtCompileTime * nRow, JacobianType::ColsAtCompileTime * nCol > >
+      public CalculusBase <MatrixOfExpressions <ValueType, JacobianType > ,
+                           Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic >,
+                           Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic > >
     {
       public:
-        typedef Eigen::Matrix<value_type , ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol >
+        typedef Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic >
           Value_t;
-        typedef Eigen::Matrix<value_type , JacobianType::RowsAtCompileTime * nRow, JacobianType::ColsAtCompileTime * nCol >
+        typedef Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic >
           Jacobian_t;
-        typedef Eigen::Matrix<value_type, ValueType::ColsAtCompileTime * nCol, ValueType::RowsAtCompileTime * nRow >
+        typedef Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic >
           PseudoInv_t;
-        typedef Eigen::Matrix<value_type, JacobianType::ColsAtCompileTime * nCol, JacobianType::RowsAtCompileTime * nRow >
+        typedef Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic >
           PseudoInvJacobian_t;
         typedef CalculusBase <MatrixOfExpressions, Value_t, Jacobian_t > Parent_t;
         typedef CalculusBaseAbstract <ValueType, JacobianType> Element_t;
         typedef typename Element_t::Ptr_t ElementPtr_t;
 
-        MatrixOfExpressions () :
-          svd_ (ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol, Eigen::ComputeFullU | Eigen::ComputeFullV)
+        MatrixOfExpressions (const Eigen::Ref<const Value_t>& value,
+            const Eigen::Ref<const Jacobian_t>& jacobian) :
+          Parent_t (value, jacobian),
+          nRows_ (0), nCols_ (0),
+          svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV)
         {}
 
         MatrixOfExpressions (const Parent_t& other) :
           Parent_t (other),
-          svd_ (ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol, Eigen::ComputeFullU | Eigen::ComputeFullV)
+          nRows_ (static_cast <const MatrixOfExpressions&>(other).nRows_),
+          nCols_ (static_cast <const MatrixOfExpressions&>(other).nCols_),
+          elements_ (static_cast <const MatrixOfExpressions&>(other).elements_),
+          svd_ (static_cast <const MatrixOfExpressions&>(other).svd ())
         {
         }
 
         MatrixOfExpressions (const MatrixOfExpressions& matrix) :
           Parent_t (matrix),
-          svd_ (ValueType::RowsAtCompileTime * nRow, ValueType::ColsAtCompileTime * nCol, Eigen::ComputeFullU | Eigen::ComputeFullV)
+          nRows_ (matrix.nRows_), nCols_ (matrix.nCols_),
+          elements_ (matrix.elements_),
+          svd_ (matrix.svd())
         {
         }
 
+        void setSize (std::size_t nRows, std::size_t nCols) {
+          nRows_ = nRows;
+          nCols_ = nCols;
+          elements_.resize (nRows_);
+          for (std::size_t i = 0; i < nRows; ++i)
+            elements_[i].resize(nCols);
+        }
+
         ElementPtr_t& operator() (std::size_t i, std::size_t j) {
-          return elements[i][j];
+          return elements_[i][j];
+        }
+
+        void set (std::size_t i, std::size_t j, const ElementPtr_t ptr) {
+          elements_[i][j] = ptr;
         }
 
         void computeValue () {
-          for (std::size_t i = 0; i < nRow; ++i)
-            for (std::size_t j = 0; j < nCol; ++j) {
-              elements[i][j].computeValue ();
-              this->value_.block <ValueType::RowsAtCompileTime, ValueType::ColsAtCompileTime>
-                (ValueType::RowsAtCompileTime * i, ValueType::ColsAtCompileTime * j)
-                = elements[i][j]->value();
+          size_type r = 0, c = 0, nr = 0, nc = 0;
+          for (std::size_t i = 0; i < nRows_; ++i) {
+            c = 0;
+            nr = elements_[i][0]->value().rows();
+            for (std::size_t j = 0; j < nCols_; ++j) {
+              elements_[i][j]->computeValue ();
+              assert (nr == elements_[i][j]->value().rows());
+              nc = elements_[i][j]->value().cols();
+              this->value_.block (r, c, nr, nc)
+                = elements_[i][j]->value();
+              c += nc;
             }
+            r += nr;
+          }
         }
         void computeJacobian () {
-          for (std::size_t i = 0; i < nRow; ++i)
-            for (std::size_t j = 0; j < nCol; ++j) {
-              elements[i][j].computeJacobian ();
-              this->jacobian_.block <JacobianType::RowsAtCompileTime, JacobianType::ColsAtCompileTime>
-                (JacobianType::RowsAtCompileTime * i, JacobianType::ColsAtCompileTime * j)
-                = elements[i][j]->jacobian();
+          size_type r = 0, c = 0, nr = 0, nc = 0;
+          for (std::size_t i = 0; i < nRows_; ++i) {
+            c = 0;
+            nr = elements_[i][0]->jacobian().rows();
+            for (std::size_t j = 0; j < nCols_; ++j) {
+              elements_[i][j]->computeJacobian ();
+              assert (nr == elements_[i][j]->jacobian().rows());
+              nc = elements_[i][j]->jacobian().cols();
+              this->jacobian_.block (r, c, nr, nc)
+                = elements_[i][j]->jacobian();
+              c += nc;
             }
+            r += nr;
+          }
         }
 
         inline const PseudoInv_t& pinv () const {
@@ -659,22 +694,48 @@ namespace hpp {
           Eigen::VectorXd singularValues_inv = svd_.singularValues ();
           for (typename Value_t::Index i=0; i < singularValues_inv.cols(); ++i) {
             if (i < svd_.rank ())
-              singularValues_inv(i)=1.0/m_singularValues(i);
+              singularValues_inv(i)=1.0/singularValues_inv[i];
             else
               singularValues_inv(i)=0;
           }
           pi_ = svd_.matrixV () * singularValues_inv.asDiagonal () * svd_.matrixU ().transpose();
         }
-        void computePseudoInverseJacobian () {
+        void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
           computeJacobian ();
           computePseudoInverse ();
-          pij_ = - pi_ * ( this->jacobian_ * pi_ + pi_.transpose() * this->jacobian_.transpose() * ( 1 - this->value_ * pi_) ) * pi_
-                 + ( 1 - pi_ * this->value_ ) * this->jacobian_.transpose() * pi_.tranpose() * pi_;
+          Jacobian_t cache (this->jacobian_.rows(), elements_[0][0]->jacobian().cols());
+          jacobianTimes (pi_ * rhs, cache);
+          pij_ = - pi_ * cache;
+          jacobianTimes (rhs, cache);
+          pij_ += (
+              (pi_ * pi_.transpose()) * (Jacobian_t::Identity (this->value_.rows(), pi_.cols()) - this->value_ * pi_).transpose()
+              + (Jacobian_t::Identity (pi_.rows(), this->value_.cols()) - pi_ * this->value_) * (pi_ * pi_.transpose())
+            ) * cache;
         }
 
-      private:
-        ElementPtr_t elements[nRow][nCol];
+        void jacobianTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
+          size_type r = 0, c = 0, nr = 0, nc = 0;
+          cache.setZero();
+          for (std::size_t i = 0; i < nRows_; ++i) {
+            c = 0;
+            nr = elements_[i][0]->jacobian().rows();
+            for (std::size_t j = 0; j < nCols_; ++j) {
+              elements_[i][j]->computeJacobian ();
+              assert (nr == elements_[i][j]->jacobian().rows());
+              nc = elements_[i][j]->jacobian().cols();
+              cache.middleRows (r,nr) += this->jacobian_.block (r, c, nr, nc) * rhs[j];
+              c += nc;
+            }
+            r += nr;
+          }
+        }
 
+        Eigen::JacobiSVD <Value_t>& svd () { return svd_; }
+
+        std::size_t nRows_, nCols_;
+        std::vector <std::vector <ElementPtr_t> > elements_;
+
+      private:
         Eigen::JacobiSVD <Value_t> svd_;
         PseudoInv_t pi_;
         PseudoInvJacobian_t pij_;
