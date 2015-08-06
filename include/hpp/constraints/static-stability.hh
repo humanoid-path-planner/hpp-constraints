@@ -191,9 +191,9 @@ namespace hpp {
         static const Eigen::Matrix <value_type, 6, 1> Gravity;
 
         struct Contact_t {
-          JointPtr_t joint;
-          vector3_t point;
-          vector3_t normal;
+          JointPtr_t joint1, joint2;
+          vector3_t point1, point2;
+          vector3_t normal1, normal2;
         };
         typedef std::vector <Contact_t> Contacts_t;
 
@@ -226,6 +226,8 @@ namespace hpp {
         CenterOfMassComputationPtr_t com_;
 
         mutable MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> phi_;
+        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> p1mp2s_;
+        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> n1mn2s_;
     };
     /// \}
   } // namespace constraints

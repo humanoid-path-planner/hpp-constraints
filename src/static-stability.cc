@@ -173,7 +173,7 @@ namespace hpp {
         const DevicePtr_t& robot, const Contacts_t& contacts,
         const CenterOfMassComputationPtr_t& com):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          contacts.size() + 6, name),
+          (1 + 6) * contacts.size() + 6, name),
       robot_ (robot), contacts_ (contacts), com_ (com),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()),
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()*robot->numberDof()))
@@ -181,19 +181,15 @@ namespace hpp {
       phi_.setSize (2,contacts.size());
       for (std::size_t i = 0; i < contacts.size(); ++i) {
         PointCom OG (com);
-        if (contacts[i].joint == NULL) {
-          Point n (contacts[i].normal, robot->numberDof()); 
-          phi_ (0,i) = CalculusBaseAbstract<>::create (n);
+        PointInJoint OP1 (contacts[i].joint1,contacts[i].point1,robot->numberDof());
+        PointInJoint OP2 (contacts[i].joint2,contacts[i].point2,robot->numberDof());
+        VectorInJoint n1 (contacts[i].joint1,contacts[i].normal1,robot->numberDof()); 
+        VectorInJoint n2 (contacts[i].joint2,contacts[i].normal2,robot->numberDof()); 
 
-          Point OP (contacts[i].point, robot->numberDof());
-          phi_ (1,i) = CalculusBaseAbstract<>::create ( (OG - OP) ^ n);
-        } else {
-          VectorInJoint n (contacts[i].joint,contacts[i].normal); 
-          phi_ (0,i) = CalculusBaseAbstract<>::create (n);
-
-          PointInJoint OP (contacts[i].joint,contacts[i].point);
-          phi_ (1,i) = CalculusBaseAbstract<>::create ( (OG - OP) ^ n);
-        }
+        phi_ (0,i) = CalculusBaseAbstract<>::create (n1);
+        phi_ (1,i) = CalculusBaseAbstract<>::create ((OG - OP1) ^ n1);
+        p1mp2s_.push_back (CalculusBaseAbstract<>::create (OP1 - OP2));
+        n1mn2s_.push_back (CalculusBaseAbstract<>::create (n1 - n2));
       }
     }
 
@@ -217,10 +213,21 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       phi_.invalidate ();
+      for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
+        p1mp2s_[i]->invalidate();
+        n1mn2s_[i]->invalidate();
+      }
       phi_.computeValue (); //done in computePseudoInverse()
       phi_.computePseudoInverse ();
       result.segment (0, contacts_.size()) = - com_->mass() * phi_.pinv() * Gravity;
       result.segment <6> (contacts_.size()) = Gravity - phi_.value() * (phi_.pinv() * Gravity);
+      size_t shift = 6 + contacts_.size();
+      for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
+        p1mp2s_[i]->computeValue();
+        n1mn2s_[i]->computeValue();
+        result.segment <3> (shift + i * 6    ) = p1mp2s_[i]->value();
+        result.segment <3> (shift + i * 6 + 3) = n1mn2s_[i]->value();
+      }
     }
 
     void StaticStability::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
@@ -229,6 +236,10 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       phi_.invalidate ();
+      for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
+        p1mp2s_[i]->invalidate();
+        n1mn2s_[i]->invalidate();
+      }
       phi_.computePseudoInverseJacobian (Gravity);
       jacobian.block (0, 0, contacts_.size(), robot_->numberDof()) =
         - com_->mass() * phi_.pinvJacobian();
@@ -239,6 +250,13 @@ namespace hpp {
       //jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof()) =
         //- phi_.jacobianTimes (phi_.pinv() * Gravity)
         //- phi_.value() * phi_.pinvJacobian ();
+      size_t shift = 6 + contacts_.size();
+      for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
+        p1mp2s_[i]->computeJacobian();
+        n1mn2s_[i]->computeJacobian();
+        jacobian.middleRows <3> (shift + i * 6    ) = p1mp2s_[i]->jacobian();
+        jacobian.middleRows <3> (shift + i * 6 + 3) = n1mn2s_[i]->jacobian();
+      }
     }
 
   } // namespace constraints
