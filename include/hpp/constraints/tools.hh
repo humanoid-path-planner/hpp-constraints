@@ -162,6 +162,9 @@ namespace hpp {
         ValueType value_;
         JacobianType jacobian_;
         CrossType cross_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     /// Base class for classes representing an operation.
@@ -213,6 +216,9 @@ namespace hpp {
         RhsValue rhs_;
         LhsValue lhs_;
         WkPtr_t self_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     /// Cross product of two expressions.
@@ -507,6 +513,9 @@ namespace hpp {
         bool center_;
 
         vector3_t g_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     /// Basic expression representing a static point
@@ -669,6 +678,9 @@ namespace hpp {
         Eigen::JacobiSVD <Value_t> svd_;
         PseudoInv_t pi_;
         PseudoInvJacobian_t pij_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     /// \}
