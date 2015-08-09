@@ -31,6 +31,7 @@ namespace hpp {
     } // namespace eigen
 
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
+    HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
     HPP_PREDEF_CLASS (Orientation);
     HPP_PREDEF_CLASS (Position);
     HPP_PREDEF_CLASS (Transformation);
@@ -68,6 +69,8 @@ namespace hpp {
     typedef model::Transform3f Transform3f;
     typedef boost::shared_ptr <DistanceBetweenBodies>
     DistanceBetweenBodiesPtr_t;
+    typedef boost::shared_ptr <DistanceBetweenPointsInBodies>
+    DistanceBetweenPointsInBodiesPtr_t;
     typedef boost::shared_ptr<Orientation> OrientationPtr_t;
     typedef boost::shared_ptr<Position> PositionPtr_t;
     typedef boost::shared_ptr<Transformation> TransformationPtr_t;
