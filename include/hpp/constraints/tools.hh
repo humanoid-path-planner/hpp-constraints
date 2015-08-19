@@ -856,7 +856,7 @@ namespace hpp {
           this->computeValue ();
           svd_.compute (this->value_);
           Eigen::VectorXd singularValues_inv = svd_.singularValues ();
-          for (typename Value_t::Index i=0; i < singularValues_inv.cols(); ++i) {
+          for (typename Value_t::Index i=0; i < singularValues_inv.rows(); ++i) {
             if (i < svd_.rank ())
               singularValues_inv(i)=1.0/singularValues_inv[i];
             else
