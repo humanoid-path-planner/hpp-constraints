@@ -33,20 +33,36 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
-    /// Constraint on the relative transformation of two robot joints
-    ///
-    /// The 3 first coordinates of the error is computed by a RelativePosition
-    /// instance where the origin of Joint 2 should coincide with the
-    /// translation part of the reference transformation passed to this.
-    ///
-    /// The 3 last coordinates of the error are computed by a
-    /// RelativeOrientation instance.
-    ///
+    /** Relative transformation of two fixed frames in robot joints
+
+        The value of the function is a 6-dimensional vector. The 3 first
+        coordinates are the position of the center of the second frame expressed
+        in the first frame. The 3 last coordinates are the log of the
+        orientation of frame 2 in frame 1.
+
+        \f{equation*}
+	f (\mathbf{q}) = \left(\begin{array}{c}
+	\mathbf{translation}\left(T_{1/J_1}^T T_1^T T_2 T_{2/J_2}\right)\\
+	\log ((R_1 R_{1/J_1})^T R_2 R_{2/J_2}) \end{array}\right)
+        \f}
+
+	The Jacobian is given by
+
+	\f{equation*}
+	\left(\begin{array}{c}
+	(R_1 R_{1/J_1})^T (\left[R_2 t_{2/J_2} + t_2 - t_1\right]_{\times}
+	J_{1\,\omega} - \left[R_2 t_{2/J_2}\right]_{\times} J_{2\,\omega} +
+	J_{2\,\mathbf{v}} - J_{1\,\mathbf{v}}) \\
+	J_{log}((R_1 R_{1/J_1})^T R_2 R_{2/J_2})(R_1 R_{1/J_1})^T
+	(J_{2\,\omega} - J_{1\,\omega})
+	\end{array}\right)
+	\f}
+    */
     class HPP_CONSTRAINTS_DLLAPI RelativeTransformation :
       public DifferentiableFunction
     {
     public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
       /// Return a shared pointer to a new instance
       ///
@@ -86,18 +102,40 @@ namespace hpp {
 	 const JointPtr_t& joint2, const Transform3f& reference,
 	 std::vector <bool> mask = boost::assign::list_of (true)(true)(true)
 	 (true)(true)(true));
+
+      /// Return a shared pointer to a new instance
+      ///
+      /// \param name the name of the constraints,
+      /// \param robot the robot the constraints is applied to,
+      /// \param joint1 the first joint the transformation of which is
+      ///               constrained,
+      /// \param joint2 the second joint the transformation of which is
+      ///               constrained,
+      /// \param frame1 position of a fixed frame in joint 1,
+      /// \param frame2 position of a fixed frame in joint 2,
+      /// \param mask vector of 6 boolean defining which coordinates of the
+      ///        error vector to take into account.
+      static RelativeTransformationPtr_t create
+	(const std::string& name, const DevicePtr_t&,
+	 const JointPtr_t& joint1, const JointPtr_t& joint2,
+	 const Transform3f& frame1, const Transform3f& frame2,
+	 std::vector <bool> mask = boost::assign::list_of (true)(true)(true)
+	 (true)(true)(true));
+
       virtual ~RelativeTransformation () throw () {}
-      /// Set desired relative transformation
+      /// Set desired relative transformation of joint2 in joint1
+      ///
       void reference (const Transform3f& reference)
       {
-	reference_ = reference;
-	relativeOrientation_.reference (reference_.getRotation ());
-	relativePosition_.pointInJoint1 (reference_.getTranslation ());
+	F1inJ1_ = reference;
+	F2inJ2_.setIdentity ();
       }
+
+
       /// Get desired relative orientation
-      const Transform3f& reference () const
+      Transform3f reference () const
       {
-	return reference_;
+	return F1inJ1_ * inverse (F2inJ2_);
       }
     protected:
       ///Constructor
@@ -118,6 +156,25 @@ namespace hpp {
                               const JointPtr_t& joint2,
                               const Transform3f& reference,
                               std::vector <bool> mask);
+
+      ///Constructor
+      ///
+      /// \param name the name of the constraints,
+      /// \param robot the robot the constraints is applied to,
+      /// \param joint1 the first joint the transformation of which is
+      ///               constrained,
+      /// \param joint2 the second joint the transformation of which is
+      ///               constrained,
+      /// \param frame1 position of a fixed frame in joint 1,
+      /// \param frame2 position of a fixed frame in joint 2,
+      /// \param mask vector of 6 boolean defining which coordinates of the
+      ///        error vector to take into account.
+      RelativeTransformation (const std::string& name, const DevicePtr_t&,
+                              const JointPtr_t& joint1,
+			      const JointPtr_t& joint2,
+                              const Transform3f& frame1,
+                              const Transform3f& frame2,
+                              std::vector <bool> mask);
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,
@@ -128,13 +185,18 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      RelativeOrientation relativeOrientation_;
-      RelativePosition relativePosition_;
-      Transform3f reference_;
-      /// Size of the translation constraint
-      size_type sizeTranslation_;
-      /// Size of the orientation constraint
-      size_type sizeOrientation_;
+      void computeError (ConfigurationIn_t argument) const;
+      DevicePtr_t robot_;
+      JointPtr_t joint1_;
+      JointPtr_t joint2_;
+      Transform3f F1inJ1_;
+      Transform3f F2inJ2_;
+      const std::vector <bool> mask_;
+      mutable value_type theta_;
+      mutable vector_t value_;
+      mutable matrix_t jacobian_;
+      mutable eigen::matrix3_t cross1_, cross2_, Jlog_;
+      mutable Configuration_t latestArgument_;
     }; // class RelativeTransformation
     /// \}
   } // namespace constraints
