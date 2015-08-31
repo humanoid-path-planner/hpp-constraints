@@ -165,9 +165,9 @@ namespace hpp {
       }
     }
 
-    const eigen::vector3_t StaticStability::gravity (0,0,-9.81);
+    const value_type StaticStability::G = 9.81;
     const Eigen::Matrix <value_type, 6, 1> StaticStability::Gravity
-      = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-9.81, 0, 0, 0).finished();
+      = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-1, 0, 0, 0).finished();
 
     StaticStability::StaticStability ( const std::string& name,
         const DevicePtr_t& robot, const Contacts_t& contacts,
@@ -179,8 +179,8 @@ namespace hpp {
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()*robot->numberDof()))
     {
       phi_.setSize (2,contacts.size());
+      PointCom OG (com);
       for (std::size_t i = 0; i < contacts.size(); ++i) {
-        PointCom OG (com);
         PointInJoint OP1 (contacts[i].joint1,contacts[i].point1,robot->numberDof());
         PointInJoint OP2 (contacts[i].joint2,contacts[i].point2,robot->numberDof());
         VectorInJoint n1 (contacts[i].joint1,contacts[i].normal1,robot->numberDof()); 
@@ -219,14 +219,15 @@ namespace hpp {
       }
       phi_.computeValue (); //done in computePseudoInverse()
       phi_.computePseudoInverse ();
-      result.segment (0, contacts_.size()) = - com_->mass() * phi_.pinv() * Gravity;
-      result.segment <6> (contacts_.size()) = Gravity - phi_.value() * (phi_.pinv() * Gravity);
+      result.segment (0, contacts_.size()) = - /*com_->mass() * G * */ phi_.pinv() * Gravity;
+      result.segment <6> (contacts_.size()) = /* G * */ Gravity - phi_.value() * (phi_.pinv() * /* G * */ Gravity);
       size_t shift = 6 + contacts_.size();
       for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
         p1mp2s_[i]->computeValue();
         n1mn2s_[i]->computeValue();
-        result.segment <3> (shift + i * 6    ) = p1mp2s_[i]->value();
-        result.segment <3> (shift + i * 6 + 3) = n1mn2s_[i]->value();
+        result.segment <3> (shift    ) = p1mp2s_[i]->value();
+        result.segment <3> (shift + 3) = n1mn2s_[i]->value();
+        shift += 6;
       }
     }
 
@@ -240,10 +241,10 @@ namespace hpp {
         p1mp2s_[i]->invalidate();
         n1mn2s_[i]->invalidate();
       }
-      phi_.computePseudoInverseJacobian (Gravity);
+      phi_.computePseudoInverseJacobian (/* G * */ Gravity);
       jacobian.block (0, 0, contacts_.size(), robot_->numberDof()) =
-        - com_->mass() * phi_.pinvJacobian();
-      phi_.jacobianTimes (- phi_.pinv() * Gravity,
+        - /* com_->mass() * */ phi_.pinvJacobian();
+      phi_.jacobianTimes (- phi_.pinv() * /* G * */ Gravity,
           jacobian.block (contacts_.size(), 0, 6, robot_->numberDof()));
       jacobian.block (contacts_.size(), 0, 6, robot_->numberDof())
         += - phi_.value() * phi_.pinvJacobian ();

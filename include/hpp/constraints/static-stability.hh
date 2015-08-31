@@ -187,7 +187,7 @@ namespace hpp {
 
     class StaticStability : public DifferentiableFunction {
       public:
-        static const eigen::vector3_t gravity;
+        static const value_type G;
         static const Eigen::Matrix <value_type, 6, 1> Gravity;
 
         struct Contact_t {
