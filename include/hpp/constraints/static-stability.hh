@@ -216,6 +216,10 @@ namespace hpp {
             const Contacts_t& contacts,
             const CenterOfMassComputationPtr_t& com);
 
+        const MatrixOfExpressions<>& phi () {
+          return phi_;
+        }
+
       private:
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
 
