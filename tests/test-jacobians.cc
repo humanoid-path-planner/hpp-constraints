@@ -53,7 +53,6 @@ const static double DQ_MAX = 1e-2;
 const static size_t MAX_NB_ERROR = 5;
 
 static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
-static fcl::Transform3f transform3f_id () { fcl::Transform3f T; T.setIdentity (); return T;}
 
 hpp::model::ObjectFactory objectFactory;
 
@@ -412,16 +411,25 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0), list_of(false)(true)(true))
       ));
-  functions.push_back ( DFptr (
-        "RelativeTransformation",
-        RelativeTransformation::create (device, ee1, ee2, transform3f_id ())
-      ));
+  ConfigurationPtr_t q2 = cs.shoot ();
+  device->currentConfiguration (*q2);
+  device->computeForwardKinematics ();
+  Transform3f tf1 (device->getJointByName (device->name () + "_SO3")->
+		   currentTransformation ());
+  q2 = cs.shoot ();
+  device->currentConfiguration (*q2);
+  device->computeForwardKinematics ();
+  Transform3f tf2 (device->getJointByName (device->name () + "_SO3")->
+		   currentTransformation ());
+  functions.push_back (DFptr ("RelativeTransformation",
+			      RelativeTransformation::create
+			      ("", device, ee1, ee2, tf1, tf2)));
   functions.push_back ( DFptr (
         "StaticStabilityGravity",
         createStaticStability (device, ee1)
       ));
 
-  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  ConfigurationPtr_t q1;
   vector_t value1, value2, dvalue, error;
   vector_t errorNorm (MAX_NB_ERROR);
   vector_t dq (device->numberDof ()); dq.setZero ();
