@@ -28,6 +28,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   relative-position.cc
   relative-transformation.cc
   static-stability.cc
+  simplex-solver.cc
   )
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)

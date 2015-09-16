@@ -14,13 +14,6 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/configuration.hh>
-#include <hpp/model/object-factory.hh>
-
-#include <hpp/constraints/tools.hh>
-
 #define BOOST_TEST_MODULE SymbolicCalculus
 #include <boost/test/included/unit_test.hpp>
 
@@ -28,30 +21,44 @@
 #include <limits>
 #include <math.h>
 
+#include <Eigen/Geometry>
+
+#include <hpp/model/device.hh>
+#include <hpp/model/joint.hh>
+#include <hpp/model/configuration.hh>
+#include <hpp/model/object-factory.hh>
+
+#include <hpp/constraints/tools.hh>
+
 using namespace hpp::constraints;
 
-struct DataWrapper {
-  eigen::vector3_t value;
-  JacobianMatrix jacobian;
-};
-
-class PointTester : public CalculusBase <PointTester>
+template <class ValueType = eigen::vector3_t,
+          class JacobianType = JacobianMatrix >
+class PointTesterT : public CalculusBase <PointTesterT<ValueType, JacobianType>, ValueType, JacobianType>
 {
   public:
-    PointTester () : datas (NULL) {}
+    typedef CalculusBase <PointTesterT<ValueType, JacobianType>, ValueType, JacobianType> Parent_t;
+    struct DataWrapper {
+      ValueType value;
+      JacobianType jacobian;
+      
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
 
-    PointTester (const CalculusBase<PointTester>& other) {
-      const PointTester& o = static_cast <const PointTester&>(other);
-      datas = o.datas;
-    }
-
-    PointTester (DataWrapper* d): datas (d)
+    PointTesterT (DataWrapper* d = NULL) :
+      datas (d)
     {}
 
-    void computeValue () {
+    PointTesterT (const Parent_t& other) :
+      Parent_t (other),
+      datas (static_cast <const PointTesterT&>(other).datas)
+    {
+    }
+
+    void impl_value () {
       this->value_ = datas->value;
     }
-    void computeJacobian () {
+    void impl_jacobian () {
       this->jacobian_ = datas->jacobian;
     }
 
@@ -62,6 +69,8 @@ namespace crossProduct {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
   typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef PointTesterT <Value, Jacobian> PointTester;
+  typedef PointTester::DataWrapper DataWrapper;
 
   void setWrappers (Config cfg, DataWrapper* d1, DataWrapper* d2)
   {
@@ -80,7 +89,7 @@ namespace crossProduct {
     v[2] =   c[0] * c[4] - c[1] * c[3];
   }
 
-  void jacobian (Config cfg, Jacobian& j)
+  void jacobian (Config cfg, Eigen::Ref<Jacobian> j)
   {
     j (0,0) =      0 ; j (0,1) =  cfg[5]; j (0,2) = -cfg[4]; j (0,3) =      0 ; j (0,4) = -cfg[2]; j (0,5) =  cfg[1];
     j (1,0) = -cfg[5]; j (1,1) =      0 ; j (1,2) =  cfg[3]; j (1,3) =  cfg[2]; j (1,4) =      0 ; j (1,5) = -cfg[0];
@@ -89,19 +98,21 @@ namespace crossProduct {
 }
 
 BOOST_AUTO_TEST_CASE (CrossProductTest) {
+  using namespace crossProduct;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
   PointTester p1 (d1), p2 (d2);
   typedef CrossProduct <PointTester, PointTester> CP_t;
   CP_t cp = p1 ^ p2;
-  crossProduct::Value v;
-  crossProduct::Jacobian j;
+  Value v;
+  Jacobian j;
   for (size_t i = 0; i < 100; i++) {
-    crossProduct::Config cfg = crossProduct::Config::Random ();
-    crossProduct::setWrappers (cfg, d1, d2);
+    Config cfg = Config::Random ();
+    cp.invalidate ();
+    setWrappers (cfg, d1, d2);
     cp.computeValue ();
-    crossProduct::value (cfg, v);
-    crossProduct::jacobian (cfg, j);
+    value (cfg, v);
+    jacobian (cfg, j);
     BOOST_CHECK (cp.value ().isApprox (v));
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
@@ -114,6 +125,8 @@ namespace difference {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
   typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef PointTesterT <Value, Jacobian> PointTester;
+  typedef PointTester::DataWrapper DataWrapper;
 
   void setWrappers (Config cfg, DataWrapper* d1, DataWrapper* d2)
   {
@@ -138,19 +151,21 @@ namespace difference {
 }
 
 BOOST_AUTO_TEST_CASE (DifferenceTest) {
+  using namespace difference;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
   PointTester p1 (d1), p2 (d2);
   typedef Difference <PointTester, PointTester> D_t;
   D_t cp = p1 - p2;
-  difference::Value v;
-  difference::Jacobian j;
+  Value v;
+  Jacobian j;
   for (size_t i = 0; i < 100; i++) {
-    difference::Config cfg = difference::Config::Random ();
-    difference::setWrappers (cfg, d1, d2);
+    Config cfg = Config::Random ();
+    cp.invalidate ();
+    setWrappers (cfg, d1, d2);
     cp.computeValue ();
-    difference::value (cfg, v);
-    difference::jacobian (cfg, j);
+    value (cfg, v);
+    jacobian (cfg, j);
     BOOST_CHECK (cp.value ().isApprox (v));
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
@@ -163,6 +178,8 @@ namespace sum {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
   typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef PointTesterT <Value, Jacobian> PointTester;
+  typedef PointTester::DataWrapper DataWrapper;
 
   void setWrappers (Config cfg, DataWrapper* d1, DataWrapper* d2)
   {
@@ -186,19 +203,21 @@ namespace sum {
 }
 
 BOOST_AUTO_TEST_CASE (SumTest) {
+  using namespace sum;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
   PointTester p1 (d1), p2 (d2);
   typedef Sum <PointTester, PointTester> D_t;
   D_t cp = p1 + p2;
-  sum::Value v;
-  sum::Jacobian j;
+  Value v;
+  Jacobian j;
   for (size_t i = 0; i < 100; i++) {
-    sum::Config cfg = sum::Config::Random ();
-    sum::setWrappers (cfg, d1, d2);
+    Config cfg = Config::Random ();
+    cp.invalidate ();
+    setWrappers (cfg, d1, d2);
     cp.computeValue ();
-    sum::value (cfg, v);
-    sum::jacobian (cfg, j);
+    value (cfg, v);
+    jacobian (cfg, j);
     BOOST_CHECK (cp.value ().isApprox (v));
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
@@ -211,6 +230,8 @@ namespace scalarMultiply {
   typedef Eigen::Matrix <value_type, 1, 4> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
   typedef Eigen::Matrix <value_type, 3, 3> Jacobian;
+  typedef PointTesterT <Value, Jacobian> PointTester;
+  typedef PointTester::DataWrapper DataWrapper;
 
   void setWrappers (Config cfg, DataWrapper* d1, DataWrapper* )
   {
@@ -231,24 +252,173 @@ namespace scalarMultiply {
 }
 
 BOOST_AUTO_TEST_CASE (ScalarMultiplyTest) {
+  using namespace scalarMultiply;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
   PointTester p1 (d1), p2 (d2);
   typedef ScalarMultiply <PointTester> D_t;
   value_type scalar = 3;
   D_t cp = p1 * scalar;
-  scalarMultiply::Value v;
-  scalarMultiply::Jacobian j;
+  Value v;
+  Jacobian j;
   for (size_t i = 0; i < 100; i++) {
-    scalarMultiply::Config cfg = scalarMultiply::Config::Random ();
+    Config cfg = Config::Random ();
     cfg[3] = scalar;
-    scalarMultiply::setWrappers (cfg, d1, d2);
+    cp.invalidate ();
+    setWrappers (cfg, d1, d2);
     cp.computeValue ();
-    scalarMultiply::value (cfg, v);
-    scalarMultiply::jacobian (cfg, j);
+    value (cfg, v);
+    jacobian (cfg, j);
     BOOST_CHECK (cp.value ().isApprox (v));
     cp.computeJacobian ();
     BOOST_CHECK (cp.jacobian ().isApprox (j));
+  }
+  delete d1;
+  delete d2;
+}
+
+namespace scalarProduct {
+  typedef Eigen::Matrix <value_type, 1, 6> Config;
+  typedef Eigen::Matrix <value_type, 1, 1> OutputValue;
+  typedef Eigen::Matrix <value_type, 1, 6> OutputJacobian;
+  typedef Eigen::Matrix <value_type, 3, 1> Value;
+  typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef PointTesterT <Value, Jacobian> PointTester;
+  typedef PointTester::DataWrapper DataWrapper;
+
+  void setWrappers (Config cfg, DataWrapper* d1, DataWrapper* d2)
+  {
+    d1->value = cfg.leftCols (3);
+    d2->value = cfg.rightCols (3);
+    d1->jacobian = Jacobian::Zero ();
+    d2->jacobian = Jacobian::Zero ();
+    d1->jacobian.leftCols (3).setIdentity ();
+    d2->jacobian.rightCols (3).setIdentity ();
+  }
+
+  void value (Config c, OutputValue& v)
+  {
+    v[0] = c.segment (0,3).dot (c.segment (3,3));
+  }
+
+  void jacobian (Config cfg, OutputJacobian& j)
+  {
+    j (0,0) = cfg[3]; j (0,1) = cfg[4]; j (0,2) = cfg[5]; j (0,3) = cfg[0]; j (0,4) = cfg[1]; j (0,5) = cfg[2];
+  }
+}
+
+BOOST_AUTO_TEST_CASE (ScalarProductTest) {
+  using namespace scalarProduct;
+  DataWrapper* d1 = new DataWrapper ();
+  DataWrapper* d2 = new DataWrapper ();
+  PointTester p1 (d1), p2 (d2);
+  typedef ScalarProduct <PointTester, PointTester> SP_t;
+  SP_t sp = p1 * p2;
+  OutputValue v;
+  OutputJacobian j;
+  for (size_t i = 0; i < 100; i++) {
+    Config cfg = Config::Random ();
+    sp.invalidate ();
+    setWrappers (cfg, d1, d2);
+    sp.computeValue ();
+    value (cfg, v);
+    jacobian (cfg, j);
+    BOOST_CHECK (v.isApproxToConstant (sp.value ()));
+    sp.computeJacobian ();
+    BOOST_CHECK (sp.jacobian ().isApprox (j));
+  }
+  delete d1;
+  delete d2;
+}
+
+namespace matrixOfExp {
+  typedef Eigen::Matrix <value_type, 1, 6> Config;
+  typedef Eigen::Matrix <value_type, 3, 1> Value;
+  typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> Jacobian;
+  typedef Eigen::Matrix <value_type, 6, 2> OutputValue;
+  typedef Eigen::Matrix <value_type, 6, 2*6> OutputJacobian;
+  typedef Eigen::Matrix <value_type, 2, 1> RValue;
+  typedef Eigen::Matrix <value_type, 6, 6> OutputJacobianTimesRValue;
+  typedef PointTesterT <Value, Jacobian> PointTester;
+  typedef PointTester::DataWrapper DataWrapper;
+
+  void setWrappers (Config cfg, DataWrapper* d1, DataWrapper* d2)
+  {
+    d1->value = cfg.leftCols (3);
+    d2->value = cfg.rightCols (3);
+    d1->jacobian = Jacobian::Zero (3,6);
+    d2->jacobian = Jacobian::Zero (3,6);
+    d1->jacobian.leftCols (3).setIdentity ();
+    d2->jacobian.rightCols (3).setIdentity ();
+  }
+
+  void value (Config c, OutputValue& v)
+  {
+    v.block (0,0,3,1).transpose() = c.segment<3> (0);
+    v.block (3,0,3,1).transpose() = c.segment<3> (0).cross (c.segment<3> (3));
+    v.block (0,1,3,1).transpose() = c.segment (0,3) - c.segment (3,3);
+    v.block (3,1,3,1).transpose() = c.segment (0,3) + c.segment (3,3);
+  }
+
+  void jacobian (Config cfg, OutputJacobian& j)
+  {
+    j.block<3,3> (0,0).setIdentity();
+    j.block<3,3> (0,3).setZero();
+
+    crossProduct::jacobian (cfg, j.block<3,6> (3,0));
+    //j.block (0,3,3,3).setZero();
+
+    j.block<3,3> (0,6).setIdentity();
+    j.block<3,3> (0,9).setIdentity();
+    j.block<3,3> (0,9) *= -1;
+
+    j.block<3,3> (3,6).setIdentity();
+    j.block<3,3> (3,9).setIdentity();
+  }
+
+  void jacobianTimes (Eigen::Ref <const OutputJacobian> jin,
+      Eigen::Ref <const RValue > rvalue, Eigen::Ref <OutputJacobianTimesRValue> jout)
+  {
+    jout.block (0,0,3,6) = rvalue[0] * jin.block (0,0,3,6)
+                         + rvalue[1] * jin.block (0,6,3,6);
+    jout.block (3,0,3,6) = rvalue[0] * jin.block (3,0,3,6)
+                         + rvalue[1] * jin.block (3,6,3,6);
+  }
+}
+
+BOOST_AUTO_TEST_CASE (MatrixOfExpTest) {
+  using namespace matrixOfExp;
+  DataWrapper* d1 = new DataWrapper ();
+  DataWrapper* d2 = new DataWrapper ();
+  PointTester p1 (d1), p2 (d2);
+  typedef MatrixOfExpressions <Value, Jacobian> MoE_t;
+  typedef CalculusBaseAbstract <Value, Jacobian> CBA_t;
+  OutputValue v;
+  OutputJacobian j;
+  RValue rvalue;
+  OutputJacobianTimesRValue jout, cache;
+  MoE_t moe(v,j);
+  moe.setSize (2,2);
+  moe.set(0,0,boost::dynamic_pointer_cast <CBA_t> (CBA_t::create (p1)));
+  moe.set(1,0,CBA_t::create (p1 ^ p2));
+  moe.set(0,1,CBA_t::create (p1 - p2));
+  moe.set(1,1,CBA_t::create (p1 + p2));
+  for (size_t i = 0; i < 100; i++) {
+    Config cfg = Config::Random ();
+    moe.invalidate ();
+    setWrappers (cfg, d1, d2);
+    moe.computeValue ();
+    value (cfg, v);
+    jacobian (cfg, j);
+    BOOST_CHECK (moe.value().isApprox (v));
+    moe.computeJacobian ();
+    BOOST_CHECK (moe.jacobian ().isApprox (j));
+    for (size_t l = 0; l < 100; l++) {
+      rvalue = RValue::Random ();
+      moe.jacobianTimes (rvalue, cache);
+      jacobianTimes (j, rvalue, jout);
+      BOOST_CHECK (cache.isApprox (jout));
+    }
   }
   delete d1;
   delete d2;

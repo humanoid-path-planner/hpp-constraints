@@ -21,6 +21,7 @@
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
+# include <hpp/constraints/tools.hh>
 
 # include "hpp/constraints/fwd.hh"
 
@@ -136,8 +137,6 @@ namespace hpp {
 
     class StaticStabilityGravity : public DifferentiableFunction {
       public:
-        static fcl::Vec3f gravity;
-
         /// Constructor
         /// \param robot the robot the constraints is applied to,
         /// \param joint the joint to which the object is attached,
@@ -180,6 +179,59 @@ namespace hpp {
         mutable matrix3_t Rerror_;
         mutable eigen::matrix3_t Jlog_;
         mutable matrix_t jacobian_;
+    };
+    /// \}
+
+    /// \addtogroup constraints
+    /// \{
+
+    class StaticStability : public DifferentiableFunction {
+      public:
+        static const value_type G;
+        static const Eigen::Matrix <value_type, 6, 1> Gravity;
+
+        struct Contact_t {
+          JointPtr_t joint1, joint2;
+          vector3_t point1, point2;
+          vector3_t normal1, normal2;
+        };
+        typedef std::vector <Contact_t> Contacts_t;
+
+        /// Constructor
+        /// \param robot the robot the constraints is applied to,
+        /// \param joint the joint to which the object is attached,
+        /// \param com COM of the object in the joint frame.
+        StaticStability (const std::string& name, const DevicePtr_t& robot,
+            const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+        static StaticStabilityPtr_t create (
+            const std::string& name,
+            const DevicePtr_t& robot,
+            const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+        static StaticStabilityPtr_t create (
+            const DevicePtr_t& robot,
+            const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+        const MatrixOfExpressions<>& phi () {
+          return phi_;
+        }
+
+      private:
+        void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+
+        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
+
+        DevicePtr_t robot_;
+        Contacts_t contacts_;
+        CenterOfMassComputationPtr_t com_;
+
+        mutable MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> phi_;
+        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> p1mp2s_;
+        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> n1mn2s_;
     };
     /// \}
   } // namespace constraints

@@ -86,6 +86,8 @@ namespace hpp {
       xmxr_ = com_ - right_;
       ecrossu_ = (com_ - ((left_ + right_) * 0.5))^(u_);
       expr_ = RotationMultiply <ECrossU_t> (jointRef_, ecrossu_, true);
+      xmxlDotu_ = CalculusBaseAbstract<value_type, RowJacobianMatrix >::create (xmxl_ * u_);
+      xmxrDotu_ = CalculusBaseAbstract<value_type, RowJacobianMatrix >::create (xmxr_ * u_);
       for (int i=0; i<3; i++) pointRef_[i] = pointRef[i];
     }
 
@@ -96,22 +98,25 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
       size_t index = 0;
-      u_.computeValue ();
       if (mask_[0]) {
+        com_.invalidate ();
         com_.computeValue ();
         result[index++] = (com_.value () - pointRef_)[2];
       }
       if (mask_[1]) {
+        expr_.invalidate ();
         expr_.computeValue ();
         result[index++] = expr_.value ()[2];
       }
       if (mask_[2]) {
-        xmxl_.computeValue ();
-        result[index++] =   xmxl_.value().dot(u_.value ());
+        xmxlDotu_->invalidate ();
+        xmxlDotu_->computeValue ();
+        result[index++] =   xmxlDotu_->value();
       }
       if (mask_[3]) {
-        xmxr_.computeValue ();
-        result[index  ] =   xmxr_.value().dot(u_.value ());
+        xmxrDotu_->invalidate ();
+        xmxrDotu_->computeValue ();
+        result[index  ] =   xmxrDotu_->value();
       }
     }
 
@@ -121,28 +126,29 @@ namespace hpp {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
       size_t index = 0;
-      u_.computeJacobian ();
       if (mask_[0]) {
+        com_.invalidate ();
         com_.computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = com_.jacobian ().row (2);
       }
       if (mask_[1]) {
+        expr_.invalidate ();
         expr_.computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = expr_.jacobian ().row (2);
       }
       if (mask_[2]) {
-        xmxl_.computeJacobian ();
+        xmxlDotu_->invalidate ();
+        xmxlDotu_->computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
-          =   u_.value ().transpose () * xmxl_.jacobian ()
-            + xmxl_.value ().transpose () * u_.jacobian ();
+          = xmxlDotu_->jacobian ();
       }
       if (mask_[3]) {
-        xmxr_.computeJacobian ();
+        xmxrDotu_->invalidate ();
+        xmxrDotu_->computeJacobian ();
         jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
-          =   u_.value ().transpose () * xmxr_.jacobian ()
-            + xmxr_.value ().transpose () * u_.jacobian ();
+          = xmxrDotu_->jacobian ();
       }
     }
   } // namespace constraints
