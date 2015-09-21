@@ -34,35 +34,38 @@ namespace hpp {
     }
 
     StaticStabilityGravity::StaticStabilityGravity ( const std::string& name,
-        const DevicePtr_t& robot, const JointPtr_t& joint):
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 5, name),
-      robot_ (robot), joint_ (joint), jacobian_ (3, robot->numberDof ())
+						     const DevicePtr_t& robot):
+      DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
+			      name),
+      robot_ (robot), jacobian_ (3, robot->numberDof ())
     {
       jacobian_.setZero ();
     }
 
     StaticStabilityGravityPtr_t StaticStabilityGravity::create (
         const std::string& name,
-        const DevicePtr_t& robot,
-        const JointPtr_t& joint)
+        const DevicePtr_t& robot)
     {
-      return StaticStabilityGravityPtr_t (new StaticStabilityGravity (name, robot, joint));
+      return StaticStabilityGravityPtr_t (new StaticStabilityGravity
+					  (name, robot));
     }
 
-    StaticStabilityGravityPtr_t StaticStabilityGravity::create (const DevicePtr_t& robot,
-        const JointPtr_t& joint)
+    StaticStabilityGravityPtr_t StaticStabilityGravity::create
+    (const DevicePtr_t& robot)
     {
-      return create ("StaticStabilityGravity", robot, joint);
+      return create ("StaticStabilityGravity", robot);
     }
 
-    void StaticStabilityGravity::addObjectTriangle (const fcl::TriangleP& t)
+    void StaticStabilityGravity::addObjectTriangle (const fcl::TriangleP& t,
+						    const JointPtr_t& joint)
     {
-      objectTriangles_.push_back (Triangle(t));
+      objectTriangles_.push_back (std::make_pair (Triangle(t), joint));
     }
 
-    void StaticStabilityGravity::addFloorTriangle (const fcl::TriangleP& t)
+    void StaticStabilityGravity::addFloorTriangle (const fcl::TriangleP& t,
+						   const JointPtr_t& joint)
     {
-      floorTriangles_.push_back (Triangle(t));
+      floorTriangles_.push_back (std::make_pair (Triangle(t), joint));
     }
 
     void StaticStabilityGravity::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
@@ -72,8 +75,10 @@ namespace hpp {
 
       selectTriangles ();
 
-      const Transform3f& M = joint_->currentTransformation ();
-      fcl::Vec3f p = floor_->transformation ().transform (M.transform (object_->center ()));
+      const Transform3f M (inverse (floor_->second->currentTransformation ()) *
+			   object_->second->currentTransformation ());
+      fcl::Vec3f p = floor_->first->inversePosition ().transform
+	(M.transform (object_->center ()));
       result [0] = p[0];
       if (floor_->isInside (floor_->intersection (M.transform (object_->center ()), floor_->normal ()))) {
         result [1] = 0;
@@ -83,8 +88,9 @@ namespace hpp {
         result [2] = p[2];
       }
 
-      Rerror_ = object_->transformation ().getRotation () *
-        (floor_->transformation ().getRotation () * M.getRotation ()).transpose ();
+      Rerror_ = object_->second->inversePosition ().getRotation () *
+        transpose ((floor_->inversePosition ().getRotation () *
+		    M.getRotation ()));
       double theta;
       computeLog (r_, theta, Rerror_);
       result [3] = r_[1];
@@ -98,18 +104,19 @@ namespace hpp {
 
       selectTriangles ();
 
-      const Transform3f& M = joint_->currentTransformation ();
-      const JointJacobian_t& Jjoint (joint_->jacobian ());
+      const Transform3f M (inverse (floor_->second->currentTransformation ()) *
+			   object_->second->currentTransformation ());
+      const JointJacobian_t& Jo (object_->second->jacobian ());
       cross (M.getRotation () * object_->center (), Rcx_);
       eigen::matrix3_t RTeigen;
       do {
-        const fcl::Matrix3f& R = floor_->transformation ().getRotation ();
+        const fcl::Matrix3f& R = floor_->inversePosition ().getRotation ();
         RTeigen << R (0,0), R (0, 1), R (0, 2),
                    R (1,0), R (1, 1), R (1, 2),
                    R (2,0), R (2, 1), R (2, 2);
       } while (0);
-      jacobian_.leftCols (Jjoint.cols ()) = RTeigen *
-        (- Rcx_ * Jjoint.bottomRows (3) + Jjoint.topRows (3));
+      jacobian_.leftCols (Jo.cols ()) = RTeigen *
+        (- Rcx_ * Jo.bottomRows (3) + Jo.topRows (3));
       jacobian.row (0) = jacobian_.row (0);
       if (floor_->isInside (floor_->intersection (M.transform (object_->center ()), floor_->normal ()))) {
         jacobian.row (1).setZero ();
@@ -118,7 +125,7 @@ namespace hpp {
         jacobian.row (1) = jacobian_.row (1);
         jacobian.row (2) = jacobian_.row (2);
       }
-      Rerror_ = object_->transformation ().getRotation () * (floor_->transformation ().getRotation () * M.getRotation ()).transpose ();
+      Rerror_ = object_->inversePosition ().getRotation () * (floor_->inversePosition ().getRotation () * M.getRotation ()).transpose ();
       double theta;
       computeLog (r_, theta, Rerror_);
       if (theta < 1e-3) {
@@ -129,29 +136,34 @@ namespace hpp {
       do {
         fcl::Matrix3f RT = M.getRotation ();
         RT.transpose ();
-        const fcl::Matrix3f R = object_->transformation ().getRotation () * RT;
+        const fcl::Matrix3f R = object_->inversePosition ().getRotation () * RT;
         RTeigen << R (0,0), R (0, 1), R (0, 2),
                    R (1,0), R (1, 1), R (1, 2),
                    R (2,0), R (2, 1), R (2, 2);
       } while (0);
-      jacobian_.leftCols (Jjoint.cols ()) = -Jlog_ * RTeigen * Jjoint.bottomRows (3);
+      jacobian_.leftCols (Jo.cols ()) = -Jlog_ * RTeigen * Jo.bottomRows (3);
       jacobian.row (3) = jacobian_.row (1);
       jacobian.row (4) = jacobian_.row (2);
     }
 
     void StaticStabilityGravity::selectTriangles () const
     {
-      const Transform3f& M = joint_->currentTransformation ();
-      fcl::Vec3f globalOC_;
+      fcl::Vec3f globalOC_, globalFC;
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
       for (Triangles::const_iterator o_it = objectTriangles_.begin ();
           o_it != objectTriangles_.end (); ++o_it) {
-        globalOC_ = M.transform (o_it->center ());
+	const Transform3f& Mo = o_it->second->currentTransformation ();
+        globalOC_ = Mo.transform (o_it->first->center ());
         for (Triangles::const_iterator f_it = floorTriangles_.begin ();
             f_it != floorTriangles_.end (); ++f_it) {
-          value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
-                     dn = f_it->normal ().dot (globalOC_ - f_it->center ());
+	  const Transform3f& Mf = f_it->second->currentTransformation ();
+	  const Matrix3_t& Rf = Mf->getRotation ();
+	  vector3_t nf (Rf * f_it->first->normal ());
+	  globalFC = Mf * f_it->first->center ();
+          value_type dp = f_it->first->distance
+	    (f_it->first->intersection (globalOC_, nf)),
+	    dn = nf.dot (globalOC_ - globalFC);
           if (dp < 0)
             dist = dn * dn;
           else

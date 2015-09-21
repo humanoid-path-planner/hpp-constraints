@@ -91,7 +91,14 @@ namespace hpp {
         inline const fcl::Vec3f& planeYaxis () const { return nxn0_; }
         inline const fcl::Vec3f& normal () const { return n_; }
         inline const fcl::Vec3f& center () const { return c_; }
-        inline const fcl::Transform3f& transformation () const { return M_; }
+      /// Return inverse of position of triangle local frame
+      ///
+      /// Triangle local frame is defined by
+      /// \li center is barycenter of 3 vertices,
+      /// \li x-axis is normal to triangle plane,
+      /// \li y-axis is aligned with \f$(p2 - p1)\times \vec{x}\f$
+      /// \li z-axis is equal to \f$\vec{x}\times\vec{y}\f$.
+        inline const fcl::Transform3f& inversePosition () const { return M_; }
 
       private:
         /// Return the distance between the point A and the segment
@@ -139,22 +146,29 @@ namespace hpp {
       public:
         /// Constructor
         /// \param robot the robot the constraints is applied to,
-        /// \param joint the joint to which the object is attached,
         /// \param com COM of the object in the joint frame.
-        StaticStabilityGravity (const std::string& name, const DevicePtr_t& robot, const JointPtr_t& joint);
+        StaticStabilityGravity (const std::string& name,
+				const DevicePtr_t& robot);
 
         static StaticStabilityGravityPtr_t create (
             const std::string& name,
-            const DevicePtr_t& robot,
-            const JointPtr_t& joint);
+            const DevicePtr_t& robot);
 
         static StaticStabilityGravityPtr_t create (
-            const DevicePtr_t& robot,
-            const JointPtr_t& joint);
+            const DevicePtr_t& robot);
 
-        void addObjectTriangle (const fcl::TriangleP& t);
+        /// Add a triangle to the object contact surface
+        /// \param t triangle,
+        /// \param joint Joint to which the triangle is attached.
+        void addObjectTriangle (const fcl::TriangleP& t,
+				const JointPtr_t& joint);
 
-        void addFloorTriangle (const fcl::TriangleP& t);
+        /// Add a triangle to the floor contact surface
+        /// \param t triangle,
+        /// joint Joint to which the triangle is attached if the contact surface
+        ///       belongs to a robot.
+        void addFloorTriangle (const fcl::TriangleP& t,
+			       const JointPtr_t& joint);
 
       private:
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
@@ -164,9 +178,8 @@ namespace hpp {
         void selectTriangles () const;
 
         DevicePtr_t robot_;
-        JointPtr_t joint_;
 
-        typedef std::vector <Triangle> Triangles;
+        typedef std::vector <std::pair <Triangle, JointPtr_t> > Triangles;
         /// Triangles with coordinates expressed in joint frame.
         Triangles objectTriangles_;
         mutable Triangles::const_iterator object_;
