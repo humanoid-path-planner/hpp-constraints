@@ -30,17 +30,41 @@ namespace hpp {
     class Triangle {
       public:
         /// Represent a triangle.
-        Triangle (const fcl::Vec3f& p0, const fcl::Vec3f& p1, const fcl::Vec3f& p2):
+        Triangle (const fcl::Vec3f& p0, const fcl::Vec3f& p1, const fcl::Vec3f& p2,
+            JointPtr_t joint = NULL):
+          P0_ (p0), P1_ (p1), P2_ (p2), joint_ (joint),
           p0_ (p0), p1_ (p1), p2_ (p2)
         {
           init ();
+          recompute ();
         }
 
-        Triangle (const fcl::TriangleP& t):
+        Triangle (const fcl::TriangleP& t, const JointPtr_t& joint = NULL):
+          P0_ (t.a), P1_ (t.b), P2_ (t.c), joint_ (joint),
           p0_ (t.a), p1_ (t.b), p2_ (t.c)
-      {
-        init ();
-      }
+        {
+          init ();
+          recompute ();
+        }
+
+        // Copy constructor
+        Triangle (const Triangle& t) :
+          P0_ (t.P0_), P1_ (t.P1_), P2_ (t.P2_), joint_ (t.joint_),
+          p0_ (t.P0_), p1_ (t.P1_), p2_ (t.P2_)
+        {
+          init ();
+          recompute ();
+        }
+
+        void updateToCurrentTransform () const
+        {
+          if (joint_ == NULL) return;
+          const Transform3f& M = joint_->currentTransformation ();
+          p0_ = M.transform (P0_);
+          p1_ = M.transform (P1_);
+          p2_ = M.transform (P2_);
+          recompute ();
+        }
 
         /// Intersection with a line defined by a point and a vector.
         inline fcl::Vec3f intersection (const fcl::Vec3f& A, const fcl::Vec3f& u) const {
@@ -91,7 +115,12 @@ namespace hpp {
         inline const fcl::Vec3f& planeYaxis () const { return nxn0_; }
         inline const fcl::Vec3f& normal () const { return n_; }
         inline const fcl::Vec3f& center () const { return c_; }
+        /// Transform from world frame coordinate to local frame coordinate
         inline const fcl::Transform3f& transformation () const { return M_; }
+
+        /// The position in the joint frame and the joint
+        fcl::Vec3f P0_, P1_, P2_, C_;
+        JointPtr_t joint_;
 
       private:
         /// Return the distance between the point A and the segment
@@ -110,6 +139,11 @@ namespace hpp {
 
         void init ()
         {
+          C_ = ( P0_ + P1_ + P2_ ) / 3;
+        }
+
+        void recompute () const
+        {
           n_ = (p1_ - p0_).cross (p2_ - p0_);
           assert (!n_.isZero ());
           n_.normalize ();
@@ -125,11 +159,12 @@ namespace hpp {
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
         }
 
-        fcl::Vec3f p0_, p1_, p2_, n_, c_;
+        /// The positions and vectors in the global frame
+        mutable fcl::Vec3f p0_, p1_, p2_, n_, c_;
         /// n_i is the vector of norm 1 perpendicular to
         /// P_{i+1}P_i and n_.
-        fcl::Vec3f n0_, n1_, n2_, nxn0_;
-        fcl::Transform3f M_;
+        mutable fcl::Vec3f n0_, n1_, n2_, nxn0_;
+        mutable fcl::Transform3f M_;
     };
 
     /// \addtogroup constraints
