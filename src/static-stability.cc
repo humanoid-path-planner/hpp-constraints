@@ -15,7 +15,7 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #include "hpp/constraints/static-stability.hh"
-#include "hpp/constraints/orientation.hh"
+#include "hpp/constraints/relative-transformation.hh"
 #include <limits>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
@@ -23,23 +23,20 @@
 
 namespace hpp {
   namespace constraints {
-    namespace {
-      static void cross (const fcl::Vec3f& v, eigen::matrix3_t& m)
-      {
-        m (0,1) = -v [2]; m (1,0) =  v [2];
-        m (0,2) =  v [1]; m (2,0) = -v [1];
-        m (1,2) = -v [0]; m (2,1) =  v [0];
-        m (0,0) = m (1,1) = m (2,2) = 0;
-      }
-    }
 
-    StaticStabilityGravity::StaticStabilityGravity ( const std::string& name,
-						     const DevicePtr_t& robot):
+    StaticStabilityGravity::StaticStabilityGravity
+    (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
 			      name),
-      robot_ (robot), jacobian_ (3, robot->numberDof ())
+      robot_ (robot), relativeTransformation_ (RelativeTransformation::create
+					       (name, robot,
+						robot->rootJoint (),
+						robot->rootJoint (),
+						Transform3f (), Transform3f (),
+						boost::assign::list_of (true)
+						(true)(true)(true)(true)(false))
+					       )
     {
-      jacobian_.setZero ();
     }
 
     StaticStabilityGravityPtr_t StaticStabilityGravity::create (
@@ -74,27 +71,17 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       selectTriangles ();
-
-      const Transform3f M (inverse (floor_->second->currentTransformation ()) *
-			   object_->second->currentTransformation ());
-      fcl::Vec3f p = floor_->first->inversePosition ().transform
-	(M.transform (object_->center ()));
-      result [0] = p[0];
-      if (floor_->isInside (floor_->intersection (M.transform (object_->center ()), floor_->normal ()))) {
-        result [1] = 0;
+      relativeTransformation_->joint1 (floor_->second);
+      relativeTransformation_->joint2 (object_->second);
+      relativeTransformation_->frame1inJoint1
+	(inverse (floor_->first.inversePosition ()));
+      relativeTransformation_->frame2inJoint2
+	(inverse (object_->first.inversePosition ()));
+      (*relativeTransformation_) (result, argument);
+      if (isInside_) {
+	result [1] = 0;
         result [2] = 0;
-      } else {
-        result [1] = p[1];
-        result [2] = p[2];
       }
-
-      Rerror_ = object_->second->inversePosition ().getRotation () *
-        transpose ((floor_->inversePosition ().getRotation () *
-		    M.getRotation ()));
-      double theta;
-      computeLog (r_, theta, Rerror_);
-      result [3] = r_[1];
-      result [4] = r_[2];
     }
 
     void StaticStabilityGravity::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
@@ -104,70 +91,47 @@ namespace hpp {
 
       selectTriangles ();
 
-      const Transform3f M (inverse (floor_->second->currentTransformation ()) *
-			   object_->second->currentTransformation ());
-      const JointJacobian_t& Jo (object_->second->jacobian ());
-      cross (M.getRotation () * object_->center (), Rcx_);
-      eigen::matrix3_t RTeigen;
-      do {
-        const fcl::Matrix3f& R = floor_->inversePosition ().getRotation ();
-        RTeigen << R (0,0), R (0, 1), R (0, 2),
-                   R (1,0), R (1, 1), R (1, 2),
-                   R (2,0), R (2, 1), R (2, 2);
-      } while (0);
-      jacobian_.leftCols (Jo.cols ()) = RTeigen *
-        (- Rcx_ * Jo.bottomRows (3) + Jo.topRows (3));
-      jacobian.row (0) = jacobian_.row (0);
-      if (floor_->isInside (floor_->intersection (M.transform (object_->center ()), floor_->normal ()))) {
-        jacobian.row (1).setZero ();
-        jacobian.row (2).setZero ();
-      } else {
-        jacobian.row (1) = jacobian_.row (1);
-        jacobian.row (2) = jacobian_.row (2);
+      relativeTransformation_->joint1 (floor_->second);
+      relativeTransformation_->joint2 (object_->second);
+      relativeTransformation_->frame1inJoint1
+	(inverse (floor_->first.inversePosition ()));
+      relativeTransformation_->frame2inJoint2
+	(inverse (object_->first.inversePosition ()));
+      
+      relativeTransformation_->jacobian (jacobian, argument);
+      if (isInside_) {
+	jacobian.row (1).setZero ();
+	jacobian.row (2).setZero ();
       }
-      Rerror_ = object_->inversePosition ().getRotation () * (floor_->inversePosition ().getRotation () * M.getRotation ()).transpose ();
-      double theta;
-      computeLog (r_, theta, Rerror_);
-      if (theta < 1e-3) {
-	Jlog_.setIdentity ();
-      } else {
-        computeJlog (theta, r_, Jlog_);
-      }
-      do {
-        fcl::Matrix3f RT = M.getRotation ();
-        RT.transpose ();
-        const fcl::Matrix3f R = object_->inversePosition ().getRotation () * RT;
-        RTeigen << R (0,0), R (0, 1), R (0, 2),
-                   R (1,0), R (1, 1), R (1, 2),
-                   R (2,0), R (2, 1), R (2, 2);
-      } while (0);
-      jacobian_.leftCols (Jo.cols ()) = -Jlog_ * RTeigen * Jo.bottomRows (3);
-      jacobian.row (3) = jacobian_.row (1);
-      jacobian.row (4) = jacobian_.row (2);
     }
 
     void StaticStabilityGravity::selectTriangles () const
     {
-      fcl::Vec3f globalOC_, globalFC;
+      fcl::Vec3f globalOC_;
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
       for (Triangles::const_iterator o_it = objectTriangles_.begin ();
           o_it != objectTriangles_.end (); ++o_it) {
-	const Transform3f& Mo = o_it->second->currentTransformation ();
-        globalOC_ = Mo.transform (o_it->first->center ());
         for (Triangles::const_iterator f_it = floorTriangles_.begin ();
             f_it != floorTriangles_.end (); ++f_it) {
-	  const Transform3f& Mf = f_it->second->currentTransformation ();
-	  const Matrix3_t& Rf = Mf->getRotation ();
-	  vector3_t nf (Rf * f_it->first->normal ());
-	  globalFC = Mf * f_it->first->center ();
-          value_type dp = f_it->first->distance
-	    (f_it->first->intersection (globalOC_, nf)),
-	    dn = nf.dot (globalOC_ - globalFC);
-          if (dp < 0)
-            dist = dn * dn;
-          else
+	  Transform3f Mf;
+	  if (f_it->second) {
+	    Mf = f_it->second->currentTransformation ();
+	  }
+	  Transform3f M (inverse (Mf) * o_it->second->currentTransformation ());
+	  globalOC_ = M.transform (o_it->first.center ());
+          value_type dp = f_it->first.distance (f_it->first.intersection
+					  (globalOC_, f_it->first.normal ())),
+	    dn = f_it->first.normal ().dot (globalOC_ - f_it->first.center ());
+          if (dp < 0) {
+	    isInside_ = true;
+	    dist = dn * dn;
+	  }
+          else {
             dist = dp*dp + dn * dn;
+	    isInside_ = false;
+	  }
+
           if (dist < minDist) {
             minDist = dist;
             object_ = o_it;

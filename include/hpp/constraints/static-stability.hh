@@ -178,6 +178,7 @@ namespace hpp {
         void selectTriangles () const;
 
         DevicePtr_t robot_;
+        RelativeTransformationPtr_t relativeTransformation_;
 
         typedef std::vector <std::pair <Triangle, JointPtr_t> > Triangles;
         /// Triangles with coordinates expressed in joint frame.
@@ -186,12 +187,7 @@ namespace hpp {
         /// Triangles with coordinates expressed in world frame.
         Triangles floorTriangles_;
         mutable Triangles::const_iterator floor_;
-
-        mutable eigen::matrix3_t Rcx_;
-        mutable eigen::vector3_t r_;
-        mutable matrix3_t Rerror_;
-        mutable eigen::matrix3_t Jlog_;
-        mutable matrix_t jacobian_;
+        mutable bool isInside_;
     };
     /// \}
 
