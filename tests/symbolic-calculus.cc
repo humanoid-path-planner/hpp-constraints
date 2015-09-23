@@ -29,8 +29,11 @@
 #include <hpp/model/object-factory.hh>
 
 #include <hpp/constraints/tools.hh>
+#include <hpp/constraints/symbolic-function.hh>
 
 using namespace hpp::constraints;
+
+typedef SymbolicFunction<JointFrame> JointFrameFunction;
 
 template <class ValueType = eigen::vector3_t,
           class JacobianType = JacobianMatrix >

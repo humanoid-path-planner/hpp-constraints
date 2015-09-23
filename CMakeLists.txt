@@ -30,6 +30,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/tools.hh
+  include/hpp/constraints/symbolic-function.hh
   include/hpp/constraints/orientation.hh
   include/hpp/constraints/position.hh
   include/hpp/constraints/transformation.hh
