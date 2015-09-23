@@ -81,6 +81,9 @@ namespace hpp {
     {
       public:
         typedef boost::shared_ptr <CalculusBaseAbstract> Ptr_t;
+        typedef ValueType ValueType_t;
+        typedef JacobianType JacobianType_t;
+
         virtual const ValueType& value () const = 0;
         virtual const JacobianType& jacobian () const = 0;
         virtual void computeValue () = 0;
@@ -751,6 +754,50 @@ namespace hpp {
 
       protected:
         CenterOfMassComputationPtr_t comc_;
+    };
+
+    class JointFrame : public CalculusBase <JointFrame, Eigen::Matrix<value_type, 6, 1>, Eigen::Matrix<value_type, 6, Eigen::Dynamic> >
+    {
+      public:
+        typedef CalculusBase <JointFrame, ValueType_t, JacobianType_t > Parent_t;
+
+        JointFrame () {}
+
+        JointFrame (const Parent_t& other) :
+          Parent_t (other),
+          joint_ (static_cast <const JointFrame&>(other).joint_)
+        {}
+
+        JointFrame (const JointFrame& jf) :
+          Parent_t (jf), joint_ (jf.joint ())
+        {}
+
+        JointFrame (const JointPtr_t& joint) :
+          joint_ (joint)
+        {
+          assert (joint_ != NULL);
+        }
+
+        const JointPtr_t& joint () const {
+          return joint_;
+        }
+        void impl_value () {
+          const fcl::Transform3f& t = joint_->currentTransformation ();
+          for (int i = 0; i < 3; ++i) this->value_[i] = t.getTranslation ()[i];
+          double theta;
+          computeLog (this->value_.segment <3> (3), theta, t.getRotation ());
+          //for (int i = 0; i < 4; ++i) this->value_[i+4] = t.getQuatRotation ()[i];
+        }
+        void impl_jacobian () {
+          const JointJacobian_t& j (joint_->jacobian ());
+          this->jacobian_ = j;
+        }
+
+      protected:
+        JointPtr_t joint_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     /// Matrix having Expression elements
