@@ -83,8 +83,7 @@ namespace hpp {
     RelativeTransformationPtr_t;
     typedef boost::shared_ptr<StaticStabilityGravity>
       StaticStabilityGravityPtr_t;
-    typedef boost::shared_ptr<StaticStability>
-      StaticStabilityPtr_t;
+    typedef boost::shared_ptr<StaticStability> StaticStabilityPtr_t;
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH
