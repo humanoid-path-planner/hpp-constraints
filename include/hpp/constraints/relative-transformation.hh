@@ -115,6 +115,8 @@ namespace hpp {
       /// \param frame2 position of a fixed frame in joint 2,
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
+      /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
+      ///       frame.
       static RelativeTransformationPtr_t create
 	(const std::string& name, const DevicePtr_t&,
 	 const JointPtr_t& joint1, const JointPtr_t& joint2,
@@ -131,11 +133,49 @@ namespace hpp {
 	F2inJ2_.setIdentity ();
       }
 
-
       /// Get desired relative orientation
       Transform3f reference () const
       {
 	return F1inJ1_ * inverse (F2inJ2_);
+      }
+
+      /// Set joint 1
+      void joint1 (const JointPtr_t& joint) {
+	joint1_ = joint;
+	assert (!joint || joint->robot () == robot_);
+      }
+
+      /// Get joint 1
+      JointPtr_t joint1 () {
+	return joint1_;
+      }
+
+      /// Set joint 2
+      void joint2 (const JointPtr_t& joint) {
+	joint2_ = joint;
+	assert (!joint || joint->robot () == robot_);
+      }
+
+      /// Get joint 2
+      JointPtr_t joint2 () {
+	return joint2_;
+      }
+
+      /// Set position of frame 1 in joint 1
+      void frame1inJoint1 (const Transform3f& M) {
+	F1inJ1_ = M;
+      }
+      /// Get position of frame 1 in joint 1
+      const Transform3f& frame1inJoint1 () const {
+	return F1inJ1_;
+      }
+      /// Set position of frame 2 in joint 2
+      void frame2inJoint2 (const Transform3f& M) {
+	F2inJ2_ = M;
+      }
+      /// Get position of frame 2 in joint 2
+      const Transform3f& frame2inJoint2 () const {
+	return F2inJ2_;
       }
     protected:
       ///Constructor

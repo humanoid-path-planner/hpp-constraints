@@ -117,7 +117,10 @@ namespace hpp {
 	  argument != latestArgument_) {
 	robot_->currentConfiguration (argument);
 	robot_->computeForwardKinematics ();
-	const Transform3f& J1 = joint1_->currentTransformation ();
+	Transform3f J1;
+	if (joint1_) {
+	  J1 = joint1_->currentTransformation ();
+	}
 	const Transform3f& J2 = joint2_->currentTransformation ();
 	Transform3f M1 (J1 * F1inJ1_);
 	Transform3f M2 (J2 * F2inJ2_);
@@ -169,7 +172,10 @@ namespace hpp {
     (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
     {
       computeError (arg);
-      const Transform3f& J1 = joint1_->currentTransformation ();
+      Transform3f J1;
+      if (joint1_) {
+	J1 = joint1_->currentTransformation ();
+      }
       const Transform3f& J2 = joint2_->currentTransformation ();
       const vector3_t& t2inJ2 (F2inJ2_.getTranslation ());
       const matrix3_t& R1inJ1 (F1inJ1_.getRotation ());
@@ -183,15 +189,23 @@ namespace hpp {
       //cross (R2*t2inJ2+t2-t1, cross1_);
       cross (R2*t2inJ2 + t2 - t1, cross1_);
       cross (R2*t2inJ2, cross2_);
-      jacobian_.topRows <3> () =
-	transpose (R1*R1inJ1)*(cross1_ * joint1_->jacobian ().bottomRows <3> ()-
-			       cross2_ * joint2_->jacobian ().bottomRows <3> ()+
-			       joint2_->jacobian ().topRows <3>()-
-			       joint1_->jacobian ().topRows <3>());
-      jacobian_.bottomRows <3> () =
-	Jlog_ * transpose (R1*R1inJ1) *
-	(joint2_->jacobian ().bottomRows <3> () -
-	 joint1_->jacobian ().bottomRows <3> ());
+      if (joint1_) {
+	jacobian_.topRows <3> () =
+	  transpose (R1*R1inJ1)*(cross1_*joint1_->jacobian ().bottomRows <3> ()-
+				 cross2_*joint2_->jacobian ().bottomRows <3> ()+
+				 joint2_->jacobian ().topRows <3>()-
+				 joint1_->jacobian ().topRows <3>());
+	jacobian_.bottomRows <3> () =
+	  Jlog_ * transpose (R1*R1inJ1) *
+	  (joint2_->jacobian ().bottomRows <3> () -
+	   joint1_->jacobian ().bottomRows <3> ());
+      } else {
+	jacobian_.topRows <3> () =
+	  transpose (R1inJ1)*(-cross2_*joint2_->jacobian ().bottomRows <3> ()
+			      + joint2_->jacobian ().topRows <3>());
+	jacobian_.bottomRows <3> () =
+	  Jlog_ * transpose (R1inJ1) * (joint2_->jacobian ().bottomRows <3> ());
+      }
       size_type index=0;
       for (size_type i=0; i<6; ++i) {
 	if (mask_ [i]) {
