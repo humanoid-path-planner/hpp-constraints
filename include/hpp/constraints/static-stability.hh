@@ -100,6 +100,12 @@ namespace hpp {
       /// \li z-axis is equal to \f$\vec{x}\times\vec{y}\f$.
         inline const fcl::Transform3f& inversePosition () const { return M_; }
 
+      /// Write triangle in a stream
+      std::ostream& print (std::ostream& os) const
+      {
+	os << "triangle: (" << p0_ << "," << p1_ << "," << p2_ << ")";
+	return os;
+      }
       private:
         /// Return the distance between the point A and the segment
         /// [P, v] oriented by u.
@@ -138,7 +144,11 @@ namespace hpp {
         fcl::Vec3f n0_, n1_, n2_, nxn0_;
         fcl::Transform3f M_;
     };
-
+    std::ostream& operator<< (std::ostream& os, const Triangle& t)
+    {
+      os << t;
+      return os;
+    }
     /// \addtogroup constraints
     /// \{
 
