@@ -34,7 +34,7 @@ namespace hpp {
 						robot->rootJoint (),
 						Transform3f (), Transform3f (),
 						boost::assign::list_of (true)
-						(true)(true)(true)(true)(false))
+						(true)(true)(false)(true)(true))
 					       )
     {
     }
