@@ -27,7 +27,7 @@
 
 namespace hpp {
   namespace constraints {
-    class Triangle {
+    class HPP_CONSTRAINTS_DLLAPI Triangle {
       public:
         /// Represent a triangle.
         Triangle (const fcl::Vec3f& p0, const fcl::Vec3f& p1, const fcl::Vec3f& p2):
@@ -152,7 +152,8 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
-    class StaticStabilityGravity : public DifferentiableFunction {
+    class HPP_CONSTRAINTS_DLLAPI StaticStabilityGravity :
+      public DifferentiableFunction {
       public:
       friend class StaticStabilityGravityComplement;
         /// Constructor
