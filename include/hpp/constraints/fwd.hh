@@ -29,6 +29,7 @@ namespace hpp {
       typedef Eigen::Matrix <double, 3, 3> matrix3_t;
       typedef Eigen::Matrix <double, 3, 1> vector3_t;
     } // namespace eigen
+    typedef Eigen::Matrix <double, 5, 1> vector5_t;
 
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
@@ -42,6 +43,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativeTransformation);
     HPP_PREDEF_CLASS (StaticStability);
     HPP_PREDEF_CLASS (StaticStabilityGravity);
+    HPP_PREDEF_CLASS (StaticStabilityGravityComplement);
 
     typedef model::ObjectVector_t ObjectVector_t;
     typedef model::CollisionObjectPtr_t CollisionObjectPtr_t;
@@ -83,6 +85,8 @@ namespace hpp {
     RelativeTransformationPtr_t;
     typedef boost::shared_ptr<StaticStabilityGravity>
       StaticStabilityGravityPtr_t;
+    typedef boost::shared_ptr<StaticStabilityGravityComplement>
+      StaticStabilityGravityComplementPtr_t;
     typedef boost::shared_ptr<StaticStability>
       StaticStabilityPtr_t;
   } // namespace constraints

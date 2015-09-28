@@ -154,6 +154,7 @@ namespace hpp {
 
     class StaticStabilityGravity : public DifferentiableFunction {
       public:
+      friend class StaticStabilityGravityComplement;
         /// Constructor
         /// \param robot the robot the constraints is applied to,
         /// \param com COM of the object in the joint frame.
@@ -184,6 +185,7 @@ namespace hpp {
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
+        void computeInternalJacobian (ConfigurationIn_t argument) const;
 
         void selectTriangles () const;
 
@@ -193,18 +195,56 @@ namespace hpp {
         typedef std::vector <std::pair <Triangle, JointPtr_t> > Triangles;
         /// Triangles with coordinates expressed in joint frame.
         Triangles objectTriangles_;
-        mutable Triangles::const_iterator object_;
         /// Triangles with coordinates expressed in world frame.
         Triangles floorTriangles_;
-        mutable Triangles::const_iterator floor_;
         mutable bool isInside_;
+        mutable vector_t result_;
+        mutable matrix_t jacobian_;
     };
+
+    /// Complement to full transformation constraint of StaticStabilityGravity
+    class HPP_CONSTRAINTS_DLLAPI StaticStabilityGravityComplement :
+      public DifferentiableFunction
+    {
+    public:
+      /// Create a pair of constraints
+      ///
+      /// The pair contains two complementary constraints to be used for
+      /// manipulation applications.
+      /// \param name name of the static stability constraint,
+      /// \param constraintName name of the complement constraint,
+      /// \param name of the robot.
+      static std::pair <StaticStabilityGravityPtr_t,
+			StaticStabilityGravityComplementPtr_t >
+	createPair (const std::string& name, const std::string& complementName,
+		    const DevicePtr_t& robot);
+
+    protected:
+      /// Constructor
+      /// \param name name of the static stability constraint,
+      /// \param constraintName name of the complement constraint,
+      /// \param name of the robot.
+      StaticStabilityGravityComplement (const std::string& name,
+					const std::string& complementName,
+					const DevicePtr_t& robot);
+
+
+    private:
+      void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+
+      void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument)
+	const;
+
+      StaticStabilityGravityPtr_t sibling_;
+    }; // class StaticStabilityGravityComplement
+
     /// \}
 
     /// \addtogroup constraints
     /// \{
 
-    class StaticStability : public DifferentiableFunction {
+    class HPP_CONSTRAINTS_DLLAPI StaticStability :
+      public DifferentiableFunction {
       public:
         static const value_type G;
         static const Eigen::Matrix <value_type, 6, 1> Gravity;

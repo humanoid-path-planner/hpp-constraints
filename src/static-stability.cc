@@ -34,9 +34,11 @@ namespace hpp {
 						robot->rootJoint (),
 						Transform3f (), Transform3f (),
 						boost::assign::list_of (true)
-						(true)(true)(false)(true)(true))
+						(true)(true)(true)(true)(true))
 					       )
     {
+      result_.resize (6);
+      jacobian_.resize (6, robot->numberDof ());
     }
 
     StaticStabilityGravityPtr_t StaticStabilityGravity::create (
@@ -71,43 +73,56 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       selectTriangles ();
-      relativeTransformation_->joint1 (floor_->second);
-      relativeTransformation_->joint2 (object_->second);
-      relativeTransformation_->frame1inJoint1
-	(inverse (floor_->first.inversePosition ()));
-      relativeTransformation_->frame2inJoint2
-	(inverse (object_->first.inversePosition ()));
-      (*relativeTransformation_) (result, argument);
+      (*relativeTransformation_) (result_, argument);
+      result [0] = result_ [0];
+      result [1] = result_ [1];
+      result [2] = result_ [2];
+      result [3] = result_ [4];
+      result [4] = result_ [5];
       if (isInside_) {
 	result [1] = 0;
         result [2] = 0;
       }
+      hppDout (info, "result = " << result.transpose ());
+    }
+
+    void StaticStabilityGravity::computeInternalJacobian
+    (ConfigurationIn_t argument) const
+    {
+      robot_->currentConfiguration (argument);
+      robot_->computeForwardKinematics ();
+      selectTriangles ();
+      relativeTransformation_->jacobian (jacobian_, argument);
     }
 
     void StaticStabilityGravity::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
     {
-      robot_->currentConfiguration (argument);
-      robot_->computeForwardKinematics ();
-
-      selectTriangles ();
-
-      relativeTransformation_->joint1 (floor_->second);
-      relativeTransformation_->joint2 (object_->second);
-      relativeTransformation_->frame1inJoint1
-	(inverse (floor_->first.inversePosition ()));
-      relativeTransformation_->frame2inJoint2
-	(inverse (object_->first.inversePosition ()));
-      
-      relativeTransformation_->jacobian (jacobian, argument);
+      computeInternalJacobian (argument);
+      jacobian.row (0) = jacobian_.row (0);
+      jacobian.row (1) = jacobian_.row (1);
+      jacobian.row (2) = jacobian_.row (2);
+      jacobian.row (3) = jacobian_.row (4);
+      jacobian.row (4) = jacobian_.row (5);
       if (isInside_) {
+	jacobian.row (0) = jacobian_.row (0);
 	jacobian.row (1).setZero ();
 	jacobian.row (2).setZero ();
+	jacobian.row (3) = jacobian_.row (4);
+	jacobian.row (4) = jacobian_.row (5);
+      } else {
+	jacobian.row (0) = jacobian_.row (0);
+	jacobian.row (1) = jacobian_.row (1);
+	jacobian.row (2) = jacobian_.row (2);
+	jacobian.row (3) = jacobian_.row (4);
+	jacobian.row (4) = jacobian_.row (5);
       }
     }
 
     void StaticStabilityGravity::selectTriangles () const
     {
       fcl::Vec3f globalOC_;
+      Triangles::const_iterator object;
+      Triangles::const_iterator floor;
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
       for (Triangles::const_iterator o_it = objectTriangles_.begin ();
@@ -134,13 +149,68 @@ namespace hpp {
 
           if (dist < minDist) {
             minDist = dist;
-            object_ = o_it;
-            floor_ = f_it;
+            object = o_it;
+            floor = f_it;
           }
         }
       }
+      relativeTransformation_->joint1 (floor->second);
+      relativeTransformation_->joint2 (object->second);
+      relativeTransformation_->frame1inJoint1
+	(inverse (floor->first.inversePosition ()));
+      relativeTransformation_->frame2inJoint2
+	(inverse (object->first.inversePosition ()));
     }
 
+    StaticStabilityGravityComplement::StaticStabilityGravityComplement
+    (const std::string& name, const std::string& complementName,
+     const DevicePtr_t& robot) :
+      DifferentiableFunction (robot->configSize (), robot->numberDof (), 3,
+			      complementName),
+      sibling_ (StaticStabilityGravity::create (name, robot))
+    {
+    }
+
+    std::pair < StaticStabilityGravityPtr_t,
+		StaticStabilityGravityComplementPtr_t >
+    StaticStabilityGravityComplement::createPair
+    (const std::string& name, const std::string& complementName,
+     const DevicePtr_t& robot)
+    {
+      StaticStabilityGravityComplement* ptr =
+	new StaticStabilityGravityComplement (name, complementName, robot);
+      StaticStabilityGravityComplementPtr_t shPtr (ptr);
+      return std::make_pair (ptr->sibling_, shPtr);
+    }
+
+    void StaticStabilityGravityComplement::impl_compute
+    (vectorOut_t result, ConfigurationIn_t argument) const
+    {
+      vector5_t tmp;
+      sibling_->impl_compute (tmp, argument);
+      result [0] = sibling_->result_ [1];
+      result [1] = sibling_->result_ [2];
+      result [2] = sibling_->result_ [3];
+      if (sibling_->isInside_) {
+	result [0] = 0;
+	result [1] = 0;
+      }
+      hppDout (info, "result = " << result.transpose ());
+    }
+
+    void StaticStabilityGravityComplement::impl_jacobian
+    (matrixOut_t jacobian, ConfigurationIn_t argument) const
+    {
+      sibling_->computeInternalJacobian (argument);
+      if (sibling_->isInside_) {
+	jacobian.row (0) = sibling_->jacobian_.row (1);
+	jacobian.row (1) = sibling_->jacobian_.row (2);
+      } else {
+	jacobian.row (0).setZero ();
+	jacobian.row (1).setZero ();
+      }
+      jacobian.row (2) = sibling_->jacobian_.row (3);
+    }
     const value_type StaticStability::G = 9.81;
     const Eigen::Matrix <value_type, 6, 1> StaticStability::Gravity
       = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-1, 0, 0, 0).finished();
