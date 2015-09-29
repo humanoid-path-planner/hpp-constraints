@@ -188,10 +188,11 @@ namespace hpp {
     {
       vector5_t tmp;
       sibling_->impl_compute (tmp, argument);
-      result [0] = sibling_->result_ [1];
-      result [1] = sibling_->result_ [2];
       result [2] = sibling_->result_ [3];
       if (sibling_->isInside_) {
+	result [0] = sibling_->result_ [1];
+	result [1] = sibling_->result_ [2];
+      } else {
 	result [0] = 0;
 	result [1] = 0;
       }
