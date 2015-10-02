@@ -42,6 +42,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativeTransformation);
     HPP_PREDEF_CLASS (StaticStability);
     HPP_PREDEF_CLASS (StaticStabilityGravity);
+    HPP_PREDEF_CLASS (ConfigurationConstraint);
 
     typedef model::ObjectVector_t ObjectVector_t;
     typedef model::CollisionObjectPtr_t CollisionObjectPtr_t;
@@ -84,6 +85,8 @@ namespace hpp {
     typedef boost::shared_ptr<StaticStabilityGravity>
       StaticStabilityGravityPtr_t;
     typedef boost::shared_ptr<StaticStability> StaticStabilityPtr_t;
+    typedef boost::shared_ptr<ConfigurationConstraint>
+      ConfigurationConstraintPtr_t;
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

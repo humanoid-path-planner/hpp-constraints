@@ -27,6 +27,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   relative-orientation.cc
   relative-position.cc
   relative-transformation.cc
+  configuration-constraint.cc
   static-stability.cc
   simplex-solver.cc
   )

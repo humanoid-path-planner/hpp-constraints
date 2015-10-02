@@ -25,6 +25,7 @@
 #include "hpp/constraints/relative-orientation.hh"
 #include "hpp/constraints/relative-transformation.hh"
 #include "hpp/constraints/static-stability.hh"
+#include "hpp/constraints/configuration-constraint.hh"
 #include "hpp/constraints/tools.hh"
 
 #define BOOST_TEST_MODULE hpp_constraints
@@ -367,6 +368,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   DevicePtr_t device = createRobot ();
   JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
              ee2 = device->getJointByName ("RLEG_5");
+  Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
 
@@ -375,6 +377,11 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   typedef std::pair <std::string, DifferentiableFunctionPtr_t> DFptr;
   typedef std::list <DFptr> DFs;
   DFs functions;
+  functions.push_back ( DFptr (
+        "ConfigurationConstraint",
+        ConfigurationConstraint::create ("testConfigConstraint",
+          device, goal)
+      ));
   functions.push_back ( DFptr (
         "Orientation",
         Orientation::create (device, ee2, identity())
