@@ -89,6 +89,14 @@ namespace hpp {
 	return o;
       }
 
+      std::string context () const {
+        return context_;
+      }
+
+      void context (const std::string& c) {
+        context_ = c;
+      }
+
     protected:
       /// \brief Concrete class constructor should call this constructor.
       ///
@@ -100,7 +108,7 @@ namespace hpp {
 			      size_type outputSize,
 			      std::string name = std::string ()) :
 	inputSize_ (inputSize), inputDerivativeSize_ (inputDerivativeSize),
-	outputSize_ (outputSize), name_ (name)
+	outputSize_ (outputSize), name_ (name), context_ ()
       {
       }
 
@@ -119,6 +127,8 @@ namespace hpp {
       /// Dimension of output vector
       size_type outputSize_;
       std::string name_;
+      /// Context of creation of function
+      std::string context_;
     }; // class DifferentiableFunction
     inline std::ostream&
     operator<< (std::ostream& os, const DifferentiableFunction& f)
