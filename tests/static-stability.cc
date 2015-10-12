@@ -177,17 +177,22 @@ BOOST_AUTO_TEST_CASE (static_stability) {
   c << 1, 0, 0;
   device->currentConfiguration (c);
   device->computeForwardKinematics ();
-  BOOST_MESSAGE ("\"rot\" initial transform:\n" << rot->currentTransformation ());
-  BOOST_MESSAGE ("\"rot\" current transform:\n" << rot->currentTransformation ());
-  BOOST_MESSAGE ("\"slider\" initial transform:\n" << slider->currentTransformation ());
-  BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
+  // BOOST_MESSAGE ("\"rot\" initial transform:\n" << rot->currentTransformation ());
+  // BOOST_MESSAGE ("\"rot\" current transform:\n" << rot->currentTransformation ());
+  // BOOST_MESSAGE ("\"slider\" initial transform:\n" << slider->currentTransformation ());
+  // BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
 
   BOOST_CHECK_MESSAGE (slider->currentTransformation ().isIdentity (),
       "This transform shoud be identity:\n" << slider->currentTransformation ());
 
-  StaticStabilityPtr_t fptr = createStaticStability (device, rot);
-  StaticStability& f (*fptr);
+  StaticStabilityPtr_t fptr  = createStaticStability (device, rot);
+  StaticStabilityPtr_t fptrH = createStaticStabilityHard4 (device, rot);
+  StaticStability& f  (*fptr);
+  StaticStability& fH (*fptrH);
+  const std::size_t nbC = 2;
+  const std::size_t nbCH = 8;
   vector_t value (f.outputSize ());
+  vector_t valueH (fH.outputSize ());
   matrix_t j (f.outputSize (), f.inputDerivativeSize ());
   std::list <Configuration_t> valid, invalid;
 
@@ -198,23 +203,42 @@ BOOST_AUTO_TEST_CASE (static_stability) {
   valid.push_back ((Configuration_t (3) << 1,0,-1).finished ());
   for (std::list<Configuration_t>::const_iterator it = valid.begin();
       it != valid.end (); ++it) {
+    BOOST_MESSAGE ("Config " << it->transpose ());
     f (value, *it);
-    BOOST_CHECK_MESSAGE (value.segment<6> (2).isZero (),
-        "(I - phi * phi^+) * G =\n" << value.segment<6> (2).transpose());
-    BOOST_CHECK_MESSAGE ((value.segment<2> (0).array () > -Eigen::NumTraits<value_type>::dummy_precision()).all(),
-        "Contact forces =\n" << value.segment<2> (0).transpose());
+    BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
+    BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero (),
+        "(I - phi * phi^+) * G =\n" << value.segment<6> (nbC).transpose());
+    BOOST_CHECK_MESSAGE ((value.segment<nbCH> (0).array () > -Eigen::NumTraits<value_type>::dummy_precision()).all(),
+        "Contact forces =\n" << value.segment<nbC> (0).transpose());
+    fH (valueH, *it);
+    BOOST_CHECK_MESSAGE (valueH.segment<6> (nbCH).isZero (),
+        "(I - phi * phi^+) * G =\n" << valueH.segment<6> (nbCH).transpose());
+    BOOST_CHECK_MESSAGE ((valueH.segment<nbCH> (0).array () > -Eigen::NumTraits<value_type>::dummy_precision()).all(),
+        "Contact forces =\n" << valueH.segment<nbCH> (0).transpose());
   }
 
+  BOOST_MESSAGE ("Starting invalid");
   invalid.push_back ((Configuration_t (3) << 0,1,0.5).finished ());
-  invalid.push_back ((Configuration_t (3) << 1,0,1.5).finished ());
+  invalid.push_back ((Configuration_t (3) << 1,0,2.5).finished ());
   invalid.push_back ((Configuration_t (3) << 1,0,-1.5).finished ());
   for (std::list<Configuration_t>::const_iterator it = invalid.begin();
       it != invalid.end (); ++it) {
+    BOOST_MESSAGE ("Config " << it->transpose ());
     f (value, *it);
-    BOOST_CHECK_MESSAGE (!value.segment<6> (2).isZero ()
-        || !(value.segment<2> (0).array () > - Eigen::NumTraits<value_type>::dummy_precision()).all(),
-        "(I - phi * phi^+) * G =\n" << value.segment<6> (2).transpose()
-        << "\nContact forces =\n" << value.segment<2> (0).transpose()
+    BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
+    BOOST_CHECK_MESSAGE (!value.segment<6> (nbC).isZero ()
+        || (value.segment<nbC> (0).array () < - Eigen::NumTraits<value_type>::dummy_precision()).any(),
+        "Should not be stable:\n"
+        "(I - phi * phi^+) * G =\n" << value.segment<6> (nbC).transpose()
+        << "\nContact forces =\n" << value.segment<nbC> (0).transpose()
+        << "\nJoint transform:\n" << slider->currentTransformation ());
+
+    fH (valueH, *it);
+    BOOST_CHECK_MESSAGE (!valueH.segment<6> (nbCH).isZero ()
+        || (valueH.segment<nbCH> (0).array () < - Eigen::NumTraits<value_type>::dummy_precision()).any(),
+        "Should not be stable:\n"
+        "(I - phi * phi^+) * G =\n" << valueH.segment<6> (nbCH).transpose()
+        << "\nContact forces =\n" << valueH.segment<nbCH> (0).transpose()
         << "\nJoint transform:\n" << slider->currentTransformation ());
   }
 }
