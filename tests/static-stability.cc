@@ -167,6 +167,138 @@ StaticStabilityPtr_t createStaticStability (DevicePtr_t d, JointPtr_t j)
   return fptr;
 }
 
+StaticStabilityPtr_t createStaticStabilityHard (DevicePtr_t d, JointPtr_t j)
+{
+  StaticStability::Contacts_t cs;
+  StaticStability::Contact_t c;
+
+  c.joint1 = NULL; c.point1 = vector3_t ( 0,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t ( 0,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,1,0); c.normal1 = vector3_t (-1,0,0);
+  c.joint2 = j;    c.point2 = vector3_t (+1,1,0); c.normal2 = vector3_t (-1,0,0);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,1,0); c.normal1 = vector3_t (1,0,0);
+  c.joint2 = j;    c.point2 = vector3_t (-1,1,0); c.normal2 = vector3_t (1,0,0);
+  cs.push_back (c);
+
+  CenterOfMassComputationPtr_t com = CenterOfMassComputation::create (d);
+  com->add (d->rootJoint ());
+  com->computeMass ();
+
+  StaticStabilityPtr_t fptr = StaticStability::create ("test", d, cs, com);
+  return fptr;
+}
+
+StaticStabilityPtr_t createStaticStabilityHard2 (DevicePtr_t d, JointPtr_t j)
+{
+  StaticStability::Contacts_t cs;
+  StaticStability::Contact_t c;
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  CenterOfMassComputationPtr_t com = CenterOfMassComputation::create (d);
+  com->add (d->rootJoint ());
+  com->computeMass ();
+
+  StaticStabilityPtr_t fptr = StaticStability::create ("test", d, cs, com);
+  return fptr;
+}
+
+StaticStabilityPtr_t createStaticStabilityHard3 (DevicePtr_t d, JointPtr_t j)
+{
+  StaticStability::Contacts_t cs;
+  StaticStability::Contact_t c;
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (0,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (0,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  CenterOfMassComputationPtr_t com = CenterOfMassComputation::create (d);
+  com->add (d->rootJoint ());
+  com->computeMass ();
+
+  StaticStabilityPtr_t fptr = StaticStability::create ("test", d, cs, com);
+  return fptr;
+}
+
+StaticStabilityPtr_t createStaticStabilityHard4 (DevicePtr_t d, JointPtr_t j)
+{
+  StaticStability::Contacts_t cs;
+  StaticStability::Contact_t c;
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,1,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,1,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,1,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,1,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,1,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,1,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,1,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,1,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,0,1); c.normal1 = vector3_t (0,0,-1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,0,1); c.normal2 = vector3_t (0,0,-1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (-1,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (-1,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  c.joint1 = NULL; c.point1 = vector3_t (+1,0,0); c.normal1 = vector3_t (0,0,1);
+  c.joint2 = j;    c.point2 = vector3_t (+1,0,0); c.normal2 = vector3_t (0,0,1);
+  cs.push_back (c);
+
+  CenterOfMassComputationPtr_t com = CenterOfMassComputation::create (d);
+  com->add (d->rootJoint ());
+  com->computeMass ();
+
+  StaticStabilityPtr_t fptr = StaticStability::create ("test", d, cs, com);
+  return fptr;
+}
+
 BOOST_AUTO_TEST_CASE (static_stability) {
   DevicePtr_t device = createRobot ();
   BOOST_REQUIRE (device);

@@ -211,8 +211,12 @@ namespace hpp {
       }
       phi_.computeValue (); //done in computePseudoInverse()
       phi_.computePseudoInverse ();
-      result.segment (0, contacts_.size()) = - /*com_->mass() * G * */ phi_.pinv() * Gravity;
-      result.segment <6> (contacts_.size()) = /* G * */ Gravity - phi_.value() * (phi_.pinv() * /* G * */ Gravity);
+      const Eigen::Matrix <value_type, 6, 1> G = - 1 * Gravity;
+      vector_t u = phi_.pinv() * G;
+      // TODO: v should not be that but (V2 * V2*)^-1 u-
+      vector_t v = 1 * (u.array () >= 0).select (0, -u);
+      result.segment (0, contacts_.size()) = u + v - phi_.pinv() * (phi_.value() * v);
+      result.segment <6> (contacts_.size()) = Gravity + phi_.value() * u;
       size_t shift = 6 + contacts_.size();
       for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
         p1mp2s_[i]->computeValue();
@@ -233,16 +237,37 @@ namespace hpp {
         p1mp2s_[i]->invalidate();
         n1mn2s_[i]->invalidate();
       }
-      phi_.computePseudoInverseJacobian (/* G * */ Gravity);
-      jacobian.block (0, 0, contacts_.size(), robot_->numberDof()) =
-        - /* com_->mass() * */ phi_.pinvJacobian();
-      phi_.jacobianTimes (- phi_.pinv() * /* G * */ Gravity,
+      phi_.computeValue (); //done in computePseudoInverse()
+      phi_.computeJacobian ();
+      phi_.computePseudoInverse ();
+
+      const Eigen::Matrix <value_type, 6, 1> G = - 1 * Gravity;
+      vector_t u = phi_.pinv() * G;
+      matrix_t S = - matrix_t::Identity (u.size(), u.size());
+      S.diagonal () = 1 * (u.array () >= 0).select
+        (0, - vector_t::Ones (u.size()));
+      vector_t v = S * u;
+
+      Eigen::Matrix <value_type, 6, Eigen::Dynamic>
+        JphiTimesV (6,robot_->numberDof());
+      phi_.jacobianTimes (v, JphiTimesV);
+      phi_.computePseudoInverseJacobian (G);
+      jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias () =
+        ( matrix_t::Identity (u.size(), u.size()) + S
+          - phi_.pinv () * (phi_.value () * S)
+          ) * phi_.pinvJacobian();
+      jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias ()
+        -= phi_.pinv () * JphiTimesV;
+      phi_.computePseudoInverseJacobian (phi_.value () * v);
+      jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias ()
+        -= phi_.pinvJacobian ();
+
+      phi_.jacobianTimes (u,
           jacobian.block (contacts_.size(), 0, 6, robot_->numberDof()));
+      phi_.computePseudoInverseJacobian (Gravity);
       jacobian.block (contacts_.size(), 0, 6, robot_->numberDof())
         += - phi_.value() * phi_.pinvJacobian ();
-      //jacobian.block (contacts_.size(), 0, contacts_.size(), robot_->numberDof()) =
-        //- phi_.jacobianTimes (phi_.pinv() * Gravity)
-        //- phi_.value() * phi_.pinvJacobian ();
+
       size_t shift = 6 + contacts_.size();
       for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
         p1mp2s_[i]->computeJacobian();
@@ -251,6 +276,5 @@ namespace hpp {
         jacobian.middleRows <3> (shift + i * 6 + 3) = n1mn2s_[i]->jacobian();
       }
     }
-
   } // namespace constraints
 } // namespace hpp
