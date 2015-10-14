@@ -215,8 +215,11 @@ namespace hpp {
       vector_t u = phi_.pinv() * G;
       // TODO: v should not be that but (V2 * V2*)^-1 u-
       vector_t v = 1 * (u.array () >= 0).select (0, -u);
-      result.segment (0, contacts_.size()) = u + v - phi_.pinv() * (phi_.value() * v);
+      matrix_t pk (v.size(), v.size());
+      hpp::model::projectorOnKernel <MoE_t::SVD_t> (phi_.svd(), pk, true);
+      result.segment (0, contacts_.size()) = u + pk * v;
       result.segment <6> (contacts_.size()) = Gravity + phi_.value() * u;
+
       size_t shift = 6 + contacts_.size();
       for (std::size_t i = 0; i < p1mp2s_.size(); ++i) {
         p1mp2s_[i]->computeValue();
@@ -247,15 +250,16 @@ namespace hpp {
       S.diagonal () = 1 * (u.array () >= 0).select
         (0, - vector_t::Ones (u.size()));
       vector_t v = S * u;
+      matrix_t pk (v.size(), v.size());
+      hpp::model::projectorOnKernel <MoE_t::SVD_t> (phi_.svd(), pk, true);
 
       Eigen::Matrix <value_type, 6, Eigen::Dynamic>
         JphiTimesV (6,robot_->numberDof());
       phi_.jacobianTimes (v, JphiTimesV);
       phi_.computePseudoInverseJacobian (G);
       jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias () =
-        ( matrix_t::Identity (u.size(), u.size()) + S
-          - phi_.pinv () * (phi_.value () * S)
-          ) * phi_.pinvJacobian();
+        ( matrix_t::Identity (u.size(), u.size()) + pk * S)
+        * phi_.pinvJacobian();
       jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias ()
         -= phi_.pinv () * JphiTimesV;
       phi_.computePseudoInverseJacobian (phi_.value () * v);

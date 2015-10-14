@@ -264,7 +264,9 @@ namespace hpp {
         Contacts_t contacts_;
         CenterOfMassComputationPtr_t com_;
 
-        mutable MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> phi_;
+        typedef MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> MoE_t;
+
+        mutable MoE_t phi_;
         mutable std::vector <CalculusBaseAbstract<>::Ptr_t> p1mp2s_;
         mutable std::vector <CalculusBaseAbstract<>::Ptr_t> n1mn2s_;
     };
