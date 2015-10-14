@@ -819,12 +819,14 @@ namespace hpp {
         typedef CalculusBase <MatrixOfExpressions, Value_t, Jacobian_t > Parent_t;
         typedef CalculusBaseAbstract <ValueType, JacobianType> Element_t;
         typedef typename Element_t::Ptr_t ElementPtr_t;
+        typedef Eigen::JacobiSVD <Value_t> SVD_t;
 
         MatrixOfExpressions (const Eigen::Ref<const Value_t>& value,
             const Eigen::Ref<const Jacobian_t>& jacobian) :
           Parent_t (value, jacobian),
           nRows_ (0), nCols_ (0),
-          svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV)
+          svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV),
+          piValid_ (false)
         {}
 
         MatrixOfExpressions (const Parent_t& other) :
@@ -832,7 +834,8 @@ namespace hpp {
           nRows_ (static_cast <const MatrixOfExpressions&>(other).nRows_),
           nCols_ (static_cast <const MatrixOfExpressions&>(other).nCols_),
           elements_ (static_cast <const MatrixOfExpressions&>(other).elements_),
-          svd_ (static_cast <const MatrixOfExpressions&>(other).svd ())
+          svd_ (static_cast <const MatrixOfExpressions&>(other).svd_),
+          piValid_ (static_cast <const MatrixOfExpressions&>(other).piValid_)
         {
         }
 
@@ -840,7 +843,8 @@ namespace hpp {
           Parent_t (matrix),
           nRows_ (matrix.nRows_), nCols_ (matrix.nCols_),
           elements_ (matrix.elements_),
-          svd_ (matrix.svd())
+          svd_ (matrix.svd_),
+          piValid_ (matrix.piValid_)
         {
         }
 
@@ -900,6 +904,7 @@ namespace hpp {
           return pij_;
         }
         void computePseudoInverse () {
+          if (piValid_) return;
           this->computeValue ();
           svd_.compute (this->value_);
           Eigen::VectorXd singularValues_inv = svd_.singularValues ();
@@ -913,6 +918,7 @@ namespace hpp {
             svd_.matrixV ().leftCols (singularValues_inv.size())
             * singularValues_inv.asDiagonal ()
             * svd_.matrixU ().leftCols (singularValues_inv.size()).adjoint();
+          piValid_ = true;
         }
         void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
           this->computeJacobian ();
@@ -974,15 +980,17 @@ namespace hpp {
           for (std::size_t i = 0; i < nRows_; ++i)
             for (std::size_t j = 0; j < nCols_; ++j)
               elements_[i][j]->invalidate ();
+          piValid_ = false;
         }
 
         std::size_t nRows_, nCols_;
         std::vector <std::vector <ElementPtr_t> > elements_;
 
       private:
-        Eigen::JacobiSVD <Value_t> svd_;
+        SVD_t svd_;
         PseudoInv_t pi_;
         PseudoInvJacobian_t pij_;
+        bool piValid_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
