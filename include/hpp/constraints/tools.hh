@@ -22,6 +22,7 @@
 #include "hpp/constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
+#include <hpp/model/eigen.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
 namespace hpp {
@@ -907,17 +908,8 @@ namespace hpp {
           if (piValid_) return;
           this->computeValue ();
           svd_.compute (this->value_);
-          Eigen::VectorXd singularValues_inv = svd_.singularValues ();
-          for (typename Value_t::Index i=0; i < singularValues_inv.rows(); ++i) {
-            if (i < svd_.rank ())
-              singularValues_inv(i)=1.0/singularValues_inv[i];
-            else
-              singularValues_inv(i)=0;
-          }
-          pi_.noalias() =
-            svd_.matrixV ().leftCols (singularValues_inv.size())
-            * singularValues_inv.asDiagonal ()
-            * svd_.matrixU ().leftCols (singularValues_inv.size()).adjoint();
+          pi_.resize (this->value_.cols(), this->value_.rows());
+          hpp::model::pseudoInverse <SVD_t> (svd_, pi_);
           piValid_ = true;
         }
         void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
@@ -925,17 +917,23 @@ namespace hpp {
           computePseudoInverse ();
           const std::size_t nbDof = elements_[0][0]->jacobian().cols();
           const std::size_t inSize = this->value_.cols();
-          const vector_t piTrhs = pi_ * rhs;
+          const vector_t piTrhs = svd_.solve (rhs);
           assert (pi_.rows () == inSize);
 
           Jacobian_t cache (this->jacobian_.rows(), nbDof);
           jacobianTimes (piTrhs, cache);
           pij_.noalias() = - pi_ * cache;
           cache.resize (inSize, nbDof);
-          jacobianTransposeTimes (rhs - this->value_ * piTrhs, cache);
+
+          pkInv_.resize (pi_.cols(), pi_.cols());
+          hpp::model::projectorOnKernelOfInv <SVD_t> (svd_, pkInv_, true);
+          jacobianTransposeTimes (pkInv_ * rhs, cache);
           pij_.noalias() += (pi_ * pi_.transpose()) * cache;
+
           jacobianTransposeTimes (pi_.transpose() * piTrhs , cache);
-          pij_.noalias() += (matrix_t::Identity (inSize, inSize) - pi_ * this->value_) * cache;
+          pk_.resize (inSize, inSize);
+          hpp::model::projectorOnKernel <SVD_t> (svd_, pk_, true);
+          pij_.noalias() += pk_ * cache;
         }
 
         void jacobianTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
@@ -988,6 +986,7 @@ namespace hpp {
 
       private:
         SVD_t svd_;
+        matrix_t pkInv_, pk_;
         PseudoInv_t pi_;
         PseudoInvJacobian_t pij_;
         bool piValid_;
