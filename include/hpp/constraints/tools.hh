@@ -824,7 +824,7 @@ namespace hpp {
             const Eigen::Ref<const Jacobian_t>& jacobian) :
           Parent_t (value, jacobian),
           nRows_ (0), nCols_ (0),
-          svd_ (value.rows(), value.cols(), Eigen::ComputeThinU | Eigen::ComputeThinV)
+          svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV)
         {}
 
         MatrixOfExpressions (const Parent_t& other) :
@@ -909,19 +909,27 @@ namespace hpp {
             else
               singularValues_inv(i)=0;
           }
-          pi_ = svd_.matrixV () * singularValues_inv.asDiagonal () * svd_.matrixU ().transpose();
+          pi_.noalias() =
+            svd_.matrixV ().leftCols (singularValues_inv.size())
+            * singularValues_inv.asDiagonal ()
+            * svd_.matrixU ().leftCols (singularValues_inv.size()).adjoint();
         }
         void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
           this->computeJacobian ();
           computePseudoInverse ();
-          Jacobian_t cache (this->jacobian_.rows(), elements_[0][0]->jacobian().cols());
-          jacobianTimes (pi_ * rhs, cache);
-          pij_ = - pi_ * cache;
-          cache.resize (this->value_.cols(), elements_[0][0]->jacobian().cols());
-          jacobianTransposeTimes (rhs - this->value_ * pi_ * rhs, cache);
-          pij_ += (pi_ * pi_.transpose()) * cache;
-          jacobianTransposeTimes (pi_.transpose() * pi_ * rhs , cache);
-          pij_ += (Jacobian_t::Identity (pi_.rows(), this->value_.cols()) - pi_ * this->value_) * cache;
+          const std::size_t nbDof = elements_[0][0]->jacobian().cols();
+          const std::size_t inSize = this->value_.cols();
+          const vector_t piTrhs = pi_ * rhs;
+          assert (pi_.rows () == inSize);
+
+          Jacobian_t cache (this->jacobian_.rows(), nbDof);
+          jacobianTimes (piTrhs, cache);
+          pij_.noalias() = - pi_ * cache;
+          cache.resize (inSize, nbDof);
+          jacobianTransposeTimes (rhs - this->value_ * piTrhs, cache);
+          pij_.noalias() += (pi_ * pi_.transpose()) * cache;
+          jacobianTransposeTimes (pi_.transpose() * piTrhs , cache);
+          pij_.noalias() += (matrix_t::Identity (inSize, inSize) - pi_ * this->value_) * cache;
         }
 
         void jacobianTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
@@ -934,7 +942,8 @@ namespace hpp {
               elements_[i][j]->computeJacobian ();
               assert (nr == elements_[i][j]->jacobian().rows());
               nc = elements_[i][j]->jacobian().cols();
-              cache.middleRows (r,nr) += this->jacobian_.block (r, c, nr, nc) * rhs[j];
+              cache.middleRows (r,nr).noalias() +=
+                this->jacobian_.block (r, c, nr, nc) * rhs[j];
               c += nc;
             }
             r += nr;
