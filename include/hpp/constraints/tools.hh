@@ -827,7 +827,7 @@ namespace hpp {
           Parent_t (value, jacobian),
           nRows_ (0), nCols_ (0),
           svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV),
-          piValid_ (false)
+          piValid_ (false), svdValid_ (false)
         {}
 
         MatrixOfExpressions (const Parent_t& other) :
@@ -836,7 +836,8 @@ namespace hpp {
           nCols_ (static_cast <const MatrixOfExpressions&>(other).nCols_),
           elements_ (static_cast <const MatrixOfExpressions&>(other).elements_),
           svd_ (static_cast <const MatrixOfExpressions&>(other).svd_),
-          piValid_ (static_cast <const MatrixOfExpressions&>(other).piValid_)
+          piValid_ (static_cast <const MatrixOfExpressions&>(other).piValid_),
+          svdValid_ (static_cast <const MatrixOfExpressions&>(other).svdValid_)
         {
         }
 
@@ -845,7 +846,8 @@ namespace hpp {
           nRows_ (matrix.nRows_), nCols_ (matrix.nCols_),
           elements_ (matrix.elements_),
           svd_ (matrix.svd_),
-          piValid_ (matrix.piValid_)
+          piValid_ (matrix.piValid_),
+          svdValid_ (matrix.svdValid_)
         {
         }
 
@@ -904,10 +906,16 @@ namespace hpp {
         inline const PseudoInvJacobian_t& pinvJacobian () const {
           return pij_;
         }
+        void computeSVD () {
+          if (svdValid_) return;
+          this->computeValue ();
+          svd_.compute (this->value_);
+          svdValid_ = true;
+        }
         void computePseudoInverse () {
           if (piValid_) return;
           this->computeValue ();
-          svd_.compute (this->value_);
+          this->computeSVD();
           pi_.resize (this->value_.cols(), this->value_.rows());
           hpp::model::pseudoInverse <SVD_t> (svd_, pi_);
           piValid_ = true;
@@ -979,6 +987,7 @@ namespace hpp {
             for (std::size_t j = 0; j < nCols_; ++j)
               elements_[i][j]->invalidate ();
           piValid_ = false;
+          svdValid_ = false;
         }
 
         std::size_t nRows_, nCols_;
@@ -989,7 +998,7 @@ namespace hpp {
         matrix_t pkInv_, pk_;
         PseudoInv_t pi_;
         PseudoInvJacobian_t pij_;
-        bool piValid_;
+        bool piValid_, svdValid_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW

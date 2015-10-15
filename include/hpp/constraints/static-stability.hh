@@ -260,6 +260,20 @@ namespace hpp {
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
 
+        static void findBoundIndex (vectorIn_t u, vectorIn_t v, 
+            value_type& lambdaMin, size_type* iMin,
+            value_type& lambdaMax, size_type* iMax);
+
+        /// Return false if uMinus.isZero(), i which case v also zero (not computed).
+        bool computeUminusAndV (vectorIn_t u, vectorOut_t uMinus,
+            vectorOut_t v) const;
+
+        void computeVDot (vectorIn_t uMinus, vectorIn_t S,
+            matrixIn_t uDot, matrixOut_t uMinusDot, matrixOut_t vDot) const;
+
+        void computeLambdaDot (vectorIn_t u, vectorIn_t v, const std::size_t i0,
+            matrixIn_t uDot, matrixIn_t vDot, vectorOut_t lambdaDot) const;
+
         DevicePtr_t robot_;
         Contacts_t contacts_;
         CenterOfMassComputationPtr_t com_;
@@ -267,6 +281,10 @@ namespace hpp {
         typedef MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> MoE_t;
 
         mutable MoE_t phi_;
+        mutable vector_t u_, uMinus_, v_;
+        mutable matrix_t uDot_, uMinusDot_, vDot_;
+        mutable vector_t lambdaDot_; 
+
         mutable std::vector <CalculusBaseAbstract<>::Ptr_t> p1mp2s_;
         mutable std::vector <CalculusBaseAbstract<>::Ptr_t> n1mn2s_;
     };
