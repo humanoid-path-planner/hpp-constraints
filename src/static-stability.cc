@@ -272,9 +272,13 @@ namespace hpp {
         value_type& lambdaMin, size_type* iMin,
         value_type& lambdaMax, size_type* iMax)
     {
-      vector_t lambdas = - u.cwiseQuotient (v);
-      lambdaMin = ( v.array() > 0 ).select (lambdas, 0).maxCoeff (iMin);
-      lambdaMax = ( v.array() < 0 ).select (lambdas, 0).minCoeff (iMax);
+      // Be carefull when v has small values.
+      // Consider them as 0
+      const value_type eps = Eigen::NumTraits<value_type>::dummy_precision();
+      vector_t lambdas = ( v.array ().cwiseAbs() < eps )
+        .select (0, -u.cwiseQuotient(v));
+      lambdaMin = ( v.array() > eps ).select (lambdas, 0).maxCoeff (iMin);
+      lambdaMax = ( v.array() < eps ).select (lambdas, 0).minCoeff (iMax);
     }
 
     bool StaticStability::computeUminusAndV (vectorIn_t u, vectorOut_t uMinus,
