@@ -25,6 +25,8 @@ SET(PROJECT_DESCRIPTION
   "Definition of basic geometric constraints for motion planning")
 SET(PROJECT_URL "https://github.com/laas/hpp-constraints")
 
+SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules/")
+
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
   include/hpp/constraints/distance-between-bodies.hh
@@ -41,6 +43,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/relative-transformation.hh
   include/hpp/constraints/configuration-constraint.hh
   include/hpp/constraints/static-stability.hh
+  include/hpp/constraints/qp-static-stability.hh
   include/hpp/constraints/simplex-solver.hh
 )
 
@@ -54,6 +57,7 @@ SETUP_PROJECT()
 SEARCH_FOR_BOOST()
 ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
+FIND_PACKAGE (qpOASES REQUIRED)
 
 ADD_SUBDIRECTORY (src)
 ADD_SUBDIRECTORY (tests)
