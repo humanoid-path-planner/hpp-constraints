@@ -251,7 +251,7 @@ namespace hpp {
             const Contacts_t& contacts,
             const CenterOfMassComputationPtr_t& com);
 
-        const MatrixOfExpressions<>& phi () {
+        MatrixOfExpressions<>& phi () {
           return phi_;
         }
 
