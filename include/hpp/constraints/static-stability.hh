@@ -284,9 +284,6 @@ namespace hpp {
         mutable vector_t u_, uMinus_, v_;
         mutable matrix_t uDot_, uMinusDot_, vDot_;
         mutable vector_t lambdaDot_; 
-
-        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> p1mp2s_;
-        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> n1mn2s_;
     };
     /// \}
   } // namespace constraints
