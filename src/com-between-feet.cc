@@ -77,8 +77,13 @@ namespace hpp {
         std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
           size (mask), name),
-      robot_ (robot), com_ (comc), left_ (jointL, pointL),
-      right_ (jointR, pointR), pointRef_ (), jointRef_ (jointRef), mask_ (mask)
+      robot_ (robot),
+      com_ (PointCom::create (comc)),
+      left_ (PointInJoint::create(jointL, pointL)),
+      right_ (PointInJoint::create(jointR, pointR)),
+      pointRef_ (),
+      jointRef_ (jointRef),
+      mask_ (mask)
     {
       cross_.setZero ();
       u_ = right_ - left_;

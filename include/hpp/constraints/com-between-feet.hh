@@ -25,6 +25,7 @@
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/tools.hh>
+# include <hpp/constraints/symbolic-calculus.hh>
 
 namespace hpp {
   namespace constraints {
@@ -94,8 +95,8 @@ namespace hpp {
             ConfigurationIn_t arg) const throw ();
       private:
         DevicePtr_t robot_;
-        mutable PointCom com_;
-        PointInJoint left_, right_;
+        mutable Traits<PointCom>::Ptr_t com_;
+        Traits<PointInJoint>::Ptr_t left_, right_;
         eigen::vector3_t pointRef_;
         JointPtr_t jointRef_;
         typedef Difference < PointCom, PointInJoint > DiffPCPiJ;
@@ -104,11 +105,11 @@ namespace hpp {
         typedef CrossProduct < Difference < PointCom,
                                             ScalarMultiply < SumPiJPiJ > >,
                                DiffPiJPiJ > ECrossU_t;
-        mutable DiffPCPiJ xmxl_, xmxr_;
-        mutable DiffPiJPiJ u_;
-        mutable ECrossU_t ecrossu_;
+        mutable Traits<DiffPCPiJ>::Ptr_t xmxl_, xmxr_;
+        mutable Traits<DiffPiJPiJ>::Ptr_t u_;
+        mutable Traits<ECrossU_t>::Ptr_t ecrossu_;
         mutable RotationMultiply <ECrossU_t> expr_;
-        mutable CalculusBaseAbstract<value_type, RowJacobianMatrix >::Ptr_t xmxlDotu_, xmxrDotu_;
+        mutable Traits<CalculusBaseAbstract<value_type, RowJacobianMatrix > >::Ptr_t xmxlDotu_, xmxrDotu_;
         std::vector <bool> mask_;
         mutable eigen::matrix3_t cross_;
     }; // class ComBetweenFeet
