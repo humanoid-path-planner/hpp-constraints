@@ -49,7 +49,7 @@ namespace hpp {
       void jacobian (matrixOut_t jacobian, vectorIn_t argument) const
       {
 	assert (argument.size () == inputSize ());
-	assert (jacobian.rows () == outputSize ());
+	assert (jacobian.rows () == outputDerivativeSize ());
 	assert (jacobian.cols () == inputDerivativeSize ());
 	impl_jacobian (jacobian, argument);
       }
@@ -73,6 +73,11 @@ namespace hpp {
       {
 	return outputSize_;
       }
+      /// Get dimension of output derivative vector
+      size_type  outputDerivativeSize () const
+      {
+	return outputDerivativeSize_;
+      }
       /// \brief Get function name.
       ///
       /// \return Function name.
@@ -92,15 +97,35 @@ namespace hpp {
     protected:
       /// \brief Concrete class constructor should call this constructor.
       ///
-      /// \param inputSize function arity
-      /// \param outputSize result size
+      /// \param sizeInput dimension of the function input
+      /// \param sizeInputDerivative dimension of the function input derivative,
+      /// \param sizeOutput dimension of the output,
       /// \param name function's name
-      DifferentiableFunction (size_type inputSize,
-			      size_type inputDerivativeSize,
-			      size_type outputSize,
+      DifferentiableFunction (size_type sizeInput,
+			      size_type sizeInputDerivative,
+			      size_type sizeOutput,
 			      std::string name = std::string ()) :
-	inputSize_ (inputSize), inputDerivativeSize_ (inputDerivativeSize),
-	outputSize_ (outputSize), name_ (name)
+	inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
+	outputSize_ (sizeOutput), outputDerivativeSize_ (sizeOutput),
+	name_ (name)
+      {
+      }
+
+      /// \brief Concrete class constructor should call this constructor.
+      ///
+      /// \param sizeInput dimension of the function input
+      /// \param sizeInputDerivative dimension of the function input derivative,
+      /// \param sizeOutput dimension of the output,
+      /// \param sizeOutputDerivative dimension of the output derivative,
+      /// \param name function's name
+      DifferentiableFunction (size_type sizeInput,
+			      size_type sizeInputDerivative,
+			      size_type sizeOutput,
+			      size_type sizeOutputDerivative,
+			      std::string name = std::string ()) :
+	inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
+	outputSize_ (sizeOutput), outputDerivativeSize_ (sizeOutputDerivative),
+	name_ (name)
       {
       }
 
@@ -118,6 +143,8 @@ namespace hpp {
       size_type inputDerivativeSize_;
       /// Dimension of output vector
       size_type outputSize_;
+      /// Dimension of output derivative vector
+      size_type outputDerivativeSize_;
       std::string name_;
     }; // class DifferentiableFunction
     inline std::ostream&
