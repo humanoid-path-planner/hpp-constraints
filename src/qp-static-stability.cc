@@ -169,8 +169,14 @@ namespace hpp {
       const qpOASES::real_t ubA[6] = { eps, eps,1+eps,-eps, eps, eps}; // - StaticStability::Gravity
       qp_.reset ();
       qp_.setHessianType (HST_IDENTITY);
-      qpOASES::returnValue ret =
-        qp_.init (NULL, Zeros, A_, Zeros, 0, lbA, ubA, nwsr, 0, primal_.data());
+      qpOASES::returnValue ret;
+      if (qp_.isInitialised()) {
+        ret =
+          qp_.hotstart (NULL, Zeros, A_, Zeros, 0, lbA, ubA, nwsr, 0);
+      } else {
+        ret =
+          qp_.init (NULL, Zeros, A_, Zeros, 0, lbA, ubA, nwsr, 0, primal_.data());
+      }
       qp_.getPrimalSolution (primal_.data ());
       qp_.getDualSolution (dual_.data ());
       result = primal_;

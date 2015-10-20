@@ -86,7 +86,7 @@ namespace hpp {
           > VectorMap_t;
         typedef Eigen::Map <const vector_t> ConstVectorMap_t;
 
-        mutable qpOASES::QProblem qp_;
+        mutable qpOASES::SQProblem qp_;
         mutable MoE_t phi_;
         mutable qpOASES::real_t* A_;
         mutable InvertStorageOrderMap_t Amap_;
