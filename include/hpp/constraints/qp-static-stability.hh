@@ -70,6 +70,10 @@ namespace hpp {
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
 
+        bool hasSolution (vectorOut_t dist) const;
+
+        qpOASES::returnValue solveQP (vectorOut_t result) const;
+
         DevicePtr_t robot_;
         Contacts_t contacts_;
         CenterOfMassComputationPtr_t com_;

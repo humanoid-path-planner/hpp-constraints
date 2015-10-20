@@ -21,6 +21,7 @@
 #include <limits>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
+#include <hpp/model/eigen.hh>
 #include "hpp/constraints/tools.hh"
 
 namespace hpp {
@@ -34,7 +35,7 @@ namespace hpp {
         const DevicePtr_t& robot, const Contacts_t& contacts,
         const CenterOfMassComputationPtr_t& com):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          contacts.size(), name),
+          contacts.size() + 6, name),
       Zeros (new qpOASES::real_t [contacts.size()]), nWSR (20),
       robot_ (robot), contacts_ (contacts), com_ (com),
       qp_ (contacts.size(), 6, qpOASES::HST_IDENTITY),
@@ -83,35 +84,25 @@ namespace hpp {
 
       phi_.invalidate ();
       phi_.computeValue ();
+      phi_.computeSVD ();
 
-      Amap_ = phi_.value (); // Need a copy because of the row-major order.
+      // Is there a solution to the unconstrained problem ?
+      bool hasSol = hasSolution (result.segment <6> (0));
 
-      // const value_type g[8] = {0,0,0,0,0,0,0,0}; // - StaticStability::Gravity
-      // const value_type lb[8] = {0,0,0,0,0,0,0,0}; // - StaticStability::Gravity
-      qpOASES::int_t nwsr = nWSR;
-      const qpOASES::real_t eps = 1e-4;
-      const qpOASES::real_t lbA[6] = {-eps,-eps,1-eps,-eps,-eps,-eps}; // - StaticStability::Gravity
-      const qpOASES::real_t ubA[6] = { eps, eps,1+eps,-eps, eps, eps}; // - StaticStability::Gravity
-
-      // Assume problem is feasible
-      qp_.reset ();
-      qp_.setHessianType (qpOASES::HST_IDENTITY);
-      if (qpOASES::SUCCESSFUL_RETURN == qp_.init (NULL, Zeros, A_, Zeros, 0,
-          lbA, ubA, nwsr, 0, primal_.data())) {
-        // , dual_.data());
-
-        qp_.getPrimalSolution (primal_.data());
-        qp_.getDualSolution (dual_.data());
-        result.segment (0, contacts_.size()) = primal_;
-      } else {
-        qp_.reset ();
-        qp_.setHessianType (qpOASES::HST_IDENTITY);
-        /// Same problem with no bound on F
-        if (qpOASES::SUCCESSFUL_RETURN == qp_.init (NULL, Zeros, A_, 0, 0,
-              lbA, ubA, nwsr, 0, primal_.data())) {
-          qp_.getPrimalSolution (primal_.data());
-          qp_.getDualSolution (dual_.data());
+      if (hasSol) {
+        if (solveQP (result.segment (6, contacts_.size()))
+            == qpOASES::SUCCESSFUL_RETURN)
+          return;
+        else {
+          // There are no positive solution.
+          result.segment (6, contacts_.size ()).noalias () =
+            phi_.svd ().solve (MinusGravity);
         }
+      } else {
+        // No solution.
+        // TODO: Does this introduce a discontinuity ?
+        result.segment (6, contacts_.size ()).noalias () =
+          phi_.svd ().solve (MinusGravity);
       }
     }
 
@@ -121,27 +112,69 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       phi_.invalidate ();
-
       phi_.computeSVD ();
       phi_.computeJacobian ();
 
-      // Assume problem is feasible
-      // TODO: Do not need to solve the QP again.
-      qp_.reset ();
-      qp_.setHessianType (qpOASES::HST_IDENTITY);
+      // Is there a solution to the unconstrained problem ?
+      vector_t u (6);
+      bool hasSol = hasSolution (u);
+
+      vector_t sol = phi_.svd().solve (MinusGravity);
+      phi_.jacobianTimes (sol, jacobian.block (0, 0, 6, robot_->numberDof()));
+      phi_.computePseudoInverseJacobian (MinusGravity);
+      jacobian.block (0, 0, 6, robot_->numberDof()).noalias ()
+        += phi_.value() * phi_.pinvJacobian ();
+
+      if (hasSol) {
+        if (solveQP (sol) == qpOASES::SUCCESSFUL_RETURN) {
+          phi_.jacobianTransposeTimes (dual_.segment <6> (contacts_.size()),
+              jacobian.block (6, 0, contacts_.size(), robot_->numberDof()));
+        }
+        else {
+          // There are no positive solution.
+          // phi_.computePseudoInverseJacobian (MinusGravity);
+          jacobian.block (6, 0, contacts_.size(), robot_->numberDof())
+            = phi_.pinvJacobian ();
+        }
+      } else {
+        // phi_.computePseudoInverseJacobian (MinusGravity);
+        jacobian.block (6, 0, contacts_.size(), robot_->numberDof()) =
+          phi_.pinvJacobian ();
+      }
+    }
+
+    inline bool QPStaticStability::hasSolution (vectorOut_t dist) const
+    {
+      using namespace hpp::model;
+
+      dist.noalias () = getU2 <MoE_t::SVD_t> (phi_.svd()) *
+        ( getU2 <MoE_t::SVD_t> (phi_.svd()).adjoint() * Gravity );
+      return dist.squaredNorm () < 1e-8;
+    }
+
+    inline qpOASES::returnValue QPStaticStability::solveQP
+      (vectorOut_t result) const
+    {
+      // TODO: Use the SVD to solve a smaller quadratic problem
+      // Try to find a positive solution
+      // using qpOASES::QProblem;
+      using qpOASES::HST_IDENTITY;
+      using qpOASES::SUCCESSFUL_RETURN;
+
       Amap_ = phi_.value (); // Need a copy because of the row-major order.
+
       qpOASES::int_t nwsr = nWSR;
       const qpOASES::real_t eps = 1e-4;
       const qpOASES::real_t lbA[6] = {-eps,-eps,1-eps,-eps,-eps,-eps}; // - StaticStability::Gravity
       const qpOASES::real_t ubA[6] = { eps, eps,1+eps,-eps, eps, eps}; // - StaticStability::Gravity
-      qp_.init (NULL, Zeros, A_, Zeros, 0,
-          lbA, ubA, nwsr, 0, primal_.data());
-          // , dual_.data());
-      qp_.getPrimalSolution (primal_.data());
-      qp_.getDualSolution (dual_.data());
-
-      phi_.jacobianTransposeTimes (dual_.segment <6> (contacts_.size()),
-          jacobian.block (0, 0, contacts_.size(), robot_->numberDof()));
+      qp_.reset ();
+      qp_.setHessianType (HST_IDENTITY);
+      qpOASES::returnValue ret =
+        qp_.init (NULL, Zeros, A_, Zeros, 0, lbA, ubA, nwsr, 0, primal_.data());
+      qp_.getPrimalSolution (primal_.data ());
+      qp_.getDualSolution (dual_.data ());
+      result = primal_;
+      return ret;
     }
   } // namespace constraints
 } // namespace hpp
