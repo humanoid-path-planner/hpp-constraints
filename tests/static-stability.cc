@@ -104,16 +104,18 @@ JointPtr_t createRotationJoint (DevicePtr_t robot)
 
   fcl::Transform3f mat; mat.setIdentity ();
   fcl::Matrix3f orient;
-  orient (0,0) = 0; orient (0,1) = 0; orient (0,2) = 1;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) = 0;
-  orient (2,0) =-1; orient (2,1) = 0; orient (2,2) = 0;
+  orient (0,0) = 0; orient (0,1) = 1; orient (0,2) = 0;
+  orient (1,0) = 0; orient (1,1) = 0; orient (1,2) = 1;
+  orient (2,0) = 1; orient (2,1) = 0; orient (2,2) = 0;
   mat.setRotation (orient);
 
   // joint rz
-  joint = objectFactory.createUnBoundedJointRotation (transform3f_id());
-  joint->positionInParentFrame (mat);
+  JointPtr_t anchor = objectFactory.createJointAnchor (transform3f_id());
+  anchor->name ("anchor");
+  robot->rootJoint (anchor);
+  joint = objectFactory.createUnBoundedJointRotation (mat);
   joint->name (jointName);
-  robot->rootJoint (joint);
+  anchor->addChildJoint (joint);
   return joint;
 }
 
@@ -126,16 +128,15 @@ DevicePtr_t createRobot ()
 
   fcl::Transform3f mat; mat.setIdentity ();
   fcl::Matrix3f orient;
-  orient (0,0) = 0; orient (0,1) = 0; orient (0,2) =-1;
+  orient (0,0) = 1; orient (0,1) = 0; orient (0,2) = 0;
   orient (1,0) = 0; orient (1,1) = 1; orient (1,2) = 0;
-  orient (2,0) = 1; orient (2,1) = 0; orient (2,2) = 0;
+  orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
   mat.setRotation (orient);
 
   // Translation along x
-  JointPtr_t joint = objectFactory.createJointTranslation (transform3f_id());
+  JointPtr_t joint = objectFactory.createJointTranslation (mat);
   joint->name ("slider");
   ff->addChildJoint (joint);
-  joint->positionInParentFrame (mat);
   joint->isBounded  (0, true);
   joint->lowerBound (0, -4);
   joint->upperBound (0, +4);
@@ -373,4 +374,65 @@ BOOST_AUTO_TEST_CASE (static_stability) {
         << "\nContact forces =\n" << valueH.segment<nbCH> (0).transpose()
         << "\nJoint transform:\n" << slider->currentTransformation ());
   }
+}
+
+BOOST_AUTO_TEST_CASE (static_stability_phi) {
+  DevicePtr_t device = createRobot ();
+  BOOST_REQUIRE (device);
+  JointPtr_t rot = device->getJointByName ("_rz");
+  JointPtr_t slider = device->getJointByName ("slider");
+
+  Configuration_t c (3);
+  c << 1, 0, 0;
+  device->currentConfiguration (c);
+  device->computeForwardKinematics ();
+
+  BOOST_CHECK_MESSAGE (slider->currentTransformation ().isIdentity (),
+      "This transform shoud be identity:\n" << slider->currentTransformation ());
+
+  StaticStabilityPtr_t fptr = createStaticStabilityHard4 (device, device->rootJoint());
+  StaticStability& f  (*fptr);
+  const std::size_t nbC = 8;
+  vector_t value (f.outputSize ());
+  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
+  std::list <Configuration_t> valid, invalid;
+
+  const double sqr2 = sqrt(2);
+  const double invsr2 = 1/sqr2;
+  Configuration_t center(3); center << 1,0,0;
+  vector_t FCenter (nbC); FCenter << 0,0,0,0,0,0,1,1; FCenter /= 2;
+  Configuration_t point2(3); point2 << -invsr2, invsr2,sqr2;
+  vector_t F2 (nbC); F2.setZero(); F2[2]=1;
+  Configuration_t point3(3); point3 <<  invsr2, invsr2,sqr2;
+  vector_t F3 (nbC); F3.setZero(); F3[3]=1;
+  Configuration_t point6(3); point6 << -1, 0, 1;
+  vector_t F6 (nbC); F6.setZero(); F6[6]=1;
+  Configuration_t point7(3); point7 <<  1, 0, 1;
+  vector_t F7 (nbC); F7.setZero(); F7[7]=1;
+
+  f (value, center);
+  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
+  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
+  BOOST_CHECK_MESSAGE ((f.phi().value() * FCenter + StaticStability::Gravity).isZero (),
+      "Residual is:\n" << f.phi().value() * FCenter);
+  f (value, point2);
+  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
+  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
+  BOOST_CHECK_MESSAGE ((f.phi().value() * F2 + StaticStability::Gravity).isZero (),
+      "Residual is:\n" << f.phi().value() * F2);
+  f (value, point3);
+  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
+  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
+  BOOST_CHECK_MESSAGE ((f.phi().value() * F3 + StaticStability::Gravity).isZero (),
+      "Residual is:\n" << f.phi().value() * F3);
+  f (value, point6);
+  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
+  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
+  BOOST_CHECK_MESSAGE ((f.phi().value() * F6 + StaticStability::Gravity).isZero (),
+      "Residual is:\n" << f.phi().value() * F6);
+  f (value, point7);
+  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
+  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
+  BOOST_CHECK_MESSAGE ((f.phi().value() * F7 + StaticStability::Gravity).isZero (),
+      "Residual is:\n" << f.phi().value() * F7);
 }
