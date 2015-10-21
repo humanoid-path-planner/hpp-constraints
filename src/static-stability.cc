@@ -351,8 +351,12 @@ namespace hpp {
         const std::size_t i0, matrixIn_t uDot, matrixIn_t vDot,
         vectorOut_t lambdaDot) const
     {
-      lambdaDot.noalias ()  = - uDot.row (i0) / v(i0);
-      lambdaDot.noalias () += (u(i0) / (v(i0)*v(i0)) ) * vDot.row(i0);
+      if (std::abs (v(i0)) < Eigen::NumTraits <value_type>::dummy_precision ())
+        lambdaDot.setZero ();
+      else {
+        lambdaDot.noalias ()  = - uDot.row (i0) / v(i0);
+        lambdaDot.noalias () += (u(i0) / (v(i0)*v(i0)) ) * vDot.row(i0);
+      }
     }
   } // namespace constraints
 } // namespace hpp
