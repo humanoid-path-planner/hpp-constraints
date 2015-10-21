@@ -22,8 +22,11 @@
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
 # include <hpp/constraints/tools.hh>
+# include <hpp/constraints/convex-hull.hh>
 
 # include "hpp/constraints/fwd.hh"
+# include "hpp/constraints/config.hh"
+# include "hpp/constraints/deprecated.hh"
 
 namespace hpp {
   namespace constraints {
@@ -176,38 +179,56 @@ namespace hpp {
         /// \param robot the robot the constraints is applied to,
         /// \param joint the joint to which the object is attached,
         /// \param com COM of the object in the joint frame.
-        StaticStabilityGravity (const std::string& name, const DevicePtr_t& robot, const JointPtr_t& joint);
+        StaticStabilityGravity (const std::string& name, const DevicePtr_t& robot, const JointPtr_t& joint)
+          HPP_CONSTRAINTS_DEPRECATED;
 
         static StaticStabilityGravityPtr_t create (
             const std::string& name,
             const DevicePtr_t& robot,
-            const JointPtr_t& joint);
+            const JointPtr_t& joint) HPP_CONSTRAINTS_DEPRECATED;
 
         static StaticStabilityGravityPtr_t create (
             const DevicePtr_t& robot,
-            const JointPtr_t& joint);
+            const JointPtr_t& joint) HPP_CONSTRAINTS_DEPRECATED;
 
-        void addObjectTriangle (const fcl::TriangleP& t);
+        // Use addObject(const ConvexHull&) instead.
+        void addObjectTriangle (const fcl::TriangleP& t)
+          HPP_CONSTRAINTS_DEPRECATED;
 
-        void addFloorTriangle (const fcl::TriangleP& t);
+        // Use addFloor(const ConvexHull&) instead.
+        void addFloorTriangle (const fcl::TriangleP& t)
+          HPP_CONSTRAINTS_DEPRECATED;
+
+        StaticStabilityGravity (const std::string& name, const DevicePtr_t& robot);
+
+        static StaticStabilityGravityPtr_t create (
+            const std::string& name,
+            const DevicePtr_t& robot);
+
+        static StaticStabilityGravityPtr_t create (
+            const DevicePtr_t& robot);
+
+        void addObject (const ConvexHull& t);
+
+        void addFloor (const ConvexHull& t);
 
       private:
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
 
-        void selectTriangles () const;
+        void selectConvexHulls () const;
 
         DevicePtr_t robot_;
         JointPtr_t joint_;
 
-        typedef std::vector <Triangle> Triangles;
-        /// Triangles with coordinates expressed in joint frame.
-        Triangles objectTriangles_;
-        mutable Triangles::const_iterator object_;
-        /// Triangles with coordinates expressed in world frame.
-        Triangles floorTriangles_;
-        mutable Triangles::const_iterator floor_;
+        typedef std::vector <ConvexHull> ConvexHulls_t;
+        /// ConvexHulls_t with coordinates expressed in joint frame.
+        ConvexHulls_t objectConvexHulls_;
+        mutable ConvexHulls_t::const_iterator object_;
+        /// ConvexHulls_t with coordinates expressed in world frame.
+        ConvexHulls_t floorConvexHulls_;
+        mutable ConvexHulls_t::const_iterator floor_;
 
         mutable eigen::matrix3_t Rcx_;
         mutable eigen::vector3_t r_;

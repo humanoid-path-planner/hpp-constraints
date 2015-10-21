@@ -58,14 +58,44 @@ namespace hpp {
       return create ("StaticStabilityGravity", robot, joint);
     }
 
+    StaticStabilityGravity::StaticStabilityGravity ( const std::string& name,
+        const DevicePtr_t& robot):
+      DifferentiableFunction (robot->configSize (), robot->numberDof (), 5, name),
+      robot_ (robot), joint_ (NULL), jacobian_ (3, robot->numberDof ())
+    {
+      jacobian_.setZero ();
+    }
+
+    StaticStabilityGravityPtr_t StaticStabilityGravity::create (
+        const std::string& name,
+        const DevicePtr_t& robot)
+    {
+      return StaticStabilityGravityPtr_t (new StaticStabilityGravity (name, robot));
+    }
+
+    StaticStabilityGravityPtr_t StaticStabilityGravity::create (const DevicePtr_t& robot)
+    {
+      return create ("StaticStabilityGravity", robot);
+    }
+
+    void StaticStabilityGravity::addObject (const ConvexHull& t)
+    {
+      objectConvexHulls_.push_back (t);
+    }
+
+    void StaticStabilityGravity::addFloor (const ConvexHull& t)
+    {
+      floorConvexHulls_.push_back (t);
+    }
+
     void StaticStabilityGravity::addObjectTriangle (const fcl::TriangleP& t)
     {
-      objectTriangles_.push_back (Triangle(t, joint_));
+      addObject (ConvexHull (t, joint_));
     }
 
     void StaticStabilityGravity::addFloorTriangle (const fcl::TriangleP& t)
     {
-      floorTriangles_.push_back (Triangle(t));
+      addFloor (ConvexHull (t));
     }
 
     void StaticStabilityGravity::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
@@ -73,7 +103,7 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
-      selectTriangles ();
+      selectConvexHulls ();
 
       fcl::Vec3f p = floor_->transformation ().transform (object_->center ());
       result [0] = p[0];
@@ -99,7 +129,7 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
-      selectTriangles ();
+      selectConvexHulls ();
 
       const Transform3f& M = object_->joint_->currentTransformation ();
       const JointJacobian_t& Jjoint (object_->joint_->jacobian ());
@@ -132,15 +162,15 @@ namespace hpp {
       jacobian.row (4) = jacobian_.row (2);
     }
 
-    void StaticStabilityGravity::selectTriangles () const
+    void StaticStabilityGravity::selectConvexHulls () const
     {
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
-      for (Triangles::const_iterator o_it = objectTriangles_.begin ();
-          o_it != objectTriangles_.end (); ++o_it) {
+      for (ConvexHulls_t::const_iterator o_it = objectConvexHulls_.begin ();
+          o_it != objectConvexHulls_.end (); ++o_it) {
         o_it->updateToCurrentTransform ();
         const fcl::Vec3f& globalOC_ = o_it->center ();
-        for (Triangles::const_iterator f_it = floorTriangles_.begin ();
-            f_it != floorTriangles_.end (); ++f_it) {
+        for (ConvexHulls_t::const_iterator f_it = floorConvexHulls_.begin ();
+            f_it != floorConvexHulls_.end (); ++f_it) {
           f_it->updateToCurrentTransform ();
           value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
                      dn = f_it->normal ().dot (globalOC_ - f_it->center ());
