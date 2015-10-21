@@ -326,9 +326,11 @@ namespace hpp {
 
       if (uMinus.isZero ()) return false;
 
-      v.noalias() = uMinus;
-      v.noalias() -= getV1 <MoE_t::SVD_t> (phi_.svd()) *
-        ( getV1 <MoE_t::SVD_t> (phi_.svd()).adjoint() * uMinus );
+      v.noalias() = getV2 <MoE_t::SVD_t> (phi_.svd()) *
+        ( getV2 <MoE_t::SVD_t> (phi_.svd()).adjoint() * uMinus );
+      // v.noalias() = uMinus;
+      // v.noalias() -= getV1 <MoE_t::SVD_t> (phi_.svd()) *
+        // ( getV1 <MoE_t::SVD_t> (phi_.svd()).adjoint() * uMinus );
       return true;
     }
 
