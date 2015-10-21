@@ -19,6 +19,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   distance-between-bodies.cc
   distance-between-points-in-bodies.cc
   tools.cc
+  contact-model.cc
   position.cc
   orientation.cc
   transformation.cc
