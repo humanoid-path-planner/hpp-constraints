@@ -19,6 +19,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   distance-between-bodies.cc
   distance-between-points-in-bodies.cc
   tools.cc
+  contact-model.cc
   position.cc
   orientation.cc
   transformation.cc
@@ -27,10 +28,13 @@ ADD_LIBRARY(${LIBRARY_NAME}
   relative-orientation.cc
   relative-position.cc
   relative-transformation.cc
+  configuration-constraint.cc
   static-stability.cc
+  qp-static-stability.cc
   simplex-solver.cc
   )
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)
+TARGET_LINK_LIBRARIES (${LIBRARY_NAME} ${qpOASES_LIBRARIES})
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)

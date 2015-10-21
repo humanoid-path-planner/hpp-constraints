@@ -22,6 +22,9 @@
 #include "hpp/constraints/static-stability.hh"
 #include "hpp/constraints/tools.hh"
 
+#include <qpOASES.hpp>
+#include <Eigen/Core>
+
 #define BOOST_TEST_MODULE StaticStability
 #include <boost/test/included/unit_test.hpp>
 
@@ -41,10 +44,10 @@ using std::numeric_limits;
 
 using namespace hpp::constraints;
 
-const static size_t NUMBER_JACOBIAN_CALCULUS = 5;
-const static double HESSIAN_MAXIMUM_COEF = 1e1;
-const static double DQ_MAX = 1e-2;
-const static size_t MAX_NB_ERROR = 5;
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix_t;
+typedef Eigen::Map <RowMajorMatrix_t> InvertStorageOrderMap_t;
+typedef Eigen::Map <vector_t> VectorMap_t;
+typedef Eigen::Map <const vector_t> ConstVectorMap_t;
 
 static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
 static fcl::Transform3f transform3f_id () { fcl::Transform3f T; T.setIdentity (); return T;}
@@ -300,81 +303,41 @@ StaticStabilityPtr_t createStaticStabilityHard4 (DevicePtr_t d, JointPtr_t j)
   return fptr;
 }
 
-BOOST_AUTO_TEST_CASE (static_stability) {
-  DevicePtr_t device = createRobot ();
-  BOOST_REQUIRE (device);
-  JointPtr_t rot = device->getJointByName ("_rz");
-  JointPtr_t slider = device->getJointByName ("slider");
+REFER_NAMESPACE_QPOASES returnValue solve (DevicePtr_t& device,
+    Configuration_t& c, const std::size_t nbC, StaticStability& f,
+    REFER_NAMESPACE_QPOASES QProblem& qp, vector_t& solution, vector_t& dual) {
+  RowMajorMatrix_t A (6, nbC); InvertStorageOrderMap_t Amap (A.data(), 6, nbC);
+  vector_t g = vector_t::Zero (nbC);
+  vector_t lb = vector_t::Zero (nbC);
+  const value_type lbA[6] = {0,0,1,0,0,0}; // - StaticStability::Gravity
+  REFER_NAMESPACE_QPOASES int_t nWSR = 10;
 
-  Configuration_t c (3);
-  c << 1, 0, 0;
   device->currentConfiguration (c);
   device->computeForwardKinematics ();
-  // BOOST_MESSAGE ("\"rot\" initial transform:\n" << rot->currentTransformation ());
-  // BOOST_MESSAGE ("\"rot\" current transform:\n" << rot->currentTransformation ());
-  // BOOST_MESSAGE ("\"slider\" initial transform:\n" << slider->currentTransformation ());
-  // BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
-
-  BOOST_CHECK_MESSAGE (slider->currentTransformation ().isIdentity (),
-      "This transform shoud be identity:\n" << slider->currentTransformation ());
-
-  StaticStabilityPtr_t fptr  = createStaticStability (device, rot);
-  StaticStabilityPtr_t fptrH = createStaticStabilityHard4 (device, rot);
-  StaticStability& f  (*fptr);
-  StaticStability& fH (*fptrH);
-  const std::size_t nbC = 2;
-  const std::size_t nbCH = 8;
-  vector_t value (f.outputSize ());
-  vector_t valueH (fH.outputSize ());
-  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
-  std::list <Configuration_t> valid, invalid;
-
-  valid.push_back ((Configuration_t (3) << 1,0,0).finished ());
-  valid.push_back ((Configuration_t (3) << 1,0,0.5).finished ());
-  valid.push_back ((Configuration_t (3) << 1,0,-0.5).finished ());
-  valid.push_back ((Configuration_t (3) << 1,0,1).finished ());
-  valid.push_back ((Configuration_t (3) << 1,0,-1).finished ());
-  for (std::list<Configuration_t>::const_iterator it = valid.begin();
-      it != valid.end (); ++it) {
-    BOOST_MESSAGE ("Config " << it->transpose ());
-    f (value, *it);
-    BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
-    BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero (),
-        "(I - phi * phi^+) * G =\n" << value.segment<6> (nbC).transpose());
-    BOOST_CHECK_MESSAGE ((value.segment<nbCH> (0).array () > -Eigen::NumTraits<value_type>::dummy_precision()).all(),
-        "Contact forces =\n" << value.segment<nbC> (0).transpose());
-    fH (valueH, *it);
-    BOOST_CHECK_MESSAGE (valueH.segment<6> (nbCH).isZero (),
-        "(I - phi * phi^+) * G =\n" << valueH.segment<6> (nbCH).transpose());
-    BOOST_CHECK_MESSAGE ((valueH.segment<nbCH> (0).array () > -Eigen::NumTraits<value_type>::dummy_precision()).all(),
-        "Contact forces =\n" << valueH.segment<nbCH> (0).transpose());
-  }
-
-  BOOST_MESSAGE ("Starting invalid");
-  invalid.push_back ((Configuration_t (3) << 0,1,0.5).finished ());
-  invalid.push_back ((Configuration_t (3) << 1,0,2.5).finished ());
-  invalid.push_back ((Configuration_t (3) << 1,0,-1.5).finished ());
-  for (std::list<Configuration_t>::const_iterator it = invalid.begin();
-      it != invalid.end (); ++it) {
-    BOOST_MESSAGE ("Config " << it->transpose ());
-    f (value, *it);
-    BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
-    BOOST_CHECK_MESSAGE (!value.segment<6> (nbC).isZero ()
-        || (value.segment<nbC> (0).array () < - Eigen::NumTraits<value_type>::dummy_precision()).any(),
-        "Should not be stable:\n"
-        "(I - phi * phi^+) * G =\n" << value.segment<6> (nbC).transpose()
-        << "\nContact forces =\n" << value.segment<nbC> (0).transpose()
-        << "\nJoint transform:\n" << slider->currentTransformation ());
-
-    fH (valueH, *it);
-    BOOST_CHECK_MESSAGE (!valueH.segment<6> (nbCH).isZero ()
-        || (valueH.segment<nbCH> (0).array () < - Eigen::NumTraits<value_type>::dummy_precision()).any(),
-        "Should not be stable:\n"
-        "(I - phi * phi^+) * G =\n" << valueH.segment<6> (nbCH).transpose()
-        << "\nContact forces =\n" << valueH.segment<nbCH> (0).transpose()
-        << "\nJoint transform:\n" << slider->currentTransformation ());
-  }
+  f.phi().invalidate ();
+  f.phi().computeValue ();
+  f.phi().computeSVD ();
+  Amap = f.phi().value();
+  solution.noalias() = f.phi().svd().solve (-StaticStability::Gravity);
+  qp.reset();
+  qp.setHessianType (REFER_NAMESPACE_QPOASES HST_IDENTITY);
+  REFER_NAMESPACE_QPOASES returnValue status =
+    // qp.init (NULL, g.data(), A.data(), lb.data(), ub.data(), lbA, lbA, nWSR, 0);
+    qp.init (NULL, g.data(), A.data(), lb.data(), 0, lbA, lbA, nWSR, 0,
+        solution.data());
+  // qp.printProperties ();
+  // qp.printOptions ();
+  // BOOST_MESSAGE ("G:\n" << gmap);
+  std::cout << "A:\n" << A << "\n";
+  qp.getPrimalSolution (solution.data());
+  qp.getDualSolution (dual.data());
+  return status;
 }
+
+const static size_t NUMBER_JACOBIAN_CALCULUS = 5;
+const static double HESSIAN_MAXIMUM_COEF = 1e1;
+const static double DQ_MAX = 1e-2;
+const static size_t MAX_NB_ERROR = 5;
 
 BOOST_AUTO_TEST_CASE (static_stability_phi) {
   DevicePtr_t device = createRobot ();
@@ -394,13 +357,13 @@ BOOST_AUTO_TEST_CASE (static_stability_phi) {
   StaticStability& f  (*fptr);
   const std::size_t nbC = 8;
   vector_t value (f.outputSize ());
-  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
-  std::list <Configuration_t> valid, invalid;
 
   const double sqr2 = sqrt(2);
   const double invsr2 = 1/sqr2;
-  Configuration_t center(3); center << 1,0,0;
-  vector_t FCenter (nbC); FCenter << 0,0,0,0,0,0,1,1; FCenter /= 2;
+  Configuration_t center(3); center << 0,1,0.5;
+  vector_t FCenter (nbC); FCenter << 0,0,1,1,0,0,1,1; FCenter /= 4;
+  Configuration_t c67(3); c67 << 1,0,0;
+  vector_t F67 (nbC); F67 << 0,0,0,0,0,0,0.5,0.5;
   Configuration_t point2(3); point2 << -invsr2, invsr2,sqr2;
   vector_t F2 (nbC); F2.setZero(); F2[2]=1;
   Configuration_t point3(3); point3 <<  invsr2, invsr2,sqr2;
@@ -410,29 +373,126 @@ BOOST_AUTO_TEST_CASE (static_stability_phi) {
   Configuration_t point7(3); point7 <<  1, 0, 1;
   vector_t F7 (nbC); F7.setZero(); F7[7]=1;
 
-  f (value, center);
-  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
-  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
-  BOOST_CHECK_MESSAGE ((f.phi().value() * FCenter + StaticStability::Gravity).isZero (),
-      "Residual is:\n" << f.phi().value() * FCenter);
-  f (value, point2);
-  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
-  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
-  BOOST_CHECK_MESSAGE ((f.phi().value() * F2 + StaticStability::Gravity).isZero (),
-      "Residual is:\n" << f.phi().value() * F2);
-  f (value, point3);
-  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
-  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
-  BOOST_CHECK_MESSAGE ((f.phi().value() * F3 + StaticStability::Gravity).isZero (),
-      "Residual is:\n" << f.phi().value() * F3);
-  f (value, point6);
-  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
-  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
-  BOOST_CHECK_MESSAGE ((f.phi().value() * F6 + StaticStability::Gravity).isZero (),
-      "Residual is:\n" << f.phi().value() * F6);
-  f (value, point7);
-  BOOST_CHECK_MESSAGE ((value.segment (0,nbC).array() >= 0).all(), "No positive solution found:\n" << value);
-  BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero(), "No solution found:\n" << value);
-  BOOST_CHECK_MESSAGE ((f.phi().value() * F7 + StaticStability::Gravity).isZero (),
-      "Residual is:\n" << f.phi().value() * F7);
+  REFER_NAMESPACE_QPOASES QProblem qp (nbC, 6, REFER_NAMESPACE_QPOASES HST_IDENTITY);
+  // qp.setPrintLevel (REFER_NAMESPACE_QPOASES PL_HIGH);
+  vector_t solution (nbC);
+  vector_t dual (nbC + 6);
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, center, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << center.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, c67, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << c67.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, point2, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << point2.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, point3, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << point3.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+}
+
+BOOST_AUTO_TEST_CASE (static_stability_jacobian) {
+  DevicePtr_t device = createRobot ();
+  BOOST_REQUIRE (device);
+  JointPtr_t rot = device->getJointByName ("_rz");
+  JointPtr_t slider = device->getJointByName ("slider");
+
+  Configuration_t c (3);
+  c << 1, 0, 0;
+  device->currentConfiguration (c);
+  device->computeForwardKinematics ();
+
+  StaticStabilityPtr_t fptr = createStaticStabilityHard4 (device, device->rootJoint());
+  StaticStability& f  (*fptr);
+  const std::size_t nbC = 8;
+  vector_t value (f.outputSize ());
+  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
+
+  const double sqr2 = sqrt(2);
+  const double invsr2 = 1/sqr2;
+  Configuration_t center(3); center << 0,1,0.5;
+  vector_t FCenter (nbC); FCenter << 0,0,1,1,0,0,1,1; FCenter /= 4;
+  Configuration_t c67(3); c67 << 1,0,0;
+  vector_t F67 (nbC); F67 << 0,0,0,0,0,0,0.5,0.5;
+  Configuration_t point2(3); point2 << -invsr2, invsr2,sqr2;
+  vector_t F2 (nbC); F2.setZero(); F2[2]=1;
+  Configuration_t point3(3); point3 <<  invsr2, invsr2,sqr2;
+  vector_t F3 (nbC); F3.setZero(); F3[3]=1;
+  Configuration_t point6(3); point6 << -1, 0, 1;
+  vector_t F6 (nbC); F6.setZero(); F6[6]=1;
+  Configuration_t point7(3); point7 <<  1, 0, 1;
+  vector_t F7 (nbC); F7.setZero(); F7[7]=1;
+
+  REFER_NAMESPACE_QPOASES QProblem qp (nbC, 6, REFER_NAMESPACE_QPOASES HST_IDENTITY);
+  // qp.setPrintLevel (REFER_NAMESPACE_QPOASES PL_HIGH);
+  vector_t solution (nbC);
+  vector_t dual (nbC + 6);
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, center, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << center.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, c67, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << c67.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, point2, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << point2.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+
+  BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
+      solve (device, point3, nbC, f, qp, solution, dual),
+      "QP problem could not be solved");
+  BOOST_MESSAGE ("Configuration : " << point3.transpose());
+  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 }

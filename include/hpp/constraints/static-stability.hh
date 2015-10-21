@@ -22,25 +22,52 @@
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
 # include <hpp/constraints/tools.hh>
+# include <hpp/constraints/convex-hull.hh>
 
 # include "hpp/constraints/fwd.hh"
+# include "hpp/constraints/config.hh"
+# include "hpp/constraints/deprecated.hh"
 
 namespace hpp {
   namespace constraints {
     class HPP_CONSTRAINTS_DLLAPI Triangle {
       public:
         /// Represent a triangle.
-        Triangle (const fcl::Vec3f& p0, const fcl::Vec3f& p1, const fcl::Vec3f& p2):
+        Triangle (const fcl::Vec3f& p0, const fcl::Vec3f& p1, const fcl::Vec3f& p2,
+            JointPtr_t joint = NULL):
+          P0_ (p0), P1_ (p1), P2_ (p2), joint_ (joint),
           p0_ (p0), p1_ (p1), p2_ (p2)
         {
           init ();
+          recompute ();
         }
 
-        Triangle (const fcl::TriangleP& t):
+        Triangle (const fcl::TriangleP& t, const JointPtr_t& joint = NULL):
+          P0_ (t.a), P1_ (t.b), P2_ (t.c), joint_ (joint),
           p0_ (t.a), p1_ (t.b), p2_ (t.c)
-      {
-        init ();
-      }
+        {
+          init ();
+          recompute ();
+        }
+
+        // Copy constructor
+        Triangle (const Triangle& t) :
+          P0_ (t.P0_), P1_ (t.P1_), P2_ (t.P2_), joint_ (t.joint_),
+          p0_ (t.P0_), p1_ (t.P1_), p2_ (t.P2_)
+        {
+          init ();
+          recompute ();
+        }
+
+        void updateToCurrentTransform () const
+        {
+          if (joint_ == NULL) return;
+          const Transform3f& M = joint_->currentTransformation ();
+          p0_ = M.transform (P0_);
+          p1_ = M.transform (P1_);
+          p2_ = M.transform (P2_);
+          recompute ();
+        }
 
         /// Intersection with a line defined by a point and a vector.
         inline fcl::Vec3f intersection (const fcl::Vec3f& A, const fcl::Vec3f& u) const {
@@ -106,6 +133,11 @@ namespace hpp {
 	os << "triangle: (" << p0_ << "," << p1_ << "," << p2_ << ")";
 	return os;
       }
+
+        /// The position in the joint frame and the joint
+        fcl::Vec3f P0_, P1_, P2_, C_;
+        JointPtr_t joint_;
+
       private:
         /// Return the distance between the point A and the segment
         /// [P, v] oriented by u.
@@ -123,6 +155,11 @@ namespace hpp {
 
         void init ()
         {
+          C_ = ( P0_ + P1_ + P2_ ) / 3;
+        }
+
+        void recompute () const
+        {
           n_ = (p1_ - p0_).cross (p2_ - p0_);
           assert (!n_.isZero ());
           n_.normalize ();
@@ -138,17 +175,15 @@ namespace hpp {
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
         }
 
-        fcl::Vec3f p0_, p1_, p2_, n_, c_;
+        /// The positions and vectors in the global frame
+        mutable fcl::Vec3f p0_, p1_, p2_, n_, c_;
         /// n_i is the vector of norm 1 perpendicular to
         /// P_{i+1}P_i and n_.
-        fcl::Vec3f n0_, n1_, n2_, nxn0_;
-        fcl::Transform3f M_;
+        mutable fcl::Vec3f n0_, n1_, n2_, nxn0_;
+        mutable fcl::Transform3f M_;
     };
-    std::ostream& operator<< (std::ostream& os, const Triangle& t)
-    {
-      os << t;
-      return os;
-    }
+    std::ostream& operator<< (std::ostream& os, const Triangle& t);
+
     /// \addtogroup constraints
     /// \{
 
@@ -169,18 +204,26 @@ namespace hpp {
         static StaticStabilityGravityPtr_t create (
             const DevicePtr_t& robot);
 
+        /// Use addObject(const ConvexHull&) instead.
         /// Add a triangle to the object contact surface
         /// \param t triangle,
         /// \param joint Joint to which the triangle is attached.
         void addObjectTriangle (const fcl::TriangleP& t,
-				const JointPtr_t& joint);
+				const JointPtr_t& joint)
+          HPP_CONSTRAINTS_DEPRECATED;
 
+        /// Use addFloor(const ConvexHull&) instead.
         /// Add a triangle to the floor contact surface
         /// \param t triangle,
         /// joint Joint to which the triangle is attached if the contact surface
         ///       belongs to a robot.
         void addFloorTriangle (const fcl::TriangleP& t,
-			       const JointPtr_t& joint);
+			       const JointPtr_t& joint)
+          HPP_CONSTRAINTS_DEPRECATED;
+
+        void addObject (const ConvexHull& t);
+
+        void addFloor (const ConvexHull& t);
 
       private:
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
@@ -188,16 +231,18 @@ namespace hpp {
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
         void computeInternalJacobian (ConfigurationIn_t argument) const;
 
-        void selectTriangles () const;
+        void selectConvexHulls () const;
 
         DevicePtr_t robot_;
         RelativeTransformationPtr_t relativeTransformation_;
 
-        typedef std::vector <std::pair <Triangle, JointPtr_t> > Triangles;
-        /// Triangles with coordinates expressed in joint frame.
-        Triangles objectTriangles_;
-        /// Triangles with coordinates expressed in world frame.
-        Triangles floorTriangles_;
+        typedef std::vector <ConvexHull> ConvexHulls_t;
+        /// ConvexHulls_t with coordinates expressed in joint frame.
+        ConvexHulls_t objectConvexHulls_;
+        mutable ConvexHulls_t::const_iterator object_;
+        /// ConvexHulls_t with coordinates expressed in world frame.
+        ConvexHulls_t floorConvexHulls_;
+        mutable ConvexHulls_t::const_iterator floor_;
         mutable bool isInside_;
         mutable vector_t result_;
         mutable matrix_t jacobian_;
@@ -276,7 +321,7 @@ namespace hpp {
             const Contacts_t& contacts,
             const CenterOfMassComputationPtr_t& com);
 
-        const MatrixOfExpressions<>& phi () {
+        MatrixOfExpressions<>& phi () {
           return phi_;
         }
 
@@ -285,13 +330,30 @@ namespace hpp {
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
 
+        static void findBoundIndex (vectorIn_t u, vectorIn_t v, 
+            value_type& lambdaMin, size_type* iMin,
+            value_type& lambdaMax, size_type* iMax);
+
+        /// Return false if uMinus.isZero(), i which case v also zero (not computed).
+        bool computeUminusAndV (vectorIn_t u, vectorOut_t uMinus,
+            vectorOut_t v) const;
+
+        void computeVDot (vectorIn_t uMinus, vectorIn_t S,
+            matrixIn_t uDot, matrixOut_t uMinusDot, matrixOut_t vDot) const;
+
+        void computeLambdaDot (vectorIn_t u, vectorIn_t v, const std::size_t i0,
+            matrixIn_t uDot, matrixIn_t vDot, vectorOut_t lambdaDot) const;
+
         DevicePtr_t robot_;
         Contacts_t contacts_;
         CenterOfMassComputationPtr_t com_;
 
-        mutable MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> phi_;
-        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> p1mp2s_;
-        mutable std::vector <CalculusBaseAbstract<>::Ptr_t> n1mn2s_;
+        typedef MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> MoE_t;
+
+        mutable MoE_t phi_;
+        mutable vector_t u_, uMinus_, v_;
+        mutable matrix_t uDot_, uMinusDot_, vDot_;
+        mutable vector_t lambdaDot_; 
     };
     /// \}
   } // namespace constraints

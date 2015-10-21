@@ -22,6 +22,7 @@
 #include "hpp/constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
+#include <hpp/model/eigen.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
 namespace hpp {
@@ -81,6 +82,9 @@ namespace hpp {
     {
       public:
         typedef boost::shared_ptr <CalculusBaseAbstract> Ptr_t;
+        typedef ValueType ValueType_t;
+        typedef JacobianType JacobianType_t;
+
         virtual const ValueType& value () const = 0;
         virtual const JacobianType& jacobian () const = 0;
         virtual void computeValue () = 0;
@@ -753,6 +757,50 @@ namespace hpp {
         CenterOfMassComputationPtr_t comc_;
     };
 
+    class JointFrame : public CalculusBase <JointFrame, Eigen::Matrix<value_type, 6, 1>, Eigen::Matrix<value_type, 6, Eigen::Dynamic> >
+    {
+      public:
+        typedef CalculusBase <JointFrame, ValueType_t, JacobianType_t > Parent_t;
+
+        JointFrame () {}
+
+        JointFrame (const Parent_t& other) :
+          Parent_t (other),
+          joint_ (static_cast <const JointFrame&>(other).joint_)
+        {}
+
+        JointFrame (const JointFrame& jf) :
+          Parent_t (jf), joint_ (jf.joint ())
+        {}
+
+        JointFrame (const JointPtr_t& joint) :
+          joint_ (joint)
+        {
+          assert (joint_ != NULL);
+        }
+
+        const JointPtr_t& joint () const {
+          return joint_;
+        }
+        void impl_value () {
+          const fcl::Transform3f& t = joint_->currentTransformation ();
+          for (int i = 0; i < 3; ++i) this->value_[i] = t.getTranslation ()[i];
+          double theta;
+          computeLog (this->value_.segment <3> (3), theta, t.getRotation ());
+          //for (int i = 0; i < 4; ++i) this->value_[i+4] = t.getQuatRotation ()[i];
+        }
+        void impl_jacobian () {
+          const JointJacobian_t& j (joint_->jacobian ());
+          this->jacobian_ = j;
+        }
+
+      protected:
+        JointPtr_t joint_;
+
+      public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
+
     /// Matrix having Expression elements
     template <typename ValueType = eigen::vector3_t, typename JacobianType = JacobianMatrix>
     class MatrixOfExpressions :
@@ -772,12 +820,14 @@ namespace hpp {
         typedef CalculusBase <MatrixOfExpressions, Value_t, Jacobian_t > Parent_t;
         typedef CalculusBaseAbstract <ValueType, JacobianType> Element_t;
         typedef typename Element_t::Ptr_t ElementPtr_t;
+        typedef Eigen::JacobiSVD <Value_t> SVD_t;
 
         MatrixOfExpressions (const Eigen::Ref<const Value_t>& value,
             const Eigen::Ref<const Jacobian_t>& jacobian) :
           Parent_t (value, jacobian),
           nRows_ (0), nCols_ (0),
-          svd_ (value.rows(), value.cols(), Eigen::ComputeThinU | Eigen::ComputeThinV)
+          svd_ (value.rows(), value.cols(), Eigen::ComputeFullU | Eigen::ComputeFullV),
+          piValid_ (false), svdValid_ (false)
         {}
 
         MatrixOfExpressions (const Parent_t& other) :
@@ -785,7 +835,9 @@ namespace hpp {
           nRows_ (static_cast <const MatrixOfExpressions&>(other).nRows_),
           nCols_ (static_cast <const MatrixOfExpressions&>(other).nCols_),
           elements_ (static_cast <const MatrixOfExpressions&>(other).elements_),
-          svd_ (static_cast <const MatrixOfExpressions&>(other).svd ())
+          svd_ (static_cast <const MatrixOfExpressions&>(other).svd_),
+          piValid_ (static_cast <const MatrixOfExpressions&>(other).piValid_),
+          svdValid_ (static_cast <const MatrixOfExpressions&>(other).svdValid_)
         {
         }
 
@@ -793,7 +845,9 @@ namespace hpp {
           Parent_t (matrix),
           nRows_ (matrix.nRows_), nCols_ (matrix.nCols_),
           elements_ (matrix.elements_),
-          svd_ (matrix.svd())
+          svd_ (matrix.svd_),
+          piValid_ (matrix.piValid_),
+          svdValid_ (matrix.svdValid_)
         {
         }
 
@@ -852,29 +906,42 @@ namespace hpp {
         inline const PseudoInvJacobian_t& pinvJacobian () const {
           return pij_;
         }
-        void computePseudoInverse () {
+        void computeSVD () {
+          if (svdValid_) return;
           this->computeValue ();
           svd_.compute (this->value_);
-          Eigen::VectorXd singularValues_inv = svd_.singularValues ();
-          for (typename Value_t::Index i=0; i < singularValues_inv.rows(); ++i) {
-            if (i < svd_.rank ())
-              singularValues_inv(i)=1.0/singularValues_inv[i];
-            else
-              singularValues_inv(i)=0;
-          }
-          pi_ = svd_.matrixV () * singularValues_inv.asDiagonal () * svd_.matrixU ().transpose();
+          svdValid_ = true;
+        }
+        void computePseudoInverse () {
+          if (piValid_) return;
+          this->computeValue ();
+          this->computeSVD();
+          pi_.resize (this->value_.cols(), this->value_.rows());
+          hpp::model::pseudoInverse <SVD_t> (svd_, pi_);
+          piValid_ = true;
         }
         void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
           this->computeJacobian ();
           computePseudoInverse ();
-          Jacobian_t cache (this->jacobian_.rows(), elements_[0][0]->jacobian().cols());
-          jacobianTimes (pi_ * rhs, cache);
-          pij_ = - pi_ * cache;
-          cache.resize (this->value_.cols(), elements_[0][0]->jacobian().cols());
-          jacobianTransposeTimes (rhs - this->value_ * pi_ * rhs, cache);
-          pij_ += (pi_ * pi_.transpose()) * cache;
-          jacobianTransposeTimes (pi_.transpose() * pi_ * rhs , cache);
-          pij_ += (Jacobian_t::Identity (pi_.rows(), this->value_.cols()) - pi_ * this->value_) * cache;
+          const std::size_t nbDof = elements_[0][0]->jacobian().cols();
+          const std::size_t inSize = this->value_.cols();
+          const vector_t piTrhs = svd_.solve (rhs);
+          assert (pi_.rows () == inSize);
+
+          Jacobian_t cache (this->jacobian_.rows(), nbDof);
+          jacobianTimes (piTrhs, cache);
+          pij_.noalias() = - pi_ * cache;
+          cache.resize (inSize, nbDof);
+
+          pkInv_.resize (pi_.cols(), pi_.cols());
+          hpp::model::projectorOnKernelOfInv <SVD_t> (svd_, pkInv_, true);
+          jacobianTransposeTimes (pkInv_ * rhs, cache);
+          pij_.noalias() += (pi_ * pi_.transpose()) * cache;
+
+          jacobianTransposeTimes (pi_.transpose() * piTrhs , cache);
+          pk_.resize (inSize, inSize);
+          hpp::model::projectorOnKernel <SVD_t> (svd_, pk_, true);
+          pij_.noalias() += pk_ * cache;
         }
 
         void jacobianTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
@@ -887,7 +954,8 @@ namespace hpp {
               elements_[i][j]->computeJacobian ();
               assert (nr == elements_[i][j]->jacobian().rows());
               nc = elements_[i][j]->jacobian().cols();
-              cache.middleRows (r,nr) += this->jacobian_.block (r, c, nr, nc) * rhs[j];
+              cache.middleRows (r,nr).noalias() +=
+                this->jacobian_.block (r, c, nr, nc) * rhs[j];
               c += nc;
             }
             r += nr;
@@ -918,15 +986,19 @@ namespace hpp {
           for (std::size_t i = 0; i < nRows_; ++i)
             for (std::size_t j = 0; j < nCols_; ++j)
               elements_[i][j]->invalidate ();
+          piValid_ = false;
+          svdValid_ = false;
         }
 
         std::size_t nRows_, nCols_;
         std::vector <std::vector <ElementPtr_t> > elements_;
 
       private:
-        Eigen::JacobiSVD <Value_t> svd_;
+        SVD_t svd_;
+        matrix_t pkInv_, pk_;
         PseudoInv_t pi_;
         PseudoInvJacobian_t pij_;
+        bool piValid_, svdValid_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
