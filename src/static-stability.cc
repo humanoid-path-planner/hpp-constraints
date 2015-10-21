@@ -245,8 +245,9 @@ namespace hpp {
       u_.noalias() = phi_.svd().solve (G);
 
       if (computeUminusAndV (u_, uMinus_, v_)) {
-        value_type lambda, unused_lMax; size_type iMax, iMin;
-        findBoundIndex (u_, v_, lambda, &iMin, unused_lMax, &iMax);
+        // value_type lambda, unused_lMax; size_type iMax, iMin;
+        // findBoundIndex (u_, v_, lambda, &iMin, unused_lMax, &iMax);
+        value_type lambda = 1;
 
         result.segment (0, contacts_.size()) = u_ + lambda * v_;
       } else {
@@ -279,16 +280,21 @@ namespace hpp {
         S.diagonal () = 1 * (u_.array () >= 0).select
           (0, - vector_t::Ones (u_.size()));
 
-        value_type lambda, unused_lMax; size_type iMax, iMin;
-        findBoundIndex (u_, v_, lambda, &iMin, unused_lMax, &iMax);
-        // value_type lambda = 1;
+        // value_type lambda, unused_lMax; size_type iMax, iMin;
+        // findBoundIndex (u_, v_, lambda, &iMin, unused_lMax, &iMax);
+        // if (lambda < Eigen::NumTraits <value_type>::dummy_precision())
+          // return;
+        value_type lambda = 1;
 
         computeVDot (uMinus_, S.diagonal(), uDot_, uMinusDot_, vDot_);
 
-        computeLambdaDot (u_, v_, iMin, uDot_, vDot_, lambdaDot_);
+        // computeLambdaDot (u_, v_, iMin, uDot_, vDot_, lambdaDot_);
+
+        // jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias ()
+          // += lambda * vDot_ + v_ * lambdaDot_.transpose ();
 
         jacobian.block (0, 0, contacts_.size(), robot_->numberDof()).noalias ()
-          += lambda * vDot_ + v_ * lambdaDot_.transpose ();
+          += lambda * vDot_;
       }
 
       phi_.jacobianTimes (u_,
