@@ -237,12 +237,9 @@ namespace hpp {
         RelativeTransformationPtr_t relativeTransformation_;
 
         typedef std::vector <ConvexShape> ConvexShapes_t;
-        /// ConvexShapes_t with coordinates expressed in joint frame.
         ConvexShapes_t objectConvexShapes_;
-        mutable ConvexShapes_t::const_iterator object_;
-        /// ConvexShapes_t with coordinates expressed in world frame.
         ConvexShapes_t floorConvexShapes_;
-        mutable ConvexShapes_t::const_iterator floor_;
+
         mutable bool isInside_;
         mutable vector_t result_;
         mutable matrix_t jacobian_;
