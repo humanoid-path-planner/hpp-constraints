@@ -22,7 +22,7 @@
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
 # include <hpp/constraints/tools.hh>
-# include <hpp/constraints/convex-hull.hh>
+# include <hpp/constraints/convex-shape.hh>
 
 # include "hpp/constraints/fwd.hh"
 # include "hpp/constraints/config.hh"
@@ -204,7 +204,7 @@ namespace hpp {
         static StaticStabilityGravityPtr_t create (
             const DevicePtr_t& robot);
 
-        /// Use addObject(const ConvexHull&) instead.
+        /// Use addObject(const ConvexShape&) instead.
         /// Add a triangle to the object contact surface
         /// \param t triangle,
         /// \param joint Joint to which the triangle is attached.
@@ -212,7 +212,7 @@ namespace hpp {
 				const JointPtr_t& joint)
           HPP_CONSTRAINTS_DEPRECATED;
 
-        /// Use addFloor(const ConvexHull&) instead.
+        /// Use addFloor(const ConvexShape&) instead.
         /// Add a triangle to the floor contact surface
         /// \param t triangle,
         /// joint Joint to which the triangle is attached if the contact surface
@@ -221,9 +221,9 @@ namespace hpp {
 			       const JointPtr_t& joint)
           HPP_CONSTRAINTS_DEPRECATED;
 
-        void addObject (const ConvexHull& t);
+        void addObject (const ConvexShape& t);
 
-        void addFloor (const ConvexHull& t);
+        void addFloor (const ConvexShape& t);
 
       private:
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
@@ -231,18 +231,18 @@ namespace hpp {
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
         void computeInternalJacobian (ConfigurationIn_t argument) const;
 
-        void selectConvexHulls () const;
+        void selectConvexShapes () const;
 
         DevicePtr_t robot_;
         RelativeTransformationPtr_t relativeTransformation_;
 
-        typedef std::vector <ConvexHull> ConvexHulls_t;
-        /// ConvexHulls_t with coordinates expressed in joint frame.
-        ConvexHulls_t objectConvexHulls_;
-        mutable ConvexHulls_t::const_iterator object_;
-        /// ConvexHulls_t with coordinates expressed in world frame.
-        ConvexHulls_t floorConvexHulls_;
-        mutable ConvexHulls_t::const_iterator floor_;
+        typedef std::vector <ConvexShape> ConvexShapes_t;
+        /// ConvexShapes_t with coordinates expressed in joint frame.
+        ConvexShapes_t objectConvexShapes_;
+        mutable ConvexShapes_t::const_iterator object_;
+        /// ConvexShapes_t with coordinates expressed in world frame.
+        ConvexShapes_t floorConvexShapes_;
+        mutable ConvexShapes_t::const_iterator floor_;
         mutable bool isInside_;
         mutable vector_t result_;
         mutable matrix_t jacobian_;

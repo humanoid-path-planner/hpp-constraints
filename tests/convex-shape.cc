@@ -14,12 +14,12 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE ConvexHull
+#define BOOST_TEST_MODULE ConvexShape
 #include <boost/test/included/unit_test.hpp>
 
-#include "hpp/constraints/convex-hull.hh"
+#include "hpp/constraints/convex-shape.hh"
 
-using hpp::constraints::ConvexHull;
+using hpp::constraints::ConvexShape;
 
 BOOST_AUTO_TEST_CASE (triangle)
 {
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE (triangle)
   pts.push_back (p0);
   pts.push_back (p1);
   pts.push_back (p2);
-  ConvexHull t (pts);
+  ConvexShape t (pts);
 
   std::vector <fcl::Vec3f> ptsIn, ptsOut;
   ptsIn.push_back (p0);

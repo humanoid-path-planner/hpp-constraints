@@ -66,23 +66,23 @@ namespace hpp {
     void StaticStabilityGravity::addObjectTriangle (const fcl::TriangleP& t,
 						    const JointPtr_t& joint)
     {
-      addObject (ConvexHull (t, joint));
+      addObject (ConvexShape (t, joint));
     }
 
     void StaticStabilityGravity::addFloorTriangle (const fcl::TriangleP& t,
 						   const JointPtr_t& joint)
     {
-      addFloor (ConvexHull (t, joint));
+      addFloor (ConvexShape (t, joint));
     }
 
-    void StaticStabilityGravity::addObject (const ConvexHull& t)
+    void StaticStabilityGravity::addObject (const ConvexShape& t)
     {
-      objectConvexHulls_.push_back (t);
+      objectConvexShapes_.push_back (t);
     }
 
-    void StaticStabilityGravity::addFloor (const ConvexHull& t)
+    void StaticStabilityGravity::addFloor (const ConvexShape& t)
     {
-      floorConvexHulls_.push_back (t);
+      floorConvexShapes_.push_back (t);
     }
 
 
@@ -91,7 +91,7 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
-      selectConvexHulls ();
+      selectConvexShapes ();
       (*relativeTransformation_) (result_, argument);
       result [0] = result_ [0];
       result [1] = result_ [1];
@@ -110,7 +110,7 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      selectConvexHulls ();
+      selectConvexShapes ();
       relativeTransformation_->jacobian (jacobian_, argument);
     }
 
@@ -137,18 +137,18 @@ namespace hpp {
       }
     }
 
-    void StaticStabilityGravity::selectConvexHulls () const
+    void StaticStabilityGravity::selectConvexShapes () const
     {
-      ConvexHulls_t::const_iterator object;
-      ConvexHulls_t::const_iterator floor;
+      ConvexShapes_t::const_iterator object;
+      ConvexShapes_t::const_iterator floor;
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
-      for (ConvexHulls_t::const_iterator o_it = objectConvexHulls_.begin ();
-          o_it != objectConvexHulls_.end (); ++o_it) {
+      for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
+          o_it != objectConvexShapes_.end (); ++o_it) {
         o_it->updateToCurrentTransform ();
         const fcl::Vec3f& globalOC_ = o_it->center ();
-        for (ConvexHulls_t::const_iterator f_it = floorConvexHulls_.begin ();
-            f_it != floorConvexHulls_.end (); ++f_it) {
+        for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
+            f_it != floorConvexShapes_.end (); ++f_it) {
           f_it->updateToCurrentTransform ();
           value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
                      dn = f_it->normal ().dot (globalOC_ - f_it->center ());

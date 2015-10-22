@@ -32,7 +32,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/tools.hh
-  include/hpp/constraints/convex-hull.hh
+  include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/contact-model.hh
   include/hpp/constraints/symbolic-function.hh
   include/hpp/constraints/orientation.hh

@@ -20,7 +20,7 @@
 #include "hpp/constraints/config.hh"
 #include "hpp/constraints/fwd.hh"
 
-#include "hpp/constraints/convex-hull.hh"
+#include "hpp/constraints/convex-shape.hh"
 
 namespace hpp {
   namespace constraints {
@@ -157,11 +157,11 @@ namespace hpp {
         // Returns a list a points where the forces are applied.
         ForceDatas_t forcePoints (const AbstractSurface* other) const;
 
-        // Create a structure like hpp::constraints::Triangle
-        const ConvexHull& convexHull () const;
+        // Get the underlying convex shape
+        const ConvexShape& convexShape () const;
 
       private:
-        ConvexHull ch_;
+        ConvexShape ch_;
     };
 
     // Returns a constraint ensuring a null velocity between the surface

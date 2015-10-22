@@ -28,7 +28,7 @@
 namespace hpp {
   namespace constraints {
     /// Return the closest point to point P, on a segment line \f$ A + t*v, t \in [0,1] \f$.
-    /// \param P PA where P is the point to 
+    /// \param P PA where P is the point to
     /// \param A the origin the segment line
     /// \param v vector presenting the segment line
     /// \param[out] B the closest point
@@ -43,7 +43,7 @@ namespace hpp {
       else               B = A + c1 / c2 * v;
     }
 
-    class HPP_CONSTRAINTS_DLLAPI ConvexHull
+    class HPP_CONSTRAINTS_DLLAPI ConvexShape
     {
       public:
         /// Represent a convex hull
@@ -53,21 +53,21 @@ namespace hpp {
         /// \note There is no convexity check yet. The order is important:
         ///       The normal is parallel to (pts[1] - pts[0]).cross (pts[2] - pts[1])
         ///       The normal to the segment in the plane are directed outward.
-        ///             (pts[i+1] - pts[i]).cross (normalToConvexHull)
-        ConvexHull (const std::vector <vector3_t>& pts, JointPtr_t joint = NULL):
+        ///             (pts[i+1] - pts[i]).cross (normalToConvexShape)
+        ConvexShape (const std::vector <vector3_t>& pts, JointPtr_t joint = NULL):
           Pts_ (pts), joint_ (joint)
         {
           init ();
         }
 
-        ConvexHull (const fcl::TriangleP& t, const JointPtr_t& joint = NULL):
+        ConvexShape (const fcl::TriangleP& t, const JointPtr_t& joint = NULL):
           Pts_ (triangleToPoints (t)), joint_ (joint)
         {
           init ();
         }
 
         // Copy constructor
-        ConvexHull (const ConvexHull& t) :
+        ConvexShape (const ConvexShape& t) :
           Pts_ (t.Pts_), joint_ (t.joint_)
         {
           init ();

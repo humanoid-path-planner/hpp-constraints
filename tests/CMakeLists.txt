@@ -46,7 +46,7 @@ ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-jacobians FALSE)
 ADD_TESTCASE (triangles FALSE)
-ADD_TESTCASE (convex-hull FALSE)
+ADD_TESTCASE (convex-shape FALSE)
 ADD_TESTCASE (symbolic-calculus FALSE)
 ADD_TESTCASE (simplex-solver FALSE)
 ADD_TESTCASE (static-stability FALSE)
