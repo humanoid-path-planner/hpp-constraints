@@ -52,8 +52,7 @@ namespace hpp {
     {
       // TODO: Add ability to put weights on DOF
       hpp::model::difference (robot_, argument, goal_, diff_);
-      result [0] = 0.5 *
-        mask_.select (diff_, vector_t::Zero (diff_.size())).squaredNorm ();
+      result [0] = 0.5 * mask_.select (diff_, 0).squaredNorm ();
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
@@ -61,7 +60,7 @@ namespace hpp {
     {
       hpp::model::difference (robot_, argument, goal_, diff_);
       jacobian.leftCols (robot_->numberDof ()) =
-        mask_.select (diff_, vector_t::Zero (diff_.size())).transpose ();
+        mask_.select (diff_, 0).transpose ();
     }
   } // namespace constraints
 } // namespace hpp
