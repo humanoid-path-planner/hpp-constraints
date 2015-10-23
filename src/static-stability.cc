@@ -85,7 +85,6 @@ namespace hpp {
       floorConvexShapes_.push_back (t);
     }
 
-
     void StaticStabilityGravity::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);
@@ -93,14 +92,26 @@ namespace hpp {
 
       selectConvexShapes ();
       (*relativeTransformation_) (result_, argument);
-      result [0] = result_ [0];
-      result [1] = result_ [1];
-      result [2] = result_ [2];
-      result [3] = result_ [4];
-      result [4] = result_ [5];
       if (isInside_) {
-	result [1] = 0;
-        result [2] = 0;
+        result [0] = result_ [0];
+        result.segment <2> (1).setZero ();
+      } else {
+        result.segment <3> (0) = result_.segment <3> (0);
+      }
+      switch (contactType_) {
+        case POINT_ON_PLANE:
+          result.segment <2> (3).setZero ();
+          break;
+        case LINE_ON_PLANE:
+          // FIXME: only one rotation should be constrained in that case but
+          // the relative transformation is not aligned properly. The Y-axis
+          // of the reference of "object" should be aligned with the
+          // "floor" line axis (Y-axis) projection onto the plane plane.
+          // result [3] = 0;
+          // result [4] = result_[5];
+        case PLANE_ON_PLANE:
+          result.segment<2> (3) = result_.segment<2> (4);
+          break;
       }
       hppDout (info, "result = " << result.transpose ());
     }
@@ -117,23 +128,26 @@ namespace hpp {
     void StaticStabilityGravity::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
     {
       computeInternalJacobian (argument);
-      jacobian.row (0) = jacobian_.row (0);
-      jacobian.row (1) = jacobian_.row (1);
-      jacobian.row (2) = jacobian_.row (2);
-      jacobian.row (3) = jacobian_.row (4);
-      jacobian.row (4) = jacobian_.row (5);
       if (isInside_) {
 	jacobian.row (0) = jacobian_.row (0);
 	jacobian.row (1).setZero ();
 	jacobian.row (2).setZero ();
-	jacobian.row (3) = jacobian_.row (4);
-	jacobian.row (4) = jacobian_.row (5);
       } else {
-	jacobian.row (0) = jacobian_.row (0);
-	jacobian.row (1) = jacobian_.row (1);
-	jacobian.row (2) = jacobian_.row (2);
-	jacobian.row (3) = jacobian_.row (4);
-	jacobian.row (4) = jacobian_.row (5);
+        jacobian.topRows<3> () = jacobian_.topRows <3> ();
+      }
+      switch (contactType_) {
+        case POINT_ON_PLANE:
+          jacobian.bottomRows<2> ().setZero ();
+          break;
+        case LINE_ON_PLANE:
+          // FIXME: See FIXME of impl_compute
+          // jacobian.row (3).setZero ();
+          // jacobian.row (4) = jacobian_.row (5);
+          throw std::logic_error ("Contact LINE_ON_PLANE: Unimplement feature");
+        case PLANE_ON_PLANE:
+          //             Row: 3 4                     Row:  4 5
+          jacobian.bottomRows<2> () = jacobian_.bottomRows <2> ();
+          break;
       }
     }
 
@@ -163,10 +177,40 @@ namespace hpp {
           }
         }
       }
+      contactType_ = contactType (*object, *floor);
       relativeTransformation_->joint1 (floor->joint_);
       relativeTransformation_->joint2 (object->joint_);
       relativeTransformation_->frame1inJoint1 (floor->positionInJoint ());
       relativeTransformation_->frame2inJoint2 (object->positionInJoint ());
+    }
+
+    StaticStabilityGravity::ContactType StaticStabilityGravity::contactType (
+        const ConvexShape& object, const ConvexShape& floor) const
+    {
+      assert (floor.shapeDimension_ > 0 && object.shapeDimension_);
+      switch (floor.shapeDimension_) {
+        case 1:
+          throw std::logic_error
+            ("Contact on points is currently unimplemented");
+          break;
+        case 2:
+          throw std::logic_error
+            ("Contact on lines is currently unimplemented");
+          break;
+        default:
+          switch (object.shapeDimension_) {
+            case 1:
+              return POINT_ON_PLANE;
+              break;
+            case 2:
+              return LINE_ON_PLANE;
+              break;
+            default:
+              return PLANE_ON_PLANE;
+              break;
+          }
+          break;
+      }
     }
 
     StaticStabilityGravityComplement::StaticStabilityGravityComplement

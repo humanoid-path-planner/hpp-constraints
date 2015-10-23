@@ -226,12 +226,20 @@ namespace hpp {
         void addFloor (const ConvexShape& t);
 
       private:
+        enum ContactType {
+          POINT_ON_PLANE,
+          LINE_ON_PLANE,
+          PLANE_ON_PLANE
+        };
+
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
         void computeInternalJacobian (ConfigurationIn_t argument) const;
 
         void selectConvexShapes () const;
+        ContactType contactType (const ConvexShape& object,
+            const ConvexShape& floor) const;
 
         DevicePtr_t robot_;
         RelativeTransformationPtr_t relativeTransformation_;
@@ -241,6 +249,7 @@ namespace hpp {
         ConvexShapes_t floorConvexShapes_;
 
         mutable bool isInside_;
+        mutable ContactType contactType_;
         mutable vector_t result_;
         mutable matrix_t jacobian_;
     };
