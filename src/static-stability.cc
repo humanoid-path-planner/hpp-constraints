@@ -170,10 +170,8 @@ namespace hpp {
       }
       relativeTransformation_->joint1 (floor->joint_);
       relativeTransformation_->joint2 (object->joint_);
-      relativeTransformation_->frame1inJoint1
-	(inverse (floor->inversePosition ()));
-      relativeTransformation_->frame2inJoint2
-	(inverse (object->inversePosition ()));
+      relativeTransformation_->frame1inJoint1 (floor->positionInJoint ());
+      relativeTransformation_->frame2inJoint2 (object->positionInJoint ());
     }
 
     StaticStabilityGravityComplement::StaticStabilityGravityComplement

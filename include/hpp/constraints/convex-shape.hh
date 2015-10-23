@@ -131,27 +131,49 @@ namespace hpp {
           return maxNegDist;
         }
 
+        /// Return the X axis of the plane in the joint frame
         inline const fcl::Vec3f& planeXaxis () const {
           assert (shapeDimension_ > 2);
-          return   n0_;
+          return Ns_[0];
         }
+        /// Return the Y axis of the plane in the joint frame
+        /// The Y axis is aligned with \f$ Pts_[1] - Pts_[0] \f$
         inline const fcl::Vec3f& planeYaxis () const {
           assert (shapeDimension_ > 2);
-          return nxn0_;
+          return Us_[0];
         }
+
+        /// Return the normal in world frame.
         inline const fcl::Vec3f& normal () const {
           assert (shapeDimension_ > 2);
           return n_;
         }
+        /// Return the center in world frame.
         inline const fcl::Vec3f& center () const { return c_; }
-        /// Transform from world frame coordinate to local frame coordinate
-        inline const fcl::Transform3f& inversePosition () const { return M_; }
+
+        /// Transform of the shape in the joint frame
+        inline const fcl::Transform3f& positionInJoint () const { return MinJoint_; }
+        // \param yaxis vector in world frame to which we should try to align
+        inline void computeAlignedPosition (const fcl::Vec3f& yaxis) const {
+          assert (shapeDimension_ > 2);
+          // Project vector onto the plane
+          fcl::Vec3f yloc = (joint_==NULL) ? yaxis : inverse (joint_->currentTransformation ()).transform(yaxis);
+          fcl::Vec3f yproj = yloc - yloc.dot (N_) * N_;
+          if (yproj.isZero ()) M_ = MinJoint_;
+          else {
+            M_ = fcl::Transform3f (
+                fcl::Matrix3f (N_, yloc, N_.cross (yloc)).transpose (),
+                C_);
+          }
+        }
+        inline const fcl::Transform3f& alignedPositionInJoint () const { return M_; }
 
         /// The position in the joint frame and the joint
         std::vector <vector3_t> Pts_;
         size_t shapeDimension_;
         vector3_t C_, N_;
         std::vector <vector3_t> Ns_, Us_;
+        fcl::Transform3f MinJoint_;
         JointPtr_t joint_;
 
       private:
@@ -229,6 +251,10 @@ namespace hpp {
               break;
           }
 
+          MinJoint_ = fcl::Transform3f (
+              fcl::Matrix3f (N_, Ns_[0], Us_[0]).transpose (),
+              C_);
+
           if (joint_ == NULL) recompute (Transform3f ());
           else                recompute (joint_->currentTransformation ());
         }
@@ -237,18 +263,10 @@ namespace hpp {
         {
           c_ = M.transform (C_);
           n_ = M.getRotation () * (N_);
-          n0_ = M.getRotation () * (Ns_[0]);
-          nxn0_ = M.getRotation () * (Us_[0]);
-          fcl::Matrix3f R (n_, n0_, nxn0_);
-          M_ = fcl::Transform3f (R, - (R * c_) );
-          // M_.setTranslation (- (M_.getRotation () * c_));
-          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (0, i) == n_[i]);
-          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (1, i) == n0_[i]);
-          for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
         }
 
         /// The positions and vectors in the global frame
-        mutable fcl::Vec3f n_, c_, n0_, nxn0_;
+        mutable fcl::Vec3f n_, c_;
         mutable fcl::Transform3f M_;
     };
   } // namespace constraints
