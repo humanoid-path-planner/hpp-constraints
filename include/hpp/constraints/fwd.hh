@@ -21,6 +21,7 @@
 # define HPP_CONSTRAINTS_FWD_HH
 
 # include <hpp/model/fwd.hh>
+# include <hpp/constraints/deprecated.hh>
 
 namespace hpp {
   namespace constraints {
@@ -43,8 +44,8 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativeTransformation);
     HPP_PREDEF_CLASS (StaticStability);
     HPP_PREDEF_CLASS (QPStaticStability);
-    HPP_PREDEF_CLASS (StaticStabilityGravity);
-    HPP_PREDEF_CLASS (StaticStabilityGravityComplement);
+    HPP_PREDEF_CLASS (ConvexShapeMatcher);
+    HPP_PREDEF_CLASS (ConvexShapeMatcherComplement);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
 
     typedef model::ObjectVector_t ObjectVector_t;
@@ -85,14 +86,21 @@ namespace hpp {
     typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
     typedef boost::shared_ptr<RelativeTransformation>
     RelativeTransformationPtr_t;
-    typedef boost::shared_ptr<StaticStabilityGravity>
-      StaticStabilityGravityPtr_t;
-    typedef boost::shared_ptr<StaticStabilityGravityComplement>
-      StaticStabilityGravityComplementPtr_t;
+    typedef boost::shared_ptr<ConvexShapeMatcher>
+      ConvexShapeMatcherPtr_t;
+    typedef boost::shared_ptr<ConvexShapeMatcherComplement>
+      ConvexShapeMatcherComplementPtr_t;
     typedef boost::shared_ptr<StaticStability> StaticStabilityPtr_t;
     typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
     typedef boost::shared_ptr<ConfigurationConstraint>
       ConfigurationConstraintPtr_t;
+
+    typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeMatcher StaticStabilityGravity;
+    typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeMatcherComplement StaticStabilityGravityComplement;
+    typedef HPP_CONSTRAINTS_DEPRECATED
+      ConvexShapeMatcherPtr_t StaticStabilityGravityPtr_t;
+    typedef HPP_CONSTRAINTS_DEPRECATED
+      ConvexShapeMatcherComplementPtr_t StaticStabilityGravityComplementPtr_t;
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

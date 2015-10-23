@@ -17,7 +17,7 @@
 #define BOOST_TEST_MODULE Triangles
 #include <boost/test/included/unit_test.hpp>
 
-#include "hpp/constraints/static-stability.hh"
+#include "hpp/constraints/convex-shape-matcher.hh"
 
 using hpp::constraints::Triangle;
 

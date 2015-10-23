@@ -24,6 +24,7 @@
 #include "hpp/constraints/relative-position.hh"
 #include "hpp/constraints/relative-orientation.hh"
 #include "hpp/constraints/relative-transformation.hh"
+#include "hpp/constraints/convex-shape-matcher.hh"
 #include "hpp/constraints/static-stability.hh"
 #include "hpp/constraints/configuration-constraint.hh"
 #include "hpp/constraints/tools.hh"
@@ -302,7 +303,7 @@ DevicePtr_t createRobot ()
   return robot;
 }
 
-StaticStabilityGravityPtr_t createStaticStability_punctual (DevicePtr_t d, JointPtr_t j)
+ConvexShapeMatcherPtr_t createConvexShapeMatcher_punctual (DevicePtr_t d, JointPtr_t j)
 {
   /** Floor = penta + square
    *     +
@@ -329,15 +330,15 @@ StaticStabilityGravityPtr_t createStaticStability_punctual (DevicePtr_t d, Joint
   std::vector <fcl::Vec3f> point(1, fcl::Vec3f (0,0,0));
   ConvexShape pointCs (point, j);
 
-  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d);
-  StaticStabilityGravity& f = *fptr;
+  ConvexShapeMatcherPtr_t fptr = ConvexShapeMatcher::create (d);
+  ConvexShapeMatcher& f = *fptr;
   f.addObject (pointCs);
   f.addFloor (sCs);
   f.addFloor (pCs);
   return fptr;
 }
 
-StaticStabilityGravityPtr_t createStaticStability_convex (DevicePtr_t d, JointPtr_t j)
+ConvexShapeMatcherPtr_t createConvexShapeMatcher_convex (DevicePtr_t d, JointPtr_t j)
 {
   /** Floor = penta + square
    *     +
@@ -369,15 +370,15 @@ StaticStabilityGravityPtr_t createStaticStability_convex (DevicePtr_t d, JointPt
   trapeze[2] = fcl::Vec3f ( 0.2,-0.1,0); trapeze[3] = fcl::Vec3f (-0.1,-0.1,0);
   ConvexShape tCs (trapeze, j);
 
-  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d);
-  StaticStabilityGravity& f = *fptr;
+  ConvexShapeMatcherPtr_t fptr = ConvexShapeMatcher::create (d);
+  ConvexShapeMatcher& f = *fptr;
   f.addObject (tCs);
   f.addFloor (sCs);
   f.addFloor (pCs);
   return fptr;
 }
 
-StaticStabilityGravityPtr_t createStaticStability_triangle (DevicePtr_t d, JointPtr_t j)
+ConvexShapeMatcherPtr_t createConvexShapeMatcher_triangles (DevicePtr_t d, JointPtr_t j)
 {
   fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
   fcl::Vec3f p[12];
@@ -389,29 +390,8 @@ StaticStabilityGravityPtr_t createStaticStability_triangle (DevicePtr_t d, Joint
                  f2 (p[3],p[4],p[5]),
                  th (p[6],p[7],p[8]),
                  o  (p[9],p[10],p[11]);
-  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d);
-  StaticStabilityGravity& f = *fptr;
-  f.addObjectTriangle (o, j);
-  // f.addFloorTriangle (th, 0x0);
-  // f.addFloorTriangle (f1, 0x0);
-  f.addFloorTriangle (f2, 0x0);
-  return fptr;
-}
-
-StaticStabilityGravityPtr_t createStaticStability_triangles (DevicePtr_t d, JointPtr_t j)
-{
-  fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
-  fcl::Vec3f p[12];
-  p[0] = fcl::Vec3f (-5,-5,0); p[1] = fcl::Vec3f (-5, 5,0); p[2] = fcl::Vec3f ( 5,-5,0);
-  p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[6] = fcl::Vec3f ( 5,-5,0);
-  p[6] = fcl::Vec3f ( 0, 0,1); p[7] = fcl::Vec3f (  1,0,1); p[8] = fcl::Vec3f (0,  1,1);
-  p[9] = fcl::Vec3f ( 0, 0,0); p[10] = fcl::Vec3f (0.1,0,0); p[11] = fcl::Vec3f (0,0.1,0);
-  fcl::TriangleP f1 (p[0],p[1],p[2]),
-                 f2 (p[3],p[4],p[5]),
-                 th (p[6],p[7],p[8]),
-                 o  (p[9],p[10],p[11]);
-  StaticStabilityGravityPtr_t fptr = StaticStabilityGravity::create (d);
-  StaticStabilityGravity& f = *fptr;
+  ConvexShapeMatcherPtr_t fptr = ConvexShapeMatcher::create (d);
+  ConvexShapeMatcher& f = *fptr;
   f.addObjectTriangle (o, j);
   f.addFloorTriangle (th, 0x0);
   f.addFloorTriangle (f1, 0x0);
@@ -445,32 +425,6 @@ BOOST_AUTO_TEST_CASE (triangle) {
   BOOST_CHECK_MESSAGE (std::abs (t.distance (p[4]) + 0.2) < 1e-8, "Distance to triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.distance (p[5]) - 0.5 * std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.distance (t.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
-}
-
-BOOST_AUTO_TEST_CASE (static_stability_triangles) {
-  DevicePtr_t device = createRobot ();
-  JointPtr_t ee1 = device->getJointByName ("LLEG_5");
-  BOOST_REQUIRE (device);
-
-  StaticStabilityGravityPtr_t fptr = createStaticStability_triangles (device, ee1);
-  StaticStabilityGravity& f = *fptr;
-  vector_t value (f.outputSize ());
-  f (value, device->currentConfiguration ());
-  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
-  f.jacobian (j, device->currentConfiguration ());
-}
-
-BOOST_AUTO_TEST_CASE (static_stability_convex) {
-  DevicePtr_t device = createRobot ();
-  JointPtr_t ee1 = device->getJointByName ("LLEG_5");
-  BOOST_REQUIRE (device);
-
-  StaticStabilityGravityPtr_t fptr = createStaticStability_convex (device, ee1);
-  StaticStabilityGravity& f = *fptr;
-  vector_t value (f.outputSize ());
-  f (value, device->currentConfiguration ());
-  matrix_t j (f.outputSize (), f.inputDerivativeSize ());
-  f.jacobian (j, device->currentConfiguration ());
 }
 
 BOOST_AUTO_TEST_CASE (jacobian) {
@@ -541,16 +495,16 @@ BOOST_AUTO_TEST_CASE (jacobian) {
 			      RelativeTransformation::create
 			      ("", device, ee1, ee2, tf1, tf2)));
   functions.push_back ( DFptr (
-        "StaticStabilityGravity triangle",
-        createStaticStability_triangle (device, ee1)
+        "ConvexShapeMatcher triangle",
+        createConvexShapeMatcher_triangles (device, ee1)
       ));
   functions.push_back ( DFptr (
-        "StaticStabilityGravity punctual",
-        createStaticStability_punctual (device, ee1)
+        "ConvexShapeMatcher punctual",
+        createConvexShapeMatcher_punctual (device, ee1)
       ));
   functions.push_back ( DFptr (
-        "StaticStabilityGravity convex",
-        createStaticStability_convex (device, ee1)
+        "ConvexShapeMatcher convex",
+        createConvexShapeMatcher_convex (device, ee1)
       ));
 
   ConfigurationPtr_t q1;
