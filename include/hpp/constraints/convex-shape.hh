@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_CONVEX_HULL_HH
-# define HPP_CONSTRAINTS_CONVEX_HULL_HH
+#ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_HH
+# define HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 
 # include <vector>
 # include <hpp/constraints/differentiable-function.hh>
@@ -46,8 +46,8 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI ConvexShape
     {
       public:
-        /// Represent a convex hull
-        /// \param pts a sequence of points lying in a plane. The convex hull is
+        /// Represent a convex shape
+        /// \param pts a sequence of points lying in a plane. The convex shape is
         ///        obtained by connecting consecutive points (in a circular way)
         ///
         /// \note There is no convexity check yet. The order is important:
@@ -111,9 +111,9 @@ namespace hpp {
           return true;
         }
 
-        /// Return the shortest distance from a point to the hull
-        /// A negative value means the point is inside the hull
-        /// \param A a point already in the plane containing the convex hull
+        /// Return the shortest distance from a point to the shape
+        /// A negative value means the point is inside the shape
+        /// \param A a point already in the plane containing the convex shape
         inline value_type distance (const fcl::Vec3f& A) const {
           assert (shapeDimension_ > 1);
           const value_type inf = std::numeric_limits<value_type>::infinity();
@@ -272,4 +272,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_CONVEX_HULL_HH
+#endif //  HPP_CONSTRAINTS_CONVEX_SHAPE_HH

@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_STATIC_STABILITY_HH
-# define HPP_CONSTRAINTS_STATIC_STABILITY_HH
+#ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_MATCHER_HH
+# define HPP_CONSTRAINTS_CONVEX_SHAPE_MATCHER_HH
 
 # include <vector>
 # include <hpp/constraints/differentiable-function.hh>
@@ -277,7 +277,7 @@ namespace hpp {
       ///
       /// The pair contains two complementary constraints to be used for
       /// manipulation applications.
-      /// \param name name of the static stability constraint,
+      /// \param name name of the ConvexShapeMatcher constraint,
       /// \param constraintName name of the complement constraint,
       /// \param name of the robot.
       static std::pair <ConvexShapeMatcherPtr_t,
@@ -287,7 +287,7 @@ namespace hpp {
 
     protected:
       /// Constructor
-      /// \param name name of the static stability constraint,
+      /// \param name name of the ConvexShapeMatcher constraint,
       /// \param constraintName name of the complement constraint,
       /// \param name of the robot.
       ConvexShapeMatcherComplement (const std::string& name,
@@ -307,4 +307,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_STATIC_STABILITY_HH
+#endif //  HPP_CONSTRAINTS_CONVEX_SHAPE_MATCHER_HH
