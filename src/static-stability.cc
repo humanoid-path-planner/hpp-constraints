@@ -85,6 +85,35 @@ namespace hpp {
       floorConvexShapes_.push_back (t);
     }
 
+    std::vector <StaticStabilityGravity::ForceData>
+      StaticStabilityGravity::computeContactPoints (
+          const value_type& normalMargin) const
+    {
+      std::vector <ForceData> fds;
+      ForceData fd;
+      for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
+          o_it != objectConvexShapes_.end (); ++o_it) {
+        // o_it->updateToCurrentTransform ();
+        const fcl::Vec3f& globalOC_ = o_it->center ();
+        for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
+            f_it != floorConvexShapes_.end (); ++f_it) {
+          // f_it->updateToCurrentTransform ();
+          if (f_it->isInside (globalOC_, f_it->normal ())) {
+            value_type dn = f_it->normal ().dot (globalOC_ - f_it->center ());
+            if (dn < normalMargin) {
+              // TODO: compute which points of the object are inside the floor shape.
+              fd.joint = o_it->joint_;
+              fd.points = o_it->Pts_;
+              fd.normal = f_it->N_;
+              fd.supportJoint = f_it->joint_;
+              fds.push_back (fd);
+            }
+          }
+        }
+      }
+      return fds;
+    }
+
     void StaticStabilityGravity::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);

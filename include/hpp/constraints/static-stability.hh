@@ -192,6 +192,17 @@ namespace hpp {
       public DifferentiableFunction {
       public:
       friend class StaticStabilityGravityComplement;
+
+        /// Represents a contact
+        /// When supportJoint is NULL, the contact is with the environment.
+        /// Otherwise, the contact is between two joints.
+        struct ForceData {
+          JointPtr_t joint;
+          JointPtr_t supportJoint;
+          std::vector<vector3_t> points;
+          vector3_t normal;
+        };
+
         /// Constructor
         /// \param robot the robot the constraints is applied to,
         /// \param com COM of the object in the joint frame.
@@ -225,6 +236,9 @@ namespace hpp {
         void addObject (const ConvexShape& t);
 
         void addFloor (const ConvexShape& t);
+
+        /// Compute the contact points in the last configuration.
+        std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
 
       private:
         enum ContactType {
