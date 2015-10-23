@@ -162,19 +162,19 @@ namespace hpp {
       }
 
       /// Set position of frame 1 in joint 1
-      void frame1inJoint1 (const Transform3f& M) {
+      void frame1InJoint1 (const Transform3f& M) {
 	F1inJ1_ = M;
       }
       /// Get position of frame 1 in joint 1
-      const Transform3f& frame1inJoint1 () const {
+      const Transform3f& frame1InJoint1 () const {
 	return F1inJ1_;
       }
       /// Set position of frame 2 in joint 2
-      void frame2inJoint2 (const Transform3f& M) {
+      void frame2InJoint2 (const Transform3f& M) {
 	F2inJ2_ = M;
       }
       /// Get position of frame 2 in joint 2
-      const Transform3f& frame2inJoint2 () const {
+      const Transform3f& frame2InJoint2 () const {
 	return F2inJ2_;
       }
     protected:

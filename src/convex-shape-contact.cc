@@ -206,8 +206,8 @@ namespace hpp {
       contactType_ = contactType (*object, *floor);
       relativeTransformation_->joint1 (floor->joint_);
       relativeTransformation_->joint2 (object->joint_);
-      relativeTransformation_->frame1inJoint1 (floor->positionInJoint ());
-      relativeTransformation_->frame2inJoint2 (object->positionInJoint ());
+      relativeTransformation_->frame1InJoint1 (floor->positionInJoint ());
+      relativeTransformation_->frame2InJoint2 (object->positionInJoint ());
     }
 
     ConvexShapeContact::ContactType ConvexShapeContact::contactType (
