@@ -45,7 +45,6 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/configuration-constraint.hh
   include/hpp/constraints/static-stability.hh
   include/hpp/constraints/qp-static-stability.hh
-  include/hpp/constraints/simplex-solver.hh
 )
 
 # Activate hpp-util logging if requested

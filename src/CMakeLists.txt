@@ -30,7 +30,6 @@ ADD_LIBRARY(${LIBRARY_NAME}
   configuration-constraint.cc
   static-stability.cc
   qp-static-stability.cc
-  simplex-solver.cc
   )
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)
