@@ -17,6 +17,8 @@
 #ifndef HPP_CONSTRAINTS_CONTACT_HH
 #define HPP_CONSTRAINTS_CONTACT_HH
 
+#include <boost/assign/list_of.hpp>
+
 #include "hpp/constraints/config.hh"
 #include "hpp/constraints/fwd.hh"
 
@@ -43,7 +45,8 @@ namespace hpp {
         typedef std::vector <Point_t> Points_t;
         typedef std::vector <ForceData> ForceDatas_t;
 
-        AbstractSurface (JointPtr_t j) : joint_ (j) {}
+        AbstractSurface (Points_t pts, JointPtr_t j) : 
+          cs_ (pts, j), joint_ (j) {}
 
         virtual Point_t center () const = 0;
 
@@ -79,7 +82,11 @@ namespace hpp {
           return joint_;
         }
 
+        // Get the underlying convex shape
+        const ConvexShape& convexShape () const;
+
       protected:
+        ConvexShape cs_;
         JointPtr_t joint_;
     };
 
@@ -87,7 +94,7 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI PointSurface : public AbstractSurface {
       public:
         PointSurface (Point_t point, JointPtr_t joint = NULL) :
-          AbstractSurface (joint), p_ (point)
+          AbstractSurface (Points_t (1, point), joint), p_ (point)
         {}
 
         Point_t center () const { return p_; }
@@ -109,7 +116,8 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI LineSurface : public AbstractSurface {
       public:
         LineSurface (Point_t p0, Point_t p1, JointPtr_t joint = NULL) :
-          AbstractSurface (joint), p0_ (p0), p1_ (p1)
+          AbstractSurface (boost::assign::list_of (p0)(p1), joint),
+          p0_ (p0), p1_ (p1)
         {
           assert ((p0_ - p1_).isZero ());
         }
@@ -137,31 +145,25 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI FlatSurface : public AbstractSurface {
       public:
         FlatSurface (Points_t pts, JointPtr_t joint = NULL) :
-          AbstractSurface (joint), ch_ (pts, joint)
+          AbstractSurface (pts, joint)
         {}
 
         Point_t normal (const PointSurface* /*other*/) const { return normal(); }
         Point_t normal (const LineSurface*  /*other*/) const { return normal(); }
         Point_t normal (const FlatSurface*  /*other*/) const { return normal(); }
 
-        Point_t center () const { return ch_.C_; }
-        Point_t normal () const { return ch_.N_; }
+        Point_t center () const { return cs_.C_; }
+        Point_t normal () const { return cs_.N_; }
 
-        Point_t tangentX () const { return ch_.Ns_[0]; }
-        Point_t tangentY () const { return ch_.Us_[0]; }
+        Point_t tangentX () const { return cs_.Ns_[0]; }
+        Point_t tangentY () const { return cs_.Us_[0]; }
 
         Point_t project (const Point_t& p) const {
-          return ch_.intersectionLocal (p, ch_.N_);
+          return cs_.intersectionLocal (p, cs_.N_);
         };
 
         // Returns a list a points where the forces are applied.
         ForceDatas_t forcePoints (const AbstractSurface* other) const;
-
-        // Get the underlying convex shape
-        const ConvexShape& convexShape () const;
-
-      private:
-        ConvexShape ch_;
     };
 
     // Returns a constraint ensuring a null velocity between the surface

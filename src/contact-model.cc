@@ -64,9 +64,9 @@ namespace hpp {
     }
 
     AbstractSurface::ForceDatas_t FlatSurface::forcePoints (const AbstractSurface* other) const {
-      ForceDatas_t fds (ch_.Pts_.size());
+      ForceDatas_t fds (cs_.Pts_.size());
       fds[0].j = joint_;
-      fds[0].p = ch_.Pts_;
+      fds[0].p = cs_.Pts_;
       fds[0].n = AbstractSurface::normal (other);
       return fds;
     }
