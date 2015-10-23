@@ -30,6 +30,7 @@
 
 namespace hpp {
   namespace constraints {
+    /// Use class ConvexShape instead
     class HPP_CONSTRAINTS_DLLAPI Triangle {
       public:
         /// Represent a triangle.
@@ -181,7 +182,7 @@ namespace hpp {
         /// P_{i+1}P_i and n_.
         mutable fcl::Vec3f n0_, n1_, n2_, nxn0_;
         mutable fcl::Transform3f M_;
-    };
+    } HPP_CONSTRAINTS_DEPRECATED;
     std::ostream& operator<< (std::ostream& os, const Triangle& t);
 
     /// \addtogroup constraints
