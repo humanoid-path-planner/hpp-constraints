@@ -75,8 +75,7 @@ namespace hpp {
 
         void updateToCurrentTransform () const
         {
-          if (joint_ == NULL) return;
-          recompute (joint_->currentTransformation());
+          if (joint_ != NULL) recompute (joint_->currentTransformation());
         }
 
         /// Intersection with a line defined by a point and a vector.
@@ -93,9 +92,11 @@ namespace hpp {
         /// Check whether the intersection of the line defined by A and u
         /// onto the plane containing the triangle is inside the triangle.
         inline bool isInside (const fcl::Vec3f& A, const fcl::Vec3f& u) const {
+          assert (shapeDimension_ > 2);
           return isInside (intersection (A, u));
         }
         inline bool isInside (const fcl::Vec3f& Ap) const {
+          assert (shapeDimension_ > 2);
           if (joint_ == NULL) return isInsideLocal (Ap);
           fcl::Transform3f M = joint_->currentTransformation ();
           vector3_t Ap_loc = M.inverse ().transform(Ap);
@@ -103,7 +104,8 @@ namespace hpp {
         }
         /// As isInside but consider A as expressed in joint frame.
         inline bool isInsideLocal (const fcl::Vec3f& Ap) const {
-          for (std::size_t i = 0; i < Pts_.size(); ++i) {
+          assert (shapeDimension_ > 2);
+          for (std::size_t i = 0; i < shapeDimension_; ++i) {
             if (Ns_[i].dot (Ap-Pts_[i]) > 0) return false;
           }
           return true;
@@ -113,10 +115,11 @@ namespace hpp {
         /// A negative value means the point is inside the hull
         /// \param A a point already in the plane containing the convex hull
         inline value_type distance (const fcl::Vec3f& A) const {
+          assert (shapeDimension_ > 1);
           const value_type inf = std::numeric_limits<value_type>::infinity();
           value_type minPosDist = inf, maxNegDist = - inf;
           bool outside = false;
-          for (std::size_t i = 0; i < Pts_.size(); ++i) {
+          for (std::size_t i = 0; i < shapeDimension_; ++i) {
             value_type d = dist (A - Pts_[i], Us_[i], Ns_[i]);
             if (d > 0) {
               outside = true;
@@ -128,15 +131,25 @@ namespace hpp {
           return maxNegDist;
         }
 
-        inline const fcl::Vec3f& planeXaxis () const { return   n0_; }
-        inline const fcl::Vec3f& planeYaxis () const { return nxn0_; }
-        inline const fcl::Vec3f& normal () const { return n_; }
+        inline const fcl::Vec3f& planeXaxis () const {
+          assert (shapeDimension_ > 2);
+          return   n0_;
+        }
+        inline const fcl::Vec3f& planeYaxis () const {
+          assert (shapeDimension_ > 2);
+          return nxn0_;
+        }
+        inline const fcl::Vec3f& normal () const {
+          assert (shapeDimension_ > 2);
+          return n_;
+        }
         inline const fcl::Vec3f& center () const { return c_; }
         /// Transform from world frame coordinate to local frame coordinate
         inline const fcl::Transform3f& inversePosition () const { return M_; }
 
         /// The position in the joint frame and the joint
         std::vector <vector3_t> Pts_;
+        size_t shapeDimension_;
         vector3_t C_, N_;
         std::vector <vector3_t> Ns_, Us_;
         JointPtr_t joint_;
@@ -166,28 +179,54 @@ namespace hpp {
 
         void init ()
         {
-          assert (Pts_.size () >= 3 && "At least 3 points are required to "
-              "define a planar convex surface.");
+          shapeDimension_ = Pts_.size ();
 
-          C_.setZero ();
-          for (std::size_t i = 0; i < Pts_.size(); ++i)
-            C_ += Pts_[i];
-          C_ /= Pts_.size();
-          N_ = (Pts_[1] - Pts_[0]).cross (Pts_[2] - Pts_[0]);
-          assert (!N_.isZero ());
-          N_.normalize ();
+          switch (shapeDimension_) {
+            case 0:
+              throw std::logic_error ("Cannot represent an empty shape.");
+              break;
+            case 1:
+              C_ = Pts_[0];
+              // The transformation will be (N_, Ns_[0], Us_[0])
+              // Fill vectors so as to be consistent
+              N_ = vector3_t(1,0,0);
+              Ns_.push_back (vector3_t(0,1,0));
+              Us_.push_back (vector3_t(0,0,1));
+              break;
+            case 2:
+              C_ = (Pts_[0] + Pts_[1])/2;
+              // The transformation will be (N_, Ns_[0], Us_[0])
+              // Fill vectors so as to be consistent
+              Us_.push_back (Pts_[1] - Pts_[0]);
+              Us_[0].normalize ();
+              if (Us_[0][0] != 0) N_ = vector3_t(-Us_[0][1],Us_[0][0],0);
+              else                N_ = vector3_t(0,-Us_[0][2],Us_[0][1]);
+              N_.normalize ();
+              Ns_.push_back (Us_[0].cross (N_));
+              Ns_[0].normalize (); // Should be unnecessary
+              break;
+            default:
+              C_.setZero ();
+              for (std::size_t i = 0; i < shapeDimension_; ++i)
+                C_ += Pts_[i];
+              C_ /= Pts_.size();
+              N_ = (Pts_[1] - Pts_[0]).cross (Pts_[2] - Pts_[1]);
+              assert (!N_.isZero ());
+              N_.normalize ();
 
-          Us_.resize (Pts_.size());
-          Ns_.resize (Pts_.size());
-          for (std::size_t i = 0; i < Pts_.size(); ++i) {
-            Us_[i] = Pts_[(i+1)%Pts_.size()] - Pts_[i];
-            Us_[i].normalize ();
-            Ns_[i] = Us_[i].cross (N_);
-            Ns_[i].normalize ();
-          }
-          for (std::size_t i = 0; i < Pts_.size(); ++i) {
-            assert (Us_[(i+1)%Pts_.size()].dot (Ns_[i]) < 0 &&
-                "The sequence does not define a convex surface");
+              Us_.resize (Pts_.size());
+              Ns_.resize (Pts_.size());
+              for (std::size_t i = 0; i < shapeDimension_; ++i) {
+                Us_[i] = Pts_[(i+1)%shapeDimension_] - Pts_[i];
+                Us_[i].normalize ();
+                Ns_[i] = Us_[i].cross (N_);
+                Ns_[i].normalize ();
+              }
+              for (std::size_t i = 0; i < shapeDimension_; ++i) {
+                assert (Us_[(i+1)%shapeDimension_].dot (Ns_[i]) < 0 &&
+                    "The sequence does not define a convex surface");
+              }
+              break;
           }
 
           if (joint_ == NULL) recompute (Transform3f ());
@@ -196,12 +235,13 @@ namespace hpp {
 
         void recompute (const Transform3f& M) const
         {
-          n_ = M.transform (N_);
           c_ = M.transform (C_);
-          n0_ = M.transform (Ns_[0]);
-          nxn0_ = M.transform (Us_[0]);
-          M_ = fcl::Transform3f (fcl::Matrix3f (n_, n0_, nxn0_));
-          M_.setTranslation (- (M_.getRotation () * c_));
+          n_ = M.getRotation () * (N_);
+          n0_ = M.getRotation () * (Ns_[0]);
+          nxn0_ = M.getRotation () * (Us_[0]);
+          fcl::Matrix3f R (n_, n0_, nxn0_);
+          M_ = fcl::Transform3f (R, - (R * c_) );
+          // M_.setTranslation (- (M_.getRotation () * c_));
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (0, i) == n_[i]);
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (1, i) == n0_[i]);
           for (size_t i = 0; i < 3; i++) assert (M_.getRotation () (2, i) == nxn0_[i]);
