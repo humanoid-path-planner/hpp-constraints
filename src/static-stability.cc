@@ -152,19 +152,14 @@ namespace hpp {
           f_it->updateToCurrentTransform ();
           value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
                      dn = f_it->normal ().dot (globalOC_ - f_it->center ());
-          if (dp < 0) {
-	    isInside_ = true;
-	    dist = dn * dn;
-	  }
-          else {
-            dist = dp*dp + dn * dn;
-	    isInside_ = false;
-	  }
+          if (dp < 0) dist = dn * dn;
+          else        dist = dp*dp + dn * dn;
 
           if (dist < minDist) {
             minDist = dist;
             object = o_it;
             floor = f_it;
+	    isInside_ = (dp < 0);
           }
         }
       }
