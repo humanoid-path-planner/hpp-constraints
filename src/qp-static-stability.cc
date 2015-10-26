@@ -49,7 +49,7 @@ namespace hpp {
       qpOASES::Options options;
       qp_.setOptions( options );
 
-      qp_.setPrintLevel (qpOASES::PL_LOW);
+      qp_.setPrintLevel (qpOASES::PL_NONE);
       phi_.setSize (2,contacts.size());
       PointCom OG (com);
       for (std::size_t i = 0; i < contacts.size(); ++i) {
@@ -129,6 +129,11 @@ namespace hpp {
         if (solveQP (sol) == qpOASES::SUCCESSFUL_RETURN) {
           phi_.jacobianTransposeTimes (dual_.segment <6> (contacts_.size()),
               jacobian.block (6, 0, contacts_.size(), robot_->numberDof()));
+          qpOASES::Bounds b;
+          qp_.getBounds (b);
+          const qpOASES::Indexlist* il = b.getFixed ();
+          for (qpOASES::int_t i = 0; i < il->getLength (); ++i)
+            jacobian.row (6 + il->getNumber (i)).setZero ();
         }
         else {
           // There are no positive solution.
@@ -149,7 +154,7 @@ namespace hpp {
 
       dist.noalias () = getU2 <MoE_t::SVD_t> (phi_.svd()) *
         ( getU2 <MoE_t::SVD_t> (phi_.svd()).adjoint() * Gravity );
-      return dist.squaredNorm () < 1e-8;
+      return dist.squaredNorm () < 1e-6;
     }
 
     inline qpOASES::returnValue QPStaticStability::solveQP
