@@ -18,6 +18,7 @@
 # define HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
 
 # include <hpp/constraints/differentiable-function.hh>
+# include <hpp/constraints/convex-shape-matcher.hh>
 # include <hpp/constraints/static-stability.hh>
 # include <hpp/constraints/tools.hh>
 
@@ -37,13 +38,20 @@ namespace hpp {
 
         typedef StaticStability::Contact_t Contact_t;
         typedef StaticStability::Contacts_t Contacts_t;
+        typedef ConvexShapeMatcher::ForceData ForceData;
 
         /// Constructor
         /// \param robot the robot the constraints is applied to,
-        /// \param joint the joint to which the object is attached,
-        /// \param com COM of the object in the joint frame.
+        /// \param com COM of the robot
         QPStaticStability (const std::string& name, const DevicePtr_t& robot,
             const Contacts_t& contacts,
+            const CenterOfMassComputationPtr_t& com);
+
+        /// Constructor
+        /// \param robot the robot the constraints is applied to,
+        /// \param com COM of the robot
+        QPStaticStability (const std::string& name, const DevicePtr_t& robot,
+            const std::vector <ForceData>& contacts,
             const CenterOfMassComputationPtr_t& com);
 
         static QPStaticStabilityPtr_t create (
@@ -75,7 +83,7 @@ namespace hpp {
         qpOASES::returnValue solveQP (vectorOut_t result) const;
 
         DevicePtr_t robot_;
-        Contacts_t contacts_;
+        std::size_t nbContacts_;
         CenterOfMassComputationPtr_t com_;
 
         typedef MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> MoE_t;

@@ -26,6 +26,17 @@
 
 namespace hpp {
   namespace constraints {
+    namespace {
+      std::size_t forceDatasToNbContacts (
+          const std::vector<ConvexShapeMatcher::ForceData>& fds) {
+        std::size_t nb = 0;
+        for (std::vector<ConvexShapeMatcher::ForceData>::const_iterator
+            it = fds.begin (); it != fds.end (); ++it)
+          nb += it->points.size ();
+        return nb;
+      }
+    }
+
     const Eigen::Matrix <value_type, 6, 1> QPStaticStability::Gravity
       = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-1, 0, 0, 0).finished();
     const Eigen::Matrix <value_type, 6, 1> QPStaticStability::MinusGravity
@@ -37,22 +48,22 @@ namespace hpp {
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
           contacts.size() + 6, name),
       Zeros (new qpOASES::real_t [contacts.size()]), nWSR (20),
-      robot_ (robot), contacts_ (contacts), com_ (com),
-      qp_ (contacts.size(), 6, qpOASES::HST_IDENTITY),
-      phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()),
-          Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,contacts.size()*robot->numberDof())),
-      A_ (new qpOASES::real_t [6*contacts.size()]), Amap_ (A_, 6, contacts.size()),
-      primal_ (vector_t::Zero (contacts.size())), dual_ (vector_t::Zero (6 + contacts.size()))
+      robot_ (robot), nbContacts_ (contacts.size()),
+      com_ (com), qp_ (nbContacts_, 6, qpOASES::HST_IDENTITY),
+      phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
+          Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
+      A_ (new qpOASES::real_t [6*nbContacts_]), Amap_ (A_, 6, nbContacts_),
+      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (6 + nbContacts_))
     {
-      VectorMap_t zeros (Zeros, contacts.size()); zeros.setZero ();
+      VectorMap_t zeros (Zeros, nbContacts_); zeros.setZero ();
 
       qpOASES::Options options;
       qp_.setOptions( options );
 
       qp_.setPrintLevel (qpOASES::PL_NONE);
-      phi_.setSize (2,contacts.size());
+      phi_.setSize (2,nbContacts_);
       PointCom OG (com);
-      for (std::size_t i = 0; i < contacts.size(); ++i) {
+      for (std::size_t i = 0; i < nbContacts_; ++i) {
         PointInJoint OP1 (contacts[i].joint1,contacts[i].point1,robot->numberDof());
         PointInJoint OP2 (contacts[i].joint2,contacts[i].point2,robot->numberDof());
         VectorInJoint n1 (contacts[i].joint1,contacts[i].normal1,robot->numberDof()); 
@@ -60,6 +71,40 @@ namespace hpp {
 
         phi_ (0,i) = CalculusBaseAbstract<>::create (n2);
         phi_ (1,i) = CalculusBaseAbstract<>::create ((OG - OP2) ^ n2);
+      }
+    }
+
+    QPStaticStability::QPStaticStability ( const std::string& name,
+        const DevicePtr_t& robot, const std::vector<ForceData>& contacts,
+        const CenterOfMassComputationPtr_t& com):
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+          forceDatasToNbContacts (contacts) + 6, name),
+      Zeros (new qpOASES::real_t [forceDatasToNbContacts (contacts)]), nWSR (20),
+      robot_ (robot), nbContacts_ (forceDatasToNbContacts (contacts)),
+      com_ (com), qp_ (nbContacts_, 6, qpOASES::HST_IDENTITY),
+      phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
+          Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
+      A_ (new qpOASES::real_t [6*nbContacts_]), Amap_ (A_, 6, nbContacts_),
+      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (6 + nbContacts_))
+    {
+      VectorMap_t zeros (Zeros, nbContacts_); zeros.setZero ();
+
+      qpOASES::Options options;
+      qp_.setOptions( options );
+
+      qp_.setPrintLevel (qpOASES::PL_NONE);
+      phi_.setSize (2,nbContacts_);
+      PointCom OG (com);
+      std::size_t col = 0;
+      for (std::size_t i = 0; i < contacts.size (); ++i) {
+        VectorInJoint n (contacts[i].joint,contacts[i].normal,robot->numberDof()); 
+        for (std::size_t j = 0; j < contacts[i].points.size (); ++j) {
+          PointInJoint OP (contacts[i].joint,contacts[i].points[j],robot->numberDof());
+
+          phi_ (0,col) = CalculusBaseAbstract<>::create (n);
+          phi_ (1,col) = CalculusBaseAbstract<>::create ((OG - OP) ^ n);
+          col++;
+        }
       }
     }
 
@@ -90,18 +135,18 @@ namespace hpp {
       bool hasSol = hasSolution (result.segment <6> (0));
 
       if (hasSol) {
-        if (solveQP (result.segment (6, contacts_.size()))
+        if (solveQP (result.segment (6, nbContacts_))
             == qpOASES::SUCCESSFUL_RETURN)
           return;
         else {
           // There are no positive solution.
-          result.segment (6, contacts_.size ()).noalias () =
+          result.segment (6, nbContacts_).noalias () =
             phi_.svd ().solve (MinusGravity);
         }
       } else {
         // No solution.
         // TODO: Does this introduce a discontinuity ?
-        result.segment (6, contacts_.size ()).noalias () =
+        result.segment (6, nbContacts_).noalias () =
           phi_.svd ().solve (MinusGravity);
       }
     }
@@ -127,8 +172,8 @@ namespace hpp {
 
       if (hasSol) {
         if (solveQP (sol) == qpOASES::SUCCESSFUL_RETURN) {
-          phi_.jacobianTransposeTimes (dual_.segment <6> (contacts_.size()),
-              jacobian.block (6, 0, contacts_.size(), robot_->numberDof()));
+          phi_.jacobianTransposeTimes (dual_.segment <6> (nbContacts_),
+              jacobian.block (6, 0, nbContacts_, robot_->numberDof()));
           qpOASES::Bounds b;
           qp_.getBounds (b);
           const qpOASES::Indexlist* il = b.getFixed ();
@@ -138,12 +183,12 @@ namespace hpp {
         else {
           // There are no positive solution.
           // phi_.computePseudoInverseJacobian (MinusGravity);
-          jacobian.block (6, 0, contacts_.size(), robot_->numberDof())
+          jacobian.block (6, 0, nbContacts_, robot_->numberDof())
             = phi_.pinvJacobian ();
         }
       } else {
         // phi_.computePseudoInverseJacobian (MinusGravity);
-        jacobian.block (6, 0, contacts_.size(), robot_->numberDof()) =
+        jacobian.block (6, 0, nbContacts_, robot_->numberDof()) =
           phi_.pinvJacobian ();
       }
     }
