@@ -561,10 +561,10 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
   typedef DifferentiableFunctionPtr_t DFptr;
   DFptr pos = Position::create (device, ee1, vector3_t (0,0,0),
           vector3_t (0,0,0), identity ());
-  PointInJoint pij (ee1, vector3_t(0,0,0));
-  PointInJoint pij2 (ee2, vector3_t(0,0,0));
-  CalculusBaseAbstract<>::Ptr_t relpos_sb_ptr =
-    CalculusBaseAbstract<>::create ((pij - pij2).rotate (ee1,true));
+  Traits<PointInJoint>::Ptr_t pij  = PointInJoint::create (ee1, vector3_t(0,0,0));
+  Traits<PointInJoint>::Ptr_t pij2 = PointInJoint::create (ee2, vector3_t(0,0,0));
+  Traits<CalculusBaseAbstract<> >::Ptr_t relpos_sb_ptr =
+    JointTranspose (ee1) * (pij - pij2);
   DFptr relpos = RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0));
 
@@ -576,17 +576,17 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
       device->currentConfiguration (*q1);
       device->computeForwardKinematics ();
 
-      pij.invalidate ();
+      pij->invalidate ();
       relpos_sb_ptr->invalidate ();
 
       /// Position
       (*pos) (value, *q1);
-      pij.computeValue ();
-      BOOST_CHECK (pij.value ().isApprox (-value));
+      pij->computeValue ();
+      BOOST_CHECK (pij->value ().isApprox (-value));
       jacobian.setZero ();
       pos->jacobian (jacobian, *q1);
-      pij.computeJacobian ();
-      BOOST_CHECK (pij.jacobian ().isApprox (-jacobian));
+      pij->computeJacobian ();
+      BOOST_CHECK (pij->jacobian ().isApprox (-jacobian));
       // Relative position
       (*relpos) (value, *q1);
       relpos_sb_ptr->computeValue ();

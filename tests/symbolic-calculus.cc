@@ -28,7 +28,7 @@
 #include <hpp/model/configuration.hh>
 #include <hpp/model/object-factory.hh>
 
-#include <hpp/constraints/tools.hh>
+#include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>
 
 using namespace hpp::constraints;
@@ -47,6 +47,8 @@ class PointTesterT : public CalculusBase <PointTesterT<ValueType, JacobianType>,
       
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
+
+    HPP_CONSTRAINTS_CB_CREATE1 (PointTesterT, DataWrapper*)
 
     PointTesterT (DataWrapper* d = NULL) :
       datas (d)
@@ -104,21 +106,22 @@ BOOST_AUTO_TEST_CASE (CrossProductTest) {
   using namespace crossProduct;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
-  PointTester p1 (d1), p2 (d2);
+  Traits<PointTester>::Ptr_t p1 = PointTester::create (d1),
+    p2 = PointTester::create (d2);
   typedef CrossProduct <PointTester, PointTester> CP_t;
-  CP_t cp = p1 ^ p2;
+  Traits<CP_t>::Ptr_t cp = p1 ^ p2;
   Value v;
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
-    cp.invalidate ();
+    cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp.computeValue ();
+    cp->computeValue ();
     value (cfg, v);
     jacobian (cfg, j);
-    BOOST_CHECK (cp.value ().isApprox (v));
-    cp.computeJacobian ();
-    BOOST_CHECK (cp.jacobian ().isApprox (j));
+    BOOST_CHECK (cp->value ().isApprox (v));
+    cp->computeJacobian ();
+    BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
   delete d2;
@@ -157,21 +160,21 @@ BOOST_AUTO_TEST_CASE (DifferenceTest) {
   using namespace difference;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
-  PointTester p1 (d1), p2 (d2);
+  Traits<PointTester>::Ptr_t p1 = PointTester::create (d1), p2 = PointTester::create (d2);
   typedef Difference <PointTester, PointTester> D_t;
-  D_t cp = p1 - p2;
+  Traits<D_t>::Ptr_t cp = p1 - p2;
   Value v;
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
-    cp.invalidate ();
+    cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp.computeValue ();
+    cp->computeValue ();
     value (cfg, v);
     jacobian (cfg, j);
-    BOOST_CHECK (cp.value ().isApprox (v));
-    cp.computeJacobian ();
-    BOOST_CHECK (cp.jacobian ().isApprox (j));
+    BOOST_CHECK (cp->value ().isApprox (v));
+    cp->computeJacobian ();
+    BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
   delete d2;
@@ -209,21 +212,21 @@ BOOST_AUTO_TEST_CASE (SumTest) {
   using namespace sum;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
-  PointTester p1 (d1), p2 (d2);
+  Traits<PointTester>::Ptr_t p1 = PointTester::create (d1), p2 = PointTester::create (d2);
   typedef Sum <PointTester, PointTester> D_t;
-  D_t cp = p1 + p2;
+  Traits<D_t>::Ptr_t cp = p1 + p2;
   Value v;
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
-    cp.invalidate ();
+    cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp.computeValue ();
+    cp->computeValue ();
     value (cfg, v);
     jacobian (cfg, j);
-    BOOST_CHECK (cp.value ().isApprox (v));
-    cp.computeJacobian ();
-    BOOST_CHECK (cp.jacobian ().isApprox (j));
+    BOOST_CHECK (cp->value ().isApprox (v));
+    cp->computeJacobian ();
+    BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
   delete d2;
@@ -258,23 +261,23 @@ BOOST_AUTO_TEST_CASE (ScalarMultiplyTest) {
   using namespace scalarMultiply;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
-  PointTester p1 (d1), p2 (d2);
+  Traits<PointTester>::Ptr_t p1 = PointTester::create (d1), p2 = PointTester::create (d2);
   typedef ScalarMultiply <PointTester> D_t;
   value_type scalar = 3;
-  D_t cp = p1 * scalar;
+  Traits<D_t>::Ptr_t cp = scalar * p1;
   Value v;
   Jacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     cfg[3] = scalar;
-    cp.invalidate ();
+    cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp.computeValue ();
+    cp->computeValue ();
     value (cfg, v);
     jacobian (cfg, j);
-    BOOST_CHECK (cp.value ().isApprox (v));
-    cp.computeJacobian ();
-    BOOST_CHECK (cp.jacobian ().isApprox (j));
+    BOOST_CHECK (cp->value ().isApprox (v));
+    cp->computeJacobian ();
+    BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
   delete d2;
@@ -314,21 +317,21 @@ BOOST_AUTO_TEST_CASE (ScalarProductTest) {
   using namespace scalarProduct;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
-  PointTester p1 (d1), p2 (d2);
+  Traits<PointTester>::Ptr_t p1 = PointTester::create (d1), p2 = PointTester::create (d2);
   typedef ScalarProduct <PointTester, PointTester> SP_t;
-  SP_t sp = p1 * p2;
+  Traits<SP_t>::Ptr_t sp = p1 * p2;
   OutputValue v;
   OutputJacobian j;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
-    sp.invalidate ();
+    sp->invalidate ();
     setWrappers (cfg, d1, d2);
-    sp.computeValue ();
+    sp->computeValue ();
     value (cfg, v);
     jacobian (cfg, j);
-    BOOST_CHECK (v.isApproxToConstant (sp.value ()));
-    sp.computeJacobian ();
-    BOOST_CHECK (sp.jacobian ().isApprox (j));
+    BOOST_CHECK (v.isApproxToConstant (sp->value ()));
+    sp->computeJacobian ();
+    BOOST_CHECK (sp->jacobian ().isApprox (j));
   }
   delete d1;
   delete d2;
@@ -393,19 +396,18 @@ BOOST_AUTO_TEST_CASE (MatrixOfExpTest) {
   using namespace matrixOfExp;
   DataWrapper* d1 = new DataWrapper ();
   DataWrapper* d2 = new DataWrapper ();
-  PointTester p1 (d1), p2 (d2);
+  Traits<PointTester>::Ptr_t p1 = PointTester::create (d1), p2 = PointTester::create (d2);
   typedef MatrixOfExpressions <Value, Jacobian> MoE_t;
-  typedef CalculusBaseAbstract <Value, Jacobian> CBA_t;
   OutputValue v;
   OutputJacobian j;
   RValue rvalue;
   OutputJacobianTimesRValue jout, cache;
   MoE_t moe(v,j);
   moe.setSize (2,2);
-  moe.set(0,0,boost::dynamic_pointer_cast <CBA_t> (CBA_t::create (p1)));
-  moe.set(1,0,CBA_t::create (p1 ^ p2));
-  moe.set(0,1,CBA_t::create (p1 - p2));
-  moe.set(1,1,CBA_t::create (p1 + p2));
+  moe.set(0,0,p1);
+  moe.set(1,0,p1 ^ p2);
+  moe.set(0,1,p1 - p2);
+  moe.set(1,1,p1 + p2);
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     moe.invalidate ();

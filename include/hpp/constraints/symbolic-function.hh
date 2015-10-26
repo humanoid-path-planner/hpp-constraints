@@ -21,8 +21,10 @@
 
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
-# include <hpp/constraints/tools.hh>
+# include <hpp/constraints/symbolic-calculus.hh>
 # include <hpp/constraints/differentiable-function.hh>
+
+# include <hpp/model/device.hh>
 
 namespace hpp {
   namespace constraints {
@@ -30,8 +32,6 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction
     {
       public:
-        //typedef boost::shared_ptr<SymbolicFunction> SymbolicFunctionPtr_t;
-
         typedef boost::shared_ptr<SymbolicFunction> Ptr_t;
         typedef boost::weak_ptr<SymbolicFunction> WkPtr_t;
 
@@ -40,7 +40,7 @@ namespace hpp {
         /// Return a shared pointer to a new instance
         static Ptr_t create (
             const std::string& name, const DevicePtr_t& robot,
-            const typename Expression::Ptr_t expr)
+            const typename Traits<Expression>::Ptr_t expr)
         {
           std::vector <bool> mask (expr->value ().size (), true);
           return create (name, robot, expr, mask);
@@ -49,7 +49,7 @@ namespace hpp {
         /// Return a shared pointer to a new instance
         static Ptr_t create (
             const std::string& name, const DevicePtr_t& robot,
-            const typename Expression::Ptr_t expr,
+            const typename Traits<Expression>::Ptr_t expr,
             std::vector <bool> mask)
         {
           assert (mask.size() == expr->value().size());
@@ -61,7 +61,7 @@ namespace hpp {
         virtual ~SymbolicFunction () throw () {}
 
         SymbolicFunction (const std::string& name, const DevicePtr_t& robot,
-            const typename Expression::Ptr_t expr,
+            const typename Traits<Expression>::Ptr_t expr,
             std::vector <bool> mask) :
           DifferentiableFunction (robot->configSize(), robot->numberDof(), expr->value().size(), name),
           robot_ (robot), expr_ (expr), mask_ (mask) {}
@@ -105,7 +105,7 @@ namespace hpp {
       private:
         WkPtr_t wkPtr_;
         DevicePtr_t robot_;
-        typename Expression::Ptr_t expr_;
+        typename Traits<Expression>::Ptr_t expr_;
         std::vector <bool> mask_;
     }; // class ComBetweenFeet
   } // namespace constraints

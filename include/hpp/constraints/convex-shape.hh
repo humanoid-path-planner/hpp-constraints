@@ -25,6 +25,9 @@
 
 # include "hpp/constraints/fwd.hh"
 
+// This is required by deprecated class Triangle
+# include <hpp/model/joint.hh>
+
 namespace hpp {
   namespace constraints {
     /// Return the closest point to point P, on a segment line \f$ A + t*v, t \in [0,1] \f$.
