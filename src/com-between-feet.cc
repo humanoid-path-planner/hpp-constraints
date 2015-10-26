@@ -89,10 +89,11 @@ namespace hpp {
       u_ = right_ - left_;
       xmxl_ = com_ - left_;
       xmxr_ = com_ - right_;
-      ecrossu_ = (com_ - ((left_ + right_) * 0.5))^(u_);
-      expr_ = RotationMultiply <ECrossU_t> (jointRef_, ecrossu_, true);
-      xmxlDotu_ = CalculusBaseAbstract<value_type, RowJacobianMatrix >::create (xmxl_ * u_);
-      xmxrDotu_ = CalculusBaseAbstract<value_type, RowJacobianMatrix >::create (xmxr_ * u_);
+      ecrossu_ = (com_ - (0.5 * (left_ + right_)))^(u_);
+      // expr_ = RotationMultiply <ECrossU_t> (jointRef_, ecrossu_, true);
+      expr_ = JointTranspose (jointRef_) * ecrossu_;
+      xmxlDotu_ = xmxl_ * u_;
+      xmxrDotu_ = xmxr_ * u_;
       for (int i=0; i<3; i++) pointRef_[i] = pointRef[i];
     }
 
@@ -104,14 +105,14 @@ namespace hpp {
       robot_->computeForwardKinematics ();
       size_t index = 0;
       if (mask_[0]) {
-        com_.invalidate ();
-        com_.computeValue ();
-        result[index++] = (com_.value () - pointRef_)[2];
+        com_->invalidate ();
+        com_->computeValue ();
+        result[index++] = (com_->value () - pointRef_)[2];
       }
       if (mask_[1]) {
-        expr_.invalidate ();
-        expr_.computeValue ();
-        result[index++] = expr_.value ()[2];
+        expr_->invalidate ();
+        expr_->computeValue ();
+        result[index++] = expr_->value ()[2];
       }
       if (mask_[2]) {
         xmxlDotu_->invalidate ();
@@ -132,16 +133,16 @@ namespace hpp {
       robot_->computeForwardKinematics ();
       size_t index = 0;
       if (mask_[0]) {
-        com_.invalidate ();
-        com_.computeJacobian ();
+        com_->invalidate ();
+        com_->computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
-          = com_.jacobian ().row (2);
+          = com_->jacobian ().row (2);
       }
       if (mask_[1]) {
-        expr_.invalidate ();
-        expr_.computeJacobian ();
+        expr_->invalidate ();
+        expr_->computeJacobian ();
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
-          = expr_.jacobian ().row (2);
+          = expr_->jacobian ().row (2);
       }
       if (mask_[2]) {
         xmxlDotu_->invalidate ();

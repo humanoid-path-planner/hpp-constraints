@@ -20,10 +20,13 @@
 # include <vector>
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/tools.hh>
+# include <hpp/constraints/symbolic-calculus.hh>
 
 # include "hpp/constraints/fwd.hh"
 # include "hpp/constraints/config.hh"
 # include "hpp/constraints/deprecated.hh"
+
+# include <hpp/model/joint.hh>
 
 namespace hpp {
   namespace constraints {

@@ -43,15 +43,15 @@ namespace hpp {
       lambdaDot_ (robot->numberDof())
     {
       phi_.setSize (2,contacts.size());
-      PointCom OG (com);
+      Traits<PointCom>::Ptr_t OG = PointCom::create (com);
       for (std::size_t i = 0; i < contacts.size(); ++i) {
-        PointInJoint OP1 (contacts[i].joint1,contacts[i].point1,robot->numberDof());
-        PointInJoint OP2 (contacts[i].joint2,contacts[i].point2,robot->numberDof());
-        VectorInJoint n1 (contacts[i].joint1,contacts[i].normal1,robot->numberDof()); 
-        VectorInJoint n2 (contacts[i].joint2,contacts[i].normal2,robot->numberDof()); 
+        Traits<PointInJoint>::Ptr_t OP2 =
+          PointInJoint::create (contacts[i].joint2,contacts[i].point2,robot->numberDof());
+        Traits<VectorInJoint>::Ptr_t n2 =
+          VectorInJoint::create (contacts[i].joint2,contacts[i].normal2,robot->numberDof()); 
 
-        phi_ (0,i) = CalculusBaseAbstract<>::create (n2);
-        phi_ (1,i) = CalculusBaseAbstract<>::create ((OG - OP2) ^ n2);
+        phi_ (0,i) = n2;
+        phi_ (1,i) = (OG - OP2) ^ n2;
       }
     }
 

@@ -17,11 +17,14 @@
 #ifndef HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
 #define HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
 
+#define HPP_CONSTRAINTS_CB_REF boost::shared_ptr
+#define HPP_CONSTRAINTS_CB_WKREF boost::shared_ptr
+
 #define HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(op, InType, OutType) \
     template < typename RhsType > \
         typename Traits <OutType < RhsType > >::Ptr_t op ( \
             const InType& lhs, \
-            const typename Traits <RhsType>::Ptr_t& rhs) { \
+            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs) { \
           typedef OutType < RhsType> Op_t; \
           return Op_t::create (lhs, rhs); \
         }
@@ -29,13 +32,13 @@
   template < typename RhsType > \
         friend typename Traits <OutType < RhsType > >::Ptr_t op ( \
             const InType& lhs, \
-            const typename Traits <RhsType>::Ptr_t& rhs);
+            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs);
 
 #define HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(op, OutType) \
     template < typename LhsType, typename RhsType > \
         typename Traits <OutType < LhsType, RhsType > >::Ptr_t op ( \
-            const typename Traits <LhsType>::Ptr_t& lhs, \
-            const typename Traits <RhsType>::Ptr_t& rhs) { \
+            const HPP_CONSTRAINTS_CB_REF <LhsType>& lhs, \
+            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs) { \
           typedef OutType < LhsType, RhsType> Op_t; \
           return Op_t::create (lhs, rhs); \
         }
@@ -43,8 +46,8 @@
 #define HPP_CONSTRAINTS_CB_FRIEND_OPERATOR2(op, OutType) \
     template < typename LhsType, typename RhsType > \
         friend typename Traits <OutType < LhsType, RhsType > >::Ptr_t op ( \
-            const typename Traits <LhsType>::Ptr_t& lhs, \
-            const typename Traits <RhsType>::Ptr_t& rhs);
+            const HPP_CONSTRAINTS_CB_REF <LhsType>& lhs, \
+            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs);
 
 #define HPP_CONSTRAINTS_CB_CREATE1(Class, Arg0Type) \
   static typename Traits <Class>::Ptr_t create (Arg0Type arg0) { \
@@ -85,6 +88,7 @@ namespace hpp {
     /// \{
 
     template <typename ValueType, typename JacobianType> class CalculusBaseAbstract;
+    template <typename T> class Traits;
 
     template <typename LhsValue, typename RhsValue> class Expression;
     template <typename LhsValue, typename RhsValue> class CrossProduct;
@@ -97,28 +101,28 @@ namespace hpp {
     typedef Eigen::Matrix <value_type, 1, Eigen::Dynamic> RowJacobianMatrix;
     typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> JacobianMatrix;
 
-    template <typename T>
-      struct Ref {
-        Ref () : t_ (NULL) {}
-        Ref (const T* t) : t_ (t) {}
-        Ref (const Ref& r) : t_ (r.t_) {}
-        T* t_;
-        T* operator-> () { return t_; }
-    };
     template <typename Class>
     struct Traits {
-      // typedef typename boost::shared_ptr <Class> Ptr_t;
-      // typedef typename boost::weak_ptr <Class> WkPtr_t;
-      // typedef Class* Ptr_t;
-      // typedef Class* WkPtr_t;
-      typedef Ref<Class> Ptr_t;
-      typedef Ref<Class> WkPtr_t;
+      typedef HPP_CONSTRAINTS_CB_REF <Class> Ptr_t;
+      typedef HPP_CONSTRAINTS_CB_WKREF <Class> WkPtr_t;
+    };
+    template <> struct Traits<value_type> {
+      typedef value_type Ptr_t;
+      typedef value_type WkPtr_t;
+    };
+    template <> struct Traits<model::Joint> {
+      typedef JointPtr_t Ptr_t;
+      typedef JointPtr_t WkPtr_t;
     };
 
     struct JointTranspose {
       JointTranspose (const JointPtr_t& joint) :
         j_ (joint) {}
       const JointPtr_t j_;
+    };
+    template <> struct Traits<JointTranspose> {
+      typedef JointTranspose Ptr_t;
+      typedef JointTranspose WkPtr_t;
     };
 
     /// Abstract class defining a basic common interface.
@@ -145,12 +149,6 @@ namespace hpp {
         virtual void computeValue () = 0;
         virtual void computeJacobian () = 0;
         virtual void invalidate () = 0;
-
-        // template <typename Type>
-        // static boost::shared_ptr <Type> create (const Type& copy) {
-          // Type* ptr = new Type (copy);
-          // return boost::shared_ptr <Type> (ptr);
-        // }
     };
 
     /// Main abstract class.
@@ -228,15 +226,6 @@ namespace hpp {
       private:
         typename Traits <T>::WkPtr_t  wkPtr_;
 
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR2(operator-, Difference)
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR2(operator+, Sum)
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR2(operator*, ScalarProduct)
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR2(operator^, CrossProduct)
-
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR1(operator^, value_type, ScalarMultiply)
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR1(operator*, JointPtr_t, RotationMultiply)
-        // HPP_CONSTRAINTS_CB_FRIEND_OPERATOR1(operator*, JointTranspose, RotationMultiply)
-
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
@@ -246,7 +235,7 @@ namespace hpp {
     HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(operator*, ScalarProduct)
     HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(operator^, CrossProduct)
 
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator^, value_type, ScalarMultiply)
+    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, value_type, ScalarMultiply)
     HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, JointPtr_t, RotationMultiply)
     HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, JointTranspose, RotationMultiply)
 
@@ -268,7 +257,8 @@ namespace hpp {
           return p;
         }
 
-        static Ptr_t create (const LhsValue& lhs, const RhsValue& rhs) {
+        static Ptr_t create (const typename Traits<LhsValue>::Ptr_t& lhs,
+            const typename Traits<RhsValue>::Ptr_t& rhs) {
           Ptr_t p (new Expression (lhs, rhs));
           p->init (p);
           return p;
@@ -288,7 +278,8 @@ namespace hpp {
           rhs_ (other.rhs()), lhs_ (other.lhs())
         {}
 
-        Expression (const LhsValue& lhs, const RhsValue& rhs):
+        Expression (const typename Traits<LhsValue>::Ptr_t& lhs,
+            const typename Traits<RhsValue>::Ptr_t& rhs):
           rhs_ (rhs), lhs_ (lhs)
         {}
 
@@ -296,9 +287,9 @@ namespace hpp {
           self_ = self;
         }
 
-        RhsValue rhs_;
-        LhsValue lhs_;
-        WkPtr_t self_;
+        typename Traits<RhsValue>::Ptr_t rhs_;
+        typename Traits<LhsValue>::Ptr_t lhs_;
+        typename Traits<Expression>::WkPtr_t self_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -313,7 +304,7 @@ namespace hpp {
         typedef CalculusBase < CrossProduct < LhsValue, RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (CrossProduct, const LhsValue&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (CrossProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         CrossProduct () {}
 
@@ -322,27 +313,27 @@ namespace hpp {
           e_ (static_cast <const CrossProduct&>(other).e_)
         {}
 
-        CrossProduct (const LhsValue& lhs, const RhsValue& rhs):
+        CrossProduct (const typename Traits<LhsValue>::Ptr_t& lhs, const typename Traits<RhsValue>::Ptr_t& rhs):
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void impl_value () {
-          e_->lhs_.computeCrossValue ();
-          e_->rhs_.computeValue ();
-          this->value_ = e_->lhs_.cross () * e_->rhs_.value ();
+          e_->lhs_->computeCrossValue ();
+          e_->rhs_->computeValue ();
+          this->value_ = e_->lhs_->cross () * e_->rhs_->value ();
         }
         void impl_jacobian () {
-          e_->lhs_.computeCrossValue ();
-          e_->rhs_.computeCrossValue ();
-          e_->lhs_.computeJacobian ();
-          e_->rhs_.computeJacobian ();
-          this->jacobian_ = e_->lhs_.cross () * e_->rhs_.jacobian ()
-                          - e_->rhs_.cross () * e_->lhs_.jacobian ();
+          e_->lhs_->computeCrossValue ();
+          e_->rhs_->computeCrossValue ();
+          e_->lhs_->computeJacobian ();
+          e_->rhs_->computeJacobian ();
+          this->jacobian_ = e_->lhs_->cross () * e_->rhs_->jacobian ()
+                          - e_->rhs_->cross () * e_->lhs_->jacobian ();
         }
         void invalidate () {
           Parent_t::invalidate ();
-          e_->rhs_.invalidate ();
-          e_->lhs_.invalidate ();
+          e_->rhs_->invalidate ();
+          e_->lhs_->invalidate ();
         }
 
       protected:
@@ -360,7 +351,7 @@ namespace hpp {
         typedef CalculusBase < ScalarProduct < LhsValue, RhsValue >, value_type, RowJacobianMatrix >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (ScalarProduct, const LhsValue&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (ScalarProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         ScalarProduct () {}
 
@@ -369,27 +360,27 @@ namespace hpp {
           e_ (static_cast <const ScalarProduct&>(other).e_)
         {}
 
-        ScalarProduct (const LhsValue& lhs, const RhsValue& rhs):
+        ScalarProduct (const typename Traits<LhsValue>::Ptr_t& lhs, const typename Traits<RhsValue>::Ptr_t& rhs):
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void impl_value () {
-          e_->lhs_.computeValue ();
-          e_->rhs_.computeValue ();
-          this->value_ = e_->lhs_.value ().dot (e_->rhs_.value ());
+          e_->lhs_->computeValue ();
+          e_->rhs_->computeValue ();
+          this->value_ = e_->lhs_->value ().dot (e_->rhs_->value ());
         }
         void impl_jacobian () {
-          e_->lhs_.computeValue ();
-          e_->rhs_.computeValue ();
-          e_->lhs_.computeJacobian ();
-          e_->rhs_.computeJacobian ();
-          this->jacobian_ = e_->lhs_.value ().transpose () * e_->rhs_.jacobian ()
-                          + e_->rhs_.value ().transpose () * e_->lhs_.jacobian ();
+          e_->lhs_->computeValue ();
+          e_->rhs_->computeValue ();
+          e_->lhs_->computeJacobian ();
+          e_->rhs_->computeJacobian ();
+          this->jacobian_ = e_->lhs_->value ().transpose () * e_->rhs_->jacobian ()
+                          + e_->rhs_->value ().transpose () * e_->lhs_->jacobian ();
         }
         void invalidate () {
           Parent_t::invalidate ();
-          e_->rhs_.invalidate ();
-          e_->lhs_.invalidate ();
+          e_->rhs_->invalidate ();
+          e_->lhs_->invalidate ();
         }
 
       protected:
@@ -407,7 +398,7 @@ namespace hpp {
         typedef CalculusBase < Difference < LhsValue, RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (Difference, const LhsValue&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (Difference, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         Difference () {}
 
@@ -416,24 +407,24 @@ namespace hpp {
           e_ (static_cast <const Difference&>(other).e_)
         {}
 
-        Difference (const LhsValue& lhs, const RhsValue& rhs):
+        Difference (const typename Traits<LhsValue>::Ptr_t& lhs, const typename Traits<RhsValue>::Ptr_t& rhs):
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void impl_value () {
-          e_->lhs_.computeValue ();
-          e_->rhs_.computeValue ();
-          this->value_ = e_->lhs_.value () - e_->rhs_.value ();
+          e_->lhs_->computeValue ();
+          e_->rhs_->computeValue ();
+          this->value_ = e_->lhs_->value () - e_->rhs_->value ();
         }
         void impl_jacobian () {
-          e_->lhs_.computeJacobian ();
-          e_->rhs_.computeJacobian ();
-          this->jacobian_ = e_->lhs_.jacobian () - e_->rhs_.jacobian ();
+          e_->lhs_->computeJacobian ();
+          e_->rhs_->computeJacobian ();
+          this->jacobian_ = e_->lhs_->jacobian () - e_->rhs_->jacobian ();
         }
         void invalidate () {
           Parent_t::invalidate ();
-          e_->rhs_.invalidate ();
-          e_->lhs_.invalidate ();
+          e_->rhs_->invalidate ();
+          e_->lhs_->invalidate ();
         }
 
       protected:
@@ -451,7 +442,7 @@ namespace hpp {
         typedef CalculusBase < Sum < LhsValue, RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (Sum, const LhsValue&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (Sum, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         Sum () {}
 
@@ -460,24 +451,24 @@ namespace hpp {
           e_ (static_cast <const Sum&>(other).e_)
         {}
 
-        Sum (const RhsValue& rhs, const LhsValue& lhs):
+        Sum (const typename Traits<RhsValue>::Ptr_t& rhs, const typename Traits<LhsValue>::Ptr_t& lhs):
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
         void impl_value () {
-          e_->lhs_.computeValue ();
-          e_->rhs_.computeValue ();
-          this->value_ = e_->lhs_.value () + e_->rhs_.value ();
+          e_->lhs_->computeValue ();
+          e_->rhs_->computeValue ();
+          this->value_ = e_->lhs_->value () + e_->rhs_->value ();
         }
         void impl_jacobian () {
-          e_->lhs_.computeJacobian ();
-          e_->rhs_.computeJacobian ();
-          this->jacobian_ = e_->lhs_.jacobian () + e_->rhs_.jacobian ();
+          e_->lhs_->computeJacobian ();
+          e_->rhs_->computeJacobian ();
+          this->jacobian_ = e_->lhs_->jacobian () + e_->rhs_->jacobian ();
         }
         void invalidate () {
           Parent_t::invalidate ();
-          e_->rhs_.invalidate ();
-          e_->lhs_.invalidate ();
+          e_->rhs_->invalidate ();
+          e_->lhs_->invalidate ();
         }
 
       protected:
@@ -495,7 +486,7 @@ namespace hpp {
         typedef CalculusBase < ScalarMultiply < RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (ScalarMultiply, const value_type&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (ScalarMultiply, const typename Traits<value_type>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         ScalarMultiply () {}
 
@@ -504,21 +495,21 @@ namespace hpp {
           e_ (static_cast <const ScalarMultiply&>(other).e_)
         {}
 
-        ScalarMultiply (const value_type& scalar, const RhsValue& rhs):
+        ScalarMultiply (const typename Traits<value_type>::Ptr_t& scalar, const typename Traits<RhsValue>::Ptr_t& rhs):
           e_ (Expression < value_type, RhsValue >::create (scalar, rhs))
         {}
 
         void impl_value () {
-          e_->rhs_.computeValue ();
-          this->value_ = e_->lhs_ * e_->rhs_.value ();
+          e_->rhs_->computeValue ();
+          this->value_ = e_->lhs_ * e_->rhs_->value ();
         }
         void impl_jacobian () {
-          e_->rhs_.computeJacobian ();
-          this->jacobian_ = e_->lhs_ * e_->rhs_.jacobian ();
+          e_->rhs_->computeJacobian ();
+          this->jacobian_ = e_->lhs_ * e_->rhs_->jacobian ();
         }
         void invalidate () {
           Parent_t::invalidate ();
-          e_->rhs_.invalidate ();
+          e_->rhs_->invalidate ();
         }
 
       protected:
@@ -544,42 +535,42 @@ namespace hpp {
           transpose_ (other.transpose_)
         {}
 
-        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const JointPtr_t&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<model::Joint>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
-        // HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const JointTranspose&, const RhsValue&)
+        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<JointTranspose>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
-        // RotationMultiply (const JointTranspose& joint, const RhsValue& rhs)
-          // e_ (Expression < JointPtr_t, RhsValue >::create (joint.j_, rhs)),
-          // transpose_ (true)
-        // {}
+        RotationMultiply (const typename Traits<JointTranspose>::Ptr_t& joint, const typename Traits<RhsValue>::Ptr_t& rhs):
+          e_ (Expression < model::Joint, RhsValue >::create (joint.j_, rhs)),
+          transpose_ (true)
+        {}
 
-        RotationMultiply (const JointPtr_t& joint, const RhsValue& rhs,
+        RotationMultiply (const typename Traits<model::Joint>::Ptr_t& joint, const typename Traits<RhsValue>::Ptr_t& rhs,
             bool transpose = false):
-          e_ (Expression < JointPtr_t, RhsValue >::create (joint, rhs)),
+          e_ (Expression < model::Joint, RhsValue >::create (joint, rhs)),
           transpose_ (transpose)
         {}
 
         void impl_value () {
-          e_->rhs_.computeValue ();
+          e_->rhs_->computeValue ();
           computeRotationMatrix ();
-          this->value_ = R * e_->rhs_.value ();
+          this->value_ = R * e_->rhs_->value ();
         }
         void impl_jacobian () {
-          e_->rhs_.computeJacobian ();
+          e_->rhs_->computeJacobian ();
           computeRotationMatrix ();
-          e_->rhs_.computeCrossValue ();
+          e_->rhs_->computeCrossValue ();
           const JointJacobian_t& J = e_->lhs_->jacobian ();
-          this->jacobian_ = R * (e_->rhs_.cross () * J.bottomRows (3) + e_->rhs_.jacobian ());
+          this->jacobian_ = R * (e_->rhs_->cross () * J.bottomRows (3) + e_->rhs_->jacobian ());
         }
         void invalidate () {
           Parent_t::invalidate ();
-          e_->rhs_.invalidate ();
+          e_->rhs_->invalidate ();
         }
 
       protected:
-        typename Expression < JointPtr_t, RhsValue >::Ptr_t e_;
+        typename Expression < model::Joint, RhsValue >::Ptr_t e_;
 
-        friend class Expression <JointPtr_t, RhsValue>;
+        friend class Expression <model::Joint, RhsValue>;
 
       private:
         void computeRotationMatrix () {
@@ -903,7 +894,7 @@ namespace hpp {
           PseudoInvJacobian_t;
         typedef CalculusBase <MatrixOfExpressions, Value_t, Jacobian_t > Parent_t;
         typedef CalculusBaseAbstract <ValueType, JacobianType> Element_t;
-        typedef typename Element_t::Ptr_t ElementPtr_t;
+        typedef typename Traits<Element_t>::Ptr_t ElementPtr_t;
         typedef Eigen::JacobiSVD <Value_t> SVD_t;
 
         HPP_CONSTRAINTS_CB_CREATE2 (MatrixOfExpressions, const Eigen::Ref<const Value_t>&, const Eigen::Ref<const Jacobian_t>&)

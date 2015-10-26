@@ -108,7 +108,7 @@ namespace hpp {
         mutable Traits<DiffPCPiJ>::Ptr_t xmxl_, xmxr_;
         mutable Traits<DiffPiJPiJ>::Ptr_t u_;
         mutable Traits<ECrossU_t>::Ptr_t ecrossu_;
-        mutable RotationMultiply <ECrossU_t> expr_;
+        mutable Traits<RotationMultiply <ECrossU_t> >::Ptr_t expr_;
         mutable Traits<CalculusBaseAbstract<value_type, RowJacobianMatrix > >::Ptr_t xmxlDotu_, xmxrDotu_;
         std::vector <bool> mask_;
         mutable eigen::matrix3_t cross_;
