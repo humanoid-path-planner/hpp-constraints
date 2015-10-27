@@ -21,7 +21,7 @@
 #include <limits>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
-#include <hpp/model/eigen.hh>
+
 #include "hpp/constraints/tools.hh"
 
 namespace hpp {
@@ -197,8 +197,6 @@ namespace hpp {
 
     inline bool QPStaticStability::hasSolution (vectorOut_t dist) const
     {
-      using namespace hpp::model;
-
       dist.noalias () = getU2 <MoE_t::SVD_t> (phi_.svd()) *
         ( getU2 <MoE_t::SVD_t> (phi_.svd()).adjoint() * Gravity );
       return dist.squaredNorm () < 1e-6;

@@ -3,7 +3,7 @@
 # Author: Joseph Mirabel
 #
 # This file is part of hpp-constraints
-# hpp-model-urdf is free software: you can redistribute it and/or modify
+# hpp-constraints is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -18,7 +18,7 @@
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
 # Make Boost.Test generates the main function in test cases.
-#ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
+ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
 
 # ADD_TESTCASE(NAME)
 # ------------------------
@@ -46,6 +46,7 @@ ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-jacobians FALSE)
 ADD_TESTCASE (triangles FALSE)
+ADD_TESTCASE (svd FALSE)
 ADD_TESTCASE (convex-shape FALSE)
 ADD_TESTCASE (symbolic-calculus FALSE)
 ADD_TESTCASE (static-stability FALSE)

@@ -75,9 +75,9 @@
 #include "hpp/constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
-#include <hpp/model/eigen.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
+#include <hpp/constraints/svd.hh>
 #include <hpp/constraints/tools.hh>
 
 namespace hpp {
@@ -994,7 +994,7 @@ namespace hpp {
           this->computeValue ();
           this->computeSVD();
           pi_.resize (this->value_.cols(), this->value_.rows());
-          hpp::model::pseudoInverse <SVD_t> (svd_, pi_);
+          pseudoInverse <SVD_t> (svd_, pi_);
           piValid_ = true;
         }
         void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
@@ -1011,13 +1011,13 @@ namespace hpp {
           cache.resize (inSize, nbDof);
 
           pkInv_.resize (pi_.cols(), pi_.cols());
-          hpp::model::projectorOnKernelOfInv <SVD_t> (svd_, pkInv_, true);
+          projectorOnKernelOfInv <SVD_t> (svd_, pkInv_, true);
           jacobianTransposeTimes (pkInv_ * rhs, cache);
           pij_.noalias() += (pi_ * pi_.transpose()) * cache;
 
           jacobianTransposeTimes (pi_.transpose() * piTrhs , cache);
           pk_.resize (inSize, inSize);
-          hpp::model::projectorOnKernel <SVD_t> (svd_, pk_, true);
+          projectorOnKernel <SVD_t> (svd_, pk_, true);
           pij_.noalias() += pk_ * cache;
         }
 
