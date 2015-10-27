@@ -17,7 +17,7 @@
 #define BOOST_TEST_MODULE Triangles
 #include <boost/test/included/unit_test.hpp>
 
-#include "hpp/constraints/convex-shape-matcher.hh"
+#include "hpp/constraints/convex-shape-contact.hh"
 
 using hpp::constraints::Triangle;
 

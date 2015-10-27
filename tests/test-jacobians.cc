@@ -24,7 +24,7 @@
 #include "hpp/constraints/relative-position.hh"
 #include "hpp/constraints/relative-orientation.hh"
 #include "hpp/constraints/relative-transformation.hh"
-#include "hpp/constraints/convex-shape-matcher.hh"
+#include "hpp/constraints/convex-shape-contact.hh"
 #include "hpp/constraints/static-stability.hh"
 #include "hpp/constraints/configuration-constraint.hh"
 #include "hpp/constraints/tools.hh"
@@ -303,7 +303,7 @@ DevicePtr_t createRobot ()
   return robot;
 }
 
-ConvexShapeMatcherPtr_t createConvexShapeMatcher_punctual (DevicePtr_t d, JointPtr_t j)
+ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointPtr_t j)
 {
   /** Floor = penta + square
    *     +
@@ -330,15 +330,15 @@ ConvexShapeMatcherPtr_t createConvexShapeMatcher_punctual (DevicePtr_t d, JointP
   std::vector <fcl::Vec3f> point(1, fcl::Vec3f (0,0,0));
   ConvexShape pointCs (point, j);
 
-  ConvexShapeMatcherPtr_t fptr = ConvexShapeMatcher::create (d);
-  ConvexShapeMatcher& f = *fptr;
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
+  ConvexShapeContact& f = *fptr;
   f.addObject (pointCs);
   f.addFloor (sCs);
   f.addFloor (pCs);
   return fptr;
 }
 
-ConvexShapeMatcherPtr_t createConvexShapeMatcher_convex (DevicePtr_t d, JointPtr_t j)
+ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr_t j)
 {
   /** Floor = penta + square
    *     +
@@ -370,15 +370,15 @@ ConvexShapeMatcherPtr_t createConvexShapeMatcher_convex (DevicePtr_t d, JointPtr
   trapeze[2] = fcl::Vec3f ( 0.2,-0.1,0); trapeze[3] = fcl::Vec3f (-0.1,-0.1,0);
   ConvexShape tCs (trapeze, j);
 
-  ConvexShapeMatcherPtr_t fptr = ConvexShapeMatcher::create (d);
-  ConvexShapeMatcher& f = *fptr;
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
+  ConvexShapeContact& f = *fptr;
   f.addObject (tCs);
   f.addFloor (sCs);
   f.addFloor (pCs);
   return fptr;
 }
 
-ConvexShapeMatcherPtr_t createConvexShapeMatcher_triangles (DevicePtr_t d, JointPtr_t j)
+ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, JointPtr_t j)
 {
   fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
   fcl::Vec3f p[12];
@@ -390,8 +390,8 @@ ConvexShapeMatcherPtr_t createConvexShapeMatcher_triangles (DevicePtr_t d, Joint
                  f2 (p[3],p[4],p[5]),
                  th (p[6],p[7],p[8]),
                  o  (p[9],p[10],p[11]);
-  ConvexShapeMatcherPtr_t fptr = ConvexShapeMatcher::create (d);
-  ConvexShapeMatcher& f = *fptr;
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
+  ConvexShapeContact& f = *fptr;
   f.addObjectTriangle (o, j);
   f.addFloorTriangle (th, 0x0);
   f.addFloorTriangle (f1, 0x0);
@@ -495,16 +495,16 @@ BOOST_AUTO_TEST_CASE (jacobian) {
 			      RelativeTransformation::create
 			      ("", device, ee1, ee2, tf1, tf2)));
   functions.push_back ( DFptr (
-        "ConvexShapeMatcher triangle",
-        createConvexShapeMatcher_triangles (device, ee1)
+        "ConvexShapeContact triangle",
+        createConvexShapeContact_triangles (device, ee1)
       ));
   functions.push_back ( DFptr (
-        "ConvexShapeMatcher punctual",
-        createConvexShapeMatcher_punctual (device, ee1)
+        "ConvexShapeContact punctual",
+        createConvexShapeContact_punctual (device, ee1)
       ));
   functions.push_back ( DFptr (
-        "ConvexShapeMatcher convex",
-        createConvexShapeMatcher_convex (device, ee1)
+        "ConvexShapeContact convex",
+        createConvexShapeContact_convex (device, ee1)
       ));
 
   ConfigurationPtr_t q1;

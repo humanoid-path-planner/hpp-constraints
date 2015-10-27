@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/constraints/convex-shape-matcher.hh"
+#include "hpp/constraints/convex-shape-contact.hh"
 
 #include <limits>
 #include <hpp/model/device.hh>
@@ -29,7 +29,7 @@ namespace hpp {
       return t.print (os);
     }
 
-    ConvexShapeMatcher::ConvexShapeMatcher
+    ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
 			      name),
@@ -46,44 +46,44 @@ namespace hpp {
       jacobian_.resize (6, robot->numberDof ());
     }
 
-    ConvexShapeMatcherPtr_t ConvexShapeMatcher::create (
+    ConvexShapeContactPtr_t ConvexShapeContact::create (
         const std::string& name,
         const DevicePtr_t& robot)
     {
-      return ConvexShapeMatcherPtr_t (new ConvexShapeMatcher
+      return ConvexShapeContactPtr_t (new ConvexShapeContact
 					  (name, robot));
     }
 
-    ConvexShapeMatcherPtr_t ConvexShapeMatcher::create
+    ConvexShapeContactPtr_t ConvexShapeContact::create
     (const DevicePtr_t& robot)
     {
-      return create ("ConvexShapeMatcher", robot);
+      return create ("ConvexShapeContact", robot);
     }
 
-    void ConvexShapeMatcher::addObjectTriangle (const fcl::TriangleP& t,
+    void ConvexShapeContact::addObjectTriangle (const fcl::TriangleP& t,
 						    const JointPtr_t& joint)
     {
       addObject (ConvexShape (t, joint));
     }
 
-    void ConvexShapeMatcher::addFloorTriangle (const fcl::TriangleP& t,
+    void ConvexShapeContact::addFloorTriangle (const fcl::TriangleP& t,
 						   const JointPtr_t& joint)
     {
       addFloor (ConvexShape (t, joint));
     }
 
-    void ConvexShapeMatcher::addObject (const ConvexShape& t)
+    void ConvexShapeContact::addObject (const ConvexShape& t)
     {
       objectConvexShapes_.push_back (t);
     }
 
-    void ConvexShapeMatcher::addFloor (const ConvexShape& t)
+    void ConvexShapeContact::addFloor (const ConvexShape& t)
     {
       floorConvexShapes_.push_back (t);
     }
 
-    std::vector <ConvexShapeMatcher::ForceData>
-      ConvexShapeMatcher::computeContactPoints (
+    std::vector <ConvexShapeContact::ForceData>
+      ConvexShapeContact::computeContactPoints (
           const value_type& normalMargin) const
     {
       std::vector <ForceData> fds;
@@ -111,7 +111,7 @@ namespace hpp {
       return fds;
     }
 
-    void ConvexShapeMatcher::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
+    void ConvexShapeContact::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -142,7 +142,7 @@ namespace hpp {
       hppDout (info, "result = " << result.transpose ());
     }
 
-    void ConvexShapeMatcher::computeInternalJacobian
+    void ConvexShapeContact::computeInternalJacobian
     (ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);
@@ -151,7 +151,7 @@ namespace hpp {
       relativeTransformation_->jacobian (jacobian_, argument);
     }
 
-    void ConvexShapeMatcher::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
+    void ConvexShapeContact::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
     {
       computeInternalJacobian (argument);
       if (isInside_) {
@@ -177,7 +177,7 @@ namespace hpp {
       }
     }
 
-    void ConvexShapeMatcher::selectConvexShapes () const
+    void ConvexShapeContact::selectConvexShapes () const
     {
       ConvexShapes_t::const_iterator object;
       ConvexShapes_t::const_iterator floor;
@@ -210,7 +210,7 @@ namespace hpp {
       relativeTransformation_->frame2inJoint2 (object->positionInJoint ());
     }
 
-    ConvexShapeMatcher::ContactType ConvexShapeMatcher::contactType (
+    ConvexShapeContact::ContactType ConvexShapeContact::contactType (
         const ConvexShape& object, const ConvexShape& floor) const
     {
       assert (floor.shapeDimension_ > 0 && object.shapeDimension_);
@@ -239,28 +239,28 @@ namespace hpp {
       }
     }
 
-    ConvexShapeMatcherComplement::ConvexShapeMatcherComplement
+    ConvexShapeContactComplement::ConvexShapeContactComplement
     (const std::string& name, const std::string& complementName,
      const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 3,
 			      complementName),
-      sibling_ (ConvexShapeMatcher::create (name, robot))
+      sibling_ (ConvexShapeContact::create (name, robot))
     {
     }
 
-    std::pair < ConvexShapeMatcherPtr_t,
-		ConvexShapeMatcherComplementPtr_t >
-    ConvexShapeMatcherComplement::createPair
+    std::pair < ConvexShapeContactPtr_t,
+		ConvexShapeContactComplementPtr_t >
+    ConvexShapeContactComplement::createPair
     (const std::string& name, const std::string& complementName,
      const DevicePtr_t& robot)
     {
-      ConvexShapeMatcherComplement* ptr =
-	new ConvexShapeMatcherComplement (name, complementName, robot);
-      ConvexShapeMatcherComplementPtr_t shPtr (ptr);
+      ConvexShapeContactComplement* ptr =
+	new ConvexShapeContactComplement (name, complementName, robot);
+      ConvexShapeContactComplementPtr_t shPtr (ptr);
       return std::make_pair (ptr->sibling_, shPtr);
     }
 
-    void ConvexShapeMatcherComplement::impl_compute
+    void ConvexShapeContactComplement::impl_compute
     (vectorOut_t result, ConfigurationIn_t argument) const
     {
       vector5_t tmp;
@@ -276,7 +276,7 @@ namespace hpp {
       hppDout (info, "result = " << result.transpose ());
     }
 
-    void ConvexShapeMatcherComplement::impl_jacobian
+    void ConvexShapeContactComplement::impl_jacobian
     (matrixOut_t jacobian, ConfigurationIn_t argument) const
     {
       sibling_->computeInternalJacobian (argument);

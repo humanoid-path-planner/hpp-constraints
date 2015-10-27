@@ -28,9 +28,9 @@ namespace hpp {
   namespace constraints {
     namespace {
       std::size_t forceDatasToNbContacts (
-          const std::vector<ConvexShapeMatcher::ForceData>& fds) {
+          const std::vector<ConvexShapeContact::ForceData>& fds) {
         std::size_t nb = 0;
-        for (std::vector<ConvexShapeMatcher::ForceData>::const_iterator
+        for (std::vector<ConvexShapeContact::ForceData>::const_iterator
             it = fds.begin (); it != fds.end (); ++it)
           nb += it->points.size ();
         return nb;

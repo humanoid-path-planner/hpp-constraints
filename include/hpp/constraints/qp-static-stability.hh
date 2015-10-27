@@ -18,7 +18,7 @@
 # define HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
 
 # include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/convex-shape-matcher.hh>
+# include <hpp/constraints/convex-shape-contact.hh>
 # include <hpp/constraints/static-stability.hh>
 # include <hpp/constraints/tools.hh>
 
@@ -38,7 +38,7 @@ namespace hpp {
 
         typedef StaticStability::Contact_t Contact_t;
         typedef StaticStability::Contacts_t Contacts_t;
-        typedef ConvexShapeMatcher::ForceData ForceData;
+        typedef ConvexShapeContact::ForceData ForceData;
 
         /// Constructor
         /// \param robot the robot the constraints is applied to,

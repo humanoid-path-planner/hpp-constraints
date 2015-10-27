@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_MATCHER_HH
-# define HPP_CONSTRAINTS_CONVEX_SHAPE_MATCHER_HH
+#ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
+# define HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
 
 # include <vector>
 # include <hpp/constraints/differentiable-function.hh>
@@ -187,10 +187,10 @@ namespace hpp {
 
     /// \addtogroup constraints
     /// \{
-    class HPP_CONSTRAINTS_DLLAPI ConvexShapeMatcher :
+    class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact :
       public DifferentiableFunction {
       public:
-      friend class ConvexShapeMatcherComplement;
+      friend class ConvexShapeContactComplement;
 
         /// Represents a contact
         /// When supportJoint is NULL, the contact is with the environment.
@@ -205,14 +205,14 @@ namespace hpp {
         /// Constructor
         /// \param robot the robot the constraints is applied to,
         /// \param com COM of the object in the joint frame.
-        ConvexShapeMatcher (const std::string& name,
+        ConvexShapeContact (const std::string& name,
 				const DevicePtr_t& robot);
 
-        static ConvexShapeMatcherPtr_t create (
+        static ConvexShapeContactPtr_t create (
             const std::string& name,
             const DevicePtr_t& robot);
 
-        static ConvexShapeMatcherPtr_t create (
+        static ConvexShapeContactPtr_t create (
             const DevicePtr_t& robot);
 
         /// Use addObject(const ConvexShape&) instead.
@@ -268,8 +268,8 @@ namespace hpp {
         mutable matrix_t jacobian_;
     };
 
-    /// Complement to full transformation constraint of ConvexShapeMatcher
-    class HPP_CONSTRAINTS_DLLAPI ConvexShapeMatcherComplement :
+    /// Complement to full transformation constraint of ConvexShapeContact
+    class HPP_CONSTRAINTS_DLLAPI ConvexShapeContactComplement :
       public DifferentiableFunction
     {
     public:
@@ -277,20 +277,20 @@ namespace hpp {
       ///
       /// The pair contains two complementary constraints to be used for
       /// manipulation applications.
-      /// \param name name of the ConvexShapeMatcher constraint,
+      /// \param name name of the ConvexShapeContact constraint,
       /// \param constraintName name of the complement constraint,
       /// \param name of the robot.
-      static std::pair <ConvexShapeMatcherPtr_t,
-			ConvexShapeMatcherComplementPtr_t >
+      static std::pair <ConvexShapeContactPtr_t,
+			ConvexShapeContactComplementPtr_t >
 	createPair (const std::string& name, const std::string& complementName,
 		    const DevicePtr_t& robot);
 
     protected:
       /// Constructor
-      /// \param name name of the ConvexShapeMatcher constraint,
+      /// \param name name of the ConvexShapeContact constraint,
       /// \param constraintName name of the complement constraint,
       /// \param name of the robot.
-      ConvexShapeMatcherComplement (const std::string& name,
+      ConvexShapeContactComplement (const std::string& name,
 					const std::string& complementName,
 					const DevicePtr_t& robot);
 
@@ -301,10 +301,10 @@ namespace hpp {
       void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument)
 	const;
 
-      ConvexShapeMatcherPtr_t sibling_;
-    }; // class ConvexShapeMatcherComplement
+      ConvexShapeContactPtr_t sibling_;
+    }; // class ConvexShapeContactComplement
     /// \}
   } // namespace constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_CONVEX_SHAPE_MATCHER_HH
+#endif //  HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH

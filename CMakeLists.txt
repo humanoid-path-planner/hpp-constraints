@@ -34,7 +34,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/svd.hh
   include/hpp/constraints/tools.hh
   include/hpp/constraints/convex-shape.hh
-  include/hpp/constraints/convex-shape-matcher.hh
+  include/hpp/constraints/convex-shape-contact.hh
   include/hpp/constraints/symbolic-calculus.hh
   include/hpp/constraints/symbolic-function.hh
   include/hpp/constraints/orientation.hh
