@@ -117,6 +117,13 @@ namespace hpp {
       return QPStaticStabilityPtr_t (new QPStaticStability (name, robot, contacts, com));
     }
 
+    QPStaticStabilityPtr_t QPStaticStability::create ( const std::string& name,
+        const DevicePtr_t& robot, const std::vector <ForceData>& contacts,
+        const CenterOfMassComputationPtr_t& com)
+    {
+      return QPStaticStabilityPtr_t (new QPStaticStability (name, robot, contacts, com));
+    }
+
     QPStaticStabilityPtr_t QPStaticStability::create (const DevicePtr_t& robot,
         const Contacts_t& contacts,
         const CenterOfMassComputationPtr_t& com)
