@@ -19,6 +19,21 @@
 #ifndef HPP_CONSTRAINTS_SVD_HH
 # define HPP_CONSTRAINTS_SVD_HH
 
+# ifdef HPP_DEBUG
+
+#  define HPP_DEBUG_SVDCHECK(svd)                                       \
+  do {                                                                  \
+    value_type SSV = svd.singularValues()(svd.rank()-1);                \
+    if (std::abs (SSV) < 1e-8)                                          \
+      hppDout (warning, "SVD check - low singular value: " << SSV);     \
+  } while (0)
+
+# else // HPP_DEBUG
+
+#  define HPP_DEBUG_SVDCHECK(svd) do { } while (0)
+
+# endif // HPP_DEBUG
+
 # include <hpp/constraints/fwd.hh>
 # include <Eigen/SVD>
 
