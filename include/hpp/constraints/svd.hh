@@ -23,9 +23,12 @@
 
 #  define HPP_DEBUG_SVDCHECK(svd)                                       \
   do {                                                                  \
-    value_type SSV = svd.singularValues()(svd.rank()-1);                \
-    if (std::abs (SSV) < 1e-8)                                          \
-      hppDout (warning, "SVD check - low singular value: " << SSV);     \
+    if (svd.rank () > 0) {                                              \
+      value_type SSV = svd.singularValues()(svd.rank()-1);              \
+      if (std::abs (SSV) < 1e-8) {                                      \
+        hppDout (warning, "SVD check - low singular value: " << SSV);   \
+      }                                                                 \
+    }                                                                   \
   } while (0)
 
 # else // HPP_DEBUG

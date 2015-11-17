@@ -987,6 +987,7 @@ namespace hpp {
           if (svdValid_) return;
           this->computeValue ();
           svd_.compute (this->value_);
+          HPP_DEBUG_SVDCHECK(svd_);
           svdValid_ = true;
         }
         void computePseudoInverse () {

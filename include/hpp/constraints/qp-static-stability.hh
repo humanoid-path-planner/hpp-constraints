@@ -28,11 +28,26 @@
 
 namespace hpp {
   namespace constraints {
-
     /// \addtogroup constraints
     /// \{
+    class HPP_CONSTRAINTS_DLLAPI QPStaticStabilityFeasability :
+      public DifferentiableFunction {
+      public:
+        static QPStaticStabilityFeasabilityPtr_t create (
+            QPStaticStabilityPtr_t stab);
 
-    class QPStaticStability : public DifferentiableFunction {
+      protected:
+        QPStaticStabilityFeasability (QPStaticStabilityPtr_t stab);
+
+      private:
+        void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+
+        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
+
+        QPStaticStabilityPtr_t stab_;
+      };
+
+    class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {
       public:
         static const Eigen::Matrix <value_type, 6, 1> Gravity;
 
@@ -76,8 +91,9 @@ namespace hpp {
         }
 
       private:
-        qpOASES::real_t* Zeros;
         static const Eigen::Matrix <value_type, 6, 1> MinusGravity;
+
+        qpOASES::real_t* Zeros;
         const qpOASES::int_t nWSR;
 
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
@@ -87,6 +103,8 @@ namespace hpp {
         bool hasSolution (vectorOut_t dist) const;
 
         qpOASES::returnValue solveQP (vectorOut_t result) const;
+
+        bool checkQPSol () const;
 
         DevicePtr_t robot_;
         std::size_t nbContacts_;
@@ -100,11 +118,14 @@ namespace hpp {
           > VectorMap_t;
         typedef Eigen::Map <const vector_t> ConstVectorMap_t;
 
+        const RowMajorMatrix_t H_;
         mutable qpOASES::SQProblem qp_;
         mutable MoE_t phi_;
         mutable qpOASES::real_t* A_;
         mutable InvertStorageOrderMap_t Amap_;
         mutable vector_t primal_, dual_;
+
+        friend class QPStaticStabilityFeasability;
     };
     /// \}
   } // namespace constraints
