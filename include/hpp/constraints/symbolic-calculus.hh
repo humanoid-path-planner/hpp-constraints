@@ -75,6 +75,7 @@
 #include "hpp/constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
+#include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
 #include <hpp/constraints/svd.hh>
@@ -852,6 +853,7 @@ namespace hpp {
           joint_ (joint)
         {
           assert (joint_ != NULL);
+          this->jacobian_.resize(6,joint->robot()->numberDof());
         }
 
         const JointPtr_t& joint () const {
@@ -859,14 +861,25 @@ namespace hpp {
         }
         void impl_value () {
           const fcl::Transform3f& t = joint_->currentTransformation ();
-          for (int i = 0; i < 3; ++i) this->value_[i] = t.getTranslation ()[i];
+          fcl::Matrix3f RT (t.getRotation ()); RT.transpose ();
+          for (int i = 0; i < 3; ++i) this->value_[i] = - t.getTranslation ()[i];
           double theta;
-          computeLog (this->value_.segment <3> (3), theta, t.getRotation ());
-          //for (int i = 0; i < 4; ++i) this->value_[i+4] = t.getQuatRotation ()[i];
+          computeLog (this->value_.segment <3> (3), theta, RT);
         }
         void impl_jacobian () {
+          // using namespace hpp::model;
           const JointJacobian_t& j (joint_->jacobian ());
-          this->jacobian_ = j;
+          const fcl::Transform3f& t = joint_->currentTransformation ();
+          eigen::matrix3_t R; hpp::model::toEigen (t.getRotation(), R); R.transposeInPlace();
+          fcl::Matrix3f RT (t.getRotation ()); RT.transpose ();
+          // Compute vector r
+          double theta;
+          eigen::matrix3_t Jlog;
+          computeLog (this->value_.segment <3> (3), theta, RT);
+          assert (theta >= 0);
+          computeJlog (theta, this->value_.segment <3> (3), Jlog);
+          this->jacobian_.topRows <3> () = - j.topRows <3> ();
+          this->jacobian_.bottomRows <3> () = - Jlog * R * j.bottomRows <3> ();
         }
 
       protected:
