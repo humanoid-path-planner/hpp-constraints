@@ -863,27 +863,24 @@ namespace hpp {
           const fcl::Transform3f& t = joint_->currentTransformation ();
           fcl::Matrix3f RT (t.getRotation ()); RT.transpose ();
           for (int i = 0; i < 3; ++i) this->value_[i] = - t.getTranslation ()[i];
-          double theta;
-          computeLog (this->value_.segment <3> (3), theta, RT);
+          computeLog (this->value_.segment <3> (3), theta_, RT);
         }
         void impl_jacobian () {
-          // using namespace hpp::model;
+          computeValue ();
           const JointJacobian_t& j (joint_->jacobian ());
           const fcl::Transform3f& t = joint_->currentTransformation ();
           eigen::matrix3_t R; hpp::model::toEigen (t.getRotation(), R); R.transposeInPlace();
-          fcl::Matrix3f RT (t.getRotation ()); RT.transpose ();
           // Compute vector r
-          double theta;
           eigen::matrix3_t Jlog;
-          computeLog (this->value_.segment <3> (3), theta, RT);
-          assert (theta >= 0);
-          computeJlog (theta, this->value_.segment <3> (3), Jlog);
+          assert (theta_ >= 0);
+          computeJlog (theta_, this->value_.segment <3> (3), Jlog);
           this->jacobian_.topRows <3> () = - j.topRows <3> ();
           this->jacobian_.bottomRows <3> () = - Jlog * R * j.bottomRows <3> ();
         }
 
       protected:
         JointPtr_t joint_;
+        double theta_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
