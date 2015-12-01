@@ -16,50 +16,86 @@
 
 #include <hpp/constraints/differentiable-function.hh>
 
+#include <hpp/model/configuration.hh>
+
 namespace hpp {
   namespace constraints {
       void DifferentiableFunction::finiteDifferenceForward
-        (matrixOut_t jacobian, vectorIn_t x, value_type eps) const
+        (matrixOut_t jacobian, vectorIn_t x,
+         DevicePtr_t robot, value_type eps) const
       {
+        // TODO: When robot is not null, it would be better to iterate over the
+        // joints.
         using std::abs;
 
-        value_type h;
-        size_type n = x.size();
+        size_type n = inputDerivativeSize();
+        vector_t h = vector_t::Zero (inputDerivativeSize ());
         vector_t x_dx = x;
         vector_t f_x   (outputSize()),
                  f_x_dx(outputSize());
         impl_compute (f_x, x);
 
         for (size_type j = 0; j < n; ++j) {
-          h = eps * abs(x[j]);
-          if (h == 0) h = eps;
-          x_dx[j] += h;
+          if (robot) {
+            JointPtr_t jt = robot->getJointAtVelocityRank (j);
+            h[j] = eps * x.segment (jt->rankInConfiguration (),
+                                    jt->configSize ()).norm();
+          }
+          else h[j] = eps * abs(x[j]);
+          if (h[j] == 0) h[j] = eps;
+
+          if (robot) integrate (robot, x, h, x_dx);
+          else x_dx[j] += h[j];
+
           impl_compute (f_x_dx, x_dx);
-          jacobian.col (j) = (f_x_dx - f_x) / h;
+          jacobian.col (j) = (f_x_dx - f_x) / h[j];
+          if (jacobian.col(j).hasNaN ()) {
+            hppDout (error, "Forward finite difference: NaN");
+          }
           x_dx[j] = x[j];
+          h[j] = 0;
+        }
+        if (jacobian.hasNaN ()) {
+          hppDout (error, "Forward finite difference: NaN");
         }
       }
 
       void DifferentiableFunction::finiteDifferenceCentral
-        (matrixOut_t jacobian, vectorIn_t x, value_type eps) const
+        (matrixOut_t jacobian, vectorIn_t x,
+         DevicePtr_t robot, value_type eps) const
       {
         using std::abs;
+        using hpp::model::integrate;
 
-        value_type h;
-        size_type n = x.size();
+        size_type n = inputDerivativeSize();
         vector_t x_dx = x;
+        vector_t h = vector_t::Zero (inputDerivativeSize ());
         vector_t f_x_mdx (outputSize()),
                  f_x_pdx (outputSize());
 
         for (size_type j = 0; j < n; ++j) {
-          h = eps * abs(x[j]);
-          if (h == 0) h = eps;
-          x_dx[j] -= h;
+          if (robot) {
+            JointPtr_t jt = robot->getJointAtVelocityRank (j);
+            h[j] = eps * x.segment (jt->rankInConfiguration (),
+                                    jt->configSize ()).norm();
+          }
+          else h[j] = eps * abs(x[j]);
+          if (h[j] == 0) h[j] = eps;
+
+          if (robot) integrate (robot, x, -h, x_dx);
+          else x_dx[j] -= h[j];
           impl_compute (f_x_mdx, x_dx);
-          x_dx[j] = x[j] + h;
+
+          if (robot) integrate (robot, x, h, x_dx);
+          else x_dx[j] = x[j] + h[j];
           impl_compute (f_x_pdx, x_dx);
-          jacobian.col (j) = (f_x_pdx - f_x_mdx) / (2*h);
+
+          jacobian.col (j) = (f_x_pdx - f_x_mdx) / (2*h[j]);
           x_dx[j] = x[j];
+          h[j] = 0;
+        }
+        if (jacobian.hasNaN ()) {
+          hppDout (error, "Central finite difference: NaN");
         }
       }
   } // namespace constraints
