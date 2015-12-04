@@ -23,7 +23,7 @@ INCLUDE(cmake/boost.cmake)
 SET(PROJECT_NAME hpp-constraints)
 SET(PROJECT_DESCRIPTION
   "Definition of basic geometric constraints for motion planning")
-SET(PROJECT_URL "https://github.com/laas/hpp-constraints")
+SET(PROJECT_URL "https://github.com/humanoid-path-planner/hpp-constraints")
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
