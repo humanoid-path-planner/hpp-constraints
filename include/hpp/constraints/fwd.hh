@@ -44,7 +44,6 @@ namespace hpp {
     HPP_PREDEF_CLASS (RelativeTransformation);
     HPP_PREDEF_CLASS (StaticStability);
     HPP_PREDEF_CLASS (QPStaticStability);
-    HPP_PREDEF_CLASS (QPStaticStabilityFeasability);
     HPP_PREDEF_CLASS (ConvexShapeContact);
     HPP_PREDEF_CLASS (ConvexShapeContactComplement);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
@@ -93,8 +92,6 @@ namespace hpp {
       ConvexShapeContactComplementPtr_t;
     typedef boost::shared_ptr<StaticStability> StaticStabilityPtr_t;
     typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
-    typedef boost::shared_ptr<QPStaticStabilityFeasability>
-      QPStaticStabilityFeasabilityPtr_t;
     typedef boost::shared_ptr<ConfigurationConstraint>
       ConfigurationConstraintPtr_t;
 
