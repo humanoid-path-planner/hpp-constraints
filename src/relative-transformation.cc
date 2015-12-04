@@ -189,21 +189,23 @@ namespace hpp {
       //cross (R2*t2inJ2+t2-t1, cross1_);
       cross (R2*t2inJ2 + t2 - t1, cross1_);
       cross (R2*t2inJ2, cross2_);
+      size_type leftCols = joint1_->jacobian().cols();
+      jacobian_.rightCols (jacobian_.cols() - leftCols).setZero();
       if (joint1_) {
-	jacobian_.topRows <3> () =
+	jacobian_.topRows <3> ().leftCols (leftCols) =
 	  transpose (R1*R1inJ1)*(cross1_*joint1_->jacobian ().bottomRows <3> ()-
 				 cross2_*joint2_->jacobian ().bottomRows <3> ()+
 				 joint2_->jacobian ().topRows <3>()-
 				 joint1_->jacobian ().topRows <3>());
-	jacobian_.bottomRows <3> () =
+	jacobian_.bottomRows <3> ().leftCols (leftCols) =
 	  Jlog_ * transpose (R1*R1inJ1) *
 	  (joint2_->jacobian ().bottomRows <3> () -
 	   joint1_->jacobian ().bottomRows <3> ());
       } else {
-	jacobian_.topRows <3> () =
+	jacobian_.topRows <3> ().leftCols (leftCols) =
 	  transpose (R1inJ1)*(-cross2_*joint2_->jacobian ().bottomRows <3> ()
 			      + joint2_->jacobian ().topRows <3>());
-	jacobian_.bottomRows <3> () =
+	jacobian_.bottomRows <3> ().leftCols (leftCols) =
 	  Jlog_ * transpose (R1inJ1) * (joint2_->jacobian ().bottomRows <3> ());
       }
       size_type index=0;
