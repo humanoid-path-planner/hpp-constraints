@@ -80,6 +80,7 @@
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/tools.hh>
+#include <hpp/constraints/macros.hh>
 
 namespace hpp {
   namespace constraints {

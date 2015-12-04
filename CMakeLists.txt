@@ -31,6 +31,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
   include/hpp/constraints/tools.hh
+  include/hpp/constraints/macros.hh
   include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/convex-shape-contact.hh
   include/hpp/constraints/symbolic-calculus.hh
@@ -52,6 +53,12 @@ SET(${PROJECT_NAME}_HEADERS
 SET (HPP_DEBUG FALSE CACHE BOOL "trigger hpp-util debug output")
 IF (HPP_DEBUG)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_DEBUG")
+ENDIF()
+
+# Activate hpp-util logging if requested
+SET (HPP_CONSTRAINTS_NUMERIC_DEBUG ${HPP_DEBUG} CACHE BOOL "trigger hpp-util debug output")
+IF (HPP_CONSTRAINTS_NUMERIC_DEBUG)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_CONSTRAINTS_NUMERIC_DEBUG")
 ENDIF()
 
 SETUP_PROJECT()
