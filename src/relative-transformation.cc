@@ -190,7 +190,7 @@ namespace hpp {
       //cross (R2*t2inJ2+t2-t1, cross1_);
       cross (R2*t2inJ2 + t2 - t1, cross1_);
       cross (R2*t2inJ2, cross2_);
-      size_type leftCols = joint1_->jacobian().cols();
+      size_type leftCols = joint2_->jacobian().cols();
       jacobian_.rightCols (jacobian_.cols() - leftCols).setZero();
       if (joint1_) {
 	jacobian_.topRows <3> ().leftCols (leftCols) =
