@@ -187,10 +187,59 @@ namespace hpp {
 
     /// \addtogroup constraints
     /// \{
+
+    /** The function returns a relative transformation between the two "closest"
+        convex shapes it contains.
+
+        Two set of convex shapes can be given to this class:
+        \li a set of object contact surfaces, \f$ (o_i)_{i \in I } \f$, which can be in contact with the environment,
+        \li a set of floor contact surfaces, \f$ (f_j)_{j \in J } \f$, which can support objects.
+
+        The distance \f$ d_{i,j} = d (o_i, f_j) \f$ between object surface
+        \f$o_i\f$ and environment surface \f$ f_j \f$ is defined by:
+        \f{equation*}
+           d(i,j)^2 =
+             \left\lbrace \begin{array}{cl}
+               d_{\parallel}^2 + d_{\perp}^2 &, \text{ if } d_{\parallel} > 0 \\
+               d_{\perp}^2                   &, \text{ otherwise}
+             \end{array} \right.
+        \f}
+        where
+        \li \f$P (C_{o_i}, f_j)\f$ is the projection of the center \f$o_i\f$ onto the plane containing \f$ f_j \f$,
+        \li \f$\textbf{n}_{f_j}\f$ is the normal of \f$ f_j \f$,
+        \li \f$d_{\parallel} = d(f_j, P (C_{o_i}, f_j))\f$ is the distance returned by ConvexShape::distance,
+        \li \f$d_{\perp} = \textbf{n}_{f_j}.C_{f_j}P(C_{o_i}, f_j)\f$ is the distance along the normal of \f$ f_j \f$,
+
+        The function first selects the pair \f$(o_i,f_j)\f$ with shortest distance.
+        \f$o_i\f$ is \emph{inside} \f$f_j\f$ if \f$d(i,j) < 0\f$.
+        returns a value that depends on the contact types:
+
+
+        | Contact type   | Inside   | Outside |
+        | -------------- | -------- | ------- |
+        | ConvexShapeContact::POINT_ON_PLANE | \f$(x+m,0,0,0,0)\f$ | \f$(x+m,y,z,0,0)\f$ |
+        | ConvexShapeContact::LINE_ON_PLANE (Unsupported)  | \f$(x+m,0,0,0,rz)\f$ | \f$(x+m,y,z,0,rz)\f$  |
+        | ConvexShapeContact::PLANE_ON_PLANE | \f$(x+m,0,0,ry,rz)\f$ | \f$(x+m,y,z,ry,rz)\f$ |
+
+        where
+        \li \f$m\f$ is the normal margin (used to avoid collisions),
+        \li \f$x,y,z,rx,ry,rz\f$ represents the output of the RelativeTransformation
+            between the element of the pair.
+    **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact :
       public DifferentiableFunction {
       public:
       friend class ConvexShapeContactComplement;
+
+        /// The type of contact between each pair (object shape, floor shape).
+        enum ContactType {
+          /// The object shape is a single point,
+          POINT_ON_PLANE,
+          /// The object shape degenerates to a line,
+          LINE_ON_PLANE,
+          /// The object shape is included in a plane and none of the above case apply.
+          PLANE_ON_PLANE
+        };
 
         /// Represents a contact
         /// When supportJoint is NULL, the contact is with the environment.
@@ -245,12 +294,6 @@ namespace hpp {
         std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
 
       private:
-        enum ContactType {
-          POINT_ON_PLANE,
-          LINE_ON_PLANE,
-          PLANE_ON_PLANE
-        };
-
         void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
@@ -275,7 +318,18 @@ namespace hpp {
         mutable matrix_t jacobian_;
     };
 
-    /// Complement to full transformation constraint of ConvexShapeContact
+    /** Complement to full transformation constraint of ConvexShapeContact
+
+        The value returned by this class is:
+
+        | Contact type   | Inside   | Outside |
+        | -------------- | -------- | ------- |
+        | ConvexShapeContact::POINT_ON_PLANE (Unsupported) | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$ |
+        | ConvexShapeContact::LINE_ON_PLANE (Unsupported)  | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$  |
+        | ConvexShapeContact::PLANE_ON_PLANE | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$ |
+
+        See ConvexShapeContact #details
+     **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContactComplement :
       public DifferentiableFunction
     {
