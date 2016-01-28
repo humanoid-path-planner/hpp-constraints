@@ -80,7 +80,8 @@ namespace hpp {
 
     void ConvexShapeContact::addFloor (const ConvexShape& t)
     {
-      floorConvexShapes_.push_back (t);
+      ConvexShape tt (t); tt.reverse ();
+      floorConvexShapes_.push_back (tt);
     }
 
     void ConvexShapeContact::setNormalMargin (const value_type& margin)

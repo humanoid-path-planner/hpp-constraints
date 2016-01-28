@@ -76,6 +76,11 @@ namespace hpp {
           init ();
         }
 
+        void reverse () {
+          std::reverse (Pts_.begin (), Pts_.end());
+          init ();
+        }
+
         void updateToCurrentTransform () const
         {
           if (joint_ != NULL) recompute (joint_->currentTransformation());
