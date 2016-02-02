@@ -126,8 +126,13 @@ namespace hpp {
 			       const JointPtr_t& joint)
           HPP_CONSTRAINTS_DEPRECATED;
 
+        /// Add a ConvexShape as an object.
         void addObject (const ConvexShape& t);
 
+        /// Add a ConvexShape as a floor.
+        ///
+        /// The convex shape will be reverted using ConvexShape::reverse
+        /// so that the normal points inside the floor object.
         void addFloor (const ConvexShape& t);
 
         /// Set the normal margin, i.e. the desired distance between matching

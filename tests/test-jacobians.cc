@@ -394,15 +394,15 @@ ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, Joint
                  o  (p[9],p[10],p[11]);
   ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
   ConvexShapeContact& f = *fptr;
-  f.addObjectTriangle (o, j);
-  f.addFloorTriangle (th, 0x0);
-  f.addFloorTriangle (f1, 0x0);
-  f.addFloorTriangle (f2, 0x0);
+  f.addObject (ConvexShape (o, j));
+  f.addFloor (ConvexShape (th, 0x0));
+  f.addFloor (ConvexShape (f1, 0x0));
+  f.addFloor (ConvexShape (f2, 0x0));
   return fptr;
 }
 
 BOOST_AUTO_TEST_CASE (triangle) {
-  /// First test Triangle class
+  /// First test ConvexShape class (as a triangle)
   fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
   fcl::Vec3f p[9];
   p[0] = fcl::Vec3f (0,0,0);

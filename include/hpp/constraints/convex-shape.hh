@@ -19,15 +19,15 @@
 
 # include <vector>
 
-# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
+
+# include <hpp/model/joint.hh>
+
+# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/tools.hh>
 
 # include "hpp/constraints/fwd.hh"
-
-// This is required by deprecated class Triangle
-# include <hpp/model/joint.hh>
 
 namespace hpp {
   namespace constraints {
