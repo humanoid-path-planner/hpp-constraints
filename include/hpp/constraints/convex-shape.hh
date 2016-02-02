@@ -18,6 +18,7 @@
 # define HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 
 # include <vector>
+
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
@@ -65,6 +66,15 @@ namespace hpp {
 
         ConvexShape (const fcl::TriangleP& t, const JointPtr_t& joint = NULL):
           Pts_ (triangleToPoints (t)), joint_ (joint)
+        {
+          init ();
+        }
+
+        /// This constructor is required for compatibility with deprecated
+        /// Triangle constructor.
+        ConvexShape (const fcl::Vec3f& p0, const fcl::Vec3f& p1,
+            const fcl::Vec3f& p2, const JointPtr_t& joint = NULL):
+          Pts_ (points(p0,p1,p2)), joint_ (joint)
         {
           init ();
         }
@@ -121,9 +131,13 @@ namespace hpp {
 
         /// Return the shortest distance from a point to the shape
         /// A negative value means the point is inside the shape
-        /// \param A a point already in the plane containing the convex shape
-        inline value_type distance (const fcl::Vec3f& A) const {
+        /// \param A a point already in the plane containing the convex shape,
+        ///        and expressed in the global frame.
+        inline value_type distance (const fcl::Vec3f& a) const {
           assert (shapeDimension_ > 1);
+          fcl::Transform3f T;
+          if (joint_!=NULL) T = joint_->currentTransformation ();T.inverse ();
+          const fcl::Vec3f A = (joint_==NULL)?a:T.transform(a);
           const value_type inf = std::numeric_limits<value_type>::infinity();
           value_type minPosDist = inf, maxNegDist = - inf;
           bool outside = false;
@@ -204,6 +218,12 @@ namespace hpp {
           ret[0] = t.a;
           ret[1] = t.b;
           ret[2] = t.c;
+          return ret;
+        }
+        static std::vector <vector3_t> points (const fcl::Vec3f& p0,
+            const fcl::Vec3f& p1, const fcl::Vec3f& p2) {
+          std::vector <vector3_t> ret (3);
+          ret[0] = p0; ret[1] = p1; ret[2] = p2;
           return ret;
         }
 

@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE (triangle) {
   p[4] = fcl::Vec3f (0.2,0.2,0);
   p[5] = fcl::Vec3f (1,1,0);
   p[6] = fcl::Vec3f (-1,-1,1);
-  Triangle t (p[0],p[1],p[2]);
+  ConvexShape t (p[0],p[1],p[2]);
   BOOST_CHECK_MESSAGE ((t.normal () - z).isZero (), "Norm of triangle is wrong");
   BOOST_CHECK_MESSAGE ((t.center () - (x+y)/3).isZero (), "Center of triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.planeXaxis ().dot (z)) < 1e-8, "X axis of triangle is wrong");
