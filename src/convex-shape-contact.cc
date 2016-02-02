@@ -24,11 +24,6 @@
 
 namespace hpp {
   namespace constraints {
-    std::ostream& operator<< (std::ostream& os, const Triangle& t)
-    {
-      return t.print (os);
-    }
-
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
