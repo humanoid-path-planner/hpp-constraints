@@ -131,7 +131,7 @@ namespace hpp {
         result.segment <2> (1).setZero ();
       } else {
         result.segment <3> (0) = result_.segment <3> (0);
-        result_[0] += normalMargin_;
+        result[0] += normalMargin_;
       }
       switch (contactType_) {
         case POINT_ON_PLANE:
