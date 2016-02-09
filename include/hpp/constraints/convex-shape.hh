@@ -190,10 +190,17 @@ namespace hpp {
         }
         inline const fcl::Transform3f& alignedPositionInJoint () const { return M_; }
 
-        /// The position in the joint frame and the joint
+        /// The points in the joint frame. It is constant.
         std::vector <vector3_t> Pts_;
         size_t shapeDimension_;
-        vector3_t C_, N_;
+        /// the center in the joint frame. It is constant.
+        vector3_t C_;
+        /// the normal to the shape in the joint frame. It is constant.
+        vector3_t N_;
+        /// Ns_ and Us_ are unit vector, in the plane containing the shape,
+        /// expressed in the joint frame.
+        /// Ns_[i] is normal to edge i, pointing inside.
+        /// Ns_[i] is a vector director of edge i.
         std::vector <vector3_t> Ns_, Us_;
         fcl::Transform3f MinJoint_;
         JointPtr_t joint_;
