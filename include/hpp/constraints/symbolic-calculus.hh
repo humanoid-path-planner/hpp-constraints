@@ -100,8 +100,8 @@ namespace hpp {
     template <typename RhsValue> class ScalarMultiply;
     template <typename RhsValue> class RotationMultiply;
     typedef eigen::matrix3_t CrossMatrix;
-    typedef Eigen::Matrix <value_type, 1, Eigen::Dynamic> RowJacobianMatrix;
-    typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> JacobianMatrix;
+    typedef Eigen::Matrix <value_type, 1, Eigen::Dynamic, Eigen::RowMajor> RowJacobianMatrix;
+    typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic, Eigen::RowMajor> JacobianMatrix;
 
     template <typename Class>
     struct Traits {
