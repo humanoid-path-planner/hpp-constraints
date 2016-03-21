@@ -236,6 +236,11 @@ namespace hpp {
 
         void addFloor (const ConvexShape& t);
 
+        /// Set the normal margin, i.e. the desired distance between matching
+        /// object and nd floor shapes.
+        /// Default to 0
+        void setNormalMargin (const value_type& margin);
+
         /// Compute the contact points in the last configuration.
         std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
 
@@ -261,6 +266,8 @@ namespace hpp {
         typedef std::vector <ConvexShape> ConvexShapes_t;
         ConvexShapes_t objectConvexShapes_;
         ConvexShapes_t floorConvexShapes_;
+
+        value_type normalMargin_;
 
         mutable bool isInside_;
         mutable ContactType contactType_;

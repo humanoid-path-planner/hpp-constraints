@@ -75,10 +75,12 @@
 #include "hpp/constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
+#include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/tools.hh>
+#include <hpp/constraints/macros.hh>
 
 namespace hpp {
   namespace constraints {
@@ -852,6 +854,7 @@ namespace hpp {
           joint_ (joint)
         {
           assert (joint_ != NULL);
+          this->jacobian_.resize(6,joint->robot()->numberDof());
         }
 
         const JointPtr_t& joint () const {
@@ -859,18 +862,26 @@ namespace hpp {
         }
         void impl_value () {
           const fcl::Transform3f& t = joint_->currentTransformation ();
-          for (int i = 0; i < 3; ++i) this->value_[i] = t.getTranslation ()[i];
-          double theta;
-          computeLog (this->value_.segment <3> (3), theta, t.getRotation ());
-          //for (int i = 0; i < 4; ++i) this->value_[i+4] = t.getQuatRotation ()[i];
+          fcl::Matrix3f RT (t.getRotation ()); RT.transpose ();
+          for (int i = 0; i < 3; ++i) this->value_[i] = - t.getTranslation ()[i];
+          computeLog (this->value_.segment <3> (3), theta_, RT);
         }
         void impl_jacobian () {
+          computeValue ();
           const JointJacobian_t& j (joint_->jacobian ());
-          this->jacobian_ = j;
+          const fcl::Transform3f& t = joint_->currentTransformation ();
+          eigen::matrix3_t R; hpp::model::toEigen (t.getRotation(), R); R.transposeInPlace();
+          // Compute vector r
+          eigen::matrix3_t Jlog;
+          assert (theta_ >= 0);
+          computeJlog (theta_, this->value_.segment <3> (3), Jlog);
+          this->jacobian_.topRows <3> () = - j.topRows <3> ();
+          this->jacobian_.bottomRows <3> () = - Jlog * R * j.bottomRows <3> ();
         }
 
       protected:
         JointPtr_t joint_;
+        double theta_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -987,6 +998,7 @@ namespace hpp {
           if (svdValid_) return;
           this->computeValue ();
           svd_.compute (this->value_);
+          HPP_DEBUG_SVDCHECK(svd_);
           svdValid_ = true;
         }
         void computePseudoInverse () {

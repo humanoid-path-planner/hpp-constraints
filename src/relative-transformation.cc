@@ -22,6 +22,7 @@
 #include <hpp/model/joint.hh>
 #include <hpp/constraints/tools.hh>
 #include <hpp/constraints/relative-transformation.hh>
+#include <hpp/constraints/macros.hh>
 
 namespace hpp {
   namespace constraints {
@@ -112,7 +113,7 @@ namespace hpp {
 
     void RelativeTransformation::computeError (ConfigurationIn_t argument) const
     {
-      hppDout (info, "argument=" << argument.transpose ());
+      hppDnum (info, "argument=" << argument.transpose ());
       if (argument.size () != latestArgument_.size () ||
 	  argument != latestArgument_) {
 	robot_->currentConfiguration (argument);
@@ -124,19 +125,19 @@ namespace hpp {
 	const Transform3f& J2 = joint2_->currentTransformation ();
 	Transform3f M1 (J1 * F1inJ1_);
 	Transform3f M2 (J2 * F2inJ2_);
-	hppDout (info, "J1=" << J1);
-	hppDout (info, "J2=" << J2);
-	hppDout (info, "M1=" << M1);
-	hppDout (info, "M2=" << M2);
+	hppDnum (info, "J1=" << J1);
+	hppDnum (info, "J2=" << J2);
+	hppDnum (info, "M1=" << M1);
+	hppDnum (info, "M2=" << M2);
 	Transform3f M (inverse (M1) * M2);
 	const matrix3_t& Rerror (M.getRotation ());
 	model::toEigen (M.getTranslation (), value_.head <3> ());
-	hppDout (info, "Rerror=" << Rerror);
+	hppDnum (info, "Rerror=" << Rerror);
 	double tr = Rerror (0, 0) + Rerror (1, 1) + Rerror (2, 2);
 	if (tr > 3) tr = 3;
 	if (tr < -1) tr = -1;
 	theta_ = acos ((tr - 1)/2);
-	hppDout (info, "theta_=" << theta_);
+	hppDnum (info, "theta_=" << theta_);
 	assert (theta_ == theta_);
 	if (theta_ > 1e-6) {
 	  value_ [3] = theta_*(Rerror (2, 1) -
@@ -185,11 +186,11 @@ namespace hpp {
       const matrix3_t& R2 (J2.getRotation ());
 
       computeJlog (theta_, value_.tail <3> (), Jlog_);
-      hppDout (info, "Jlog_: " << Jlog_);
+      hppDnum (info, "Jlog_: " << Jlog_);
       //cross (R2*t2inJ2+t2-t1, cross1_);
       cross (R2*t2inJ2 + t2 - t1, cross1_);
       cross (R2*t2inJ2, cross2_);
-      size_type leftCols = joint1_->jacobian().cols();
+      size_type leftCols = joint2_->jacobian().cols();
       jacobian_.rightCols (jacobian_.cols() - leftCols).setZero();
       if (joint1_) {
 	jacobian_.topRows <3> ().leftCols (leftCols) =

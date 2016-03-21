@@ -46,14 +46,14 @@ namespace hpp {
         const DevicePtr_t& robot, const Contacts_t& contacts,
         const CenterOfMassComputationPtr_t& com):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          contacts.size() + 6, name),
-      Zeros (new qpOASES::real_t [contacts.size()]), nWSR (20),
+          1, name),
+      Zeros (new qpOASES::real_t [contacts.size()]), nWSR (40),
       robot_ (robot), nbContacts_ (contacts.size()),
-      com_ (com), qp_ (nbContacts_, 6, qpOASES::HST_IDENTITY),
+      com_ (com), H_ (nbContacts_,nbContacts_), G_ (nbContacts_),
+      qp_ (nbContacts_, qpOASES::HST_SEMIDEF),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
-      A_ (new qpOASES::real_t [6*nbContacts_]), Amap_ (A_, 6, nbContacts_),
-      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (6 + nbContacts_))
+      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (nbContacts_))
     {
       VectorMap_t zeros (Zeros, nbContacts_); zeros.setZero ();
 
@@ -78,14 +78,14 @@ namespace hpp {
         const DevicePtr_t& robot, const std::vector<ForceData>& contacts,
         const CenterOfMassComputationPtr_t& com):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          forceDatasToNbContacts (contacts) + 6, name),
-      Zeros (new qpOASES::real_t [forceDatasToNbContacts (contacts)]), nWSR (20),
+          1, name),
+      Zeros (new qpOASES::real_t [forceDatasToNbContacts (contacts)]), nWSR (40),
       robot_ (robot), nbContacts_ (forceDatasToNbContacts (contacts)),
-      com_ (com), qp_ (nbContacts_, 6, qpOASES::HST_IDENTITY),
+      com_ (com), H_ (nbContacts_, nbContacts_), G_ (nbContacts_),
+      qp_ (nbContacts_, qpOASES::HST_SEMIDEF),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
-      A_ (new qpOASES::real_t [6*nbContacts_]), Amap_ (A_, 6, nbContacts_),
-      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (6 + nbContacts_))
+      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (nbContacts_))
     {
       VectorMap_t zeros (Zeros, nbContacts_); zeros.setZero ();
 
@@ -140,23 +140,12 @@ namespace hpp {
       phi_.computeValue ();
       phi_.computeSVD ();
 
-      // Is there a solution to the unconstrained problem ?
-      bool hasSol = hasSolution (result.segment <6> (0));
-
-      if (hasSol) {
-        if (solveQP (result.segment (6, nbContacts_))
-            == qpOASES::SUCCESSFUL_RETURN)
-          return;
-        else {
-          // There are no positive solution.
-          result.segment (6, nbContacts_).noalias () =
-            phi_.svd ().solve (MinusGravity);
-        }
-      } else {
-        // No solution.
-        // TODO: Does this introduce a discontinuity ?
-        result.segment (6, nbContacts_).noalias () =
-          phi_.svd ().solve (MinusGravity);
+      qpOASES::returnValue ret = solveQP (result);
+      if (ret != qpOASES::SUCCESSFUL_RETURN) {
+        hppDout (error, "QP could not be solved. Error is " << ret);
+      }
+      if (!checkQPSol ()) {
+        hppDout (error, "QP solution does not satisfies the constraints");
       }
     }
 
@@ -169,44 +158,26 @@ namespace hpp {
       phi_.computeSVD ();
       phi_.computeJacobian ();
 
-      // Is there a solution to the unconstrained problem ?
-      vector_t u (6);
-      bool hasSol = hasSolution (u);
-
-      vector_t sol = phi_.svd().solve (MinusGravity);
-      phi_.jacobianTimes (sol, jacobian.block (0, 0, 6, robot_->numberDof()));
-      phi_.computePseudoInverseJacobian (MinusGravity);
-      jacobian.block (0, 0, 6, robot_->numberDof()).noalias ()
-        += phi_.value() * phi_.pinvJacobian ();
-
-      if (hasSol) {
-        if (solveQP (sol) == qpOASES::SUCCESSFUL_RETURN) {
-          phi_.jacobianTransposeTimes (dual_.segment <6> (nbContacts_),
-              jacobian.block (6, 0, nbContacts_, robot_->numberDof()));
-          qpOASES::Bounds b;
-          qp_.getBounds (b);
-          const qpOASES::Indexlist* il = b.getFixed ();
-          for (qpOASES::int_t i = 0; i < il->getLength (); ++i)
-            jacobian.row (6 + il->getNumber (i)).setZero ();
-        }
-        else {
-          // There are no positive solution.
-          // phi_.computePseudoInverseJacobian (MinusGravity);
-          jacobian.block (6, 0, nbContacts_, robot_->numberDof())
-            = phi_.pinvJacobian ();
-        }
-      } else {
-        // phi_.computePseudoInverseJacobian (MinusGravity);
-        jacobian.block (6, 0, nbContacts_, robot_->numberDof()) =
-          phi_.pinvJacobian ();
+      vector_t res(1);
+      qpOASES::returnValue ret = solveQP (res);
+      if (ret != qpOASES::SUCCESSFUL_RETURN) {
+        hppDout (error, "QP could not be solved. Error is " << ret);
       }
-    }
+      if (!checkQPSol ()) {
+        hppDout (error, "QP solution does not satisfies the constraints");
+      }
+      if (!checkStrictComplementarity ()) {
+        hppDout (error, "Strict complementary slackness does not hold. "
+            "Jacobian WILL be wrong.");
+      }
 
-    inline bool QPStaticStability::hasSolution (vectorOut_t dist) const
-    {
-      dist.noalias () = getU2 <MoE_t::SVD_t> (phi_.svd()) *
-        ( getU2 <MoE_t::SVD_t> (phi_.svd()).adjoint() * Gravity );
-      return dist.squaredNorm () < 1e-6;
+      matrix_t JT_phi_F (nbContacts_, robot_->numberDof());
+      matrix_t J_F (6, robot_->numberDof());
+      phi_.jacobianTransposeTimes (phi_.value () * primal_, JT_phi_F);
+      phi_.jacobianTimes (primal_, J_F);
+
+      jacobian = 0.5 * primal_.transpose() * JT_phi_F
+        + (0.5 * phi_.value() * primal_ + Gravity).transpose() * J_F;
     }
 
     inline qpOASES::returnValue QPStaticStability::solveQP
@@ -214,30 +185,34 @@ namespace hpp {
     {
       // TODO: Use the SVD to solve a smaller quadratic problem
       // Try to find a positive solution
-      // using qpOASES::QProblem;
-      using qpOASES::HST_IDENTITY;
       using qpOASES::SUCCESSFUL_RETURN;
 
-      Amap_ = phi_.value (); // Need a copy because of the row-major order.
+      H_ = phi_.value ().transpose () * phi_.value();
+      G_ = phi_.value().transpose () * Gravity;
 
       qpOASES::int_t nwsr = nWSR;
-      const qpOASES::real_t eps = 1e-4;
-      const qpOASES::real_t lbA[6] = {-eps,-eps,1-eps,-eps,-eps,-eps}; // - StaticStability::Gravity
-      const qpOASES::real_t ubA[6] = { eps, eps,1+eps,-eps, eps, eps}; // - StaticStability::Gravity
       qp_.reset ();
-      qp_.setHessianType (HST_IDENTITY);
+      qp_.setHessianType (qpOASES::HST_SEMIDEF);
       qpOASES::returnValue ret;
-      if (qp_.isInitialised()) {
-        ret =
-          qp_.hotstart (NULL, Zeros, A_, Zeros, 0, lbA, ubA, nwsr, 0);
-      } else {
-        ret =
-          qp_.init (NULL, Zeros, A_, Zeros, 0, lbA, ubA, nwsr, 0, primal_.data());
-      }
+      ret = qp_.init (H_.data(), G_.data(), Zeros, 0, nwsr, 0);
       qp_.getPrimalSolution (primal_.data ());
       qp_.getDualSolution (dual_.data ());
-      result = primal_;
+      result[0] = 2*qp_.getObjVal () + MinusGravity.squaredNorm ();
       return ret;
+    }
+
+    bool QPStaticStability::checkQPSol () const
+    {
+      return (primal_.array () >= -1e-8).all();
+    }
+
+    bool QPStaticStability::checkStrictComplementarity () const
+    {
+      qpOASES::real_t eps = qp_.getOptions().boundTolerance;
+      return (
+             (primal_.array() > eps &&   dual_.cwiseAbs().array() <= eps )
+          || (  dual_.array() > eps && primal_.cwiseAbs().array() <= eps )
+          ).all();
     }
   } // namespace constraints
 } // namespace hpp

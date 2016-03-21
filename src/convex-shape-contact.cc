@@ -40,7 +40,8 @@ namespace hpp {
 						Transform3f (), Transform3f (),
 						boost::assign::list_of (true)
 						(true)(true)(true)(true)(true))
-					       )
+					       ),
+      normalMargin_ (0)
     {
       result_.resize (6);
       jacobian_.resize (6, robot->numberDof ());
@@ -82,6 +83,12 @@ namespace hpp {
       floorConvexShapes_.push_back (t);
     }
 
+    void ConvexShapeContact::setNormalMargin (const value_type& margin)
+    {
+      assert (margin >= 0);
+      normalMargin_ = margin;
+    }
+
     std::vector <ConvexShapeContact::ForceData>
       ConvexShapeContact::computeContactPoints (
           const value_type& normalMargin) const
@@ -119,10 +126,11 @@ namespace hpp {
       selectConvexShapes ();
       (*relativeTransformation_) (result_, argument);
       if (isInside_) {
-        result [0] = result_ [0];
+        result [0] = result_ [0] + normalMargin_;
         result.segment <2> (1).setZero ();
       } else {
         result.segment <3> (0) = result_.segment <3> (0);
+        result_[0] += normalMargin_;
       }
       switch (contactType_) {
         case POINT_ON_PLANE:

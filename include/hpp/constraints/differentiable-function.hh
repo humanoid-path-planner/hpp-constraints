@@ -144,6 +144,26 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  vectorIn_t arg) const = 0;
 
+      /// Approximate the jacobian using forward finite difference.
+      /// \param robot use to add configuration and velocities. If set to NULL,
+      ///              the configuration space is considered a vector space.
+      /// \param eps refers to \f$\epsilon\f$ in
+      ///            http://en.wikipedia.org/wiki/Numerical_differentiation
+      /// Evaluate the function (x.size() + 1) times but less precise the
+      /// finiteDifferenceCentral
+      void finiteDifferenceForward (matrixOut_t jacobian, vectorIn_t arg,
+          DevicePtr_t robot = DevicePtr_t (),
+          value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon())) const;
+
+      /// Approximate the jacobian using forward finite difference.
+      /// \param eps refers to \f$\epsilon\f$ in
+      ///            http://en.wikipedia.org/wiki/Numerical_differentiation
+      /// Evaluate the function 2*x.size() times but more precise the
+      /// finiteDifferenceForward
+      void finiteDifferenceCentral (matrixOut_t jacobian, vectorIn_t arg,
+          DevicePtr_t robot = DevicePtr_t (),
+          value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon())) const;
+
     private:
       /// Dimension of input vector.
       size_type inputSize_;
