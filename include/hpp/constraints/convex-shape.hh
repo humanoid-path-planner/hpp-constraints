@@ -147,7 +147,7 @@ namespace hpp {
               outside = true;
               if (d < minPosDist) minPosDist = d;
             }
-            if (d < 0 && d > maxNegDist) maxNegDist = d;
+            if (d <= 0 && d > maxNegDist) maxNegDist = d;
           }
           if (outside) return minPosDist;
           return maxNegDist;
