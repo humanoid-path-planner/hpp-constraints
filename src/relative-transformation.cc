@@ -193,8 +193,15 @@ namespace hpp {
       size_type leftCols = joint2_->jacobian().cols();
       jacobian_.rightCols (jacobian_.cols() - leftCols).setZero();
       if (joint1_) {
-	jacobian_.topRows <3> ().leftCols (leftCols) =
-	  transpose (R1*R1inJ1)*(cross1_*joint1_->jacobian ().bottomRows <3> ()-
+        jacobian_.topRows <3> ().leftCols (leftCols) =
+#ifdef FCL_HAVE_EIGEN
+          transpose (R1inJ1) * transpose (R1)
+#else
+          // This is a bug in Eigen that is fixed in a future version.
+          // See https://bitbucket.org/eigen/eigen/commits/de7b8c9b1e86/
+          transpose (R1*R1inJ1)
+#endif
+          *(cross1_*joint1_->jacobian ().bottomRows <3> ()-
 				 cross2_*joint2_->jacobian ().bottomRows <3> ()+
 				 joint2_->jacobian ().topRows <3>()-
 				 joint1_->jacobian ().topRows <3>());
