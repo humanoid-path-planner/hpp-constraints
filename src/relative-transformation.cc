@@ -206,7 +206,15 @@ namespace hpp {
 				 joint2_->jacobian ().topRows <3>()-
 				 joint1_->jacobian ().topRows <3>());
 	jacobian_.bottomRows <3> ().leftCols (leftCols) =
-	  Jlog_ * transpose (R1*R1inJ1) *
+	  Jlog_ *
+#ifdef FCL_HAVE_EIGEN
+          transpose (R1inJ1) * transpose (R1)
+#else
+          // This is a bug in Eigen that is fixed in a future version.
+          // See https://bitbucket.org/eigen/eigen/commits/de7b8c9b1e86/
+          transpose (R1*R1inJ1)
+#endif
+          *
 	  (joint2_->jacobian ().bottomRows <3> () -
 	   joint1_->jacobian ().bottomRows <3> ());
       } else {
