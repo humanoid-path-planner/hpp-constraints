@@ -142,7 +142,7 @@ namespace hpp {
           value_type minPosDist = inf, maxNegDist = - inf;
           bool outside = false;
           for (std::size_t i = 0; i < shapeDimension_; ++i) {
-            value_type d = dist (A - Pts_[i], Us_[i], Ns_[i]);
+            value_type d = dist (A - Pts_[i], Ls_[i], Us_[i], Ns_[i]);
             if (d > 0) {
               outside = true;
               if (d < minPosDist) minPosDist = d;
@@ -202,21 +202,23 @@ namespace hpp {
         /// Ns_[i] is normal to edge i, pointing inside.
         /// Ns_[i] is a vector director of edge i.
         std::vector <vector3_t> Ns_, Us_;
+        vector_t Ls_;
         fcl::Transform3f MinJoint_;
         JointPtr_t joint_;
 
       private:
         /// Return the distance between the point A and the segment
-        /// [P, v] oriented by u.
+        /// [P, c2*v] oriented by u.
         /// w = PA.
-        inline value_type dist (const fcl::Vec3f& w, const fcl::Vec3f& v, const fcl::Vec3f& u) const {
-          value_type c1, c2;
+        inline value_type dist (const fcl::Vec3f& w, const value_type& c2, const fcl::Vec3f& v, const fcl::Vec3f& u) const {
+          value_type c1;
           c1 = v.dot (w);
           if (c1 <= 0)
             return (u.dot (w) > 0)?(w.norm()):(- w.norm());
-          c2 = v.dot (v);
           if (c2 <= c1)
-            return (u.dot (w) > 0)?((w-v).norm()):(-(w-v).norm());
+            // TODO: (w - c2 * v).norm() == sqrt((u.dot(w)**2 + (c1 - c2)**2)
+            // second should be cheaper.
+            return (u.dot (w) > 0)?((w-c2*v).norm()):(-(w-c2*v).norm());
           return u.dot (w);
         }
 
@@ -251,10 +253,12 @@ namespace hpp {
               Us_.push_back (vector3_t(0,0,1));
               break;
             case 2:
+              Ls_ = vector_t(1);
               C_ = (Pts_[0] + Pts_[1])/2;
               // The transformation will be (N_, Ns_[0], Us_[0])
               // Fill vectors so as to be consistent
               Us_.push_back (Pts_[1] - Pts_[0]);
+              Ls_[0] = Us_[0].norm();
               Us_[0].normalize ();
               if (Us_[0][0] != 0) N_ = vector3_t(-Us_[0][1],Us_[0][0],0);
               else                N_ = vector3_t(0,-Us_[0][2],Us_[0][1]);
@@ -263,6 +267,7 @@ namespace hpp {
               Ns_[0].normalize (); // Should be unnecessary
               break;
             default:
+              Ls_ = vector_t(shapeDimension_);
               C_.setZero ();
               for (std::size_t i = 0; i < shapeDimension_; ++i)
                 C_ += Pts_[i];
@@ -275,6 +280,7 @@ namespace hpp {
               Ns_.resize (Pts_.size());
               for (std::size_t i = 0; i < shapeDimension_; ++i) {
                 Us_[i] = Pts_[(i+1)%shapeDimension_] - Pts_[i];
+                Ls_[i] = Us_[i].norm();
                 Us_[i].normalize ();
                 Ns_[i] = Us_[i].cross (N_);
                 Ns_[i].normalize ();
