@@ -24,11 +24,6 @@
 
 namespace hpp {
   namespace constraints {
-    std::ostream& operator<< (std::ostream& os, const Triangle& t)
-    {
-      return t.print (os);
-    }
-
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
@@ -40,7 +35,8 @@ namespace hpp {
 						Transform3f (), Transform3f (),
 						boost::assign::list_of (true)
 						(true)(true)(true)(true)(true))
-					       )
+					       ),
+      normalMargin_ (0)
     {
       result_.resize (6);
       jacobian_.resize (6, robot->numberDof ());
@@ -79,7 +75,14 @@ namespace hpp {
 
     void ConvexShapeContact::addFloor (const ConvexShape& t)
     {
-      floorConvexShapes_.push_back (t);
+      ConvexShape tt (t); tt.reverse ();
+      floorConvexShapes_.push_back (tt);
+    }
+
+    void ConvexShapeContact::setNormalMargin (const value_type& margin)
+    {
+      assert (margin >= 0);
+      normalMargin_ = margin;
     }
 
     std::vector <ConvexShapeContact::ForceData>
@@ -119,10 +122,11 @@ namespace hpp {
       selectConvexShapes ();
       (*relativeTransformation_) (result_, argument);
       if (isInside_) {
-        result [0] = result_ [0];
+        result [0] = result_ [0] + normalMargin_;
         result.segment <2> (1).setZero ();
       } else {
         result.segment <3> (0) = result_.segment <3> (0);
+        result[0] += normalMargin_;
       }
       switch (contactType_) {
         case POINT_ON_PLANE:

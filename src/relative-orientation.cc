@@ -24,6 +24,7 @@
 #include <hpp/constraints/relative-orientation.hh>
 #include <hpp/constraints/orientation.hh>
 #include <hpp/constraints/tools.hh>
+#include <hpp/constraints/macros.hh>
 
 namespace hpp {
   namespace constraints {
@@ -128,9 +129,9 @@ namespace hpp {
       }
       const JointJacobian_t& Jjoint1 (joint1_->jacobian ());
       const JointJacobian_t& Jjoint2 (joint2_->jacobian ());
-      hppDout (info, "Jlog_ = " << std::endl << Jlog_);
-      hppDout (info, "Jjoint1 = " << std::endl << Jjoint1);
-      hppDout (info, "Jjoint2 = " << std::endl << Jjoint2);
+      hppDnum (info, "Jlog_ = " << std::endl << Jlog_);
+      hppDnum (info, "Jjoint1 = " << std::endl << Jjoint1);
+      hppDnum (info, "Jjoint2 = " << std::endl << Jjoint2);
       jacobian_.leftCols (Jjoint1.cols ()) = Jlog_ * R2T *
 	(Jjoint1.bottomRows (3) - Jjoint2.bottomRows (3));
       size_type index = 0;

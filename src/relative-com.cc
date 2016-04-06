@@ -24,6 +24,8 @@
 #include <hpp/model/joint.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
+#include <hpp/constraints/macros.hh>
+
 namespace hpp {
   namespace constraints {
     namespace {
@@ -143,9 +145,9 @@ namespace hpp {
             index++;
           }
       }
-      hppDout (info, "Jcom = " << std::endl << Jcom);
-      hppDout (info, "Jw = " << std::endl << Jjoint.bottomRows (3));
-      hppDout (info, "Jv = " << std::endl << Jjoint.topRows (3));
+      hppDnum (info, "Jcom = " << std::endl << Jcom);
+      hppDnum (info, "Jw = " << std::endl << Jjoint.bottomRows (3));
+      hppDnum (info, "Jv = " << std::endl << Jjoint.topRows (3));
     }
 
   } // namespace constraints

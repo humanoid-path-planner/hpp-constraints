@@ -21,9 +21,11 @@
 
 #include "hpp/constraints/position.hh"
 #include "hpp/constraints/orientation.hh"
+#include "hpp/constraints/transformation.hh"
 #include "hpp/constraints/relative-position.hh"
 #include "hpp/constraints/relative-orientation.hh"
 #include "hpp/constraints/relative-transformation.hh"
+#include "hpp/constraints/symbolic-function.hh"
 #include "hpp/constraints/convex-shape-contact.hh"
 #include "hpp/constraints/static-stability.hh"
 #include "hpp/constraints/configuration-constraint.hh"
@@ -383,7 +385,7 @@ ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, Joint
   fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
   fcl::Vec3f p[12];
   p[0] = fcl::Vec3f (-5,-5,0); p[1] = fcl::Vec3f (-5, 5,0); p[2] = fcl::Vec3f ( 5,-5,0);
-  p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[6] = fcl::Vec3f ( 5,-5,0);
+  p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[5] = fcl::Vec3f ( 5,-5,0);
   p[6] = fcl::Vec3f ( 0, 0,1); p[7] = fcl::Vec3f (  1,0,1); p[8] = fcl::Vec3f (0,  1,1);
   p[9] = fcl::Vec3f ( 0, 0,0); p[10] = fcl::Vec3f (0.1,0,0); p[11] = fcl::Vec3f (0,0.1,0);
   fcl::TriangleP f1 (p[0],p[1],p[2]),
@@ -392,15 +394,15 @@ ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, Joint
                  o  (p[9],p[10],p[11]);
   ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
   ConvexShapeContact& f = *fptr;
-  f.addObjectTriangle (o, j);
-  f.addFloorTriangle (th, 0x0);
-  f.addFloorTriangle (f1, 0x0);
-  f.addFloorTriangle (f2, 0x0);
+  f.addObject (ConvexShape (o, j));
+  f.addFloor (ConvexShape (th, 0x0));
+  f.addFloor (ConvexShape (f1, 0x0));
+  f.addFloor (ConvexShape (f2, 0x0));
   return fptr;
 }
 
 BOOST_AUTO_TEST_CASE (triangle) {
-  /// First test Triangle class
+  /// First test ConvexShape class (as a triangle)
   fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
   fcl::Vec3f p[9];
   p[0] = fcl::Vec3f (0,0,0);
@@ -410,7 +412,7 @@ BOOST_AUTO_TEST_CASE (triangle) {
   p[4] = fcl::Vec3f (0.2,0.2,0);
   p[5] = fcl::Vec3f (1,1,0);
   p[6] = fcl::Vec3f (-1,-1,1);
-  Triangle t (p[0],p[1],p[2]);
+  ConvexShape t (p[0],p[1],p[2]);
   BOOST_CHECK_MESSAGE ((t.normal () - z).isZero (), "Norm of triangle is wrong");
   BOOST_CHECK_MESSAGE ((t.center () - (x+y)/3).isZero (), "Center of triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.planeXaxis ().dot (z)) < 1e-8, "X axis of triangle is wrong");
@@ -549,7 +551,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   }
 }
 
-BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
+BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   DevicePtr_t device = createRobot ();
   JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
              ee2 = device->getJointByName ("RLEG_5");
@@ -595,5 +597,40 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus) {
       relpos->jacobian (jacobian, *q1);
       relpos_sb_ptr->computeJacobian ();
       BOOST_CHECK (relpos_sb_ptr->jacobian ().isApprox (jacobian));
+  }
+}
+
+BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
+  DevicePtr_t device = createRobot ();
+  JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
+             ee2 = device->getJointByName ("RLEG_5");
+  BOOST_REQUIRE (device);
+  BasicConfigurationShooter cs (device);
+
+  /// Create the constraints
+  typedef DifferentiableFunction DF;
+  typedef DifferentiableFunctionPtr_t DFptr;
+  DFptr trans = Transformation::create (device, ee1, fcl::Transform3f ());
+  Traits<JointFrame>::Ptr_t jf  = JointFrame::create (ee1);
+  DFptr sf = SymbolicFunction<JointFrame>::create ("SymbolicFunctionTest", device, jf);
+
+  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  vector_t value1 = vector_t (trans->outputSize ());
+  vector_t value2 = vector_t (trans->outputSize ());
+  matrix_t jacobian1 = matrix_t (trans->outputSize (), device->numberDof ());
+  matrix_t jacobian2 = matrix_t (trans->outputSize (), device->numberDof ());
+  for (int i = 0; i < 100; i++) {
+      q1 = cs.shoot ();
+      device->currentConfiguration (*q1);
+      device->computeForwardKinematics ();
+
+      (*trans) (value1, *q1);
+      (*sf) (value2, *q1);
+      BOOST_CHECK (value1.isApprox ( value2));
+      jacobian1.setZero ();
+      jacobian2.setZero ();
+      trans->jacobian (jacobian1, *q1);
+      sf->jacobian (jacobian2, *q1);
+      BOOST_CHECK (jacobian1.isApprox ( jacobian2));
   }
 }

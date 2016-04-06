@@ -20,6 +20,7 @@
 #include "hpp/constraints/convex-shape.hh"
 
 using hpp::constraints::ConvexShape;
+using hpp::constraints::value_type;
 
 BOOST_AUTO_TEST_CASE (triangle)
 {
@@ -62,3 +63,28 @@ BOOST_AUTO_TEST_CASE (triangle)
   }
 }
 
+void checkDistance(const ConvexShape& t, const fcl::Vec3f& p, const value_type& expected)
+{
+  BOOST_CHECK_MESSAGE(std::abs(t.distance(p) - expected) < 1e-5,
+      "Point " << p << ".\nDistance computed: " << t.distance(p) << "\nDistance expected: " << expected
+      );
+}
+
+BOOST_AUTO_TEST_CASE (distance)
+{
+  fcl::Vec3f p0 (0,0,0),
+             p1 (2,0,0),
+             p2 (2,2,0),
+             p3 (0,2,0);
+  std::vector <fcl::Vec3f> pts;
+  pts.push_back (p0);
+  pts.push_back (p1);
+  pts.push_back (p2);
+  pts.push_back (p3);
+  ConvexShape t (pts);
+
+  checkDistance(t, fcl::Vec3f(0, 3, 0),  1);
+  checkDistance(t, fcl::Vec3f(3, 0, 0),  1);
+  checkDistance(t, fcl::Vec3f(1, 1, 0), -1);
+  checkDistance(t, fcl::Vec3f(0, 1, 0),  0);
+}

@@ -18,15 +18,16 @@
 # define HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 
 # include <vector>
-# include <hpp/constraints/differentiable-function.hh>
+
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
+
+# include <hpp/model/joint.hh>
+
+# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/tools.hh>
 
 # include "hpp/constraints/fwd.hh"
-
-// This is required by deprecated class Triangle
-# include <hpp/model/joint.hh>
 
 namespace hpp {
   namespace constraints {
@@ -69,10 +70,24 @@ namespace hpp {
           init ();
         }
 
+        /// This constructor is required for compatibility with deprecated
+        /// Triangle constructor.
+        ConvexShape (const fcl::Vec3f& p0, const fcl::Vec3f& p1,
+            const fcl::Vec3f& p2, const JointPtr_t& joint = NULL):
+          Pts_ (points(p0,p1,p2)), joint_ (joint)
+        {
+          init ();
+        }
+
         // Copy constructor
         ConvexShape (const ConvexShape& t) :
           Pts_ (t.Pts_), joint_ (t.joint_)
         {
+          init ();
+        }
+
+        void reverse () {
+          std::reverse (Pts_.begin (), Pts_.end());
           init ();
         }
 
@@ -116,19 +131,23 @@ namespace hpp {
 
         /// Return the shortest distance from a point to the shape
         /// A negative value means the point is inside the shape
-        /// \param A a point already in the plane containing the convex shape
-        inline value_type distance (const fcl::Vec3f& A) const {
+        /// \param A a point already in the plane containing the convex shape,
+        ///        and expressed in the global frame.
+        inline value_type distance (const fcl::Vec3f& a) const {
           assert (shapeDimension_ > 1);
+          fcl::Transform3f T;
+          if (joint_!=NULL) T = joint_->currentTransformation ();T.inverse ();
+          const fcl::Vec3f A = (joint_==NULL)?a:T.transform(a);
           const value_type inf = std::numeric_limits<value_type>::infinity();
           value_type minPosDist = inf, maxNegDist = - inf;
           bool outside = false;
           for (std::size_t i = 0; i < shapeDimension_; ++i) {
-            value_type d = dist (A - Pts_[i], Us_[i], Ns_[i]);
+            value_type d = dist (A - Pts_[i], Ls_[i], Us_[i], Ns_[i]);
             if (d > 0) {
               outside = true;
               if (d < minPosDist) minPosDist = d;
             }
-            if (d < 0 && d > maxNegDist) maxNegDist = d;
+            if (d <= 0 && d > maxNegDist) maxNegDist = d;
           }
           if (outside) return minPosDist;
           return maxNegDist;
@@ -171,26 +190,35 @@ namespace hpp {
         }
         inline const fcl::Transform3f& alignedPositionInJoint () const { return M_; }
 
-        /// The position in the joint frame and the joint
+        /// The points in the joint frame. It is constant.
         std::vector <vector3_t> Pts_;
         size_t shapeDimension_;
-        vector3_t C_, N_;
+        /// the center in the joint frame. It is constant.
+        vector3_t C_;
+        /// the normal to the shape in the joint frame. It is constant.
+        vector3_t N_;
+        /// Ns_ and Us_ are unit vector, in the plane containing the shape,
+        /// expressed in the joint frame.
+        /// Ns_[i] is normal to edge i, pointing inside.
+        /// Ns_[i] is a vector director of edge i.
         std::vector <vector3_t> Ns_, Us_;
+        vector_t Ls_;
         fcl::Transform3f MinJoint_;
         JointPtr_t joint_;
 
       private:
         /// Return the distance between the point A and the segment
-        /// [P, v] oriented by u.
+        /// [P, c2*v] oriented by u.
         /// w = PA.
-        inline value_type dist (const fcl::Vec3f& w, const fcl::Vec3f& v, const fcl::Vec3f& u) const {
-          value_type c1, c2;
+        inline value_type dist (const fcl::Vec3f& w, const value_type& c2, const fcl::Vec3f& v, const fcl::Vec3f& u) const {
+          value_type c1;
           c1 = v.dot (w);
           if (c1 <= 0)
             return (u.dot (w) > 0)?(w.norm()):(- w.norm());
-          c2 = v.dot (v);
           if (c2 <= c1)
-            return (u.dot (w) > 0)?((w-v).norm()):(-(w-v).norm());
+            // TODO: (w - c2 * v).norm() == sqrt((u.dot(w)**2 + (c1 - c2)**2)
+            // second should be cheaper.
+            return (u.dot (w) > 0)?((w-c2*v).norm()):(-(w-c2*v).norm());
           return u.dot (w);
         }
 
@@ -199,6 +227,12 @@ namespace hpp {
           ret[0] = t.a;
           ret[1] = t.b;
           ret[2] = t.c;
+          return ret;
+        }
+        static std::vector <vector3_t> points (const fcl::Vec3f& p0,
+            const fcl::Vec3f& p1, const fcl::Vec3f& p2) {
+          std::vector <vector3_t> ret (3);
+          ret[0] = p0; ret[1] = p1; ret[2] = p2;
           return ret;
         }
 
@@ -219,10 +253,12 @@ namespace hpp {
               Us_.push_back (vector3_t(0,0,1));
               break;
             case 2:
+              Ls_ = vector_t(1);
               C_ = (Pts_[0] + Pts_[1])/2;
               // The transformation will be (N_, Ns_[0], Us_[0])
               // Fill vectors so as to be consistent
               Us_.push_back (Pts_[1] - Pts_[0]);
+              Ls_[0] = Us_[0].norm();
               Us_[0].normalize ();
               if (Us_[0][0] != 0) N_ = vector3_t(-Us_[0][1],Us_[0][0],0);
               else                N_ = vector3_t(0,-Us_[0][2],Us_[0][1]);
@@ -231,6 +267,7 @@ namespace hpp {
               Ns_[0].normalize (); // Should be unnecessary
               break;
             default:
+              Ls_ = vector_t(shapeDimension_);
               C_.setZero ();
               for (std::size_t i = 0; i < shapeDimension_; ++i)
                 C_ += Pts_[i];
@@ -243,6 +280,7 @@ namespace hpp {
               Ns_.resize (Pts_.size());
               for (std::size_t i = 0; i < shapeDimension_; ++i) {
                 Us_[i] = Pts_[(i+1)%shapeDimension_] - Pts_[i];
+                Ls_[i] = Us_[i].norm();
                 Us_[i].normalize ();
                 Ns_[i] = Us_[i].cross (N_);
                 Ns_[i].normalize ();

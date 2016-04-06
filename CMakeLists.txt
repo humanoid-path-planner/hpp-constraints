@@ -23,7 +23,7 @@ INCLUDE(cmake/boost.cmake)
 SET(PROJECT_NAME hpp-constraints)
 SET(PROJECT_DESCRIPTION
   "Definition of basic geometric constraints for motion planning")
-SET(PROJECT_URL "https://github.com/laas/hpp-constraints")
+SET(PROJECT_URL "https://github.com/humanoid-path-planner/hpp-constraints")
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
@@ -31,6 +31,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
   include/hpp/constraints/tools.hh
+  include/hpp/constraints/macros.hh
   include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/convex-shape-contact.hh
   include/hpp/constraints/symbolic-calculus.hh
@@ -54,13 +55,20 @@ IF (HPP_DEBUG)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_DEBUG")
 ENDIF()
 
+# Activate hpp-util logging if requested
+SET (HPP_CONSTRAINTS_NUMERIC_DEBUG ${HPP_DEBUG} CACHE BOOL "trigger hpp-util debug output")
+IF (HPP_CONSTRAINTS_NUMERIC_DEBUG)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_CONSTRAINTS_NUMERIC_DEBUG")
+ENDIF()
+
 SETUP_PROJECT()
 SEARCH_FOR_BOOST()
 ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
 ADD_REQUIRED_DEPENDENCY("qpOASES >= 3.2")
-PKG_CONFIG_APPEND_LIBS("hpp-constraints")
 
 ADD_SUBDIRECTORY (src)
 ADD_SUBDIRECTORY (tests)
+
+PKG_CONFIG_APPEND_LIBS("hpp-constraints")
 
 SETUP_PROJECT_FINALIZE()

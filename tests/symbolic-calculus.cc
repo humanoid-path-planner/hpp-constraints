@@ -73,7 +73,7 @@ class PointTesterT : public CalculusBase <PointTesterT<ValueType, JacobianType>,
 namespace crossProduct {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
-  typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef Eigen::Matrix <value_type, 3, 6, Eigen::RowMajor> Jacobian;
   typedef PointTesterT <Value, Jacobian> PointTester;
   typedef PointTester::DataWrapper DataWrapper;
 
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE (CrossProductTest) {
 namespace difference {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
-  typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef Eigen::Matrix <value_type, 3, 6, Eigen::RowMajor> Jacobian;
   typedef PointTesterT <Value, Jacobian> PointTester;
   typedef PointTester::DataWrapper DataWrapper;
 
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE (DifferenceTest) {
 namespace sum {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
-  typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef Eigen::Matrix <value_type, 3, 6, Eigen::RowMajor> Jacobian;
   typedef PointTesterT <Value, Jacobian> PointTester;
   typedef PointTester::DataWrapper DataWrapper;
 
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE (SumTest) {
 namespace scalarMultiply {
   typedef Eigen::Matrix <value_type, 1, 4> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
-  typedef Eigen::Matrix <value_type, 3, 3> Jacobian;
+  typedef Eigen::Matrix <value_type, 3, 3, Eigen::RowMajor> Jacobian;
   typedef PointTesterT <Value, Jacobian> PointTester;
   typedef PointTester::DataWrapper DataWrapper;
 
@@ -286,9 +286,9 @@ BOOST_AUTO_TEST_CASE (ScalarMultiplyTest) {
 namespace scalarProduct {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 1, 1> OutputValue;
-  typedef Eigen::Matrix <value_type, 1, 6> OutputJacobian;
+  typedef Eigen::Matrix <value_type, 1, 6, Eigen::RowMajor> OutputJacobian;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
-  typedef Eigen::Matrix <value_type, 3, 6> Jacobian;
+  typedef Eigen::Matrix <value_type, 3, 6, Eigen::RowMajor> Jacobian;
   typedef PointTesterT <Value, Jacobian> PointTester;
   typedef PointTester::DataWrapper DataWrapper;
 
@@ -340,9 +340,9 @@ BOOST_AUTO_TEST_CASE (ScalarProductTest) {
 namespace matrixOfExp {
   typedef Eigen::Matrix <value_type, 1, 6> Config;
   typedef Eigen::Matrix <value_type, 3, 1> Value;
-  typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic> Jacobian;
+  typedef Eigen::Matrix <value_type, 3, Eigen::Dynamic, Eigen::RowMajor> Jacobian;
   typedef Eigen::Matrix <value_type, 6, 2> OutputValue;
-  typedef Eigen::Matrix <value_type, 6, 2*6> OutputJacobian;
+  typedef Eigen::Matrix <value_type, 6, 2*6, Eigen::RowMajor> OutputJacobian;
   typedef Eigen::Matrix <value_type, 2, 1> RValue;
   typedef Eigen::Matrix <value_type, 6, 6> OutputJacobianTimesRValue;
   typedef PointTesterT <Value, Jacobian> PointTester;

@@ -62,7 +62,9 @@ namespace hpp {
       public DifferentiableFunction
     {
     public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+      /// \cond
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      /// \endcond
 
       /// Return a shared pointer to a new instance
       ///
