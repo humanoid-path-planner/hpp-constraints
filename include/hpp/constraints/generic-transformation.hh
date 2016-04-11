@@ -61,15 +61,19 @@ namespace hpp {
       GenericTransformationJointData<rel>,
       GenericTransformationOriData<ori>
     {
-      typedef Eigen::Matrix<value_type, (pos?3:0)+(ori?3:0), 1> ValueType;
-      typedef Eigen::Matrix<value_type, (pos?3:0)+(ori?3:0), Eigen::Dynamic, Eigen::RowMajor> JacobianType;
+      enum { NbRows = (pos?3:0)+(ori?3:0) };
+      typedef Eigen::Matrix<value_type, NbRows, 1> ValueType;
+      typedef Eigen::Matrix<value_type, NbRows, Eigen::Dynamic> JacobianType;
+      bool fullPos, fullOri;
       mutable ValueType value;
       mutable JacobianType jacobian;
       mutable eigen::vector3_t cross1, cross2;
       GenericTransformationData (const size_type cols) :
         GenericTransformationJointData<rel>(),
-        GenericTransformationOriData<ori> ()
-      { jacobian.resize(6, cols); cross1.setZero(); cross2.setZero(); }
+        GenericTransformationOriData<ori> (),
+        fullPos(false), fullOri(false),
+        jacobian((int)NbRows, cols)
+      { cross1.setZero(); cross2.setZero(); }
     };
     /// \endcond DEVEL
 

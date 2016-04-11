@@ -84,52 +84,67 @@ namespace hpp {
           } 
       };
 
+      template <typename Data, typename Derived> void set
+        (bool cond, const Data& d, matrixOut_t J,
+         const Eigen::MatrixBase<Derived>& rhs,
+         const size_type& startRow, const size_type& leftCols)
+      {
+        if (cond) d.jacobian.template middleRows<3>(startRow).leftCols(leftCols) = rhs;
+        else               J.template middleRows<3>(startRow).leftCols(leftCols) = rhs;
+      }
+
       template <bool lflag /*rel*/, bool rflag /*false*/> struct binary
       {
         // the first template allow us to consider relative transformation as
         // absolute when joint1 is NULL, at run time
         template <bool rel, bool pos> static inline void Jorientation (
-            const GenericTransformationData<rel, pos, rflag>&) {}
+            const GenericTransformationData<rel, pos, rflag>&, matrixOut_t) {}
         template <bool rel, bool ori> static inline void Jtranslation (
-            const GenericTransformationData<rel, rflag, ori>&) {}
+            const GenericTransformationData<rel, rflag, ori>&, matrixOut_t) {}
       };
       template <> struct binary<false, true> // Absolute
       {
         template <bool rel, bool pos> static inline void Jorientation (
-            const GenericTransformationData<rel, pos, true>& d)
+            const GenericTransformationData<rel, pos, true>& d, matrixOut_t J)
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const size_type leftCols = d.joint2->jacobian().cols();
-          d.jacobian.template bottomRows<3>().leftCols (leftCols) =
-            d.Jlog * transpose(R1inJ1) * (d.joint2->jacobian().template bottomRows<3>());
+          set(!d.fullOri, d, J,
+            d.Jlog * transpose(R1inJ1) * (d.joint2->jacobian().template bottomRows<3>()),
+            (pos?3:0), leftCols);
         }
         template <bool rel, bool ori> static inline void Jtranslation (
-            const GenericTransformationData<rel, true, ori>& d)
+            const GenericTransformationData<rel, true, ori>& d,
+            matrixOut_t J)
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const size_type leftCols = d.joint2->jacobian().cols();
-          d.jacobian.template topRows<3>().leftCols (leftCols) =
+          set (!d.fullPos, d, J, 
               transpose(R1inJ1) * (
-                    d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
-                  + d.joint2->jacobian().template topRows<3>());
+                d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
+                + d.joint2->jacobian().template topRows<3>()),
+              0, leftCols);
         }
       };
       template <> struct binary<true, true> // Relative
       {
         template <bool pos> static inline void Jorientation (
-            const GenericTransformationData<true, pos, true>& d)
+            const GenericTransformationData<true, pos, true>& d,
+            matrixOut_t J)
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const Transform3f& J1 = d.joint1->currentTransformation ();
           const matrix3_t& R1 (J1.getRotation ());
           const size_type leftCols = d.joint2->jacobian().cols();
-          d.jacobian.template bottomRows<3>().leftCols (leftCols) =
+          set(!d.fullOri, d, J,
             d.Jlog * transpose (R1inJ1) * transpose (R1) *
             (  d.joint2->jacobian().template bottomRows<3>()
-             - d.joint1->jacobian().template bottomRows<3>());
+               - d.joint1->jacobian().template bottomRows<3>()),
+            (pos?3:0), leftCols);
         }
         template <bool ori> static inline void Jtranslation (
-            const GenericTransformationData<true, true, ori>& d)
+            const GenericTransformationData<true, true, ori>& d,
+            matrixOut_t J)
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const Transform3f& J1 = d.joint1->currentTransformation ();
@@ -137,12 +152,13 @@ namespace hpp {
           const size_type leftCols = d.joint2->jacobian().cols();
           // This is a bug in Eigen that is fixed in a future version.
           // See https://bitbucket.org/eigen/eigen/commits/de7b8c9b1e86/
-          d.jacobian.template topRows<3>().leftCols (leftCols) =
+          set(!d.fullPos, d, J,
             transpose(R1inJ1) * transpose(R1) * (
                 - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1)
                 + d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
                 + d.joint2->jacobian().template topRows<3>()
-                - d.joint1->jacobian().template topRows<3>());
+                - d.joint1->jacobian().template topRows<3>()),
+            0, leftCols);
         }
       };
 
@@ -171,7 +187,8 @@ namespace hpp {
           unary<ori>::log(M, d);
         }
 
-        static inline void jacobian (const GenericTransformationData<rel, pos, ori>& d)
+        static inline void jacobian (const GenericTransformationData<rel, pos, ori>& d,
+            matrixOut_t jacobian, const std::vector<bool>& mask)
         {
           const Transform3f& J2 = d.joint2->currentTransformation ();
           const vector3_t& t2inJ2 (d.F2inJ2.getTranslation ());
@@ -192,12 +209,30 @@ namespace hpp {
             const Transform3f& J1 = d.getJoint1()->currentTransformation ();
             const vector3_t& t1 (J1.getTranslation ());
             d.cross1.noalias() = d.cross2 + t2 - t1;
-            binary<rel, pos>::Jtranslation (d);
-            binary<rel, ori>::Jorientation (d);
+            binary<rel, pos>::Jtranslation (d, jacobian);
+            binary<rel, ori>::Jorientation (d, jacobian);
           } else {
             d.cross1.noalias() = d.cross2 + t2;
-            binary<false, pos>::Jtranslation (d);
-            binary<false, ori>::Jorientation (d);
+            binary<false, pos>::Jtranslation (d, jacobian);
+            binary<false, ori>::Jorientation (d, jacobian);
+          }
+
+          // Copy necessary rows.
+          size_type index=0;
+          const std::size_t lPos = (pos?3:0), lOri = (ori?3:0);
+          if (!d.fullPos) {
+            for (size_type i=0; i<lPos; ++i) {
+              if (mask [i]) {
+                jacobian.row (index) = d.jacobian.row(i); ++index;
+              }
+            }
+          } else index = lPos;
+          if (!d.fullOri) {
+            for (size_type i=lPos; i<lPos+lOri; ++i) {
+              if (mask [i]) {
+                jacobian.row (index) = d.jacobian.row(i); ++index;
+              }
+            }
           }
         }
       };
@@ -278,6 +313,14 @@ namespace hpp {
       robot_ (robot), d_(robot->numberDof()), mask_ (mask)
     {
       assert(mask.size()==ValueSize);
+      std::size_t iOri = 0;
+      if (ComputePosition) {
+        d_.fullPos = mask_[0] && mask_[1] && mask_[2];
+        iOri = 3;
+      } else d_.fullPos = false;
+      if (ComputeOrientation)
+        d_.fullOri = mask_[iOri + 0] && mask_[iOri + 1] && mask_[iOri + 2];
+      else d_.fullPos = false;
     }
 
     template <int _Options>
@@ -312,13 +355,7 @@ namespace hpp {
     (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
     {
       computeError (arg);
-      compute<IsRelative, ComputePosition, ComputeOrientation>::jacobian (d_);
-      size_type index=0;
-      for (size_type i=0; i<ValueSize; ++i) {
-	if (mask_ [i]) {
-	  jacobian.row (index) = d_.jacobian.row(i); ++index;
-	}
-      }
+      compute<IsRelative, ComputePosition, ComputeOrientation>::jacobian (d_, jacobian, mask_);
     }
 
     /// Force instanciation of relevant classes
