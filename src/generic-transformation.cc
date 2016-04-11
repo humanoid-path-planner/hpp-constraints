@@ -63,23 +63,27 @@ namespace hpp {
         template <bool rel, bool pos> static inline void Jlog (
             const GenericTransformationData<rel, pos, true>& d)
           {
-            if (d.theta < 1e-6) d.Jlog.setIdentity ();
-            else {
+            if (d.theta < 1e-6) {
+              if (d.R1isID) d.JlogXTR1inJ1.setIdentity ();
+              else          d.JlogXTR1inJ1.noalias() = d.F1inJ1.getRotation().derived().transpose();
+            } else {
               // Jlog = alpha I
               const value_type ct = cos(d.theta), st = sin(d.theta);
               const value_type st_1mct = st/(1-ct);
 
-              d.Jlog.setZero ();
-              d.Jlog.diagonal().setConstant (d.theta*st_1mct);
+              d.JlogXTR1inJ1.setZero ();
+              d.JlogXTR1inJ1.diagonal().setConstant (d.theta*st_1mct);
 
               // Jlog += -r_{\times}/2
-              d.Jlog(0,1) =  d.value((pos?3:0)+2); d.Jlog(1,0) = -d.value((pos?3:0)+2);
-              d.Jlog(0,2) = -d.value((pos?3:0)+1); d.Jlog(2,0) =  d.value((pos?3:0)+1);
-              d.Jlog(1,2) =  d.value((pos?3:0)+0); d.Jlog(2,1) = -d.value((pos?3:0)+0);
-              d.Jlog /= 2;
+              d.JlogXTR1inJ1(0,1) =  d.value((pos?3:0)+2); d.JlogXTR1inJ1(1,0) = -d.value((pos?3:0)+2);
+              d.JlogXTR1inJ1(0,2) = -d.value((pos?3:0)+1); d.JlogXTR1inJ1(2,0) =  d.value((pos?3:0)+1);
+              d.JlogXTR1inJ1(1,2) =  d.value((pos?3:0)+0); d.JlogXTR1inJ1(2,1) = -d.value((pos?3:0)+0);
+              d.JlogXTR1inJ1 /= 2;
 
               const value_type alpha = 1/(d.theta*d.theta) - st_1mct/(2*d.theta);
-              d.Jlog.noalias() += alpha * d.value.template tail<3>() * d.value.template tail<3>().transpose ();
+              d.JlogXTR1inJ1.noalias() += alpha * d.value.template tail<3>() * d.value.template tail<3>().transpose ();
+              if (!d.R1isID)
+                d.JlogXTR1inJ1 *= d.F1inJ1.getRotation().derived().transpose();
             }
           } 
       };
@@ -107,10 +111,9 @@ namespace hpp {
         template <bool rel, bool pos> static inline void Jorientation (
             const GenericTransformationData<rel, pos, true>& d, matrixOut_t J)
         {
-          const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
-          const size_type leftCols = d.joint2->jacobian().cols();
+          const size_type& leftCols = d.joint2->jacobian().cols();
           assign_if(!d.fullOri, d, J,
-            d.Jlog * transpose(R1inJ1) * (d.joint2->jacobian().template bottomRows<3>()),
+            d.JlogXTR1inJ1 * (d.joint2->jacobian().template bottomRows<3>()),
             (pos?3:0), leftCols);
         }
         template <bool rel, bool ori> static inline void Jtranslation (
@@ -118,12 +121,24 @@ namespace hpp {
             matrixOut_t J)
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
-          const size_type leftCols = d.joint2->jacobian().cols();
-          assign_if (!d.fullPos, d, J, 
-              transpose(R1inJ1) * (
-                d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
-                + d.joint2->jacobian().template topRows<3>()),
-              0, leftCols);
+          const size_type& leftCols = d.joint2->jacobian().cols();
+
+          Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmp (3,0);
+
+          if (!d.t2isZero) {
+            tmp.noalias() = d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
+            if (d.R1isID) {
+              assign_if (!d.fullPos, d, J, tmp + d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+            } else { // Generic case
+              tmp.noalias() += d.joint2->jacobian().template topRows<3>();
+              assign_if (!d.fullPos, d, J, transpose(R1inJ1) * tmp, 0, leftCols);
+            }
+          } else {
+            if (d.R1isID)
+              assign_if (!d.fullPos, d, J,                     d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+            else
+              assign_if (!d.fullPos, d, J, transpose(R1inJ1) * d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+          }
         }
       };
       template <> struct binary<true, true> // Relative
@@ -132,15 +147,14 @@ namespace hpp {
             const GenericTransformationData<true, pos, true>& d,
             matrixOut_t J)
         {
-          const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const Transform3f& J1 = d.joint1->currentTransformation ();
           const matrix3_t& R1 (J1.getRotation ());
-          const size_type leftCols = d.joint2->jacobian().cols();
+          const size_type& leftCols = d.joint2->jacobian().cols();
           assign_if(!d.fullOri, d, J,
-            d.Jlog * transpose (R1inJ1) * transpose (R1) *
-            (  d.joint2->jacobian().template bottomRows<3>()
-               - d.joint1->jacobian().template bottomRows<3>()),
-            (pos?3:0), leftCols);
+              d.JlogXTR1inJ1 * transpose (R1) * (
+                  d.joint2->jacobian().template bottomRows<3>()
+                - d.joint1->jacobian().template bottomRows<3>()),
+              (pos?3:0), leftCols);
         }
         template <bool ori> static inline void Jtranslation (
             const GenericTransformationData<true, true, ori>& d,
@@ -149,16 +163,16 @@ namespace hpp {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const Transform3f& J1 = d.joint1->currentTransformation ();
           const matrix3_t& R1 (J1.getRotation ());
-          const size_type leftCols = d.joint2->jacobian().cols();
-          // This is a bug in Eigen that is fixed in a future version.
-          // See https://bitbucket.org/eigen/eigen/commits/de7b8c9b1e86/
-          assign_if(!d.fullPos, d, J,
-            transpose(R1inJ1) * transpose(R1) * (
-                - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1)
-                + d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
-                + d.joint2->jacobian().template topRows<3>()
-                - d.joint1->jacobian().template topRows<3>()),
-            0, leftCols);
+          const size_type& leftCols = d.joint2->jacobian().cols();
+
+          Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmp (
+            - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1));
+          tmp.noalias() +=   d.joint2->jacobian().template topRows<3>()
+                           - d.joint1->jacobian().template topRows<3>();
+          if (!d.t2isZero)
+            tmp += d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
+          if (d.R1isID) assign_if(!d.fullPos, d, J,                     transpose(R1) * tmp, 0, leftCols);
+          else          assign_if(!d.fullPos, d, J, transpose(R1inJ1) * transpose(R1) * tmp, 0, leftCols);
         }
       };
 
@@ -195,13 +209,11 @@ namespace hpp {
           const vector3_t& t2 (J2.getTranslation ());
           const matrix3_t& R2 (J2.getRotation ());
 
-          d.cross2.noalias() = R2*t2inJ2;
+          if (!d.t2isZero)
+            d.cross2.noalias() = R2*t2inJ2;
 
           unary<ori>::Jlog (d);
-          hppDnum (info, "Jlog_: " << d.Jlog);
-
-          const size_type leftCols = d.joint2->jacobian().cols();
-          d.jacobian.rightCols (d.jacobian.cols() - leftCols).setZero();
+          hppDnum (info, "Jlog_: " << d.JlogXTR1inJ1);
 
           // rel:           relative known at compile time
           // d.getJoint1(): relative known at run time
@@ -219,21 +231,23 @@ namespace hpp {
 
           // Copy necessary rows.
           size_type index=0;
+          const size_type& leftCols = d.joint2->jacobian().cols();
           const std::size_t lPos = (pos?3:0), lOri = (ori?3:0);
           if (!d.fullPos) {
             for (size_type i=0; i<lPos; ++i) {
               if (mask [i]) {
-                jacobian.row (index) = d.jacobian.row(i); ++index;
+                jacobian.row(index).leftCols(leftCols).noalias() = d.jacobian.row(i); ++index;
               }
             }
           } else index = lPos;
           if (!d.fullOri) {
             for (size_type i=lPos; i<lPos+lOri; ++i) {
               if (mask [i]) {
-                jacobian.row (index) = d.jacobian.row(i); ++index;
+                jacobian.row(index).leftCols(leftCols).noalias() = d.jacobian.row(i); ++index;
               }
             }
           }
+          jacobian.rightCols(jacobian.cols()-leftCols).setZero();
         }
       };
     }

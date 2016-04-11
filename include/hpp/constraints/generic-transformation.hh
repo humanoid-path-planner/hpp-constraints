@@ -35,10 +35,12 @@ namespace hpp {
     template <bool rel> struct GenericTransformationJointData
     {
       JointPtr_t joint2;
+      bool R1isID, R2isID, t1isZero, t2isZero;
       Transform3f F1inJ1, F2inJ2;
       inline JointPtr_t getJoint1() const { return NULL; }
       inline void setJoint1(const JointPtr_t&) {}
-      GenericTransformationJointData () : joint2(NULL)
+      GenericTransformationJointData () :
+        joint2(NULL), R1isID(true), R2isID(true), t1isZero(true), t2isZero(true)
       { F1inJ1.setIdentity(); F2inJ2.setIdentity(); }
     };
     template <> struct GenericTransformationJointData<true> :
@@ -54,7 +56,7 @@ namespace hpp {
     template <> struct GenericTransformationOriData<true>
     {
       mutable value_type theta;
-      mutable eigen::matrix3_t Jlog;
+      mutable eigen::matrix3_t JlogXTR1inJ1;
     };
     /// This class contains the data of the GenericTransformation class.
     template <bool rel, bool pos, bool ori> struct GenericTransformationData :
@@ -74,6 +76,13 @@ namespace hpp {
         fullPos(false), fullOri(false),
         jacobian((int)NbRows, cols)
       { cross1.setZero(); cross2.setZero(); }
+      void checkIsIdentity1() {
+        this->R1isID = this->F1inJ1.getRotation().isIdentity(); this->t1isZero = this->F1inJ1.getTranslation().isZero();
+      }
+      void checkIsIdentity2() {
+        this->R2isID = this->F2inJ2.getRotation().isIdentity(); this->t2isZero = this->F2inJ2.getTranslation().isZero();
+        if (this->t2isZero) cross2.setZero();
+      }
     };
     /// \endcond DEVEL
 
@@ -209,7 +218,9 @@ namespace hpp {
       inline void reference (const Transform3f& reference)
       {
 	d_.F1inJ1 = reference;
+        d_.checkIsIdentity1();
 	d_.F2inJ2.setIdentity ();
+        d_.checkIsIdentity2();
       }
 
       /// Get desired relative orientation
@@ -244,6 +255,7 @@ namespace hpp {
       /// Set position of frame 1 in joint 1
       inline void frame1InJoint1 (const Transform3f& M) {
 	d_.F1inJ1 = M;
+        d_.checkIsIdentity1();
       }
       /// Get position of frame 1 in joint 1
       inline const Transform3f& frame1InJoint1 () const {
@@ -252,6 +264,7 @@ namespace hpp {
       /// Set position of frame 2 in joint 2
       inline void frame2InJoint2 (const Transform3f& M) {
 	d_.F2inJ2 = M;
+        d_.checkIsIdentity2();
       }
       /// Get position of frame 2 in joint 2
       inline const Transform3f& frame2InJoint2 () const {
