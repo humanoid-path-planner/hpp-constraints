@@ -394,6 +394,11 @@ BOOST_AUTO_TEST_CASE (consistency) {
         -1);
         // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
   check_consistent (device,
+        Position::create ("Position"           , device, ee2, vector3_t (1,0,0), vector3_t (0,0,0), identity ()),
+        Position2::create("PositionFromGeneric", device, ee2, vector3_t (0,0,0), vector3_t (1,0,0)),
+        -1);
+        // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
+  check_consistent (device,
         RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, identity ()),
         RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, Tid, Tid),
         -1);
