@@ -84,13 +84,13 @@ namespace hpp {
           } 
       };
 
-      template <typename Data, typename Derived> void set
+      template <typename Data, typename Derived> void assign_if
         (bool cond, const Data& d, matrixOut_t J,
          const Eigen::MatrixBase<Derived>& rhs,
          const size_type& startRow, const size_type& leftCols)
       {
-        if (cond) d.jacobian.template middleRows<3>(startRow).leftCols(leftCols) = rhs;
-        else               J.template middleRows<3>(startRow).leftCols(leftCols) = rhs;
+        if (cond) d.jacobian.template middleRows<3>(startRow)                   .noalias() = rhs;
+        else               J.template middleRows<3>(startRow).leftCols(leftCols).noalias() = rhs;
       }
 
       template <bool lflag /*rel*/, bool rflag /*false*/> struct binary
@@ -109,7 +109,7 @@ namespace hpp {
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const size_type leftCols = d.joint2->jacobian().cols();
-          set(!d.fullOri, d, J,
+          assign_if(!d.fullOri, d, J,
             d.Jlog * transpose(R1inJ1) * (d.joint2->jacobian().template bottomRows<3>()),
             (pos?3:0), leftCols);
         }
@@ -119,7 +119,7 @@ namespace hpp {
         {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const size_type leftCols = d.joint2->jacobian().cols();
-          set (!d.fullPos, d, J, 
+          assign_if (!d.fullPos, d, J, 
               transpose(R1inJ1) * (
                 d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
                 + d.joint2->jacobian().template topRows<3>()),
@@ -136,7 +136,7 @@ namespace hpp {
           const Transform3f& J1 = d.joint1->currentTransformation ();
           const matrix3_t& R1 (J1.getRotation ());
           const size_type leftCols = d.joint2->jacobian().cols();
-          set(!d.fullOri, d, J,
+          assign_if(!d.fullOri, d, J,
             d.Jlog * transpose (R1inJ1) * transpose (R1) *
             (  d.joint2->jacobian().template bottomRows<3>()
                - d.joint1->jacobian().template bottomRows<3>()),
@@ -152,7 +152,7 @@ namespace hpp {
           const size_type leftCols = d.joint2->jacobian().cols();
           // This is a bug in Eigen that is fixed in a future version.
           // See https://bitbucket.org/eigen/eigen/commits/de7b8c9b1e86/
-          set(!d.fullPos, d, J,
+          assign_if(!d.fullPos, d, J,
             transpose(R1inJ1) * transpose(R1) * (
                 - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1)
                 + d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2)
