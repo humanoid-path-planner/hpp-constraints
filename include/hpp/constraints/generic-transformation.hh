@@ -55,6 +55,7 @@ namespace hpp {
     template <bool rel> struct GenericTransformationOriData {};
     template <> struct GenericTransformationOriData<true>
     {
+      mutable Transform3f M;
       mutable value_type theta;
       mutable eigen::matrix3_t JlogXTR1inJ1;
     };

@@ -36,19 +36,19 @@ namespace hpp {
         return res;
       }
 
-      template <bool flag> struct unary
+      template <bool flag /* false */ > struct unary
       {
         template <bool rel, bool pos> static inline void log (
-            const Transform3f&, const GenericTransformationData<rel, pos, flag>&) {}
+            const GenericTransformationData<rel, pos, flag>&) {}
         template <bool rel, bool pos> static inline void Jlog (
             const GenericTransformationData<rel, pos, flag>&) {}
       };
       template <> struct unary <true>
       {
         template <bool rel, bool pos> static inline void log (
-            const Transform3f& M, const GenericTransformationData<rel, pos, true>& d)
+            const GenericTransformationData<rel, pos, true>& d)
           {
-            const matrix3_t& Rerror (M.getRotation ());
+            const matrix3_t& Rerror (d.M.getRotation ());
             value_type tr = Rerror.trace();
             if (tr > 3)       d.theta = 0; // acos((3-1)/2)
             else if (tr < -1) d.theta = ::boost::math::constants::pi<value_type>(); // acos((-1-1)/2)
@@ -176,29 +176,68 @@ namespace hpp {
         }
       };
 
-      template <bool rel> static inline void relativeTransform (
-            const JointPtr_t j1, const Transform3f& f1,
-            const JointPtr_t j2, const Transform3f& f2,
-            Transform3f& out)
+      template <bool compileTimeRel /* false */, bool ori /* false */> struct relativeTransform {
+        template <bool runtimeRel> static inline void run (
+            const GenericTransformationData<runtimeRel, true, false>& d)
         {
-          // TODO: when position only, do not compute the relative orientation.
-          const Transform3f& J2 = j2->currentTransformation ();
-          if (rel && j1) {
-            const Transform3f& J1 = j1->currentTransformation ();
-            out = f1.inverseTimes(J1.inverseTimes(J2 * f2));
-          } else {
-            out = f1.inverseTimes(J2 * f2);
-          }
+          // There is no joint1
+          const Transform3f& J2 = d.joint2->currentTransformation ();
+          d.value.noalias() = J2.transform (d.F2inJ2.getTranslation());
+          if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.getTranslation();
+          if (!d.R1isID)
+            d.value.applyOnTheLeft(d.F1inJ1.getRotation().derived().transpose());
         }
+      };
+      template <> struct relativeTransform<false, true> {
+        template <bool runtimeRel, bool pos> static inline void run (
+            const GenericTransformationData<runtimeRel, pos, true>& d)
+        {
+          const Transform3f& J2 = d.joint2->currentTransformation ();
+          d.M = d.F1inJ1.inverseTimes(J2 * d.F2inJ2);
+          if (pos) d.value.template head<3>().noalias() = d.M.getTranslation();
+        }
+      };
+      template <> struct relativeTransform<true, true> {
+        template <bool pos> static inline void run (
+            const GenericTransformationData<true, pos, true>& d)
+        {
+          if (d.joint1 == NULL) {
+            // runtime absolute reference.
+            relativeTransform<false, true>::run(d);
+            return;
+          }
+          const Transform3f& J1 = d.joint1->currentTransformation ();
+          const Transform3f& J2 = d.joint2->currentTransformation ();
+          d.M = d.F1inJ1.inverseTimes(J1.inverseTimes(J2 * d.F2inJ2));
+          if (pos) d.value.template head<3>().noalias() = d.M.getTranslation();
+        }
+      };
+      template <> struct relativeTransform<true, false> {
+        static inline void run (const GenericTransformationData<true, true, false>& d)
+        {
+          if (d.joint1 == NULL) {
+            // runtime absolute reference.
+            relativeTransform<false, false>::run(d);
+            return;
+          }
+          const Transform3f& J2 = d.joint2->currentTransformation ();
+          const Transform3f& J1 = d.joint1->currentTransformation ();
+          d.value.noalias() = J2.transform (d.F2inJ2.getTranslation())
+                              - J1.getTranslation();
+          d.value.applyOnTheLeft(J1.getRotation().derived().transpose());
+
+          if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.getTranslation();
+          if (!d.R1isID)
+            d.value.applyOnTheLeft(d.F1inJ1.getRotation().derived().transpose());
+        }
+      };
 
       template <bool rel, bool pos, bool ori> struct compute
       {
         static inline void error (const GenericTransformationData<rel, pos, ori>& d)
         {
-          Transform3f M;
-          relativeTransform<rel> (d.getJoint1(), d.F1inJ1, d.joint2, d.F2inJ2, M);
-          if (pos) d.value.template head<3>() = M.getTranslation();
-          unary<ori>::log(M, d);
+          relativeTransform<rel, ori>::run (d);
+          unary<ori>::log(d);
         }
 
         static inline void jacobian (const GenericTransformationData<rel, pos, ori>& d,
