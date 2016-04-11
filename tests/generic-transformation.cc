@@ -310,7 +310,7 @@ void check_consistent (DevicePtr_t dev,
     const value_type alpha = 1)
 {
   BasicConfigurationShooter cs (dev);
-  std::cout << f->name() << '\n' << g->name() << '\n';
+  // std::cout << f->name() << '\n' << g->name() << '\n';
   BOOST_CHECK(f->outputSize()==g->outputSize());
 
   vector_t value1 = vector_t (f->outputSize ());
@@ -322,12 +322,12 @@ void check_consistent (DevicePtr_t dev,
     (*f) (value1, *q);
     (*g) (value2, *q);
     vector_t d = value2 - alpha * value1;
-    std::cout << d.transpose() << std::endl;
+    // std::cout << d.transpose() << std::endl;
     BOOST_CHECK(value1.isApprox(alpha*value2));
     f->jacobian (jacobian1, *q);
     g->jacobian (jacobian2, *q);
     matrix_t diffJ = jacobian2 - alpha*jacobian1;
-    std::cout << diffJ.norm() << std::endl;
+    // std::cout << diffJ.norm() << std::endl;
     BOOST_CHECK(jacobian1.isApprox(alpha*jacobian2));
   }
   const std::size_t iter = 10000;
@@ -343,32 +343,31 @@ void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
   const DifferentiableFunction& _f = *f;
 
   vector_t value = vector_t (f->outputSize ());
-  double value_elapsed = 0;
+  clock_t value_elapsed = 0;
   boost::timer v_current;
   for (std::size_t i = 0; i < iter; i++) {
     ConfigurationPtr_t q = cs.shoot ();
     dev->currentConfiguration (*q);
     dev->computeForwardKinematics ();
 
-    v_current.restart();
+    const clock_t begin_time = clock();
     _f (value, *q);
-    value_elapsed += v_current.elapsed ();
+    value_elapsed += clock() - begin_time;
   }
-  std::cout << "Value:\t" << value_elapsed / iter << '\n';
+  std::cout << "Value:\t" << value_elapsed << '\n';
 
   matrix_t jacobian = matrix_t (f->outputSize (), dev->numberDof ());
-  double jacobian_elapsed = 0;
-  boost::timer j_current;
+  clock_t jacobian_elapsed = 0;
   for (std::size_t i = 0; i < iter; i++) {
     ConfigurationPtr_t q = cs.shoot ();
     dev->currentConfiguration (*q);
     dev->computeForwardKinematics ();
 
-    j_current.restart();
+    const clock_t begin_time = clock();
     _f.jacobian(jacobian, *q);
-    jacobian_elapsed += j_current.elapsed ();
+    jacobian_elapsed += clock() - begin_time;
   }
-  std::cout << "Jacobian:\t" << jacobian_elapsed / iter << '\n';
+  std::cout << "Jacobian:\t" << jacobian_elapsed << '\n';
 }
 
 BOOST_AUTO_TEST_CASE (consistency) {
