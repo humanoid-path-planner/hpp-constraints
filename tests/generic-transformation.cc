@@ -302,6 +302,9 @@ DevicePtr_t createRobot ()
   return robot;
 }
 
+void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
+    const std::size_t iter);
+
 void check_consistent (DevicePtr_t dev,
     DifferentiableFunctionPtr_t f, DifferentiableFunctionPtr_t g,
     const value_type alpha = 1)
@@ -327,6 +330,45 @@ void check_consistent (DevicePtr_t dev,
     std::cout << diffJ.norm() << std::endl;
     BOOST_CHECK(jacobian1.isApprox(alpha*jacobian2));
   }
+  const std::size_t iter = 10000;
+  timings(dev, f, iter);
+  timings(dev, g, iter);
+}
+
+void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
+    const std::size_t iter)
+{
+  BasicConfigurationShooter cs (dev);
+  std::cout << f->name() << '\n';
+  const DifferentiableFunction& _f = *f;
+
+  vector_t value = vector_t (f->outputSize ());
+  double value_elapsed = 0;
+  boost::timer v_current;
+  for (std::size_t i = 0; i < iter; i++) {
+    ConfigurationPtr_t q = cs.shoot ();
+    dev->currentConfiguration (*q);
+    dev->computeForwardKinematics ();
+
+    v_current.restart();
+    _f (value, *q);
+    value_elapsed += v_current.elapsed ();
+  }
+  std::cout << "Value:\t" << value_elapsed / iter << '\n';
+
+  matrix_t jacobian = matrix_t (f->outputSize (), dev->numberDof ());
+  double jacobian_elapsed = 0;
+  boost::timer j_current;
+  for (std::size_t i = 0; i < iter; i++) {
+    ConfigurationPtr_t q = cs.shoot ();
+    dev->currentConfiguration (*q);
+    dev->computeForwardKinematics ();
+
+    j_current.restart();
+    _f.jacobian(jacobian, *q);
+    jacobian_elapsed += j_current.elapsed ();
+  }
+  std::cout << "Jacobian:\t" << jacobian_elapsed / iter << '\n';
 }
 
 BOOST_AUTO_TEST_CASE (consistency) {
