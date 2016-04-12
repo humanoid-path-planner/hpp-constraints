@@ -32,8 +32,6 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <stdlib.h>
-#include <limits>
-#include <math.h>
 
 using hpp::model::Configuration_t;
 using hpp::model::ConfigurationPtr_t;
@@ -43,15 +41,9 @@ using hpp::model::JointPtr_t;
 using hpp::model::JointVector_t;
 using hpp::model::BodyPtr_t;
 
-using std::numeric_limits;
-using boost::assign::list_of;
-
 using namespace hpp::constraints;
 
-const static size_t NUMBER_JACOBIAN_CALCULUS = 5;
-const static double HESSIAN_MAXIMUM_COEF = 1e1;
-const static double DQ_MAX = 1e-2;
-const static size_t MAX_NB_ERROR = 5;
+const static size_t NUMBER_JACOBIAN_CALCULUS = 10;
 
 static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
 
@@ -304,6 +296,9 @@ DevicePtr_t createRobot ()
 
 void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
     const std::size_t iter);
+void timings2 (DevicePtr_t dev,
+    const std::vector<ConfigurationPtr_t>& configs,
+    DifferentiableFunctionPtr_t f);
 
 void check_consistent (DevicePtr_t dev,
     DifferentiableFunctionPtr_t f, DifferentiableFunctionPtr_t g,
@@ -323,28 +318,31 @@ void check_consistent (DevicePtr_t dev,
     (*g) (value2, *q);
     vector_t d = value2 - alpha * value1;
     // std::cout << d.transpose() << std::endl;
-    BOOST_CHECK(value1.isApprox(alpha*value2));
+    BOOST_CHECK_MESSAGE(value1.isApprox(alpha*value2), "Value not matching. Norm of error is " << d.norm());
     f->jacobian (jacobian1, *q);
     g->jacobian (jacobian2, *q);
     matrix_t diffJ = jacobian2 - alpha*jacobian1;
     // std::cout << diffJ.norm() << std::endl;
-    BOOST_CHECK(jacobian1.isApprox(alpha*jacobian2));
+    BOOST_CHECK_MESSAGE(jacobian1.isApprox(alpha*jacobian2), "Jacobian not matching. Norm of error is " << diffJ.norm());
   }
   const std::size_t iter = 10000;
-  timings(dev, f, iter);
-  timings(dev, g, iter);
+  // timings(dev, f, iter);
+  // timings(dev, g, iter);
+  std::vector<ConfigurationPtr_t> cfgs(iter);
+  for (size_t i = 0; i < iter; i++) cfgs[i] = cs.shoot();
+  timings2(dev, cfgs, f);
+  timings2(dev, cfgs, g);
 }
 
 void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
     const std::size_t iter)
 {
   BasicConfigurationShooter cs (dev);
-  std::cout << f->name() << '\n';
+  std::cout << "=======================\n" << f->name() << '\n';
   const DifferentiableFunction& _f = *f;
 
   vector_t value = vector_t (f->outputSize ());
   clock_t value_elapsed = 0;
-  boost::timer v_current;
   for (std::size_t i = 0; i < iter; i++) {
     ConfigurationPtr_t q = cs.shoot ();
     dev->currentConfiguration (*q);
@@ -354,7 +352,7 @@ void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
     _f (value, *q);
     value_elapsed += clock() - begin_time;
   }
-  std::cout << "Value:\t" << value_elapsed << '\n';
+  std::cout << "Value   :\t" << value_elapsed << '\n';
 
   matrix_t jacobian = matrix_t (f->outputSize (), dev->numberDof ());
   clock_t jacobian_elapsed = 0;
@@ -368,6 +366,29 @@ void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
     jacobian_elapsed += clock() - begin_time;
   }
   std::cout << "Jacobian:\t" << jacobian_elapsed << '\n';
+}
+
+void timings2 (DevicePtr_t dev,
+    const std::vector<ConfigurationPtr_t>& configs,
+    DifferentiableFunctionPtr_t f)
+{
+  std::cout << "=======================\n" << f->name() << '\n';
+  const DifferentiableFunction& _f = *f;
+  const std::size_t iter = configs.size();
+
+  vector_t value = vector_t (f->outputSize ());
+  matrix_t jacobian = matrix_t (f->outputDerivativeSize (), f->inputDerivativeSize ());
+  
+  clock_t elapsed = 0;
+  for (std::size_t i = 0; i < iter; i++) {
+    dev->currentConfiguration (*configs[i]);
+    dev->computeForwardKinematics ();
+    const clock_t begin_time = clock();
+    _f (value, *configs[i]);
+    _f.jacobian(jacobian, *configs[i]);
+    elapsed += clock() - begin_time;
+  }
+  std::cout << "Time   :\t" << elapsed << '\n';
 }
 
 BOOST_AUTO_TEST_CASE (consistency) {
@@ -422,4 +443,12 @@ BOOST_AUTO_TEST_CASE (consistency) {
   check_consistent (device,
       RelativeTransformation::create ("RelativeTransformation"           , device, ee1, ee2, tf1, tf2),
       RelativeTransformation2::create("RelativeTransformationFromGeneric", device, ee1, ee2, tf1, tf2));
+  check_consistent (device,
+        Position::create ("Position"           , device, ee2, tf1.getTranslation(), vector3_t (0,0,0), tf1.getRotation()),
+        Position2::create("PositionFromGeneric", device, ee2, fcl::Matrix3f(transpose(tf1.getRotation())), tf1.getTranslation()),
+        -1);
+  check_consistent (device,
+        RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation()),
+        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation(), Tid),
+        -1);
 }
