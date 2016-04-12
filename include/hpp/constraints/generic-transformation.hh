@@ -70,6 +70,7 @@ namespace hpp {
       bool fullPos, fullOri;
       mutable ValueType value;
       mutable JacobianType jacobian;
+      mutable Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmpJac;
       mutable eigen::vector3_t cross1, cross2;
       GenericTransformationData (const size_type cols) :
         GenericTransformationJointData<rel>(),

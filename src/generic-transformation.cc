@@ -123,15 +123,13 @@ namespace hpp {
           const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
           const size_type& leftCols = d.joint2->jacobian().cols();
 
-          Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmp (3,0);
-
           if (!d.t2isZero) {
-            tmp.noalias() = d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
+            d.tmpJac.noalias() = d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
             if (d.R1isID) {
-              assign_if (!d.fullPos, d, J, tmp + d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+              assign_if (!d.fullPos, d, J, d.tmpJac + d.joint2->jacobian().template topRows<3>(), 0, leftCols);
             } else { // Generic case
-              tmp.noalias() += d.joint2->jacobian().template topRows<3>();
-              assign_if (!d.fullPos, d, J, transpose(R1inJ1) * tmp, 0, leftCols);
+              d.tmpJac.noalias() += d.joint2->jacobian().template topRows<3>();
+              assign_if (!d.fullPos, d, J, transpose(R1inJ1) * d.tmpJac, 0, leftCols);
             }
           } else {
             if (d.R1isID)
@@ -150,10 +148,11 @@ namespace hpp {
           const Transform3f& J1 = d.joint1->currentTransformation ();
           const matrix3_t& R1 (J1.getRotation ());
           const size_type& leftCols = d.joint2->jacobian().cols();
-          assign_if(!d.fullOri, d, J,
-              d.JlogXTR1inJ1 * transpose (R1) * (
+          d.tmpJac.noalias() =
                   d.joint2->jacobian().template bottomRows<3>()
-                - d.joint1->jacobian().template bottomRows<3>()),
+                - d.joint1->jacobian().template bottomRows<3>();
+          assign_if(!d.fullOri, d, J,
+              d.JlogXTR1inJ1 * transpose (R1) * d.tmpJac,
               (pos?3:0), leftCols);
         }
         template <bool ori> static inline void Jtranslation (
@@ -165,14 +164,14 @@ namespace hpp {
           const matrix3_t& R1 (J1.getRotation ());
           const size_type& leftCols = d.joint2->jacobian().cols();
 
-          Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmp (
-            - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1));
-          tmp.noalias() +=   d.joint2->jacobian().template topRows<3>()
-                           - d.joint1->jacobian().template topRows<3>();
+          d.tmpJac.noalias() =
+            - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1)
+            + d.joint2->jacobian().template topRows<3>()
+            - d.joint1->jacobian().template topRows<3>();
           if (!d.t2isZero)
-            tmp += d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
-          if (d.R1isID) assign_if(!d.fullPos, d, J,                     transpose(R1) * tmp, 0, leftCols);
-          else          assign_if(!d.fullPos, d, J, transpose(R1inJ1) * transpose(R1) * tmp, 0, leftCols);
+            d.tmpJac.noalias() += d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
+          if (d.R1isID) assign_if(!d.fullPos, d, J,                     transpose(R1) * d.tmpJac, 0, leftCols);
+          else          assign_if(!d.fullPos, d, J, transpose(R1inJ1) * transpose(R1) * d.tmpJac, 0, leftCols);
         }
       };
 
