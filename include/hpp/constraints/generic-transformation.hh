@@ -91,30 +91,40 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
-    /** Relative transformation of two fixed frames in robot joints.
-
-        The value of the function is a 6-dimensional vector. The 3 first
-        coordinates are the position of the center of the second frame expressed
-        in the first frame. The 3 last coordinates are the log of the
-        orientation of frame 2 in frame 1.
-
-        \f{equation*}
-	f (\mathbf{q}) = \left(\begin{array}{c}
-	\mathbf{translation}\left(T_{1/J_1}^T T_1^T T_2 T_{2/J_2}\right)\\
-	\log ((R_1 R_{1/J_1})^T R_2 R_{2/J_2}) \end{array}\right)
-        \f}
-
-	The Jacobian is given by
-
-	\f{equation*}
-	\left(\begin{array}{c}
-	(R_1 R_{1/J_1})^T (\left[R_2 t_{2/J_2} + t_2 - t_1\right]_{\times}
-	J_{1\,\omega} - \left[R_2 t_{2/J_2}\right]_{\times} J_{2\,\omega} +
-	J_{2\,\mathbf{v}} - J_{1\,\mathbf{v}}) \\
-	J_{log}((R_1 R_{1/J_1})^T R_2 R_{2/J_2})(R_1 R_{1/J_1})^T
-	(J_{2\,\omega} - J_{1\,\omega})
-	\end{array}\right)
-	\f}
+    /** GenericTransformation class encapsulates 6 possible differentiable
+     *  functions: Position2, Orientation2, Transformation2 and their relative
+     *  versions RelativePosition2, RelativeOrientation2, RelativeTransformation2.
+     *
+     *  These functions compute the position of frame
+     *  GenericTransformation::frame2InJoint2 in joint
+     *  GenericTransformation::joint2 frame, in the frame
+     *  GenericTransformation::frame1InJoint1 in GenericTransformation::joint1
+     *  frame. For absolute functions, GenericTransformation::joint1 is
+     *  NULL and joint1 frame is the world frame.
+     *
+     *  The value of the RelativeTransformation function is a 6-dimensional
+     *  vector. The 3 first coordinates are the position of the center of the
+     *  second frame expressed in the first frame.
+     *  The 3 last coordinates are the log of the orientation of frame 2 in
+     *  frame 1.
+     *
+     *  \f{equation*}
+     *  f (\mathbf{q}) = \left(\begin{array}{c}
+     *  \mathbf{translation}\left(T_{1/J_1}^T T_1^T T_2 T_{2/J_2}\right)\\
+     *  \log ((R_1 R_{1/J_1})^T R_2 R_{2/J_2}) \end{array}\right)
+     *  \f}
+     *
+     *  The Jacobian is given by
+     *
+     *  \f{equation*}
+     *  \left(\begin{array}{c}
+     *  (R_1 R_{1/J_1})^T (\left[R_2 t_{2/J_2} + t_2 - t_1\right]_{\times}
+     *  J_{1\,\omega} - \left[R_2 t_{2/J_2}\right]_{\times} J_{2\,\omega} +
+     *  J_{2\,\mathbf{v}} - J_{1\,\mathbf{v}}) \\
+     *  J_{log}((R_1 R_{1/J_1})^T R_2 R_{2/J_2})(R_1 R_{1/J_1})^T
+     *  (J_{2\,\omega} - J_{1\,\omega})
+     *  \end{array}\right)
+     *  \f}
     */
     template <int _Options>
     class HPP_CONSTRAINTS_DLLAPI GenericTransformation :
