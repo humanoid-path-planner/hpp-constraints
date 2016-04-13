@@ -298,7 +298,7 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      void computeError (ConfigurationIn_t argument) const;
+      void computeError (const ConfigurationIn_t& argument) const;
       DevicePtr_t robot_;
       GenericTransformationData<IsRelative,ComputePosition,ComputeOrientation>
         d_;

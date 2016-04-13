@@ -376,7 +376,7 @@ namespace hpp {
     }
 
     template <int _Options>
-    void GenericTransformation<_Options>::computeError (ConfigurationIn_t argument) const
+    inline void GenericTransformation<_Options>::computeError (const ConfigurationIn_t& argument) const
     {
       hppDnum (info, "argument=" << argument.transpose ());
       if (argument.size () != latestArgument_.size () ||
@@ -384,7 +384,7 @@ namespace hpp {
 	robot_->currentConfiguration (argument);
 	robot_->computeForwardKinematics ();
         compute<IsRelative, ComputePosition, ComputeOrientation>::error (d_);
-	latestArgument_ = argument;
+	latestArgument_.noalias() = argument;
       }
     }
 
