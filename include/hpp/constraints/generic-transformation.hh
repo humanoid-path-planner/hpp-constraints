@@ -89,8 +89,8 @@ namespace hpp {
     /// \{
 
     /** GenericTransformation class encapsulates 6 possible differentiable
-     *  functions: Position2, Orientation2, Transformation2 and their relative
-     *  versions RelativePosition2, RelativeOrientation2, RelativeTransformation2.
+     *  functions: Position, Orientation, Transformation and their relative
+     *  versions RelativePosition, RelativeOrientation, RelativeTransformation.
      *
      *  These functions compute the position of frame
      *  GenericTransformation::frame2InJoint2 in joint
@@ -170,7 +170,7 @@ namespace hpp {
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
       ///
-      /// \note For Position2, the rotation part of frame1 defines the
+      /// \note For Position, the rotation part of frame1 defines the
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
@@ -210,7 +210,7 @@ namespace hpp {
       /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
       ///       frame.
       ///
-      /// \note For RelativePosition2, the rotation part of frame1 defines the
+      /// \note For RelativePosition, the rotation part of frame1 defines the
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
