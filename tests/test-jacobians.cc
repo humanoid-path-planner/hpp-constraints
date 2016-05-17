@@ -625,11 +625,11 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
       /// Position
       (*pos) (value, *q1);
       pij->computeValue ();
-      BOOST_CHECK (pij->value ().isApprox (-value));
+      BOOST_CHECK (pij->value ().isApprox (value));
       jacobian.setZero ();
       pos->jacobian (jacobian, *q1);
       pij->computeJacobian ();
-      BOOST_CHECK (pij->jacobian ().isApprox (-jacobian));
+      BOOST_CHECK (pij->jacobian ().isApprox (jacobian));
       // Relative position
       (*relpos) (value, *q1);
       relpos_sb_ptr->computeValue ();
