@@ -176,7 +176,7 @@ namespace hpp {
       /// \note For Position2, the rotation part of frame1 defines the
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
-      static Ptr_t create (const std::string& name, const DevicePtr_t&,
+      static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
           /* World frame          */ const JointPtr_t& joint2,
           const Transform3f& frame2, const Transform3f& frame1,
          std::vector <bool> mask = std::vector<bool>(ValueSize,true));
