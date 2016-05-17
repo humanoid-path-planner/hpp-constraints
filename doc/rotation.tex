@@ -311,23 +311,25 @@ Equation \ref{eq:antisymmetric} gives, at the second order in $\normr$:
 
 \subsection{Around $\normr = \pi$}
 
-Equation \ref{eq:symmetric} gives, at the second order in $\phi = \normr - \pi$:
+Equation \ref{eq:symmetric} gives, denoting $\phi = \normr - \pi$:
 
 \begin{eqnarray*}
 \frac{R + R^T}{2} &=& I_3 + \frac{1 - \cos \normr}{\normr^2}\rcross{}^2 \\
                   &=& I_3 + \frac{1 + \cos \left( \phi \right) }{\normr^2} \left( \rot \rot^t - \normr^2 I_3 \right) \\
-                  &=& - \cos (\phi) I_3 + \frac{1 + \cos \left( \phi \right) }{\normr^2} \rot \rot^t \\
-                  &\approx & - (1 - \frac{\phi^2}{2}) I_3 + \frac{2 - \frac{\phi^2}{2}}{\normr^2} \rot \rot^t
+                  &=& - \cos (\phi) I_3 + \frac{1 + \cos \left( \phi \right) }{\normr^2} \rot \rot^t
 \end{eqnarray*}
 
 so
 \begin{equation}
-\rot \rot^t \approx \frac{\normr^2}{2 - \frac{\phi^2}{2}} \left( \frac{R + R^T}{2} + (1 - \frac{\phi^2}{2}) I_3 \right)
+\rot \rot^t = \frac{\normr^2}{1 - \cos\phi} \left( \frac{R + R^T}{2} + \cos(\phi) I_3 \right)
 \end{equation}
 
 The diagonal elements of $\rot \rot^t$ are the square of the elements of $\rot$.
 As $\frac{\sin \normr}{\normr} \geq 0 $, components of $\rcross{}$ have the sign of $\frac{R - R^T}{2}$.
 $r$ is fully known.
+
+This expression is numerical less precise than the next one, as the logarithm is computed as a square root of
+a vector computed with machine precision.
 
 \subsection{Nominal case}
 
