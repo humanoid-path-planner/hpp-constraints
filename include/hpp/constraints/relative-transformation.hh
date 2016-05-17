@@ -20,6 +20,9 @@
 #ifndef HPP_RELATIVE_TRANSFORMATION_HH
 # define HPP_RELATIVE_TRANSFORMATION_HH
 
+# include <hpp/constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+
 # include <boost/assign/list_of.hpp>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/constraints/differentiable-function.hh>
@@ -30,6 +33,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     /// \addtogroup constraints
     /// \{
 
@@ -239,8 +243,9 @@ namespace hpp {
       mutable matrix_t jacobian_;
       mutable eigen::matrix3_t cross1_, cross2_, Jlog_;
       mutable Configuration_t latestArgument_;
-    }; // class RelativeTransformation
+    } HPP_CONSTRAINTS_DEPRECATED; // class RelativeTransformation
     /// \}
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_RELATIVE_TRANSFORMATION_HH

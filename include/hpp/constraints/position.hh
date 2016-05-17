@@ -20,13 +20,17 @@
 #ifndef HPP_CONSTRAINTS_POSITION_HH
 # define HPP_CONSTRAINTS_POSITION_HH
 
-# include <boost/assign/list_of.hpp>
 # include <hpp/constraints/differentiable-function.hh>
+# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+
+# include <boost/assign/list_of.hpp>
+# include <hpp/constraints/generic-transformation.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     /// \addtogroup constraints
     /// \{
 
@@ -153,8 +157,9 @@ namespace hpp {
       mutable vector3_t p_;
       mutable eigen::matrix3_t cross_;
       mutable vector_t result_;
-    }; // class Position
+    } HPP_CONSTRAINTS_DEPRECATED; // class Position
     /// \}
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 

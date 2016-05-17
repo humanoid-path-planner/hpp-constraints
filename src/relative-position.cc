@@ -24,6 +24,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     static size_type size (std::vector<bool> mask)
     {
       size_type res = 0;
@@ -144,5 +145,6 @@ namespace hpp {
       }
     }
 
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp

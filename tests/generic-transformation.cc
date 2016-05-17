@@ -405,28 +405,28 @@ BOOST_AUTO_TEST_CASE (consistency) {
   /// of Frame2 wrt Frame1, in Frame1.
   Transform3f Tid; Tid.setIdentity();
   check_consistent (device,
-        Orientation::create ("Orientation"           , device, ee2, identity()),
-        Orientation2::create("OrientationFromGeneric", device, ee2, identity()),
+        deprecated::Orientation::create ("Orientation"           , device, ee2, identity()),
+        Orientation::create             ("OrientationFromGeneric", device, ee2, identity()),
         -1);
         // Orientation::create (device, ee2, identity(), list_of(false)(true)(true))
   check_consistent (device,
-        Position::create ("Position"           , device, ee2, vector3_t (0,0,0), vector3_t (0,0,0), identity ()),
-        Position2::create("PositionFromGeneric", device, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
+        deprecated::Position::create ("Position"           , device, ee2, vector3_t (0,0,0), vector3_t (0,0,0), identity ()),
+        Position::create             ("PositionFromGeneric", device, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
         -1);
         // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
   check_consistent (device,
-        Position::create ("Position"           , device, ee2, vector3_t (1,0,0), vector3_t (0,0,0), identity ()),
-        Position2::create("PositionFromGeneric", device, ee2, vector3_t (1,0,0), vector3_t (0,0,0)),
+        deprecated::Position::create ("Position"           , device, ee2, vector3_t (1,0,0), vector3_t (0,0,0), identity ()),
+        Position::create             ("PositionFromGeneric", device, ee2, vector3_t (1,0,0), vector3_t (0,0,0)),
         -1);
         // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
   check_consistent (device,
-        RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, identity ()),
-        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, identity ()),
+        deprecated::RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, identity ()),
+        RelativeOrientation::create             ("RelativeOrientationFromGeneric", device, ee1, ee2, identity ()),
         -1);
         // RelativeOrientation::create (device, ee1, ee2, identity (), list_of(false)(true)(true))
   check_consistent (device,
-        RelativePosition::create ("RelativePosition"           , device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
-        RelativePosition2::create("RelativePositionFromGeneric", device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
+        deprecated::RelativePosition::create ("RelativePosition"           , device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
+        RelativePosition::create             ("RelativePositionFromGeneric", device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
         -1);
         // RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0), list_of(false)(true)(true))
 
@@ -441,14 +441,14 @@ BOOST_AUTO_TEST_CASE (consistency) {
   Transform3f tf2 (device->getJointByName (device->name () + "_SO3")->
 		   currentTransformation ());
   check_consistent (device,
-      RelativeTransformation::create ("RelativeTransformation"           , device, ee1, ee2, tf1, tf2),
-      RelativeTransformation2::create("RelativeTransformationFromGeneric", device, ee1, ee2, tf1, tf2));
+      deprecated::RelativeTransformation::create ("RelativeTransformation"           , device, ee1, ee2, tf1, tf2),
+      RelativeTransformation::create             ("RelativeTransformationFromGeneric", device, ee1, ee2, tf1, tf2));
   check_consistent (device,
-        Position::create ("Position"           , device, ee2, tf1.getTranslation(), vector3_t (0,0,0), tf1.getRotation()),
-        Position2::create("PositionFromGeneric", device, ee2, tf1.getTranslation(), fcl::Transform3f(transpose(tf1.getRotation()), vector3_t(0,0,0))),
+        deprecated::Position::create ("Position"           , device, ee2, tf1.getTranslation(), vector3_t (0,0,0), tf1.getRotation()),
+        Position::create             ("PositionFromGeneric", device, ee2, tf1.getTranslation(), fcl::Transform3f(transpose(tf1.getRotation()), vector3_t(0,0,0))),
         -1);
   check_consistent (device,
-        RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation()),
-        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation()),
+        deprecated::RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation()),
+        RelativeOrientation::create             ("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation()),
         -1);
 }

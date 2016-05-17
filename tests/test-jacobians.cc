@@ -19,17 +19,20 @@
 #include <hpp/model/configuration.hh>
 #include <hpp/model/object-factory.hh>
 
+#include "hpp/constraints/generic-transformation.hh"
+#include "hpp/constraints/symbolic-function.hh"
+#include "hpp/constraints/convex-shape-contact.hh"
+#include "hpp/constraints/static-stability.hh"
+#include "hpp/constraints/configuration-constraint.hh"
+#include "hpp/constraints/tools.hh"
+
+// The following 6 includes are deprecated and will be removed
 #include "hpp/constraints/position.hh"
 #include "hpp/constraints/orientation.hh"
 #include "hpp/constraints/transformation.hh"
 #include "hpp/constraints/relative-position.hh"
 #include "hpp/constraints/relative-orientation.hh"
 #include "hpp/constraints/relative-transformation.hh"
-#include "hpp/constraints/symbolic-function.hh"
-#include "hpp/constraints/convex-shape-contact.hh"
-#include "hpp/constraints/static-stability.hh"
-#include "hpp/constraints/configuration-constraint.hh"
-#include "hpp/constraints/tools.hh"
 
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
@@ -48,6 +51,8 @@ using hpp::model::BodyPtr_t;
 
 using std::numeric_limits;
 using boost::assign::list_of;
+
+typedef std::vector<bool> BoolVector_t;
 
 using namespace hpp::constraints;
 
@@ -448,39 +453,75 @@ BOOST_AUTO_TEST_CASE (jacobian) {
           device, goal)
       ));
   functions.push_back ( DFptr (
+        "deprecated Orientation",
+        deprecated::Orientation::create (device, ee2, identity())
+      ));
+  functions.push_back ( DFptr (
+        "deprecated Orientation with mask (0,1,1)",
+        deprecated::Orientation::create (device, ee2, identity(), list_of(false)(true)(true))
+      ));
+  functions.push_back ( DFptr (
         "Orientation",
-        Orientation::create (device, ee2, identity())
+        Orientation::create ("Orientation", device, ee2, identity())
       ));
   functions.push_back ( DFptr (
         "Orientation with mask (0,1,1)",
-        Orientation::create (device, ee2, identity(), list_of(false)(true)(true))
+        Orientation::create ("Orientation", device, ee2, identity(), list_of(false)(true)(true).convert_to_container<BoolVector_t>())
       ));
   functions.push_back ( DFptr (
-        "Position",
-        Position::create (device, ee1, vector3_t (0,0,0),
+        "deprecated Position",
+        deprecated::Position::create (device, ee1, vector3_t (0,0,0),
           vector3_t (0,0,0), identity ())
       ));
   functions.push_back ( DFptr (
-        "Position with mask (0,1,1)",
-        Position::create (device, ee1, vector3_t (0,0,0),
+        "Position",
+        Position::create ("Position", device, ee1, vector3_t (0,0,0),
+          vector3_t (0,0,0))
+      ));
+  functions.push_back ( DFptr (
+        "deprecated Position with mask (0,1,1)",
+        deprecated::Position::create (device, ee1, vector3_t (0,0,0),
           vector3_t (0,0,0), identity (), list_of(false)(true)(true))
       ));
   functions.push_back ( DFptr (
+        "Position with mask (0,1,1)",
+        Position::create ("Position", device, ee1, vector3_t (0,0,0),
+          vector3_t (0,0,0), list_of(false)(true)(true))
+      ));
+  functions.push_back ( DFptr (
         "RelativeOrientation",
-        RelativeOrientation::create (device, ee1, ee2, identity ())
+        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, identity ())
       ));
   functions.push_back ( DFptr (
         "RelativeOrientation with mask (0,1,1)",
-        RelativeOrientation::create (device, ee1, ee2, identity (), list_of(false)(true)(true))
+        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, identity (), list_of(false)(true)(true).convert_to_container<BoolVector_t>())
+      ));
+  functions.push_back ( DFptr (
+        "deprecated::RelativeOrientation",
+        deprecated::RelativeOrientation::create (device, ee1, ee2, identity ())
+      ));
+  functions.push_back ( DFptr (
+        "deprecated::RelativeOrientation with mask (0,1,1)",
+        deprecated::RelativeOrientation::create (device, ee1, ee2, identity (), list_of(false)(true)(true))
       ));
   functions.push_back ( DFptr (
         "RelativePosition",
-        RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
+        RelativePosition::create ("RelativePosition", device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0))
       ));
   functions.push_back ( DFptr (
         "RelativePosition with mask (0,1,1)",
-        RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
+        RelativePosition::create ("RelativePosition", device, ee1, ee2, vector3_t (0,0,0),
+          vector3_t (0,0,0), list_of(false)(true)(true).convert_to_container<BoolVector_t>())
+      ));
+  functions.push_back ( DFptr (
+        "deprecated::RelativePosition",
+        deprecated::RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
+          vector3_t (0,0,0))
+      ));
+  functions.push_back ( DFptr (
+        "deprecated::RelativePosition with mask (0,1,1)",
+        deprecated::RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0), list_of(false)(true)(true))
       ));
   ConfigurationPtr_t q2 = cs.shoot ();
@@ -561,13 +602,13 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   /// Create the constraints
   typedef DifferentiableFunction DF;
   typedef DifferentiableFunctionPtr_t DFptr;
-  DFptr pos = Position::create (device, ee1, vector3_t (0,0,0),
-          vector3_t (0,0,0), identity ());
+  DFptr pos = Position::create ("Position", device, ee1, vector3_t (0,0,0),
+          vector3_t (0,0,0));
   Traits<PointInJoint>::Ptr_t pij  = PointInJoint::create (ee1, vector3_t(0,0,0));
   Traits<PointInJoint>::Ptr_t pij2 = PointInJoint::create (ee2, vector3_t(0,0,0));
   Traits<CalculusBaseAbstract<> >::Ptr_t relpos_sb_ptr =
-    JointTranspose (ee1) * (pij - pij2);
-  DFptr relpos = RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
+    JointTranspose (ee1) * (pij2 - pij);
+  DFptr relpos = RelativePosition::create ("RelPos", device, ee1, ee2, vector3_t (0,0,0),
           vector3_t (0,0,0));
 
   ConfigurationPtr_t q1, q2 = cs.shoot ();
@@ -610,7 +651,7 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   /// Create the constraints
   typedef DifferentiableFunction DF;
   typedef DifferentiableFunctionPtr_t DFptr;
-  DFptr trans = Transformation::create (device, ee1, fcl::Transform3f ());
+  DFptr trans = Transformation::create ("Transform", device, ee1, fcl::Transform3f ());
   Traits<JointFrame>::Ptr_t jf  = JointFrame::create (ee1);
   DFptr sf = SymbolicFunction<JointFrame>::create ("SymbolicFunctionTest", device, jf);
 

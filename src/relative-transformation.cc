@@ -26,6 +26,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     //using fcl::transpose;
 
     static size_type size (std::vector<bool> mask)
@@ -242,5 +243,6 @@ namespace hpp {
       }
     }
 
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp

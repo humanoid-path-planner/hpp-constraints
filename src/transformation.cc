@@ -24,6 +24,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     static matrix3_t identity_;
     static size_type size (std::vector<bool> mask)
     {
@@ -92,5 +93,6 @@ namespace hpp {
       orientation_.jacobian (jacobian.bottomRows (sizeOrientation_), arg);
     }
 
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp

@@ -20,6 +20,9 @@
 #ifndef HPP_TRANSFORMATION_HH
 # define HPP_TRANSFORMATION_HH
 
+# include <hpp/constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+
 # include <boost/assign/list_of.hpp>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/constraints/differentiable-function.hh>
@@ -34,6 +37,7 @@ namespace hpp {
     typedef Eigen::Matrix <double, 3, 1> vector3_t;
   } // namespace eigen
   namespace constraints {
+    namespace deprecated {
     /// \addtogroup constraints
     /// \{
 
@@ -132,8 +136,9 @@ namespace hpp {
       size_type sizeTranslation_;
       /// Size of the orientation constraint
       size_type sizeOrientation_;
-    }; // class Transformation
+    } HPP_CONSTRAINTS_DEPRECATED; // class Transformation
     /// \}
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_TRANSFORMATION_HH

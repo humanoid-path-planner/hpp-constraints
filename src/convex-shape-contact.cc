@@ -28,7 +28,7 @@ namespace hpp {
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
 			      name),
-      robot_ (robot), relativeTransformation_ (RelativeTransformation::create
+      robot_ (robot), relativeTransformation_ (deprecated::RelativeTransformation::create
 					       (name, robot,
 						robot->rootJoint (),
 						robot->rootJoint (),

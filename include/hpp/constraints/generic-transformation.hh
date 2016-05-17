@@ -315,12 +315,12 @@ namespace hpp {
       mutable Configuration_t latestArgument_;
     }; // class GenericTransformation
 
-    typedef GenericTransformation<               PositionBit | OrientationBit > Transformation2;
-    typedef GenericTransformation<               PositionBit                  > Position2;
-    typedef GenericTransformation<                             OrientationBit > Orientation2;
-    typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit > RelativeTransformation2;
-    typedef GenericTransformation< RelativeBit | PositionBit                  > RelativePosition2;
-    typedef GenericTransformation< RelativeBit |               OrientationBit > RelativeOrientation2;
+    typedef GenericTransformation<               PositionBit | OrientationBit > Transformation;
+    typedef GenericTransformation<               PositionBit                  > Position;
+    typedef GenericTransformation<                             OrientationBit > Orientation;
+    typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit > RelativeTransformation;
+    typedef GenericTransformation< RelativeBit | PositionBit                  > RelativePosition;
+    typedef GenericTransformation< RelativeBit |               OrientationBit > RelativeOrientation;
     /// \}
   } // namespace constraints
 } // namespace hpp

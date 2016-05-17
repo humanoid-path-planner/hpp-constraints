@@ -154,7 +154,7 @@ namespace hpp {
             const ConvexShape& floor) const;
 
         DevicePtr_t robot_;
-        RelativeTransformationPtr_t relativeTransformation_;
+        deprecated::RelativeTransformationPtr_t relativeTransformation_;
 
         typedef std::vector <ConvexShape> ConvexShapes_t;
         ConvexShapes_t objectConvexShapes_;

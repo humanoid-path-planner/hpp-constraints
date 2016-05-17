@@ -28,6 +28,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     RelativeOrientationPtr_t RelativeOrientation::create
     (const std::string& name, const DevicePtr_t& robot,
      const JointPtr_t& joint1, const JointPtr_t& joint2,
@@ -145,6 +146,7 @@ namespace hpp {
 	jacobian.row (index) = jacobian_.row (2);
       }
     }
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 
