@@ -89,6 +89,27 @@ namespace hpp {
     typedef HPP_CONSTRAINTS_DEPRECATED
       ConvexShapeContactComplementPtr_t StaticStabilityGravityComplementPtr_t;
 
+    template <int _Options> class GenericTransformation;
+
+    /// \cond DEVEL
+    const int RelativeBit       = 0x1;
+    const int PositionBit       = 0x2;
+    const int OrientationBit    = 0x4;
+    /// \endcond DEVEL
+    typedef GenericTransformation<               PositionBit | OrientationBit > Transformation;
+    typedef GenericTransformation<               PositionBit                  > Position;
+    typedef GenericTransformation<                             OrientationBit > Orientation;
+    typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit > RelativeTransformation;
+    typedef GenericTransformation< RelativeBit | PositionBit                  > RelativePosition;
+    typedef GenericTransformation< RelativeBit |               OrientationBit > RelativeOrientation;
+    typedef boost::shared_ptr<Position> PositionPtr_t;
+    typedef boost::shared_ptr<Orientation> OrientationPtr_t;
+    typedef boost::shared_ptr<Transformation> TransformationPtr_t;
+    typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
+    typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
+    typedef boost::shared_ptr<RelativeTransformation>
+      RelativeTransformationPtr_t;
+
     namespace deprecated {
       HPP_PREDEF_CLASS (Position);
       HPP_PREDEF_CLASS (Orientation);

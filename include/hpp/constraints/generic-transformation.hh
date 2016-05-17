@@ -28,9 +28,6 @@
 
 namespace hpp {
   namespace constraints {
-    const int RelativeBit       = 0x1;
-    const int PositionBit       = 0x2;
-    const int OrientationBit    = 0x4;
     /// \cond DEVEL
     template <bool rel> struct GenericTransformationJointData
     {
@@ -315,13 +312,6 @@ namespace hpp {
       WkPtr_t self_;
       mutable Configuration_t latestArgument_;
     }; // class GenericTransformation
-
-    typedef GenericTransformation<               PositionBit | OrientationBit > Transformation;
-    typedef GenericTransformation<               PositionBit                  > Position;
-    typedef GenericTransformation<                             OrientationBit > Orientation;
-    typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit > RelativeTransformation;
-    typedef GenericTransformation< RelativeBit | PositionBit                  > RelativePosition;
-    typedef GenericTransformation< RelativeBit |               OrientationBit > RelativeOrientation;
     /// \}
   } // namespace constraints
 } // namespace hpp
