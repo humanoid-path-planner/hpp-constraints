@@ -73,12 +73,19 @@ bool check (const vector3_t& aa, const value_type eps = -1)
     std::cout << "exp(x) = " << exponential(aa) << std::endl;
     std::cout << "log(exp(x)) = " << res << std::endl;
     std::cout << "(x - log(exp(x))) / norm(x) = " << (aa-res).derived().transpose()/aa.norm() << std::endl;
-    std::cout << "eps = " << eps << std::endl;
+    std::cout << "eps = " << (eps < 0 ? Eigen::NumTraits<value_type>::dummy_precision() : eps) << std::endl;
   }
   return ret;
 }
 
 BOOST_AUTO_TEST_CASE (logarithm) {
+  // Width of the domain considered as close to rotation of Pi. It should be the
+  // same as the value in the logarithm computation.
+  // When in this domain, the precision of the computation is done on the square
+  // of the angle axis. So we only have precision eps defined as follow.
+  const value_type dlUB = 1e-2;
+  const value_type eps = sqrt(Eigen::NumTraits<value_type>::epsilon());
+
   BOOST_CHECK(check (vector3_t (0,0,0)));
   BOOST_CHECK(check (vector3_t (1,0,0)));
   BOOST_CHECK(check (vector3_t (0,1,0)));
@@ -87,17 +94,21 @@ BOOST_AUTO_TEST_CASE (logarithm) {
   BOOST_CHECK(check (vector3_t (0,1,1)));
   BOOST_CHECK(check (vector3_t (1,0,1)));
   BOOST_CHECK(check (vector3_t (1,1,1)));
+
   BOOST_CHECK(check (M_PI * vector3_t (1,0,0)));
   BOOST_CHECK(check (M_PI * vector3_t (0,1,0)));
   BOOST_CHECK(check (M_PI * vector3_t (0,0,1)));
   BOOST_CHECK(check (M_PI / sqrt(2) * vector3_t (1,1,0)));
   BOOST_CHECK(check (M_PI / sqrt(2) * vector3_t (0,1,1)));
   BOOST_CHECK(check (M_PI / sqrt(2) * vector3_t (1,0,1)));
-  // The two following tests are not passing with better precision.
-  BOOST_CHECK(check (M_PI / sqrt(3) * vector3_t (1,-1,1), sqrt(Eigen::NumTraits<value_type>::epsilon())));
-  BOOST_CHECK(check (M_PI / sqrt(3) * vector3_t (1, 1,1), sqrt(Eigen::NumTraits<value_type>::epsilon())));
+
+  BOOST_CHECK(check (M_PI / sqrt(3) * vector3_t (1,-1,1), eps));
+  BOOST_CHECK(check (M_PI / sqrt(3) * vector3_t (1, 1,1), eps));
 
   BOOST_CHECK(check (1e-7 * vector3_t (1,1,1)));
-  BOOST_CHECK(check ((M_PI - 1e-4) / sqrt(3) * vector3_t (1,-1,1)));
-  BOOST_CHECK(check ((M_PI - 1e-4) / sqrt(3) * vector3_t (1, 1,1)));
+  BOOST_CHECK(check ((M_PI - 0.1 * dlUB) / sqrt(3) * vector3_t (1,-1,1), eps));
+  BOOST_CHECK(check ((M_PI - 0.1 * dlUB) / sqrt(3) * vector3_t (1, 1,1), eps));
+
+  BOOST_CHECK(check ((M_PI - 1.001 * dlUB) / sqrt(3) * vector3_t (1, 1,1), eps));
+  BOOST_CHECK(check ((M_PI - 0.999 * dlUB) / sqrt(3) * vector3_t (1, 1,1)));
 }

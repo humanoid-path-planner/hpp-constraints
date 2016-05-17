@@ -55,22 +55,25 @@ namespace hpp {
             else              d.theta = acos ((tr - 1)/2);
             hppDnum (info, "theta_=" << d.theta);
             assert (d.theta == d.theta);
-            if (d.theta < M_PI - 1e-3) {
+            // From runs of tests/logarithm.cc: 1e-6 is too small.
+            if (d.theta < M_PI - 1e-2) {
               const value_type t = ((d.theta > 1e-6)? d.theta / sin(d.theta) : 1) / 2;
               d.value((pos?3:0)+0) = t * (Rerror (2, 1) - Rerror (1, 2));
               d.value((pos?3:0)+1) = t * (Rerror (0, 2) - Rerror (2, 0));
               d.value((pos?3:0)+2) = t * (Rerror (1, 0) - Rerror (0, 1));
             } else {
-              const value_type phi = d.theta - M_PI;
-              const value_type phi2_2 = phi * phi / 2;
-              const value_type alpha = 1 - phi2_2;
-              const value_type beta  = d.theta*d.theta / ( 2 - phi2_2 );
-              const value_type tmp0 = Rerror (0, 0) + alpha;
-              const value_type tmp1 = Rerror (1, 1) + alpha;
-              const value_type tmp2 = Rerror (2, 2) + alpha;
-              d.value((pos?3:0)+0) = (Rerror (2, 1) > Rerror (1, 2) ? 1 : -1 ) * (tmp0 > 0 ? sqrt(tmp0 * beta) : 0);
-              d.value((pos?3:0)+1) = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1 * beta) : 0);
-              d.value((pos?3:0)+2) = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2 * beta) : 0);
+              // 1e-2: A low value is not required since the computation is
+              // using explicit formula. However, the precision of this method
+              // is the square root of the precision with the antisymmetric
+              // method (Nominal case).
+              const value_type cphi = cos(d.theta - M_PI);
+              const value_type beta  = d.theta*d.theta / ( 1 + cphi );
+              const value_type tmp0 = (Rerror (0, 0) + cphi) * beta;
+              const value_type tmp1 = (Rerror (1, 1) + cphi) * beta;
+              const value_type tmp2 = (Rerror (2, 2) + cphi) * beta;
+              d.value((pos?3:0)+0) = (Rerror (2, 1) > Rerror (1, 2) ? 1 : -1 ) * (tmp0 > 0 ? sqrt(tmp0) : 0);
+              d.value((pos?3:0)+1) = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1) : 0);
+              d.value((pos?3:0)+2) = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2) : 0);
             }
           }
         template <bool rel, bool pos> static inline void Jlog (
