@@ -155,7 +155,7 @@ namespace hpp {
       /// \param joint2 the second joint the transformation of which is
       ///               constrained,
       /// \param reference desired relative transformation
-      ///        \f$T_1(\mathbf{q})^{-1} T_2(\mathbf{q})\f$ between the joints.
+      ///        \f$T_2(\mathbf{q})\f$ between the joints.
       /// \param mask which component of the error vector to take into
       ///        account.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
@@ -172,15 +172,13 @@ namespace hpp {
       /// \param frame2 position of a fixed frame in joint 2,
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
-      /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
-      ///       frame.
       ///
       /// \note For Position2, the rotation part of frame1 defines the
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
       static Ptr_t create (const std::string& name, const DevicePtr_t&,
           /* World frame          */ const JointPtr_t& joint2,
-          const Transform3f& frame1, const Transform3f& frame2,
+          const Transform3f& frame2, const Transform3f& frame1,
          std::vector <bool> mask = std::vector<bool>(ValueSize,true));
 
       /// Object builder for relative functions.
@@ -218,7 +216,7 @@ namespace hpp {
       /// \note For RelativePosition2, the rotation part of frame1 defines the
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
-      static Ptr_t create (const std::string& name, const DevicePtr_t&,
+      static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
 	 const JointPtr_t& joint1,  const JointPtr_t& joint2,
 	 const Transform3f& frame1, const Transform3f& frame2,
          std::vector <bool> mask = std::vector<bool>(ValueSize,true));

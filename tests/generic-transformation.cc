@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE (consistency) {
   Transform3f Tid; Tid.setIdentity();
   check_consistent (device,
         Orientation::create ("Orientation"           , device, ee2, identity()),
-        Orientation2::create("OrientationFromGeneric", device, ee2, Tid),
+        Orientation2::create("OrientationFromGeneric", device, ee2, identity()),
         -1);
         // Orientation::create (device, ee2, identity(), list_of(false)(true)(true))
   check_consistent (device,
@@ -416,12 +416,12 @@ BOOST_AUTO_TEST_CASE (consistency) {
         // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
   check_consistent (device,
         Position::create ("Position"           , device, ee2, vector3_t (1,0,0), vector3_t (0,0,0), identity ()),
-        Position2::create("PositionFromGeneric", device, ee2, vector3_t (0,0,0), vector3_t (1,0,0)),
+        Position2::create("PositionFromGeneric", device, ee2, vector3_t (1,0,0), vector3_t (0,0,0)),
         -1);
         // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
   check_consistent (device,
         RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, identity ()),
-        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, Tid, Tid),
+        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, identity ()),
         -1);
         // RelativeOrientation::create (device, ee1, ee2, identity (), list_of(false)(true)(true))
   check_consistent (device,
@@ -445,10 +445,10 @@ BOOST_AUTO_TEST_CASE (consistency) {
       RelativeTransformation2::create("RelativeTransformationFromGeneric", device, ee1, ee2, tf1, tf2));
   check_consistent (device,
         Position::create ("Position"           , device, ee2, tf1.getTranslation(), vector3_t (0,0,0), tf1.getRotation()),
-        Position2::create("PositionFromGeneric", device, ee2, fcl::Matrix3f(transpose(tf1.getRotation())), tf1.getTranslation()),
+        Position2::create("PositionFromGeneric", device, ee2, tf1.getTranslation(), fcl::Transform3f(transpose(tf1.getRotation()), vector3_t(0,0,0))),
         -1);
   check_consistent (device,
         RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation()),
-        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation(), Tid),
+        RelativeOrientation2::create("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation()),
         -1);
 }
