@@ -277,6 +277,63 @@ J &=& I_3 -\frac{1}{2}\rcross{} +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{
 &=& I_3 -\frac{1}{2}\rcross{} +  \left(\frac{2(1-\cos\normr) - \normr\sin\normr}{2\normr^2(1-\cos\normr)}\right)\rcross{}^2\\
 \end{eqnarray*}
 
+\section{Logarithm}
+
+From equations \ref{eq:rodrigues} and \ref{eq:rcross2}, we have:
+
+\begin{eqnarray}
+\label{eq:antisymmetric}
+\frac{R - R^T}{2} &=& \frac{\sin \normr}{\normr}\rcross{} \\
+\label{eq:symmetric}
+\frac{R + R^T}{2} &=& I_3 + \frac{1 - \cos \normr}{\normr^2}\rcross{}^2 \\
+\label{eq:trace}
+tr(R) &=& 1 + 2 \cos \normr
+\end{eqnarray}
+
+Thus,
+\begin{equation}
+\normr = \arccos \left( \frac{tr(R) - 1}{2} \right)
+\end{equation}
+
+In order to derive $\rot$ from $R$, one can use Eq.\ \ref{eq:antisymmetric}.
+However, around $\normr = 0$ and $\normr = \pi$, inverting $\frac{\sin\normr}{\normr}$ is numerically unstable (as the limit of the division of two terms tending to 0).
+Around $0$, a limited development, proposed below, allows us to go beyond the numerical issue.
+Around $\pi$, a work around is proposed below, using both Eq.\ \ref{eq:antisymmetric} and Eq.\ \ref{eq:symmetric}.
+The resolution is thus divided in the three following cases.
+
+\subsection{Around $\normr = 0$}
+
+Equation \ref{eq:antisymmetric} gives, at the second order in $\normr$:
+
+\begin{equation}
+  \rcross{} = ( 1 - \frac{\normr^2}{3}) \frac{R - R^T}{2}
+\end{equation}
+
+\subsection{Around $\normr = \pi$}
+
+Equation \ref{eq:symmetric} gives, at the second order in $\phi = \normr - \pi$:
+
+\begin{eqnarray*}
+\frac{R + R^T}{2} &=& I_3 + \frac{1 - \cos \normr}{\normr^2}\rcross{}^2 \\
+                  &=& I_3 + \frac{1 + \cos \left( \phi \right) }{\normr^2} \left( \rot \rot^t - \normr^2 I_3 \right) \\
+                  &=& - \cos (\phi) I_3 + \frac{1 + \cos \left( \phi \right) }{\normr^2} \rot \rot^t \\
+                  &\approx & - (1 - \frac{\phi^2}{2}) I_3 + \frac{2 - \frac{\phi^2}{2}}{\normr^2} \rot \rot^t
+\end{eqnarray*}
+
+so
+\begin{equation}
+\rot \rot^t \approx \frac{\normr^2}{2 - \frac{\phi^2}{2}} \left( \frac{R + R^T}{2} + (1 - \frac{\phi^2}{2}) I_3 \right)
+\end{equation}
+
+The diagonal elements of $\rot \rot^t$ are the square of the elements of $\rot$.
+As $\frac{\sin \normr}{\normr} \geq 0 $, components of $\rcross{}$ have the sign of $\frac{R - R^T}{2}$.
+$r$ is fully known.
+
+\subsection{Nominal case}
+
+\begin{equation}
+\rcross{} = \frac{\normr}{\sin \normr} \frac{R - R^T}{2}
+\end{equation}
 
 \section{Appendix}
 
