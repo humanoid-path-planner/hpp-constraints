@@ -280,7 +280,7 @@ namespace hpp {
       inline const Transform3f& frame2InJoint2 () const {
 	return d_.F2inJ2;
       }
-    protected:
+
       ///Constructor
       ///
       /// \param name the name of the constraints,
@@ -292,6 +292,7 @@ namespace hpp {
                               const DevicePtr_t&,
                               std::vector <bool> mask);
 
+    protected:
       void init (const WkPtr_t& self)
       {
         self_ = self;

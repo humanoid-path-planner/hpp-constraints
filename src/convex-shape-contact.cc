@@ -20,24 +20,18 @@
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
 
-#include "hpp/constraints/relative-transformation.hh"
-
 namespace hpp {
   namespace constraints {
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
 			      name),
-      robot_ (robot), relativeTransformation_ (deprecated::RelativeTransformation::create
-					       (name, robot,
-						robot->rootJoint (),
-						robot->rootJoint (),
-						Transform3f (), Transform3f (),
-						boost::assign::list_of (true)
-						(true)(true)(true)(true)(true))
-					       ),
+      robot_ (robot),
+      relativeTransformation_ (name, robot, std::vector<bool>(6, true)),
       normalMargin_ (0)
     {
+      relativeTransformation_.joint1(robot->rootJoint());
+      relativeTransformation_.joint2(robot->rootJoint());
       result_.resize (6);
       jacobian_.resize (6, robot->numberDof ());
     }
@@ -120,7 +114,7 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       selectConvexShapes ();
-      (*relativeTransformation_) (result_, argument);
+      relativeTransformation_ (result_, argument);
       if (isInside_) {
         result [0] = result_ [0] + normalMargin_;
         result.segment <2> (1).setZero ();
@@ -152,7 +146,7 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
       selectConvexShapes ();
-      relativeTransformation_->jacobian (jacobian_, argument);
+      relativeTransformation_.jacobian (jacobian_, argument);
     }
 
     void ConvexShapeContact::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
@@ -208,10 +202,10 @@ namespace hpp {
         }
       }
       contactType_ = contactType (*object, *floor);
-      relativeTransformation_->joint1 (floor->joint_);
-      relativeTransformation_->joint2 (object->joint_);
-      relativeTransformation_->frame1InJoint1 (floor->positionInJoint ());
-      relativeTransformation_->frame2InJoint2 (object->positionInJoint ());
+      relativeTransformation_.joint1 (floor->joint_);
+      relativeTransformation_.joint2 (object->joint_);
+      relativeTransformation_.frame1InJoint1 (floor->positionInJoint ());
+      relativeTransformation_.frame2InJoint2 (object->positionInJoint ());
     }
 
     ConvexShapeContact::ContactType ConvexShapeContact::contactType (
