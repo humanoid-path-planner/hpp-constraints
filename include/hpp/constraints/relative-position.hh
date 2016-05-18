@@ -20,6 +20,9 @@
 #ifndef HPP_CONSTRAINTS_RELATIVE_POSITION_HH
 # define HPP_CONSTRAINTS_RELATIVE_POSITION_HH
 
+# include <hpp/constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+
 # include <boost/assign/list_of.hpp>
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/fwd.hh>
@@ -27,6 +30,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     /// \addtogroup constraints
     /// \{
 
@@ -154,8 +158,9 @@ namespace hpp {
       mutable eigen::matrix3_t cross2_;
       mutable eigen::matrix3_t R1T_;
       mutable eigen::vector3_t T1_;
-    }; // class RelativePosition
+    } HPP_CONSTRAINTS_DEPRECATED; // class RelativePosition
     /// \}
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_RELATIVE_POSITION_HH

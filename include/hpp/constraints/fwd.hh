@@ -34,14 +34,8 @@ namespace hpp {
 
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
-    HPP_PREDEF_CLASS (Orientation);
-    HPP_PREDEF_CLASS (Position);
-    HPP_PREDEF_CLASS (Transformation);
     HPP_PREDEF_CLASS (RelativeCom);
     HPP_PREDEF_CLASS (ComBetweenFeet);
-    HPP_PREDEF_CLASS (RelativeOrientation);
-    HPP_PREDEF_CLASS (RelativePosition);
-    HPP_PREDEF_CLASS (RelativeTransformation);
     HPP_PREDEF_CLASS (StaticStability);
     HPP_PREDEF_CLASS (QPStaticStability);
     HPP_PREDEF_CLASS (ConvexShapeContact);
@@ -77,15 +71,8 @@ namespace hpp {
     DistanceBetweenBodiesPtr_t;
     typedef boost::shared_ptr <DistanceBetweenPointsInBodies>
     DistanceBetweenPointsInBodiesPtr_t;
-    typedef boost::shared_ptr<Orientation> OrientationPtr_t;
-    typedef boost::shared_ptr<Position> PositionPtr_t;
-    typedef boost::shared_ptr<Transformation> TransformationPtr_t;
-    typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
     typedef boost::shared_ptr<RelativeCom> RelativeComPtr_t;
     typedef boost::shared_ptr<ComBetweenFeet> ComBetweenFeetPtr_t;
-    typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
-    typedef boost::shared_ptr<RelativeTransformation>
-    RelativeTransformationPtr_t;
     typedef boost::shared_ptr<ConvexShapeContact>
       ConvexShapeContactPtr_t;
     typedef boost::shared_ptr<ConvexShapeContactComplement>
@@ -101,6 +88,43 @@ namespace hpp {
       ConvexShapeContactPtr_t StaticStabilityGravityPtr_t;
     typedef HPP_CONSTRAINTS_DEPRECATED
       ConvexShapeContactComplementPtr_t StaticStabilityGravityComplementPtr_t;
+
+    template <int _Options> class GenericTransformation;
+
+    /// \cond DEVEL
+    const int RelativeBit       = 0x1;
+    const int PositionBit       = 0x2;
+    const int OrientationBit    = 0x4;
+    /// \endcond DEVEL
+    typedef GenericTransformation<               PositionBit | OrientationBit > Transformation;
+    typedef GenericTransformation<               PositionBit                  > Position;
+    typedef GenericTransformation<                             OrientationBit > Orientation;
+    typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit > RelativeTransformation;
+    typedef GenericTransformation< RelativeBit | PositionBit                  > RelativePosition;
+    typedef GenericTransformation< RelativeBit |               OrientationBit > RelativeOrientation;
+    typedef boost::shared_ptr<Position> PositionPtr_t;
+    typedef boost::shared_ptr<Orientation> OrientationPtr_t;
+    typedef boost::shared_ptr<Transformation> TransformationPtr_t;
+    typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
+    typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
+    typedef boost::shared_ptr<RelativeTransformation>
+      RelativeTransformationPtr_t;
+
+    namespace deprecated {
+      HPP_PREDEF_CLASS (Position);
+      HPP_PREDEF_CLASS (Orientation);
+      HPP_PREDEF_CLASS (Transformation);
+      HPP_PREDEF_CLASS (RelativeOrientation);
+      HPP_PREDEF_CLASS (RelativePosition);
+      HPP_PREDEF_CLASS (RelativeTransformation);
+      typedef boost::shared_ptr<Position> PositionPtr_t;
+      typedef boost::shared_ptr<Orientation> OrientationPtr_t;
+      typedef boost::shared_ptr<Transformation> TransformationPtr_t;
+      typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
+      typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
+      typedef boost::shared_ptr<RelativeTransformation>
+        RelativeTransformationPtr_t;
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

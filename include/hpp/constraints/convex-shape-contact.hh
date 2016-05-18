@@ -18,15 +18,16 @@
 # define HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
 
 # include <vector>
-# include <hpp/constraints/differentiable-function.hh>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
 # include <hpp/constraints/tools.hh>
-# include <hpp/constraints/convex-shape.hh>
 
-# include "hpp/constraints/fwd.hh"
-# include "hpp/constraints/config.hh"
-# include "hpp/constraints/deprecated.hh"
+# include <hpp/constraints/fwd.hh>
+# include <hpp/constraints/config.hh>
+# include <hpp/constraints/deprecated.hh>
+# include <hpp/constraints/generic-transformation.hh>
+# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/constraints/convex-shape.hh>
 
 namespace hpp {
   namespace constraints {
@@ -74,7 +75,11 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact :
       public DifferentiableFunction {
       public:
-      friend class ConvexShapeContactComplement;
+        friend class ConvexShapeContactComplement;
+
+        /// \cond
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        /// \endcond
 
         /// The type of contact between each pair (object shape, floor shape).
         enum ContactType {
@@ -154,7 +159,7 @@ namespace hpp {
             const ConvexShape& floor) const;
 
         DevicePtr_t robot_;
-        RelativeTransformationPtr_t relativeTransformation_;
+        mutable RelativeTransformation relativeTransformation_;
 
         typedef std::vector <ConvexShape> ConvexShapes_t;
         ConvexShapes_t objectConvexShapes_;

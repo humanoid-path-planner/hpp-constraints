@@ -25,6 +25,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
     matrix3_t Position::I3 = identity ();
 
@@ -117,5 +118,6 @@ namespace hpp {
 	jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
       }
     }
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp

@@ -28,6 +28,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   relative-orientation.cc
   relative-position.cc
   relative-transformation.cc
+  generic-transformation.cc
   configuration-constraint.cc
   convex-shape-contact.cc
   static-stability.cc

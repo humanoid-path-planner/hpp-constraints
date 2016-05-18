@@ -25,6 +25,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
 
     static vector3_t zero3d (0, 0, 0);
 
@@ -152,5 +153,6 @@ namespace hpp {
       }
     }
 
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp

@@ -862,9 +862,8 @@ namespace hpp {
         }
         void impl_value () {
           const fcl::Transform3f& t = joint_->currentTransformation ();
-          fcl::Matrix3f RT (t.getRotation ()); RT.transpose ();
-          for (int i = 0; i < 3; ++i) this->value_[i] = - t.getTranslation ()[i];
-          computeLog (this->value_.segment <3> (3), theta_, RT);
+          for (int i = 0; i < 3; ++i) this->value_[i] = t.getTranslation ()[i];
+          computeLog (this->value_.segment <3> (3), theta_, t.getRotation());
         }
         void impl_jacobian () {
           computeValue ();
@@ -875,8 +874,8 @@ namespace hpp {
           eigen::matrix3_t Jlog;
           assert (theta_ >= 0);
           computeJlog (theta_, this->value_.segment <3> (3), Jlog);
-          this->jacobian_.topRows <3> () = - j.topRows <3> ();
-          this->jacobian_.bottomRows <3> () = - Jlog * R * j.bottomRows <3> ();
+          this->jacobian_.topRows<3>().noalias() = j.topRows <3> ();
+          this->jacobian_.bottomRows<3>().noalias() = Jlog * j.bottomRows <3> ();
         }
 
       protected:

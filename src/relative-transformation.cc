@@ -26,6 +26,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     //using fcl::transpose;
 
     static size_type size (std::vector<bool> mask)
@@ -139,18 +140,28 @@ namespace hpp {
 	theta_ = acos ((tr - 1)/2);
 	hppDnum (info, "theta_=" << theta_);
 	assert (theta_ == theta_);
-	if (theta_ > 1e-6) {
+	if (theta_ < 1e-6) {
+	  value_ [3] = (Rerror (2, 1) - Rerror (1, 2))/2;
+	  value_ [4] = (Rerror (0, 2) - Rerror (2, 0))/2;
+	  value_ [5] = (Rerror (1, 0) - Rerror (0, 1))/2;
+	} else if (theta_ > M_PI - 1e-3) {
+          const value_type phi = theta_ - M_PI;
+          const value_type phi2_2 = phi * phi / 2;
+          const value_type alpha = 1 - phi2_2;
+          const value_type beta  = theta_*theta_ / ( 2 - phi2_2 );
+          const value_type tmp0 = Rerror (0, 0) + alpha;
+          const value_type tmp1 = Rerror (1, 1) + alpha;
+          const value_type tmp2 = Rerror (2, 2) + alpha;
+	  value_ [3] = (Rerror (2, 1) > Rerror (1, 2) ? 1 : -1 ) * (tmp0 > 0 ? sqrt(tmp0 * beta) : 0);
+	  value_ [4] = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1 * beta) : 0);
+	  value_ [5] = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2 * beta) : 0);
+        } else {
 	  value_ [3] = theta_*(Rerror (2, 1) -
 			      Rerror (1, 2))/(2*sin(theta_));
 	  value_ [4] = theta_*(Rerror (0, 2) -
 			      Rerror (2, 0))/(2*sin(theta_));
 	  value_ [5] = theta_*(Rerror (1, 0) -
 			      Rerror (0, 1))/(2*sin(theta_));
-	}
-	else {
-	  value_ [3] = (Rerror (2, 1) - Rerror (1, 2))/2;
-	  value_ [4] = (Rerror (0, 2) - Rerror (2, 0))/2;
-	  value_ [5] = (Rerror (1, 0) - Rerror (0, 1))/2;
 	}
 	latestArgument_ = argument;
       }
@@ -232,5 +243,6 @@ namespace hpp {
       }
     }
 
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp

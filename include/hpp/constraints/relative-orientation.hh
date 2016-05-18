@@ -20,11 +20,15 @@
 #ifndef HPP_RELATIVE_ORIENTATION_HH
 # define HPP_RELATIVE_ORIENTATION_HH
 
+# include <hpp/constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+
 # include <boost/assign/list_of.hpp>
 # include <hpp/constraints/differentiable-function.hh>
 
 namespace hpp {
   namespace constraints {
+    namespace deprecated {
     /// \addtogroup constraints
     /// \{
 
@@ -132,8 +136,9 @@ namespace hpp {
       mutable vector_t r_;
       mutable eigen::matrix3_t Jlog_;
       mutable matrix_t jacobian_;
-    }; // class RelativeOrientation
+    } HPP_CONSTRAINTS_DEPRECATED; // class RelativeOrientation
     /// \}
+    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_RELATIVE_ORIENTATION_HH
