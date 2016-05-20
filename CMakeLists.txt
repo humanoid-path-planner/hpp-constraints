@@ -32,6 +32,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
   include/hpp/constraints/tools.hh
+  include/hpp/constraints/generic-transformation.hh
   include/hpp/constraints/macros.hh
   include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/convex-shape-contact.hh
