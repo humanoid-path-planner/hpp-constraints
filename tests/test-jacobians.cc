@@ -24,6 +24,7 @@
 #include "hpp/constraints/convex-shape-contact.hh"
 #include "hpp/constraints/static-stability.hh"
 #include "hpp/constraints/configuration-constraint.hh"
+#include "hpp/constraints/differentiable-function-stack.hh"
 #include "hpp/constraints/tools.hh"
 
 // The following 6 includes are deprecated and will be removed
@@ -552,6 +553,25 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         createConvexShapeContact_convex (device, ee1)
       ));
 
+  // DifferentiableFunctionStack
+  DifferentiableFunctionStackPtr_t stack =
+    DifferentiableFunctionStack::create("Stack");
+  stack->add (Position::create ("Position", device, ee1, vector3_t (0,0,0),
+        vector3_t (0,0,0)));
+  stack->add (RelativeOrientation::create (
+        "RelativeOrientation", device, ee1, ee2, identity (),
+        list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
+  // Cannot be tested with intervals as we later iterate on the robot DOFs
+  // DifferentiableFunctionStackPtr_t stack2 =
+    // DifferentiableFunctionStack::create("Stack with intervals");
+  // stack2->add (Position::create ("Position", device, ee1, vector3_t (0,0,0),
+        // vector3_t (0,0,0)));
+  // stack2->add (RelativeOrientation::create (
+        // "RelativeOrientation", device, ee1, ee2, identity (),
+        // list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
+  // stack2->add (SizeInterval_t(0,4));
+  // functions.push_back (DFptr (stack2->name (), stack2));
+
   ConfigurationPtr_t q1, q2 (new Configuration_t(device->currentConfiguration()));
   vector_t value1, value2, dvalue, error;
   vector_t errorNorm (MAX_NB_ERROR);
@@ -562,7 +582,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
     value1 = vector_t (f.outputSize ());
     value2 = vector_t (f.outputSize ());
     errorNorm.setZero ();
-    jacobian = matrix_t (f.outputSize (), device->numberDof ());
+    jacobian = matrix_t (f.outputDerivativeSize (), f.inputDerivativeSize ());
     for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) {
       q1 = cs.shoot ();
       f (value1, *q1);

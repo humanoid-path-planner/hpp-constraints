@@ -26,11 +26,26 @@
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
+    HPP_PREDEF_CLASS (DifferentiableFunctionStack);
+    typedef model::size_type size_type;
+    typedef model::value_type value_type;
+    typedef model::JointPtr_t JointPtr_t;
+    typedef model::vector3_t vector3_t;
+    typedef model::matrix3_t matrix3_t;
+    typedef model::matrix_t matrix_t;
+    typedef Eigen::Ref <const matrix_t> matrixIn_t;
+    typedef Eigen::Ref <matrix_t> matrixOut_t;
+    typedef model::vector_t vector_t;
+    typedef model::vectorIn_t vectorIn_t;
+    typedef model::vectorOut_t vectorOut_t;
+    typedef model::ComJacobian_t ComJacobian_t;
+    typedef model::JointJacobian_t JointJacobian_t;
+    typedef model::Transform3f Transform3f;
     namespace eigen {
-      typedef Eigen::Matrix <double, 3, 3> matrix3_t;
-      typedef Eigen::Matrix <double, 3, 1> vector3_t;
+      typedef Eigen::Matrix <value_type, 3, 3> matrix3_t;
+      typedef Eigen::Matrix <value_type, 3, 1> vector3_t;
     } // namespace eigen
-    typedef Eigen::Matrix <double, 5, 1> vector5_t;
+    typedef Eigen::Matrix <value_type, 5, 1> vector5_t;
 
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
@@ -53,20 +68,8 @@ namespace hpp {
     typedef model::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
     typedef boost::shared_ptr <DifferentiableFunction>
     DifferentiableFunctionPtr_t;
-    typedef model::size_type size_type;
-    typedef model::value_type value_type;
-    typedef model::JointPtr_t JointPtr_t;
-    typedef model::vector3_t vector3_t;
-    typedef model::matrix3_t matrix3_t;
-    typedef model::matrix_t matrix_t;
-    typedef Eigen::Ref <const matrix_t> matrixIn_t;
-    typedef Eigen::Ref <matrix_t> matrixOut_t;
-    typedef model::vector_t vector_t;
-    typedef model::vectorIn_t vectorIn_t;
-    typedef model::vectorOut_t vectorOut_t;
-    typedef model::ComJacobian_t ComJacobian_t;
-    typedef model::JointJacobian_t JointJacobian_t;
-    typedef model::Transform3f Transform3f;
+    typedef boost::shared_ptr <DifferentiableFunctionStack>
+    DifferentiableFunctionStackPtr_t;
     typedef boost::shared_ptr <DistanceBetweenBodies>
     DistanceBetweenBodiesPtr_t;
     typedef boost::shared_ptr <DistanceBetweenPointsInBodies>
