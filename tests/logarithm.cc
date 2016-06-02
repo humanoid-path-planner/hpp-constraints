@@ -49,7 +49,7 @@ matrix3_t exponential (const vector3_t& aa)
     R += 0.5 * xCross.transpose() * xCross;
   } else {
     R += sin(theta) / theta * xCross;
-    R += 2 * std::pow(sin(theta/2),2) / std::pow(theta,2) * xCross.transpose() * xCross;
+    R += 2 * std::pow(sin(theta/2),2) / std::pow(theta,2) * xCross * xCross;
   }
   return R;
 }
