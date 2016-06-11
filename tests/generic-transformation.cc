@@ -40,6 +40,7 @@ using hpp::model::DevicePtr_t;
 using hpp::model::JointPtr_t;
 using hpp::model::JointVector_t;
 using hpp::model::BodyPtr_t;
+using hpp::model::Transform3f;
 
 using namespace hpp::constraints;
 
@@ -429,6 +430,15 @@ BOOST_AUTO_TEST_CASE (consistency) {
         RelativePosition::create             ("RelativePositionFromGeneric", device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
         -1);
         // RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0), list_of(false)(true)(true))
+
+  std::vector < bool > mask (6, true); mask [0] = mask [1] = false;
+  check_consistent (device, deprecated::RelativeTransformation::create
+		    ("RelativeTransformation", device, ee1, ee2,
+		     Transform3f (), Transform3f (), mask),
+		    RelativeTransformation::create
+		    ("RelativeTransformation", device, ee1, ee2,
+		     Transform3f (), Transform3f (), mask),
+		    -1);
 
   ConfigurationPtr_t q2 = cs.shoot ();
   device->currentConfiguration (*q2);
