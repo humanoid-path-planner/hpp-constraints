@@ -319,12 +319,20 @@ void check_consistent (DevicePtr_t dev,
     (*g) (value2, *q);
     vector_t d = value2 - alpha * value1;
     // std::cout << d.transpose() << std::endl;
-    BOOST_CHECK_MESSAGE(value1.isApprox(alpha*value2), "Value not matching. Norm of error is " << d.norm());
+    BOOST_CHECK_MESSAGE(value1.isApprox(alpha*value2, 1e-10),
+			"Value not matching. Norm of value1 is "
+			<< value1.norm () <<  ", norm of value2 is "
+			<< value2.norm () << ", norm of error is "
+			<< d.norm());
     f->jacobian (jacobian1, *q);
     g->jacobian (jacobian2, *q);
     matrix_t diffJ = jacobian2 - alpha*jacobian1;
     // std::cout << diffJ.norm() << std::endl;
-    BOOST_CHECK_MESSAGE(jacobian1.isApprox(alpha*jacobian2), "Jacobian not matching. Norm of error is " << diffJ.norm());
+    BOOST_CHECK_MESSAGE(jacobian1.isApprox(alpha*jacobian2, 1e-10),
+			"Jacobian not matching. Norm of J1 is "
+			<< jacobian1.norm () << ", norm of J2 is "
+			<< jacobian2.norm () << ", norm of error is "
+			<< diffJ.norm());
   }
   const std::size_t iter = 10000;
   // timings(dev, f, iter);
