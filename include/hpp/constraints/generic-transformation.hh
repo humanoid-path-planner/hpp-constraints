@@ -65,6 +65,7 @@ namespace hpp {
       typedef Eigen::Matrix<value_type, NbRows, 1> ValueType;
       typedef Eigen::Matrix<value_type, NbRows, Eigen::Dynamic> JacobianType;
       bool fullPos, fullOri;
+      size_type rowOri;
       mutable ValueType value;
       mutable JacobianType jacobian;
       mutable Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmpJac;

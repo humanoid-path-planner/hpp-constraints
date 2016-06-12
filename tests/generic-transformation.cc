@@ -437,8 +437,7 @@ BOOST_AUTO_TEST_CASE (consistency) {
 		     Transform3f (), Transform3f (), mask),
 		    RelativeTransformation::create
 		    ("RelativeTransformation", device, ee1, ee2,
-		     Transform3f (), Transform3f (), mask),
-		    -1);
+		     Transform3f (), Transform3f (), mask));
 
   ConfigurationPtr_t q2 = cs.shoot ();
   device->currentConfiguration (*q2);

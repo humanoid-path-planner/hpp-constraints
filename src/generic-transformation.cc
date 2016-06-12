@@ -130,7 +130,7 @@ namespace hpp {
           const size_type& leftCols = d.joint2->jacobian().cols();
           assign_if(!d.fullOri, d, J,
             d.JlogXTR1inJ1 * (d.joint2->jacobian().template bottomRows<3>()),
-            (pos?3:0), leftCols);
+            d.rowOri, leftCols);
         }
         template <bool rel, bool ori> static inline void Jtranslation (
             const GenericTransformationData<rel, true, ori>& d,
@@ -169,7 +169,7 @@ namespace hpp {
                 - d.joint1->jacobian().template bottomRows<3>();
           assign_if(!d.fullOri, d, J,
               d.JlogXTR1inJ1 * transpose (R1) * d.tmpJac,
-              (pos?3:0), leftCols);
+              d.rowOri, leftCols);
         }
         template <bool ori> static inline void Jtranslation (
             const GenericTransformationData<true, true, ori>& d,
@@ -382,13 +382,15 @@ namespace hpp {
     {
       assert(mask.size()==ValueSize);
       std::size_t iOri = 0;
+      d_.rowOri = 0;
       if (ComputePosition) {
-        d_.fullPos = mask_[0] && mask_[1] && mask_[2];
+        for (size_type i=0; i<3; ++i) if (mask_[i]) d_.rowOri++;
+        d_.fullPos = (d_.rowOri==3);
         iOri = 3;
       } else d_.fullPos = false;
       if (ComputeOrientation)
         d_.fullOri = mask_[iOri + 0] && mask_[iOri + 1] && mask_[iOri + 2];
-      else d_.fullPos = false;
+      else d_.fullOri = false;
     }
 
     template <int _Options>
