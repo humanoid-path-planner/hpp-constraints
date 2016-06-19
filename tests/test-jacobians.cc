@@ -442,10 +442,16 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
 
+  device->currentConfiguration (*cs.shoot ());
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
+
   /// Create the constraints
   typedef DifferentiableFunction DF;
   typedef std::pair <std::string, DifferentiableFunctionPtr_t> DFptr;
   typedef std::list <DFptr> DFs;
+  std::vector<bool> mask011 (3, true); mask011[0] = false;
   DFs functions;
   functions.push_back ( DFptr (
         "ConfigurationConstraint",
@@ -454,86 +460,82 @@ BOOST_AUTO_TEST_CASE (jacobian) {
       ));
   functions.push_back ( DFptr (
         "deprecated Orientation",
-        deprecated::Orientation::create (device, ee2, identity())
+        deprecated::Orientation::create (device, ee2, tf2.getRotation())
       ));
   functions.push_back ( DFptr (
         "deprecated Orientation with mask (0,1,1)",
-        deprecated::Orientation::create (device, ee2, identity(), list_of(false)(true)(true))
+        deprecated::Orientation::create (device, ee1, tf1.getRotation(), mask011)
       ));
   functions.push_back ( DFptr (
         "Orientation",
-        Orientation::create ("Orientation", device, ee2, identity())
+        Orientation::create ("Orientation", device, ee2, tf2.getRotation())
       ));
   functions.push_back ( DFptr (
         "Orientation with mask (0,1,1)",
-        Orientation::create ("Orientation", device, ee2, identity(), list_of(false)(true)(true).convert_to_container<BoolVector_t>())
+        Orientation::create ("Orientation", device, ee1, tf1.getRotation(), mask011)
       ));
   functions.push_back ( DFptr (
         "deprecated Position",
-        deprecated::Position::create (device, ee1, vector3_t (0,0,0),
-          vector3_t (0,0,0), identity ())
+        deprecated::Position::create (device, ee1, tf1.getTranslation(),
+          tf2.getTranslation(), tf2.getRotation())
       ));
   functions.push_back ( DFptr (
         "Position",
-        Position::create ("Position", device, ee1, vector3_t (0,0,0),
-          vector3_t (0,0,0))
+        Position::create ("Position", device, ee1, tf1.getTranslation(), tf2)
       ));
   functions.push_back ( DFptr (
         "deprecated Position with mask (0,1,1)",
-        deprecated::Position::create (device, ee1, vector3_t (0,0,0),
-          vector3_t (0,0,0), identity (), list_of(false)(true)(true))
+        deprecated::Position::create (device, ee1, tf1.getTranslation(),
+          tf2.getTranslation(), tf2.getRotation (), mask011)
       ));
   functions.push_back ( DFptr (
         "Position with mask (0,1,1)",
-        Position::create ("Position", device, ee1, vector3_t (0,0,0),
-          vector3_t (0,0,0), list_of(false)(true)(true))
+        Position::create ("Position", device, ee1, tf1.getTranslation(),
+          tf2, mask011)
       ));
   functions.push_back ( DFptr (
         "RelativeOrientation",
-        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, identity ())
+        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2)
       ));
   functions.push_back ( DFptr (
         "RelativeOrientation with mask (0,1,1)",
-        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, identity (), list_of(false)(true)(true).convert_to_container<BoolVector_t>())
+        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2, mask011)
       ));
   functions.push_back ( DFptr (
         "deprecated::RelativeOrientation",
-        deprecated::RelativeOrientation::create (device, ee1, ee2, identity ())
+        deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.getRotation())
       ));
   functions.push_back ( DFptr (
         "deprecated::RelativeOrientation with mask (0,1,1)",
-        deprecated::RelativeOrientation::create (device, ee1, ee2, identity (), list_of(false)(true)(true))
+        deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.getRotation(), mask011)
       ));
   functions.push_back ( DFptr (
         "RelativePosition",
-        RelativePosition::create ("RelativePosition", device, ee1, ee2, vector3_t (0,0,0),
-          vector3_t (0,0,0))
+        RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2)
       ));
   functions.push_back ( DFptr (
         "RelativePosition with mask (0,1,1)",
-        RelativePosition::create ("RelativePosition", device, ee1, ee2, vector3_t (0,0,0),
-          vector3_t (0,0,0), list_of(false)(true)(true).convert_to_container<BoolVector_t>())
+        RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2, mask011)
       ));
   functions.push_back ( DFptr (
         "deprecated::RelativePosition",
-        deprecated::RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
-          vector3_t (0,0,0))
+        deprecated::RelativePosition::create (device, ee1, ee2, tf1.getTranslation(),
+          tf2.getTranslation())
       ));
   functions.push_back ( DFptr (
         "deprecated::RelativePosition with mask (0,1,1)",
-        deprecated::RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0),
-          vector3_t (0,0,0), list_of(false)(true)(true))
+        deprecated::RelativePosition::create (device, ee1, ee2, tf1.getTranslation(),
+          tf2.getTranslation(), mask011)
       ));
-  ConfigurationPtr_t q2 = cs.shoot ();
-  device->currentConfiguration (*q2);
+
+  device->currentConfiguration (*cs.shoot ());
   device->computeForwardKinematics ();
-  Transform3f tf1 (device->getJointByName (device->name () + "_SO3")->
-		   currentTransformation ());
-  q2 = cs.shoot ();
-  device->currentConfiguration (*q2);
-  device->computeForwardKinematics ();
-  Transform3f tf2 (device->getJointByName (device->name () + "_SO3")->
-		   currentTransformation ());
+  tf1 = ee1->currentTransformation ();
+  tf2 = ee2->currentTransformation ();
+
+  functions.push_back (DFptr ("Transformation",
+			      Transformation::create
+			      ("", device, ee1, tf1)));
   functions.push_back (DFptr ("RelativeTransformation",
 			      RelativeTransformation::create
 			      ("", device, ee1, ee2, tf1, tf2)));
@@ -550,7 +552,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         createConvexShapeContact_convex (device, ee1)
       ));
 
-  ConfigurationPtr_t q1;
+  ConfigurationPtr_t q1, q2 (new Configuration_t(device->currentConfiguration()));
   vector_t value1, value2, dvalue, error;
   vector_t errorNorm (MAX_NB_ERROR);
   vector_t dq (device->numberDof ()); dq.setZero ();
