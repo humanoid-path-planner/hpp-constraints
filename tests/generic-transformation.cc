@@ -50,6 +50,25 @@ static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
 
 hpp::model::ObjectFactory objectFactory;
 
+matrix3_t exponential (const vector3_t& aa)
+{
+  matrix3_t R, xCross;
+  xCross.setZero();
+  xCross(1, 0) = + aa(2); xCross(0, 1) = - aa(2);
+  xCross(2, 0) = - aa(1); xCross(0, 2) = + aa(1);
+  xCross(2, 1) = + aa(0); xCross(1, 2) = - aa(0);
+  R.setIdentity();
+  value_type theta = aa.norm();
+  if (theta < 1e-6) {
+    R += xCross;
+    R += 0.5 * xCross.transpose() * xCross;
+  } else {
+    R += sin(theta) / theta * xCross;
+    R += 2 * std::pow(sin(theta/2),2) / std::pow(theta,2) * xCross.transpose() * xCross;
+  }
+  return R;
+}
+
 class BasicConfigurationShooter
 {
 public:
@@ -301,9 +320,79 @@ void timings2 (DevicePtr_t dev,
     const std::vector<ConfigurationPtr_t>& configs,
     DifferentiableFunctionPtr_t f);
 
+struct ProportionalCompare {
+  const value_type alpha;
+  ProportionalCompare (value_type _alpha = 1) : alpha (_alpha) {}
+
+  void value(const vector_t& value1, const vector_t& value2) const {
+    vector_t d = value2 - alpha * value1;
+    //std::cout << "----------" << std::endl;
+    //std::cout << value1.transpose() << std::endl;
+    //std::cout << value2.transpose() << std::endl;
+    //std::cout << "--" << std::endl;
+    //std::cout << exponential(value1.tail<3>()) * R << std::endl;
+    //std::cout << exponential(value2.tail<3>()) * transpose(R) << std::endl;
+    //std::cout << "----------" << std::endl;
+    //std::cout << d.transpose() << std::endl;
+    BOOST_CHECK_MESSAGE(value1.isApprox(alpha*value2, 1e-10),
+			"Value not matching. Norm of value1 is "
+			<< value1.norm () <<  ", norm of value2 is "
+			<< value2.norm () << ", norm of error is "
+			<< d.norm());
+  }
+
+  void jacobian(const matrix_t& jacobian1, const matrix_t& jacobian2) const {
+    matrix_t diffJ = jacobian2 - alpha*jacobian1;
+    // std::cout << diffJ.norm() << std::endl;
+    BOOST_CHECK_MESSAGE(jacobian1.isApprox(alpha*jacobian2, 1e-10),
+			"Jacobian not matching. Norm of J1 is "
+			<< jacobian1.norm () << ", norm of J2 is "
+			<< jacobian2.norm () << ", norm of error is "
+			<< diffJ.norm());
+  }
+};
+
+struct TransformationCompare {
+  const matrix3_t R;
+  const size_type rowTr, sizeTr;
+  TransformationCompare (const matrix3_t _R, size_type _rowTr, size_type _sizeTr)
+    : R (_R), rowTr(_rowTr), sizeTr(_sizeTr) {}
+
+  void value(const vector_t& value1, const vector_t& value2) const {
+    vector_t dtr  = R.middleRows(rowTr, sizeTr) * value2.segment(rowTr,sizeTr) + value1.segment(rowTr,sizeTr);
+    BOOST_CHECK_MESSAGE(dtr.isZero(1e-10),
+			"Value not matching. Norm of value1 is "
+			<< value1.segment(rowTr,sizeTr).norm () <<  ", norm of value2 is "
+			<< value2.segment(rowTr,sizeTr).norm () << ", norm of error is "
+			<< dtr.norm());
+    //matrix3_t A = exponential(value1.tail<3>()) * transpose(R);
+    //matrix3_t B = exponential(value2.tail<3>()) * R;
+    matrix3_t A = exponential(value1.tail<3>());
+    matrix3_t B = exponential(value2.tail<3>());
+    matrix_t diff = A.transpose() - B;
+    // std::cout << diff << std::endl;
+    BOOST_CHECK_MESSAGE(diff.isZero(1e-10),
+			"Value not matching. Norm of error is "
+			<< diff.norm());
+  }
+
+  void jacobian(const matrix_t& jacobian1, const matrix_t& jacobian2) const {
+    matrix_t diffJtr = R.middleRows(rowTr, sizeTr) * jacobian2.middleRows(rowTr, sizeTr) + jacobian1.middleRows(rowTr, sizeTr);
+    //matrix_t diffJrot = jacobian2 - jacobian1;
+    // std::cout << diffJ.norm() << std::endl;
+    BOOST_CHECK_MESSAGE(diffJtr.isZero(1e-10),
+			"Jacobian not matching. Norm of J1 is "
+			<< jacobian1.middleRows(rowTr, sizeTr).norm () << ", norm of J2 is "
+			<< jacobian2.middleRows(rowTr, sizeTr).norm () << ", norm of error is "
+			<< diffJtr.norm());
+    std::cout << "Rotation part of jacobian not checked." << std::endl;
+  }
+};
+
+template <typename Compare>
 void check_consistent (DevicePtr_t dev,
     DifferentiableFunctionPtr_t f, DifferentiableFunctionPtr_t g,
-    const value_type alpha = 1)
+    const Compare comp = Compare())
 {
   BasicConfigurationShooter cs (dev);
   // std::cout << f->name() << '\n' << g->name() << '\n';
@@ -317,30 +406,18 @@ void check_consistent (DevicePtr_t dev,
     ConfigurationPtr_t q = cs.shoot ();
     (*f) (value1, *q);
     (*g) (value2, *q);
-    vector_t d = value2 - alpha * value1;
-    // std::cout << d.transpose() << std::endl;
-    BOOST_CHECK_MESSAGE(value1.isApprox(alpha*value2, 1e-10),
-			"Value not matching. Norm of value1 is "
-			<< value1.norm () <<  ", norm of value2 is "
-			<< value2.norm () << ", norm of error is "
-			<< d.norm());
+    comp.value (value1, value2);
     f->jacobian (jacobian1, *q);
     g->jacobian (jacobian2, *q);
-    matrix_t diffJ = jacobian2 - alpha*jacobian1;
-    // std::cout << diffJ.norm() << std::endl;
-    BOOST_CHECK_MESSAGE(jacobian1.isApprox(alpha*jacobian2, 1e-10),
-			"Jacobian not matching. Norm of J1 is "
-			<< jacobian1.norm () << ", norm of J2 is "
-			<< jacobian2.norm () << ", norm of error is "
-			<< diffJ.norm());
+    comp.jacobian (jacobian1, jacobian2);
   }
   const std::size_t iter = 10000;
   // timings(dev, f, iter);
   // timings(dev, g, iter);
-  std::vector<ConfigurationPtr_t> cfgs(iter);
-  for (size_t i = 0; i < iter; i++) cfgs[i] = cs.shoot();
-  timings2(dev, cfgs, f);
-  timings2(dev, cfgs, g);
+  //std::vector<ConfigurationPtr_t> cfgs(iter);
+  //for (size_t i = 0; i < iter; i++) cfgs[i] = cs.shoot();
+  //timings2(dev, cfgs, f);
+  //timings2(dev, cfgs, g);
 }
 
 void timings (DevicePtr_t dev, DifferentiableFunctionPtr_t f,
@@ -407,6 +484,12 @@ BOOST_AUTO_TEST_CASE (consistency) {
   Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
+  std::vector<bool> mask011 (3, true); mask011[0] = false;
+
+  device->currentConfiguration (*cs.shoot ());
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
 
   /// The -1 factor is here because Orientation, Position, RelativeOrientation
   /// and RelativePosition express the relative position of Frame1 wrt Frame2, in
@@ -414,63 +497,68 @@ BOOST_AUTO_TEST_CASE (consistency) {
   /// of Frame2 wrt Frame1, in Frame1.
   Transform3f Tid; Tid.setIdentity();
   check_consistent (device,
-        deprecated::Orientation::create ("Orientation"           , device, ee2, identity()),
-        Orientation::create             ("OrientationFromGeneric", device, ee2, identity()),
-        -1);
-        // Orientation::create (device, ee2, identity(), list_of(false)(true)(true))
+        deprecated::Orientation::create ("Orientation"           , device, ee2, tf2.getRotation()),
+        Orientation::create             ("OrientationFromGeneric", device, ee2, tf2.getRotation()),
+        ProportionalCompare(-1));
   check_consistent (device,
-        deprecated::Position::create ("Position"           , device, ee2, vector3_t (0,0,0), vector3_t (0,0,0), identity ()),
-        Position::create             ("PositionFromGeneric", device, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
-        -1);
-        // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
+        deprecated::Orientation::create ("Orientation"           , device, ee2, tf2.getRotation(), mask011),
+        Orientation::create             ("OrientationFromGeneric", device, ee2, tf2.getRotation(), mask011),
+        ProportionalCompare(-1));
   check_consistent (device,
-        deprecated::Position::create ("Position"           , device, ee2, vector3_t (1,0,0), vector3_t (0,0,0), identity ()),
-        Position::create             ("PositionFromGeneric", device, ee2, vector3_t (1,0,0), vector3_t (0,0,0)),
-        -1);
-        // Position::create (device, ee1, vector3_t (0,0,0), vector3_t (0,0,0), identity (), list_of(false)(true)(true))
+        deprecated::Position::create ("Position"           , device, ee2, tf2.getTranslation(), tf1.getTranslation(), transpose(tf1.getRotation())),
+        Position::create             ("PositionFromGeneric", device, ee2, tf2, tf1),
+        ProportionalCompare(-1));
   check_consistent (device,
-        deprecated::RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, identity ()),
-        RelativeOrientation::create             ("RelativeOrientationFromGeneric", device, ee1, ee2, identity ()),
-        -1);
-        // RelativeOrientation::create (device, ee1, ee2, identity (), list_of(false)(true)(true))
-  check_consistent (device,
-        deprecated::RelativePosition::create ("RelativePosition"           , device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
-        RelativePosition::create             ("RelativePositionFromGeneric", device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0)),
-        -1);
-        // RelativePosition::create (device, ee1, ee2, vector3_t (0,0,0), vector3_t (0,0,0), list_of(false)(true)(true))
-
-  std::vector < bool > mask (6, true); mask [0] = mask [1] = false;
-  check_consistent (device, deprecated::RelativeTransformation::create
-		    ("RelativeTransformation", device, ee1, ee2,
-		     Transform3f (), Transform3f (), mask),
-		    RelativeTransformation::create
-		    ("RelativeTransformation", device, ee1, ee2,
-		     Transform3f (), Transform3f (), mask));
-
-  ConfigurationPtr_t q2 = cs.shoot ();
-  device->currentConfiguration (*q2);
-  device->computeForwardKinematics ();
-  Transform3f tf1 (device->getJointByName (device->name () + "_SO3")->
-		   currentTransformation ());
-  q2 = cs.shoot ();
-  device->currentConfiguration (*q2);
-  device->computeForwardKinematics ();
-  Transform3f tf2 (device->getJointByName (device->name () + "_SO3")->
-		   currentTransformation ());
-  check_consistent (device,
-      deprecated::RelativeTransformation::create ("RelativeTransformation"           , device, ee1, ee2, tf1, tf2),
-      RelativeTransformation::create             ("RelativeTransformationFromGeneric", device, ee1, ee2, tf1, tf2));
-  check_consistent (device,
-        deprecated::Position::create ("Position"           , device, ee2, tf1.getTranslation(), vector3_t (0,0,0), tf1.getRotation()),
-        Position::create             ("PositionFromGeneric", device, ee2, tf1.getTranslation(), fcl::Transform3f(transpose(tf1.getRotation()), vector3_t(0,0,0))),
-        -1);
-  check_consistent (device,
-		    deprecated::Transformation::create
-		    ("Transformation", device, ee1, tf2, mask),
-		    Transformation::create
-		    ("TransformationFromGeneric", device, ee1, tf1, mask));
+        deprecated::Position::create ("Position"           , device, ee2, tf2.getTranslation(), tf1.getTranslation(), transpose(tf1.getRotation()), mask011),
+        Position::create             ("PositionFromGeneric", device, ee2, tf2, tf1, mask011),
+        ProportionalCompare(-1));
   check_consistent (device,
         deprecated::RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation()),
         RelativeOrientation::create             ("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation()),
-        -1);
+        ProportionalCompare(-1));
+  check_consistent (device,
+        deprecated::RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation(), mask011),
+        RelativeOrientation::create             ("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation(), mask011),
+        ProportionalCompare(-1));
+  check_consistent (device,
+        deprecated::RelativePosition::create ("RelativePosition"           , device, ee1, ee2, tf1.getTranslation(), tf2.getTranslation()),
+        RelativePosition::create             ("RelativePositionFromGeneric", device, ee1, ee2, tf1.getTranslation(), tf2.getTranslation()),
+        ProportionalCompare(-1));
+
+  std::vector < bool > mask (6, true); mask [0] = mask [1] = false;
+  check_consistent (device,
+        deprecated::Orientation::create ("Orientation"           , device, ee2, tf2.getRotation()),
+        Orientation::create             ("OrientationFromGeneric", device, ee2, tf2.getRotation()),
+        ProportionalCompare(-1));
+  check_consistent (device,
+        deprecated::Position::create ("Position"           , device, ee2, tf2.getTranslation(), tf1.getTranslation(), transpose(tf1.getRotation())),
+        Position::create             ("PositionFromGeneric", device, ee2, tf2.getTranslation(), tf1),
+        ProportionalCompare(-1));
+  check_consistent (device, deprecated::RelativeTransformation::create
+		    ("RelativeTransformation", device, ee1, ee2, Tid, Tid, mask),
+		    RelativeTransformation::create
+		    ("RelativeTransformationFromGeneric", device, ee1, ee2, Tid, Tid, mask),
+        ProportionalCompare(1));
+  check_consistent (device,
+      deprecated::RelativeTransformation::create ("RelativeTransformation"           , device, ee1, ee2, tf1, tf2),
+      RelativeTransformation::create             ("RelativeTransformationFromGeneric", device, ee1, ee2, tf1, tf2),
+      ProportionalCompare(1));
+  check_consistent (device,
+		    deprecated::Transformation::create ("Transformation", device, ee1, identity()),
+		    Transformation::create ("TransformationFromGeneric", device, ee1, identity()),
+        ProportionalCompare(-1));
+
+  fcl::Matrix3f R = transpose(tf2.getRotation());
+  fcl::Transform3f tf2inv = inverse(tf2);
+  check_consistent (device,
+		    deprecated::Transformation::create ("Transformation", device, ee1, tf2),
+		    Transformation::create ("TransformationFromGeneric", device, ee1, tf2),
+        TransformationCompare (tf2.getRotation(), 0, 3));
+  //check_consistent (device,
+		    //deprecated::Transformation::create ("Transformation", device, ee1, tf2, mask),
+		    //Transformation::create ("TransformationFromGeneric", device, ee1, tf2, mask));
+  check_consistent (device,
+        deprecated::RelativeOrientation::create ("RelativeOrientation"           , device, ee1, ee2, tf1.getRotation()),
+        RelativeOrientation::create             ("RelativeOrientationFromGeneric", device, ee1, ee2, tf1.getRotation()),
+        ProportionalCompare(-1));
 }

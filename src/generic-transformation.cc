@@ -325,7 +325,7 @@ namespace hpp {
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
       GenericTransformation<_Options>::create
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint2,
+     /* World frame          */ const JointPtr_t& joint2,
      const Transform3f& frame2, const Transform3f& frame1,
      std::vector <bool> mask)
     {

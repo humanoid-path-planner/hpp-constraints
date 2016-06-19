@@ -166,8 +166,8 @@ namespace hpp {
       /// \param robot the robot the constraints is applied to,
       /// \param joint2 the second joint the transformation of which is
       ///               constrained,
-      /// \param frame1 position of a fixed frame in the world,
       /// \param frame2 position of a fixed frame in joint 2,
+      /// \param frame1 position of a fixed frame in the world,
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
       ///
