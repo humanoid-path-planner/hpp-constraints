@@ -311,6 +311,8 @@ DevicePtr_t createRobot ()
   body->name ("LLEG_BODY5");
   joint->setLinkedBody (body);
 
+  robot->setDimensionExtraConfigSpace(1);
+
   return robot;
 }
 

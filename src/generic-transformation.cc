@@ -378,7 +378,7 @@ namespace hpp {
        std::vector <bool> mask) :
         DifferentiableFunction (robot->configSize (), robot->numberDof (),
 			      size (mask), name),
-      robot_ (robot), d_(robot->numberDof()), mask_ (mask)
+      robot_ (robot), d_(robot->numberDof()-robot->extraConfigSpace().dimension()), mask_ (mask)
     {
       assert(mask.size()==ValueSize);
       std::size_t iOri = 0;
