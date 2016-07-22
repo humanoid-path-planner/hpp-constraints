@@ -27,9 +27,11 @@
 #include <hpp/pinocchio/hpp-model/model-loader.hh>
 
 #include "hpp/_constraints/generic-transformation.hh"
-#include "hpp/_constraints/relative-com.hh"
 #include "hpp/constraints/generic-transformation.hh"
+#include "hpp/_constraints/relative-com.hh"
 #include "hpp/constraints/relative-com.hh"
+#include "hpp/_constraints/com-between-feet.hh"
+#include "hpp/constraints/com-between-feet.hh"
 
 
 #include <stdlib.h>
@@ -365,26 +367,37 @@ BOOST_AUTO_TEST_CASE (com) {
   rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
   rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
 
-  _c::JointPtr_t eeM = rm->getJointByName ("RAnkleRoll");
-  c ::JointPtr_t eeP = rp->getJointByName ("RAnkleRoll");
+  _c::JointPtr_t eeMR = rm->getJointByName ("RAnkleRoll");
+  c ::JointPtr_t eePR = rp->getJointByName ("RAnkleRoll");
+  _c::JointPtr_t eeML = rm->getJointByName ("LAnkleRoll");
+  c ::JointPtr_t eePL = rp->getJointByName ("LAnkleRoll");
 
-  _c::Transform3f tfM (eeM->currentTransformation ());
-  c ::Transform3f tfP (eeP->currentTransformation ());
 
-  _c::vector3_t targetM = tfM.getRotation() * (rm->positionCenterOfMass() - tfM.getTranslation());
-  c ::vector3_t targetP = tfP.actInv(rm->positionCenterOfMass().derived());
+  _c::Transform3f tfMR (eeMR->currentTransformation ());
+  c ::Transform3f tfPR (eePR->currentTransformation ());
+
+  _c::vector3_t targetMR = tfMR.getRotation() * (rm->positionCenterOfMass() - tfMR.getTranslation());
+  c ::vector3_t targetPR = tfPR.actInv(rm->positionCenterOfMass().derived());
 
   // This two frames are the position to be compared.
-  _c::Transform3f frameM = eeM->linkInJointFrame();
-  c ::Transform3f frameP = rp->model()->getFramePlacement(eeM->linkName());
+  _c::Transform3f frameMR = eeMR->linkInJointFrame();
+  c ::Transform3f framePR = rp->model()->getFramePlacement(eeMR->linkName());
 
-  BOOST_REQUIRE(m2p::SE3(tfM * frameM).isApprox(tfP * frameP));
+  BOOST_REQUIRE(m2p::SE3(tfMR * frameMR).isApprox(tfPR * framePR));
 
   /*********************** Relative COM **************************/
   // /*
   check_consistent (rm, rp,
-        _c::RelativeCom::create (rm, eeM, targetM),
-        c ::RelativeCom::create (rp, eeP, targetP),
+        _c::RelativeCom::create (rm, eeMR, targetMR),
+        c ::RelativeCom::create (rp, eePR, targetPR),
+        ProportionalCompare(1));
+  // */
+
+  /*********************** COM between feet **************************/
+  // /*
+  check_consistent (rm, rp,
+        _c::ComBetweenFeet::create ("ModelComBetweenFeet", rm, eeML, eeMR, tIdM.getTranslation(), tIdM.getTranslation(), eeMR, tIdM.getTranslation()),
+        c ::ComBetweenFeet::create ("PinocComBetweenFeet", rp, eePL, eePR, tIdP.translation()   , tIdP.translation()   , eePR, tIdP.translation()),
         ProportionalCompare(1));
   // */
 }

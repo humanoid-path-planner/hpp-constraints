@@ -19,6 +19,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   differentiable-function.cc
   generic-transformation.cc
   relative-com.cc
+  com-between-feet.cc
   )
   # distance-between-bodies.cc
   # distance-between-points-in-bodies.cc
@@ -26,7 +27,6 @@ ADD_LIBRARY(${LIBRARY_NAME}
   # position.cc
   # orientation.cc
   # transformation.cc
-  # com-between-feet.cc
   # relative-orientation.cc
   # relative-position.cc
   # relative-transformation.cc

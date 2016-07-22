@@ -17,15 +17,15 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/_constraints/com-between-feet.hh>
+#include <hpp/constraints/com-between-feet.hh>
 
 #include <hpp/util/debug.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/center-of-mass-computation.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/center-of-mass-computation.hh>
 
 namespace hpp {
-  namespace _constraints {
+  namespace constraints {
     namespace {
       static size_type size (std::vector<bool> mask)
       {
