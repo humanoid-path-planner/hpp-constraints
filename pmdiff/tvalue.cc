@@ -94,43 +94,6 @@ struct ProportionalCompare {
   }
 };
 
-struct TransformationCompare {
-  // const matrix3_t R;
-  // const size_type rowTr, sizeTr;
-  // TransformationCompare (const matrix3_t _R, size_type _rowTr, size_type _sizeTr)
-    // : R (_R), rowTr(_rowTr), sizeTr(_sizeTr) {}
-
-  // void value(const vector_t& value1, const vector_t& value2) const {
-    // vector_t dtr  = R.middleRows(rowTr, sizeTr) * value2.segment(rowTr,sizeTr) + value1.segment(rowTr,sizeTr);
-    // BOOST_CHECK_MESSAGE(dtr.isZero(1e-10),
-			// "Value not matching. Norm of value1 is "
-			// << value1.segment(rowTr,sizeTr).norm () <<  ", norm of value2 is "
-			// << value2.segment(rowTr,sizeTr).norm () << ", norm of error is "
-			// << dtr.norm());
-    // //matrix3_t A = exponential(value1.tail<3>()) * transpose(R);
-    // //matrix3_t B = exponential(value2.tail<3>()) * R;
-    // matrix3_t A = exponential(value1.tail<3>());
-    // matrix3_t B = exponential(value2.tail<3>());
-    // matrix_t diff = A.transpose() - B;
-    // // std::cout << diff << std::endl;
-    // BOOST_CHECK_MESSAGE(diff.isZero(1e-10),
-			// "Value not matching. Norm of error is "
-			// << diff.norm());
-  // }
-
-  // void jacobian(const matrix_t& jacobian1, const matrix_t& jacobian2) const {
-    // matrix_t diffJtr = R.middleRows(rowTr, sizeTr) * jacobian2.middleRows(rowTr, sizeTr) + jacobian1.middleRows(rowTr, sizeTr);
-    // //matrix_t diffJrot = jacobian2 - jacobian1;
-    // // std::cout << diffJ.norm() << std::endl;
-    // BOOST_CHECK_MESSAGE(diffJtr.isZero(1e-10),
-			// "Jacobian not matching. Norm of J1 is "
-			// << jacobian1.middleRows(rowTr, sizeTr).norm () << ", norm of J2 is "
-			// << jacobian2.middleRows(rowTr, sizeTr).norm () << ", norm of error is "
-			// << diffJtr.norm());
-    // std::cout << "Rotation part of jacobian not checked." << std::endl;
-  // }
-};
-
 template <typename Compare>
 void check_consistent (_c::DevicePtr_t rm, c::DevicePtr_t rp,
     _c::DifferentiableFunctionPtr_t fm, c::DifferentiableFunctionPtr_t fp,
