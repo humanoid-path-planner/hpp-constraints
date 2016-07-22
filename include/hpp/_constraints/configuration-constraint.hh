@@ -17,17 +17,17 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
-# define HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
+#ifndef HPP__CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
+# define HPP__CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
 
 # include <boost/assign/list_of.hpp>
 # include <Eigen/Core>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     class HPP_CONSTRAINTS_DLLAPI ConfigurationConstraint : public DifferentiableFunction
     {
       public:
@@ -62,6 +62,6 @@ namespace hpp {
         EigenBoolVector_t mask_;
         mutable vector_t diff_;
     }; // class ComBetweenFeet
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
+#endif // HPP__CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH

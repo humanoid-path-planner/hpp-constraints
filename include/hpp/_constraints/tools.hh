@@ -14,13 +14,13 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_TOOL_HH
-#define HPP_CONSTRAINTS_TOOL_HH
+#ifndef HPP__CONSTRAINTS_TOOL_HH
+#define HPP__CONSTRAINTS_TOOL_HH
 
-#include "hpp/constraints/fwd.hh"
+#include "hpp/_constraints/fwd.hh"
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     void computeLog (vectorOut_t result, double& theta, const fcl::Matrix3f& Rerror);
 
     void computeJlog (const double& theta, vectorIn_t r, eigen::matrix3_t& Jlog);
@@ -40,7 +40,7 @@ namespace hpp {
       for (size_t i = 0; i < s; ++i) out[i] = in[i];
       return out;
     }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_TOOL_HH
+#endif // HPP__CONSTRAINTS_TOOL_HH

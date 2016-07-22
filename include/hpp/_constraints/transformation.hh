@@ -17,28 +17,28 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_TRANSFORMATION_HH
-# define HPP_TRANSFORMATION_HH
+#ifndef HPP__CONSTRAINTS_TRANSFORMATION_HH
+# define HPP__CONSTRAINTS_TRANSFORMATION_HH
 
-# include <hpp/constraints/generic-transformation.hh>
-# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+# include <hpp/_constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/_constraints/generic-transformation.hh"
 
 # include <boost/assign/list_of.hpp>
 # include <hpp/fcl/math/transform.h>
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/orientation.hh>
-# include <hpp/constraints/position.hh>
-# include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/orientation.hh>
+# include <hpp/_constraints/position.hh>
+# include <hpp/_constraints/config.hh>
+# include <hpp/_constraints/fwd.hh>
 
 namespace hpp {
   namespace eigen {
     typedef Eigen::Matrix <double, 3, 3> matrix3_t;
     typedef Eigen::Matrix <double, 3, 1> vector3_t;
   } // namespace eigen
-  namespace constraints {
+  namespace _constraints {
     namespace deprecated {
-    /// \addtogroup constraints
+    /// \addtogroup _constraints
     /// \{
 
     /// Constraint on the transformation of one robot joint
@@ -58,7 +58,7 @@ namespace hpp {
 
       /// Return a shared pointer to a new instance
       ///
-      /// \param name the name of the constraints,
+      /// \param name the name of the _constraints,
       /// \param robot the robot the constraints is applied to,
       /// \param joint1 the first joint the transformation of which is
       ///               constrained,
@@ -139,6 +139,6 @@ namespace hpp {
     } HPP_CONSTRAINTS_DEPRECATED; // class Transformation
     /// \}
     } // namespace deprecated
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 #endif // HPP_TRANSFORMATION_HH

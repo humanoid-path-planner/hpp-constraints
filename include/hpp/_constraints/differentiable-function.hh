@@ -16,15 +16,15 @@
 // hpp-constraints  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH
-# define HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH
+#ifndef HPP__CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH
+# define HPP__CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH
 
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
+  namespace _constraints {
+    /// \addtogroup _constraints
     /// \{
 
     /// Differentiable function
@@ -186,7 +186,7 @@ namespace hpp {
       return f.print (os);
     }
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
 

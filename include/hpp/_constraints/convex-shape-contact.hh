@@ -14,24 +14,24 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
-# define HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
+#ifndef HPP__CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
+# define HPP__CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
 
 # include <vector>
 # include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
-# include <hpp/constraints/tools.hh>
+# include <hpp/_constraints/tools.hh>
 
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/deprecated.hh>
-# include <hpp/constraints/generic-transformation.hh>
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/convex-shape.hh>
+# include <hpp/_constraints/generic-transformation.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/convex-shape.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
+  namespace _constraints {
+    /// \addtogroup _constraints
     /// \{
 
     /** The function returns a relative transformation between the two "closest"
@@ -220,7 +220,7 @@ namespace hpp {
       ConvexShapeContactPtr_t sibling_;
     }; // class ConvexShapeContactComplement
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
+#endif //  HPP__CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH

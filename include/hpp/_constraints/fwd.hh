@@ -17,14 +17,14 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_FWD_HH
-# define HPP_CONSTRAINTS_FWD_HH
+#ifndef HPP__CONSTRAINTS_FWD_HH
+# define HPP__CONSTRAINTS_FWD_HH
 
 # include <hpp/model/fwd.hh>
 # include <hpp/constraints/deprecated.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
     HPP_PREDEF_CLASS (DifferentiableFunctionStack);
     typedef model::size_type size_type;
@@ -128,6 +128,6 @@ namespace hpp {
       typedef boost::shared_ptr<RelativeTransformation>
         RelativeTransformationPtr_t;
     } // namespace deprecated
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_FWD_HH
+#endif // HPP__CONSTRAINTS_FWD_HH

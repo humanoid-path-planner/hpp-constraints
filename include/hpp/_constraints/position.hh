@@ -17,21 +17,21 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_POSITION_HH
-# define HPP_CONSTRAINTS_POSITION_HH
+#ifndef HPP__CONSTRAINTS_POSITION_HH
+# define HPP__CONSTRAINTS_POSITION_HH
 
-# include <hpp/constraints/differentiable-function.hh>
-# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+# include <hpp/_constraints/differentiable-function.hh>
+# warning "This file is deprecated. You should only include hpp/_constraints/generic-transformation.hh"
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/constraints/generic-transformation.hh>
-# include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/generic-transformation.hh>
+# include <hpp/_constraints/config.hh>
+# include <hpp/_constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     namespace deprecated {
-    /// \addtogroup constraints
+    /// \addtogroup _constraints
     /// \{
 
     /// Constraint on the position of a robot point
@@ -68,7 +68,7 @@ namespace hpp {
     ///       frame.
     /// \note The constant rotation matrix \f$R\f$ combined with
     ///  selection of degrees of freedom enable users to define
-    ///  constraints in a plane or along a line not necessarily
+    ///  _constraints in a plane or along a line not necessarily
     ///  aligned with the world reference frame axes.
     class HPP_CONSTRAINTS_DLLAPI Position : public DifferentiableFunction
     {
@@ -78,7 +78,7 @@ namespace hpp {
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       /// Return a shared pointer to a new instance
       ///
-      /// \param name the name of the constraints,
+      /// \param name the name of the _constraints,
       /// \param robot the robot the constraint applies to,
       /// \param joint the joint the position of which is constrained,
       /// \param pointInLocalFrame point in local frame,
@@ -127,7 +127,7 @@ namespace hpp {
       }
       /// Constructor
       ///
-      /// \param name the name of the constraints,
+      /// \param name the name of the _constraints,
       /// \param robot the robot the constraint applies to,
       /// \param joint the joint the position of which is constrained,
       /// \param pointInLocalFrame point in local frame,
@@ -160,7 +160,7 @@ namespace hpp {
     } HPP_CONSTRAINTS_DEPRECATED; // class Position
     /// \}
     } // namespace deprecated
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_POSITION_HH
+#endif // HPP__CONSTRAINTS_POSITION_HH

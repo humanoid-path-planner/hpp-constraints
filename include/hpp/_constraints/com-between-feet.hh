@@ -17,18 +17,18 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_COM_BETWEEN_FEET_HH
-# define HPP_CONSTRAINTS_COM_BETWEEN_FEET_HH
+#ifndef HPP__CONSTRAINTS_COM_BETWEEN_FEET_HH
+# define HPP__CONSTRAINTS_COM_BETWEEN_FEET_HH
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/tools.hh>
-# include <hpp/constraints/symbolic-calculus.hh>
+# include <hpp/_constraints/fwd.hh>
+# include <hpp/_constraints/tools.hh>
+# include <hpp/_constraints/symbolic-calculus.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     /// Constraint on the relative position of the center of mass
     ///
     /// The value of the function is defined as the position of the center
@@ -113,6 +113,6 @@ namespace hpp {
         std::vector <bool> mask_;
         mutable eigen::matrix3_t cross_;
     }; // class ComBetweenFeet
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_COM_BETWEEN_FEET_HH
+#endif // HPP__CONSTRAINTS_COM_BETWEEN_FEET_HH

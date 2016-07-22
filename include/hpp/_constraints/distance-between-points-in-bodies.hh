@@ -17,49 +17,52 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
-# define HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
+#ifndef HPP__CONSTRAINTS_DISTANCE_BETWEEN_POINTS_IN_BODIES_HH
+# define HPP__CONSTRAINTS_DISTANCE_BETWEEN_POINTS_IN_BODIES_HH
 
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     /// Distance between two sets of objects
     ///
     /// This function maps to a configuration of a robot, the distance
-    ///   \li either between objects of a joints and objects of another joint,
-    ///   \li or objects of a joint with a list of fixed objects.
+    ///   \li either between two points in two joints
+    ///   \li or between a point in a joint and a point in the environment
     ///
-    /// The above type of distance is determined by the method "create" called.
-    class HPP_CONSTRAINTS_DLLAPI DistanceBetweenBodies :
+    /// The type of distance above is determined by the method "create" called.
+    class HPP_CONSTRAINTS_DLLAPI DistanceBetweenPointsInBodies :
       public DifferentiableFunction
     {
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-      
-      /// Create instance and return shared pointer
-      ///
-      /// \param name name of the constraint,
-      /// \param robot robot that own the bodies,
-      /// \param joint1 joint that holds the first body,
-      /// \param joint2 joint that holds the second body.
-      static DistanceBetweenBodiesPtr_t create (const std::string& name,
-						const DevicePtr_t& robot,
-						const JointPtr_t& joint1,
-						const JointPtr_t& joint2);
-      
-      /// Create instance and return shared pointer
-      ///
-      /// \param name name of the constraint,
-      /// \param robot robot that own the bodies,
-      /// \param joint joint that holds the body,
-      /// \param objects list of fixed objects in the environment.
-      static DistanceBetweenBodiesPtr_t create (const std::string& name,
-						const DevicePtr_t& robot,
-						const JointPtr_t& joint,
-						const ObjectVector_t& objects);
 
-      virtual ~DistanceBetweenBodies () throw () {}
+      /// Create instance and return shared pointer
+      ///
+      /// \param name name of the constraint,
+      /// \param robot robot that own the bodies,
+      /// \param joint1 joint that holds the first point,
+      /// \param joint2 joint that holds the second point,
+      /// \param point1 point in frame of joint 1,
+      /// \param point2 point in frame of joint 2.
+      static DistanceBetweenPointsInBodiesPtr_t create
+	(const std::string& name, const DevicePtr_t& robot,
+	 const JointPtr_t& joint1, const JointPtr_t& joint2,
+	 const vector3_t& point1, const vector3_t& point2);
+
+      /// Create instance and return shared pointer
+      ///
+      /// \param name name of the constraint,
+      /// \param robot robot that own the bodies,
+      /// \param joint1 joint that holds the first point,
+      /// \param point1 point in frame of joint 1,
+      /// \param point2 point in frame of joint 2.
+      static DistanceBetweenPointsInBodiesPtr_t create
+	(const std::string& name, const DevicePtr_t& robot,
+	 const JointPtr_t& joint1, const vector3_t& point1,
+	 const vector3_t& point2);
+
+      virtual ~DistanceBetweenPointsInBodies () throw () {}
 
     protected:
       /// Protected constructor
@@ -68,19 +71,24 @@ namespace hpp {
       /// \param robot robot that own the bodies,
       /// \param joint1 joint that holds the first body,
       /// \param joint2 joint that holds the second body.
-      DistanceBetweenBodies (const std::string& name, const DevicePtr_t& robot,
-			     const JointPtr_t& joint1,
-			     const JointPtr_t& joint2);
+      DistanceBetweenPointsInBodies (const std::string& name,
+				     const DevicePtr_t& robot,
+				     const JointPtr_t& joint1,
+				     const JointPtr_t& joint2,
+				     const vector3_t& point1,
+				     const vector3_t& point2);
 
       /// Protected constructor
       ///
       /// \param name name of the constraint,
       /// \param robot robot that own the bodies,
-      /// \param joint joint that holds the body,
-      /// \param objects list of fixed objects in the environment.
-      DistanceBetweenBodies (const std::string& name, const DevicePtr_t& robot,
-			     const JointPtr_t& joint,
-			     const ObjectVector_t& objects);
+      /// \param joint1 joint that holds the first body,
+      /// \param joint2 joint that holds the second body.
+      DistanceBetweenPointsInBodies (const std::string& name,
+				     const DevicePtr_t& robot,
+				     const JointPtr_t& joint1,
+				     const vector3_t& point1,
+				     const vector3_t& point2);
 
       virtual void impl_compute (vectorOut_t result,
 				 ConfigurationIn_t argument) const throw ();
@@ -90,14 +98,14 @@ namespace hpp {
       DevicePtr_t robot_;
       JointPtr_t joint1_;
       JointPtr_t joint2_;
-      ObjectVector_t objs1_;
-      ObjectVector_t objs2_;
-      mutable vector3_t point1_;
-      mutable vector3_t point2_;
+      vector3_t point1_;
+      vector3_t point2_;
+      mutable vector3_t global1_;
+      mutable vector3_t global2_;
       mutable Configuration_t latestArgument_;
       mutable vector_t latestResult_;
-    }; // class DistanceBetweenBodies
-  } // namespace constraints
+    }; // class DistanceBetweenPointsInBodies
+  } // namespace _constraints
 } // namespace hpp
 
-#endif //HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
+#endif //HPP__CONSTRAINTS_DISTANCE_BETWEEN_POINTS_IN_BODIES_HH

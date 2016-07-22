@@ -17,17 +17,17 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_RELATIVE_COM_HH
-# define HPP_CONSTRAINTS_RELATIVE_COM_HH
+#ifndef HPP__CONSTRAINTS_RELATIVE_COM_HH
+# define HPP__CONSTRAINTS_RELATIVE_COM_HH
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
+  namespace _constraints {
+    /// \addtogroup _constraints
     /// \{
 
     /// Constraint on the relative position of the center of mass
@@ -94,6 +94,6 @@ namespace hpp {
       mutable ComJacobian_t jacobian_;
     }; // class RelativeCom
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_RELATIVE_COM_HH
+#endif // HPP__CONSTRAINTS_RELATIVE_COM_HH

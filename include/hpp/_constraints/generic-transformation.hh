@@ -17,17 +17,17 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_GENERIC_TRANSFORMATION_HH
-# define HPP_CONSTRAINTS_GENERIC_TRANSFORMATION_HH
+#ifndef HPP__CONSTRAINTS_GENERIC_TRANSFORMATION_HH
+# define HPP__CONSTRAINTS_GENERIC_TRANSFORMATION_HH
 
 # include <hpp/fcl/math/transform.h>
 # include <hpp/model/joint.hh>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     /// \cond DEVEL
     template <bool rel> struct GenericTransformationJointData
     {
@@ -314,6 +314,6 @@ namespace hpp {
       mutable Configuration_t latestArgument_;
     }; // class GenericTransformation
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_GENERIC_TRANSFORMATION_HH
+#endif // HPP__CONSTRAINTS_GENERIC_TRANSFORMATION_HH

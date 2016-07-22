@@ -14,56 +14,56 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
-#define HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
+#ifndef HPP__CONSTRAINTS_SYMBOLIC_CALCULUS_HH
+#define HPP__CONSTRAINTS_SYMBOLIC_CALCULUS_HH
 
-#define HPP_CONSTRAINTS_CB_REF boost::shared_ptr
-#define HPP_CONSTRAINTS_CB_WKREF boost::shared_ptr
+#define HPP__CONSTRAINTS_CB_REF boost::shared_ptr
+#define HPP__CONSTRAINTS_CB_WKREF boost::shared_ptr
 
-#define HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(op, InType, OutType) \
+#define HPP__CONSTRAINTS_CB_DEFINE_OPERATOR1(op, InType, OutType) \
     template < typename RhsType > \
         typename Traits <OutType < RhsType > >::Ptr_t op ( \
             const InType& lhs, \
-            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs) { \
+            const HPP__CONSTRAINTS_CB_REF <RhsType>& rhs) { \
           typedef OutType < RhsType> Op_t; \
           return Op_t::create (lhs, rhs); \
         }
-#define HPP_CONSTRAINTS_CB_FRIEND_OPERATOR1(op, InType, OutType) \
+#define HPP__CONSTRAINTS_CB_FRIEND_OPERATOR1(op, InType, OutType) \
   template < typename RhsType > \
         friend typename Traits <OutType < RhsType > >::Ptr_t op ( \
             const InType& lhs, \
-            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs);
+            const HPP__CONSTRAINTS_CB_REF <RhsType>& rhs);
 
-#define HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(op, OutType) \
+#define HPP__CONSTRAINTS_CB_DEFINE_OPERATOR2(op, OutType) \
     template < typename LhsType, typename RhsType > \
         typename Traits <OutType < LhsType, RhsType > >::Ptr_t op ( \
-            const HPP_CONSTRAINTS_CB_REF <LhsType>& lhs, \
-            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs) { \
+            const HPP__CONSTRAINTS_CB_REF <LhsType>& lhs, \
+            const HPP__CONSTRAINTS_CB_REF <RhsType>& rhs) { \
           typedef OutType < LhsType, RhsType> Op_t; \
           return Op_t::create (lhs, rhs); \
         }
 
-#define HPP_CONSTRAINTS_CB_FRIEND_OPERATOR2(op, OutType) \
+#define HPP__CONSTRAINTS_CB_FRIEND_OPERATOR2(op, OutType) \
     template < typename LhsType, typename RhsType > \
         friend typename Traits <OutType < LhsType, RhsType > >::Ptr_t op ( \
-            const HPP_CONSTRAINTS_CB_REF <LhsType>& lhs, \
-            const HPP_CONSTRAINTS_CB_REF <RhsType>& rhs);
+            const HPP__CONSTRAINTS_CB_REF <LhsType>& lhs, \
+            const HPP__CONSTRAINTS_CB_REF <RhsType>& rhs);
 
-#define HPP_CONSTRAINTS_CB_CREATE1(Class, Arg0Type) \
+#define HPP__CONSTRAINTS_CB_CREATE1(Class, Arg0Type) \
   static typename Traits <Class>::Ptr_t create (Arg0Type arg0) { \
     typename Traits <Class>::Ptr_t ptr (new Class (arg0)); \
     ptr->init (ptr); \
     return ptr; \
   }
 
-#define HPP_CONSTRAINTS_CB_CREATE2(Class, Arg0Type, Arg1Type) \
+#define HPP__CONSTRAINTS_CB_CREATE2(Class, Arg0Type, Arg1Type) \
   static typename Traits <Class>::Ptr_t create (Arg0Type arg0, Arg1Type arg1) { \
     typename Traits <Class>::Ptr_t ptr (new Class (arg0, arg1)); \
     ptr->init (ptr); \
     return ptr; \
   }
 
-#define HPP_CONSTRAINTS_CB_CREATE3(Class, Arg0Type, Arg1Type, Arg2Type) \
+#define HPP__CONSTRAINTS_CB_CREATE3(Class, Arg0Type, Arg1Type, Arg2Type) \
   static typename Traits <Class>::Ptr_t create (Arg0Type arg0, Arg1Type arg1, Arg2Type arg2) { \
     typename Traits <Class>::Ptr_t ptr (new Class (arg0, arg1, arg2)); \
     ptr->init (ptr); \
@@ -72,18 +72,18 @@
 
 #include <Eigen/SVD>
 
-#include "hpp/constraints/fwd.hh"
+#include "hpp/_constraints/fwd.hh"
 
 #include <hpp/model/joint.hh>
 #include <hpp/model/fcl-to-eigen.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
-#include <hpp/constraints/svd.hh>
-#include <hpp/constraints/tools.hh>
-#include <hpp/constraints/macros.hh>
+#include <hpp/_constraints/svd.hh>
+#include <hpp/_constraints/tools.hh>
+#include <hpp/_constraints/macros.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     /// \defgroup symbolic_calculus Symbolic calculus
 
     /// \addtogroup symbolic_calculus
@@ -105,8 +105,8 @@ namespace hpp {
 
     template <typename Class>
     struct Traits {
-      typedef HPP_CONSTRAINTS_CB_REF <Class> Ptr_t;
-      typedef HPP_CONSTRAINTS_CB_WKREF <Class> WkPtr_t;
+      typedef HPP__CONSTRAINTS_CB_REF <Class> Ptr_t;
+      typedef HPP__CONSTRAINTS_CB_WKREF <Class> WkPtr_t;
     };
     template <> struct Traits<value_type> {
       typedef value_type Ptr_t;
@@ -232,14 +232,14 @@ namespace hpp {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(operator-, Difference)
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(operator+, Sum)
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(operator*, ScalarProduct)
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR2(operator^, CrossProduct)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR2(operator-, Difference)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR2(operator+, Sum)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR2(operator*, ScalarProduct)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR2(operator^, CrossProduct)
 
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, value_type, ScalarMultiply)
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, JointPtr_t, RotationMultiply)
-    HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, JointTranspose, RotationMultiply)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, value_type, ScalarMultiply)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, JointPtr_t, RotationMultiply)
+    HPP__CONSTRAINTS_CB_DEFINE_OPERATOR1(operator*, JointTranspose, RotationMultiply)
 
     /// Base class for classes representing an operation.
     template <typename LhsValue, typename RhsValue>
@@ -306,7 +306,7 @@ namespace hpp {
         typedef CalculusBase < CrossProduct < LhsValue, RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (CrossProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (CrossProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         CrossProduct () {}
 
@@ -353,7 +353,7 @@ namespace hpp {
         typedef CalculusBase < ScalarProduct < LhsValue, RhsValue >, value_type, RowJacobianMatrix >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (ScalarProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (ScalarProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         ScalarProduct () {}
 
@@ -400,7 +400,7 @@ namespace hpp {
         typedef CalculusBase < Difference < LhsValue, RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (Difference, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (Difference, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         Difference () {}
 
@@ -444,7 +444,7 @@ namespace hpp {
         typedef CalculusBase < Sum < LhsValue, RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (Sum, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (Sum, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         Sum () {}
 
@@ -488,7 +488,7 @@ namespace hpp {
         typedef CalculusBase < ScalarMultiply < RhsValue > >
           Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (ScalarMultiply, const typename Traits<value_type>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (ScalarMultiply, const typename Traits<value_type>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         ScalarMultiply () {}
 
@@ -537,9 +537,9 @@ namespace hpp {
           transpose_ (other.transpose_)
         {}
 
-        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<model::Joint>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<model::Joint>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
-        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<JointTranspose>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<JointTranspose>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         RotationMultiply (const typename Traits<JointTranspose>::Ptr_t& joint, const typename Traits<RhsValue>::Ptr_t& rhs):
           e_ (Expression < model::Joint, RhsValue >::create (joint.j_, rhs)),
@@ -599,8 +599,8 @@ namespace hpp {
       public:
         typedef CalculusBase <PointInJoint> Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (PointInJoint, const JointPtr_t&, const vector3_t&)
-        HPP_CONSTRAINTS_CB_CREATE3 (PointInJoint, const JointPtr_t&, const vector3_t&, const size_type&)
+        HPP__CONSTRAINTS_CB_CREATE2 (PointInJoint, const JointPtr_t&, const vector3_t&)
+        HPP__CONSTRAINTS_CB_CREATE3 (PointInJoint, const JointPtr_t&, const vector3_t&, const size_type&)
 
         PointInJoint () {}
 
@@ -690,8 +690,8 @@ namespace hpp {
     {
       public:
 
-        HPP_CONSTRAINTS_CB_CREATE2 (VectorInJoint, const JointPtr_t&, const vector3_t&)
-        HPP_CONSTRAINTS_CB_CREATE3 (VectorInJoint, const JointPtr_t&, const vector3_t&, const size_type&)
+        HPP__CONSTRAINTS_CB_CREATE2 (VectorInJoint, const JointPtr_t&, const vector3_t&)
+        HPP__CONSTRAINTS_CB_CREATE3 (VectorInJoint, const JointPtr_t&, const vector3_t&, const size_type&)
 
         VectorInJoint () {}
 
@@ -765,7 +765,7 @@ namespace hpp {
     class Point : public CalculusBase <Point, eigen::vector3_t, JacobianMatrix>
     {
       public:
-        HPP_CONSTRAINTS_CB_CREATE2 (Point, const vector3_t&, const size_t&)
+        HPP__CONSTRAINTS_CB_CREATE2 (Point, const vector3_t&, const size_t&)
 
         Point () {}
 
@@ -797,7 +797,7 @@ namespace hpp {
     class PointCom : public CalculusBase <PointCom>
     {
       public:
-        HPP_CONSTRAINTS_CB_CREATE1 (PointCom, const CenterOfMassComputationPtr_t&)
+        HPP__CONSTRAINTS_CB_CREATE1 (PointCom, const CenterOfMassComputationPtr_t&)
 
         PointCom () {}
 
@@ -837,7 +837,7 @@ namespace hpp {
       public:
         typedef CalculusBase <JointFrame, ValueType_t, JacobianType_t > Parent_t;
 
-        HPP_CONSTRAINTS_CB_CREATE1 (JointFrame, const JointPtr_t&)
+        HPP__CONSTRAINTS_CB_CREATE1 (JointFrame, const JointPtr_t&)
 
         JointFrame () {}
 
@@ -907,7 +907,7 @@ namespace hpp {
         typedef typename Traits<Element_t>::Ptr_t ElementPtr_t;
         typedef Eigen::JacobiSVD <Value_t> SVD_t;
 
-        HPP_CONSTRAINTS_CB_CREATE2 (MatrixOfExpressions, const Eigen::Ref<const Value_t>&, const Eigen::Ref<const Jacobian_t>&)
+        HPP__CONSTRAINTS_CB_CREATE2 (MatrixOfExpressions, const Eigen::Ref<const Value_t>&, const Eigen::Ref<const Jacobian_t>&)
 
         MatrixOfExpressions (const Eigen::Ref<const Value_t>& value,
             const Eigen::Ref<const Jacobian_t>& jacobian) :
@@ -1093,7 +1093,7 @@ namespace hpp {
     };
 
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
+#endif // HPP__CONSTRAINTS_SYMBOLIC_CALCULUS_HH

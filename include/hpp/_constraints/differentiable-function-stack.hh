@@ -16,15 +16,15 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_STACK_HH
-# define HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_STACK_HH
+#ifndef HPP__CONSTRAINTS_DIFFERENTIABLE_FUNCTION_STACK_HH
+# define HPP__CONSTRAINTS_DIFFERENTIABLE_FUNCTION_STACK_HH
 
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/fwd.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
+  namespace _constraints {
+    /// \addtogroup _constraints
     /// \{
 
     /// Stack of differentiable functions
@@ -131,7 +131,7 @@ namespace hpp {
         Functions_t functions_;
     }; // class DifferentiableFunctionStack
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_STACK_HH
+#endif // HPP__CONSTRAINTS_DIFFERENTIABLE_FUNCTION_STACK_HH

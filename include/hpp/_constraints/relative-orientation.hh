@@ -20,16 +20,16 @@
 #ifndef HPP_RELATIVE_ORIENTATION_HH
 # define HPP_RELATIVE_ORIENTATION_HH
 
-# include <hpp/constraints/generic-transformation.hh>
-# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+# include <hpp/_constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/_constraints/generic-transformation.hh"
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     namespace deprecated {
-    /// \addtogroup constraints
+    /// \addtogroup _constraints
     /// \{
 
     /// Constraint on the relative orientation of two robot joints
@@ -139,6 +139,6 @@ namespace hpp {
     } HPP_CONSTRAINTS_DEPRECATED; // class RelativeOrientation
     /// \}
     } // namespace deprecated
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 #endif // HPP_RELATIVE_ORIENTATION_HH

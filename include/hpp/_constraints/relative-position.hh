@@ -17,21 +17,21 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_RELATIVE_POSITION_HH
-# define HPP_CONSTRAINTS_RELATIVE_POSITION_HH
+#ifndef HPP__CONSTRAINTS_RELATIVE_POSITION_HH
+# define HPP__CONSTRAINTS_RELATIVE_POSITION_HH
 
-# include <hpp/constraints/generic-transformation.hh>
-# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+# include <hpp/_constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/_constraints/generic-transformation.hh"
 
 # include <boost/assign/list_of.hpp>
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/config.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/fwd.hh>
+# include <hpp/_constraints/config.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     namespace deprecated {
-    /// \addtogroup constraints
+    /// \addtogroup _constraints
     /// \{
 
     /// Constraint on the relative position of two robot joints
@@ -161,6 +161,6 @@ namespace hpp {
     } HPP_CONSTRAINTS_DEPRECATED; // class RelativePosition
     /// \}
     } // namespace deprecated
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_RELATIVE_POSITION_HH
+#endif // HPP__CONSTRAINTS_RELATIVE_POSITION_HH

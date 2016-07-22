@@ -14,20 +14,20 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_SYMBOLIC_FUNCTION_HH
-# define HPP_CONSTRAINTS_SYMBOLIC_FUNCTION_HH
+#ifndef HPP__CONSTRAINTS_SYMBOLIC_FUNCTION_HH
+# define HPP__CONSTRAINTS_SYMBOLIC_FUNCTION_HH
 
 # include <boost/assign/list_of.hpp>
 
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/config.hh>
-# include <hpp/constraints/symbolic-calculus.hh>
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/_constraints/fwd.hh>
+# include <hpp/_constraints/config.hh>
+# include <hpp/_constraints/symbolic-calculus.hh>
+# include <hpp/_constraints/differentiable-function.hh>
 
 # include <hpp/model/device.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     template <typename Expression>
     class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction
     {
@@ -108,6 +108,6 @@ namespace hpp {
         typename Traits<Expression>::Ptr_t expr_;
         std::vector <bool> mask_;
     }; // class ComBetweenFeet
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
-#endif // HPP_CONSTRAINTS_SYMBOLIC_FUNCTION_HH
+#endif // HPP__CONSTRAINTS_SYMBOLIC_FUNCTION_HH

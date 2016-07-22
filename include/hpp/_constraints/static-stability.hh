@@ -14,23 +14,23 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_STATIC_STABILITY_HH
-# define HPP_CONSTRAINTS_STATIC_STABILITY_HH
+#ifndef HPP__CONSTRAINTS_STATIC_STABILITY_HH
+# define HPP__CONSTRAINTS_STATIC_STABILITY_HH
 
 # include <vector>
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/tools.hh>
-# include <hpp/constraints/symbolic-calculus.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/tools.hh>
+# include <hpp/_constraints/symbolic-calculus.hh>
 
-# include "hpp/constraints/fwd.hh"
+# include "hpp/_constraints/fwd.hh"
 # include "hpp/constraints/config.hh"
 # include "hpp/constraints/deprecated.hh"
 
 # include <hpp/model/joint.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
+  namespace _constraints {
+    /// \addtogroup _constraints
     /// \{
     class HPP_CONSTRAINTS_DLLAPI StaticStability :
       public DifferentiableFunction {
@@ -99,7 +99,7 @@ namespace hpp {
         mutable vector_t lambdaDot_; 
     };
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_STATIC_STABILITY_HH
+#endif //  HPP__CONSTRAINTS_STATIC_STABILITY_HH

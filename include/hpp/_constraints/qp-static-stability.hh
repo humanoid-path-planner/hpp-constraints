@@ -14,21 +14,21 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
-# define HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
+#ifndef HPP__CONSTRAINTS_QP_STATIC_STABILITY_HH
+# define HPP__CONSTRAINTS_QP_STATIC_STABILITY_HH
 
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/convex-shape-contact.hh>
-# include <hpp/constraints/static-stability.hh>
-# include <hpp/constraints/tools.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/convex-shape-contact.hh>
+# include <hpp/_constraints/static-stability.hh>
+# include <hpp/_constraints/tools.hh>
 
-# include "hpp/constraints/fwd.hh"
+# include "hpp/_constraints/fwd.hh"
 
 # include <qpOASES.hpp>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
+  namespace _constraints {
+    /// \addtogroup _constraints
     /// \{
     class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {
       public:
@@ -107,7 +107,7 @@ namespace hpp {
         mutable vector_t primal_, dual_;
     };
     /// \}
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_STATIC_STABILITY_HH
+#endif //  HPP__CONSTRAINTS_STATIC_STABILITY_HH

@@ -17,24 +17,24 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_RELATIVE_TRANSFORMATION_HH
-# define HPP_RELATIVE_TRANSFORMATION_HH
+#ifndef HPP__CONSTRAINTS_RELATIVE_TRANSFORMATION_HH
+# define HPP__CONSTRAINTS_RELATIVE_TRANSFORMATION_HH
 
-# include <hpp/constraints/generic-transformation.hh>
-# warning "This file is deprecated. You should only include hpp/constraints/generic-transformation.hh"
+# include <hpp/_constraints/generic-transformation.hh>
+# warning "This file is deprecated. You should only include hpp/_constraints/generic-transformation.hh"
 
 # include <boost/assign/list_of.hpp>
 # include <hpp/fcl/math/transform.h>
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/relative-orientation.hh>
-# include <hpp/constraints/relative-position.hh>
-# include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/relative-orientation.hh>
+# include <hpp/_constraints/relative-position.hh>
+# include <hpp/_constraints/config.hh>
+# include <hpp/_constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     namespace deprecated {
-    /// \addtogroup constraints
+    /// \addtogroup _constraints
     /// \{
 
     /** Relative transformation of two fixed frames in robot joints
@@ -243,9 +243,9 @@ namespace hpp {
       mutable matrix_t jacobian_;
       mutable eigen::matrix3_t cross1_, cross2_, Jlog_;
       mutable Configuration_t latestArgument_;
-    } HPP_CONSTRAINTS_DEPRECATED; // class RelativeTransformation
+    } HPP__CONSTRAINTS_DEPRECATED; // class RelativeTransformation
     /// \}
     } // namespace deprecated
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 #endif // HPP_RELATIVE_TRANSFORMATION_HH

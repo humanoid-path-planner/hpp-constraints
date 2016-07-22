@@ -16,14 +16,14 @@
 // hpp-constraints  If not, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_SVD_HH
-# define HPP_CONSTRAINTS_SVD_HH
+#ifndef HPP__CONSTRAINTS_SVD_HH
+# define HPP__CONSTRAINTS_SVD_HH
 
-# include <hpp/constraints/fwd.hh>
+# include <hpp/_constraints/fwd.hh>
 # include <Eigen/SVD>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     template <typename SVD>
       static Eigen::Ref<const typename SVD::MatrixUType>
       getU1 (const SVD& svd)
@@ -120,7 +120,7 @@ namespace hpp {
         projector.diagonal().noalias () += vector_t::Ones(svd.matrixU().rows());
       }
     }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_SVD_HH
+#endif // HPP__CONSTRAINTS_SVD_HH

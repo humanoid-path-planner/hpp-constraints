@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_HH
-# define HPP_CONSTRAINTS_CONVEX_SHAPE_HH
+#ifndef HPP__CONSTRAINTS_CONVEX_SHAPE_HH
+# define HPP__CONSTRAINTS_CONVEX_SHAPE_HH
 
 # include <vector>
 
@@ -24,13 +24,13 @@
 
 # include <hpp/model/joint.hh>
 
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/tools.hh>
+# include <hpp/_constraints/differentiable-function.hh>
+# include <hpp/_constraints/tools.hh>
 
-# include "hpp/constraints/fwd.hh"
+# include "hpp/_constraints/fwd.hh"
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     /// Return the closest point to point P, on a segment line \f$ A + t*v, t \in [0,1] \f$.
     /// \param P PA where P is the point to
     /// \param A the origin the segment line
@@ -310,7 +310,7 @@ namespace hpp {
         mutable fcl::Vec3f n_, c_;
         mutable fcl::Transform3f M_;
     };
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp
 
-#endif //  HPP_CONSTRAINTS_CONVEX_SHAPE_HH
+#endif //  HPP__CONSTRAINTS_CONVEX_SHAPE_HH
