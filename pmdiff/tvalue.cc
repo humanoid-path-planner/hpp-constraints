@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE (absolute) {
   BOOST_REQUIRE(m2p::SE3(tfM * frameM).isApprox(tfP * frameP));
 
   /*********************** Position **************************/
-  /*
+  // /*
   // Position of the center in world frame.
   check_consistent (rm, rp,
         _c::Position::create ("ModelPosition", rm, eeM, tIdM),
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE (absolute) {
   // */
 
   /*********************** Orientation **************************/
-  /*
+  // /*
   // Orientation of a frame in joint frame wrt world frame.
   check_consistent (rm, rp,
         _c::Orientation::create ("ModelOrientation", rm, eeM, frameM, tIdM),
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE (absolute) {
   // */
 
   /*********************** Transformation **************************/
-  /*
+  // /*
   // Transformation of a frame in joint frame wrt world frame.
   check_consistent (rm, rp,
         _c::Transformation::create ("ModelTransformation", rm, eeM, frameM, tIdM),
