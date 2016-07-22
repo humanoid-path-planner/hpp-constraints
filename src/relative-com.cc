@@ -17,30 +17,18 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/_constraints/relative-com.hh>
+#include <hpp/constraints/relative-com.hh>
 
 #include <hpp/util/debug.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/center-of-mass-computation.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/center-of-mass-computation.hh>
 
-#include <hpp/_constraints/macros.hh>
+#include <hpp/constraints/macros.hh>
 
 namespace hpp {
-  namespace _constraints {
+  namespace constraints {
     namespace {
-      static void convert (const _constraints::vector3_t& v, model::vectorOut_t res)
-      {
-        res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
-      }
-
-      static void convert (const _constraints::matrix3_t& m, eigen::matrix3_t& res)
-      {
-        res (0,0) = m (0,0); res (0,1) = m (0,1); res (0,2) = m (0,2);
-        res (1,0) = m (1,0); res (1,1) = m (1,1); res (1,2) = m (1,2);
-        res (2,0) = m (2,0); res (2,1) = m (2,1); res (2,2) = m (2,2);
-      }
-
       static size_type size (std::vector<bool> mask)
       {
         size_type res = 0;
@@ -81,9 +69,8 @@ namespace hpp {
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                                size (mask), "RelativeCom"),
       robot_ (robot), comc_ (comc), joint_ (joint), reference_ (reference), mask_ (mask),
-      nominalCase_ (false), result_ (3), jacobian_ (3, robot->numberDof ())
+      nominalCase_ (false), jacobian_ (3, robot->numberDof()-robot->extraConfigSpace().dimension())
     {
-      cross_.setZero ();
       if (mask[0] && mask[1] && mask[2])
         nominalCase_ = true;
       jacobian_.setZero ();
@@ -98,17 +85,17 @@ namespace hpp {
       comc_->compute (Device::COM);
       const Transform3f& M = joint_->currentTransformation ();
       const vector3_t& x = comc_->com ();
-      fcl::Matrix3f RT = M.getRotation (); RT.transpose ();
-      const fcl::Vec3f& t = M.getTranslation ();
+      const matrix3_t& R = M.rotation ();
+      const vector3_t& t = M.translation ();
 
       if (nominalCase_)
-        convert (RT * (x - t) - reference_, result);
+        result = R.transpose() * (x - t) - reference_;
       else {
-        convert (RT * (x - t) - reference_, result_);
+        const vector3_t res ( R.transpose() * (x - t) - reference_);
         size_t index = 0;
         for (size_t i = 0; i < 3; ++i)
           if (mask_[i]) {
-            result [index] = result_ [i];
+            result [index] = res [i];
             index++;
           }
       }
@@ -123,32 +110,30 @@ namespace hpp {
       const ComJacobian_t& Jcom = comc_->jacobian ();
       const JointJacobian_t& Jjoint (joint_->jacobian ());
       const Transform3f& M = joint_->currentTransformation ();
-      fcl::Matrix3f RT (M.getRotation ()); RT.transpose ();
-      const vector3_t& x = comc_->com ();
-      const vector3_t& t (M.getTranslation ());
-      cross_ (0,1) = -x [2] + t [2]; cross_ (1,0) = x [2] - t [2];
-      cross_ (0,2) = x [1] - t [1]; cross_ (2,0) = -x [1] + t [1];
-      cross_ (1,2) = -x [0] + t [0]; cross_ (2,1) = x [0] - t [0];
-      eigen::matrix3_t eigenRT; convert (RT, eigenRT);
+      const matrix3_t& R (M.rotation ());
+      const vector3_t& x (comc_->com ());
+      const vector3_t& t (M.translation ());
+
+      // Right part
+      jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+      // Left part
+      // J = 0RTj ( Jcom + [ x - 0tj ]x 0Rj jJwj - 0Rj jJtj)
+      jacobian_ = R.transpose() * Jcom;
+      jacobian_.noalias() += (R.transpose() * R.colwise().cross(t-x)) * Jjoint.bottomRows<3>();
+
       if (nominalCase_) {
-        jacobian.leftCols (Jjoint.cols ()) =
-          eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
-        jacobian.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
+        jacobian.leftCols (Jjoint.cols ()).noalias() = jacobian_ - Jjoint.topRows<3>();
       } else {
-        jacobian_.leftCols (Jjoint.cols ()) =
-          eigenRT * (Jcom + cross_ * Jjoint.bottomRows (3) - Jjoint.topRows (3));
-        jacobian_.rightCols (jacobian.cols () - Jjoint.cols ()).setZero ();
         size_t index = 0;
         for (size_t i = 0; i < 3; ++i)
           if (mask_[i]) {
-            jacobian.row (index) = jacobian_.row (i);
+            jacobian.row(index).head(Jjoint.cols()) = jacobian_.row (i) - Jjoint.row(i);
             index++;
           }
       }
       hppDnum (info, "Jcom = " << std::endl << Jcom);
-      hppDnum (info, "Jw = " << std::endl << Jjoint.bottomRows (3));
-      hppDnum (info, "Jv = " << std::endl << Jjoint.topRows (3));
+      hppDnum (info, "Jw = " << std::endl << Jjoint.bottomRows<3>());
+      hppDnum (info, "Jv = " << std::endl << Jjoint.topRows<3>());
     }
-
   } // namespace _constraints
 } // namespace hpp

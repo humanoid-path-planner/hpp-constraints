@@ -27,7 +27,9 @@
 #include <hpp/pinocchio/hpp-model/model-loader.hh>
 
 #include "hpp/_constraints/generic-transformation.hh"
+#include "hpp/_constraints/relative-com.hh"
 #include "hpp/constraints/generic-transformation.hh"
+#include "hpp/constraints/relative-com.hh"
 
 
 #include <stdlib.h>
@@ -378,6 +380,48 @@ BOOST_AUTO_TEST_CASE (relative) {
   check_consistent (rm, rp,
         _c::RelativeTransformation::create ("ModelRelativeTransformation", rm, eeM1, eeM2, frameM1 * randM1, frameM2 * randM2),
         c ::RelativeTransformation::create ("PinocRelativeTransformation", rp, eeP1, eeP2, frameP1 * randP1, frameP2 * randP2),
+        ProportionalCompare(1));
+  // */
+}
+
+BOOST_AUTO_TEST_CASE (com) {
+  model::DevicePtr_t rm = hppModel();
+  pinoc::DevicePtr_t rp = hppPinocchio();
+
+  _c::Configuration_t qm = rm->neutralConfiguration();
+  // _c::Configuration_t q = rp->neutralConfiguration();
+  c ::Configuration_t qp = m2p::q(qm);
+  rm->controlComputation((_c::Device::Computation_t)(_c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
+  rp->controlComputation(( c::Device::Computation_t)( c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
+  rm->currentConfiguration(qm); rm->computeForwardKinematics();
+  rp->currentConfiguration(qp); rp->computeForwardKinematics();
+
+  /// Set root joint bound.
+  rm->rootJoint()->lowerBound(0,-1); rm->rootJoint()->lowerBound(1,-1); rm->rootJoint()->lowerBound(2,-1);
+  rm->rootJoint()->upperBound(0, 1); rm->rootJoint()->upperBound(1, 1); rm->rootJoint()->upperBound(2, 1);
+  rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
+  rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
+
+  _c::JointPtr_t eeM = rm->getJointByName ("RAnkleRoll");
+  c ::JointPtr_t eeP = rp->getJointByName ("RAnkleRoll");
+
+  _c::Transform3f tfM (eeM->currentTransformation ());
+  c ::Transform3f tfP (eeP->currentTransformation ());
+
+  _c::vector3_t targetM = tfM.getRotation() * (rm->positionCenterOfMass() - tfM.getTranslation());
+  c ::vector3_t targetP = tfP.actInv(rm->positionCenterOfMass().derived());
+
+  // This two frames are the position to be compared.
+  _c::Transform3f frameM = eeM->linkInJointFrame();
+  c ::Transform3f frameP = rp->model()->getFramePlacement(eeM->linkName());
+
+  BOOST_REQUIRE(m2p::SE3(tfM * frameM).isApprox(tfP * frameP));
+
+  /*********************** Relative COM **************************/
+  // /*
+  check_consistent (rm, rp,
+        _c::RelativeCom::create (rm, eeM, targetM),
+        c ::RelativeCom::create (rp, eeP, targetP),
         ProportionalCompare(1));
   // */
 }

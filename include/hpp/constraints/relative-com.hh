@@ -87,10 +87,8 @@ namespace hpp {
       CenterOfMassComputationPtr_t comc_;
       JointPtr_t joint_;
       vector3_t reference_;
-      mutable eigen::matrix3_t cross_;
       std::vector <bool> mask_;
       bool nominalCase_;
-      mutable vector_t result_;
       mutable ComJacobian_t jacobian_;
     }; // class RelativeCom
     /// \}

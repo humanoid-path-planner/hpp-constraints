@@ -64,8 +64,8 @@ namespace hpp {
     typedef pinocchio::ConfigurationOut_t ConfigurationOut_t;
     typedef pinocchio::Device Device;
     typedef pinocchio::DevicePtr_t DevicePtr_t;
-//NOTYET    typedef pinocchio::CenterOfMassComputation CenterOfMassComputation;
-//NOTYET    typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
+    typedef pinocchio::CenterOfMassComputation CenterOfMassComputation;
+    typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
     typedef boost::shared_ptr <DifferentiableFunction>
     DifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DifferentiableFunctionStack>
