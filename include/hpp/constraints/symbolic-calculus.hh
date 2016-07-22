@@ -74,9 +74,8 @@
 
 #include "hpp/constraints/fwd.hh"
 
-#include <hpp/model/joint.hh>
-#include <hpp/model/fcl-to-eigen.hh>
-#include <hpp/model/center-of-mass-computation.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/center-of-mass-computation.hh>
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/tools.hh>
@@ -112,7 +111,7 @@ namespace hpp {
       typedef value_type Ptr_t;
       typedef value_type WkPtr_t;
     };
-    template <> struct Traits<model::Joint> {
+    template <> struct Traits<pinocchio::Joint> {
       typedef JointPtr_t Ptr_t;
       typedef JointPtr_t WkPtr_t;
     };
@@ -165,7 +164,7 @@ namespace hpp {
     ///     hand calculation error proof
     /// \li a fast way to check the results of your calculations.
     template <class T,
-             class ValueType = eigen::vector3_t,
+             class ValueType = vector3_t,
              class JacobianType = JacobianMatrix,
              class CrossType = CrossMatrix >
     class CalculusBase : public CalculusBaseAbstract <ValueType, JacobianType>
@@ -537,32 +536,40 @@ namespace hpp {
           transpose_ (other.transpose_)
         {}
 
-        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<model::Joint>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
+        HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<pinocchio::Joint>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         HPP_CONSTRAINTS_CB_CREATE2 (RotationMultiply, const typename Traits<JointTranspose>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
 
         RotationMultiply (const typename Traits<JointTranspose>::Ptr_t& joint, const typename Traits<RhsValue>::Ptr_t& rhs):
-          e_ (Expression < model::Joint, RhsValue >::create (joint.j_, rhs)),
+          e_ (Expression < pinocchio::Joint, RhsValue >::create (joint.j_, rhs)),
           transpose_ (true)
         {}
 
-        RotationMultiply (const typename Traits<model::Joint>::Ptr_t& joint, const typename Traits<RhsValue>::Ptr_t& rhs,
+        RotationMultiply (const typename Traits<pinocchio::Joint>::Ptr_t& joint, const typename Traits<RhsValue>::Ptr_t& rhs,
             bool transpose = false):
-          e_ (Expression < model::Joint, RhsValue >::create (joint, rhs)),
+          e_ (Expression < pinocchio::Joint, RhsValue >::create (joint, rhs)),
           transpose_ (transpose)
         {}
 
         void impl_value () {
           e_->rhs_->computeValue ();
-          computeRotationMatrix ();
-          this->value_ = R * e_->rhs_->value ();
+          const matrix3_t& R = e_->lhs_->currentTransformation ().rotation ();
+          if (transpose_)
+            this->value_ = R.transpose() * e_->rhs_->value ();
+          else
+            this->value_ = R             * e_->rhs_->value ();
         }
         void impl_jacobian () {
           e_->rhs_->computeJacobian ();
-          computeRotationMatrix ();
           e_->rhs_->computeCrossValue ();
           const JointJacobian_t& J = e_->lhs_->jacobian ();
-          this->jacobian_ = R * (e_->rhs_->cross () * J.bottomRows (3) + e_->rhs_->jacobian ());
+          const matrix3_t& R = e_->lhs_->currentTransformation ().rotation ();
+          if (transpose_)
+            this->jacobian_ = R.transpose()
+              * ((e_->rhs_->cross () * R) * J.bottomRows<3>() + e_->rhs_->jacobian ());
+          else
+            this->jacobian_ = R
+              * ((e_->rhs_->cross () * R) * J.bottomRows<3>() + e_->rhs_->jacobian ());
         }
         void invalidate () {
           Parent_t::invalidate ();
@@ -570,27 +577,12 @@ namespace hpp {
         }
 
       protected:
-        typename Expression < model::Joint, RhsValue >::Ptr_t e_;
+        typename Expression < pinocchio::Joint, RhsValue >::Ptr_t e_;
 
-        friend class Expression <model::Joint, RhsValue>;
+        friend class Expression <pinocchio::Joint, RhsValue>;
 
       private:
-        void computeRotationMatrix () {
-          const fcl::Matrix3f& Rfcl =
-            e_->lhs_->currentTransformation ().getRotation ();
-          if (transpose_) {
-            R (0,0) = Rfcl (0,0); R (1,0) = Rfcl (0,1); R (2,0) = Rfcl (0,2);
-            R (0,1) = Rfcl (1,0); R (1,1) = Rfcl (1,1); R (2,1) = Rfcl (1,2);
-            R (0,2) = Rfcl (2,0); R (1,2) = Rfcl (2,1); R (2,2) = Rfcl (2,2);
-          } else {
-            R (0,0) = Rfcl (0,0); R (0,1) = Rfcl (0,1); R (0,2) = Rfcl (0,2);
-            R (1,0) = Rfcl (1,0); R (1,1) = Rfcl (1,1); R (1,2) = Rfcl (1,2);
-            R (2,0) = Rfcl (2,0); R (2,1) = Rfcl (2,1); R (2,2) = Rfcl (2,2);
-          }
-        }
-
         bool transpose_;
-        eigen::matrix3_t R;
     };
 
     /// Basic expression representing a point in a joint frame.
@@ -650,17 +642,16 @@ namespace hpp {
         }
         void impl_value () {
           if (joint_ == NULL) return;
-          g_ = joint_->currentTransformation ().transform (local_);
-          for (int i = 0; i < 3; ++i) this->value_[i] = g_[i];
+          this->value_ = joint_->currentTransformation ().act (local_);
         }
         void impl_jacobian () {
           if (joint_ == NULL) return;
-          const JointJacobian_t& j (joint_->jacobian ());
+          const JointJacobian_t& J (joint_->jacobian ());
+          const matrix3_t& R = joint_->currentTransformation ().rotation ();
+          this->jacobian_.noalias() = R * J.topRows<3>();
           if (!center_) {
             computeCrossRXl ();
-            this->jacobian_ = - this->cross_ * j.bottomRows (3) + j.topRows (3);
-          } else {
-            this->jacobian_ = j.topRows (3);
+            this->jacobian_.noalias() -= (this->cross_ * R) * J.bottomRows<3>();
           }
         }
         void computeCrossRXl () {
@@ -670,7 +661,7 @@ namespace hpp {
             return;
           }
           computeCrossMatrix (
-              joint_->currentTransformation ().getRotation () * (local_),
+              joint_->currentTransformation ().rotation () * local_,
               this->cross_);
         }
 
@@ -678,8 +669,6 @@ namespace hpp {
         JointPtr_t joint_;
         vector3_t local_;
         bool center_;
-
-        vector3_t g_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -733,27 +722,25 @@ namespace hpp {
         }
         void impl_value () {
           if (joint_ == NULL) return;
-          g_ = joint_->currentTransformation ().getRotation () * vector_;
-          for (int i = 0; i < 3; ++i) this->value_[i] = g_[i];
+          this->value_ = joint_->currentTransformation ().rotation () * vector_;
         }
         void impl_jacobian () {
           if (joint_ == NULL) return;
-          const JointJacobian_t& j (joint_->jacobian ());
+          const JointJacobian_t& J (joint_->jacobian ());
+          const matrix3_t& R = joint_->currentTransformation ().rotation ();
           computeCrossRXl ();
-          this->jacobian_ = - this->cross_ * j.bottomRows (3);
+          this->jacobian_.noalias() = (- this->cross_ * R ) * J.bottomRows<3>();
         }
         void computeCrossRXl () {
           if (joint_ == NULL) return;
           computeCrossMatrix (
-              joint_->currentTransformation ().getRotation () * vector_,
+              joint_->currentTransformation ().rotation () * vector_,
               this->cross_);
         }
 
       protected:
         JointPtr_t joint_;
         vector3_t vector_;
-
-        vector3_t g_;
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -762,20 +749,20 @@ namespace hpp {
     /// Basic expression representing a static point
     ///
     /// Its value is constant and its jacobian is a zero matrix.
-    class Point : public CalculusBase <Point, eigen::vector3_t, JacobianMatrix>
+    class Point : public CalculusBase <Point, vector3_t, JacobianMatrix>
     {
       public:
         HPP_CONSTRAINTS_CB_CREATE2 (Point, const vector3_t&, const size_t&)
 
         Point () {}
 
-        Point (const CalculusBase<Point, eigen::vector3_t, JacobianMatrix>& other) :
+        Point (const CalculusBase<Point, vector3_t, JacobianMatrix>& other) :
           CalculusBase <Point, eigen::vector3_t, JacobianMatrix> (other)
         {
         }
 
         Point (const Point& point) :
-          CalculusBase <Point, eigen::vector3_t, JacobianMatrix> (point)
+          CalculusBase <Point, vector3_t, JacobianMatrix> (point)
         {
         }
 
@@ -784,8 +771,8 @@ namespace hpp {
         /// \param point the static point
         /// \param jacobianNbCols number of column of the jacobian
         Point (const vector3_t& point, size_t jacobianNbCols) :
-          CalculusBase <Point, eigen::vector3_t, JacobianMatrix>
-          (convert <vector3_t, eigen::vector3_t> (point, 3), JacobianMatrix::Zero (3, jacobianNbCols))
+          CalculusBase <Point, vector3_t, JacobianMatrix>
+          (convert <vector3_t, vector3_t> (point, 3), JacobianMatrix::Zero (3, jacobianNbCols))
         {
         }
 
@@ -794,15 +781,16 @@ namespace hpp {
     };
 
     /// Basic expression representing a COM.
-    class PointCom : public CalculusBase <PointCom>
+    class PointCom : public CalculusBase <PointCom, vector3_t, ComJacobian_t>
     {
       public:
+        typedef CalculusBase <PointCom, vector3_t, ComJacobian_t > Parent_t;
         HPP_CONSTRAINTS_CB_CREATE1 (PointCom, const CenterOfMassComputationPtr_t&)
 
         PointCom () {}
 
-        PointCom (const CalculusBase<PointCom>& other):
-          CalculusBase <PointCom> (other),
+        PointCom (const Parent_t& other):
+          Parent_t (other),
           comc_ (static_cast <const PointCom&>(other).centerOfMassComputation ())
         {
         }
@@ -810,7 +798,10 @@ namespace hpp {
         PointCom (const CenterOfMassComputationPtr_t& comc): comc_ (comc)
         {}
 
-        inline const JacobianMatrix& jacobian () const {
+        inline const vector3_t& value () const {
+          return comc_->com();
+        }
+        inline const ComJacobian_t& jacobian () const {
           return comc_->jacobian();
         }
 
@@ -819,10 +810,9 @@ namespace hpp {
         }
         void impl_value () {
           comc_->compute (Device::COM);
-          for (int i = 0; i < 3; ++i) this->value_[i] = comc_->com ()[i];
         }
         void impl_jacobian () {
-          comc_->compute (Device::JACOBIAN);
+          comc_->compute (Device::ALL);
           // TODO: there is memory and time to be saved here as this copy is
           // not important.
           //this->jacobian_ = comc_->jacobian ();
@@ -861,21 +851,20 @@ namespace hpp {
           return joint_;
         }
         void impl_value () {
-          const fcl::Transform3f& t = joint_->currentTransformation ();
-          for (int i = 0; i < 3; ++i) this->value_[i] = t.getTranslation ()[i];
-          computeLog (this->value_.segment <3> (3), theta_, t.getRotation());
+          const Transform3f& M = joint_->currentTransformation ();
+          this->value_.head<3>() = M.translation ();
+          computeLog (this->value_.tail<3>(), theta_, M.rotation());
         }
         void impl_jacobian () {
           computeValue ();
-          const JointJacobian_t& j (joint_->jacobian ());
-          const fcl::Transform3f& t = joint_->currentTransformation ();
-          eigen::matrix3_t R; hpp::model::toEigen (t.getRotation(), R); R.transposeInPlace();
+          const JointJacobian_t& J (joint_->jacobian ());
+          const matrix3_t& R (joint_->currentTransformation ().rotation ());
           // Compute vector r
           eigen::matrix3_t Jlog;
           assert (theta_ >= 0);
-          computeJlog (theta_, this->value_.segment <3> (3), Jlog);
-          this->jacobian_.topRows<3>().noalias() = j.topRows <3> ();
-          this->jacobian_.bottomRows<3>().noalias() = Jlog * j.bottomRows <3> ();
+          computeJlog (theta_, this->value_.tail<3>(), Jlog);
+          this->jacobian_.topRows<3>().noalias() = R * J.topRows<3>();
+          this->jacobian_.bottomRows<3>().noalias() = (Jlog * R) * J.bottomRows<3>();
         }
 
       protected:

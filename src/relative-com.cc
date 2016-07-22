@@ -135,5 +135,5 @@ namespace hpp {
       hppDnum (info, "Jw = " << std::endl << Jjoint.bottomRows<3>());
       hppDnum (info, "Jv = " << std::endl << Jjoint.topRows<3>());
     }
-  } // namespace _constraints
+  } // namespace constraints
 } // namespace hpp
