@@ -14,10 +14,10 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/constraints/tools.hh"
+#include "hpp/_constraints/tools.hh"
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     void computeLog (vectorOut_t result, double& theta, const fcl::Matrix3f& Rerror)
     {
       double tr = Rerror (0, 0) + Rerror (1, 1) + Rerror (2, 2);
@@ -52,5 +52,5 @@ namespace hpp {
 	Jlog += alpha * r * r.transpose ();
       }
     }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/configuration-constraint.hh>
+#include <hpp/_constraints/configuration-constraint.hh>
 
 #include <hpp/util/debug.hh>
 #include <hpp/model/device.hh>
@@ -22,7 +22,7 @@
 #include <hpp/model/configuration.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     ConfigurationConstraintPtr_t ConfigurationConstraint::create (
         const std::string& name, const DevicePtr_t& robot,
         ConfigurationIn_t goal, std::vector <bool> mask)

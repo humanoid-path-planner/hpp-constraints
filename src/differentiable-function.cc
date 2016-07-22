@@ -14,12 +14,12 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/differentiable-function.hh>
+#include <hpp/_constraints/differentiable-function.hh>
 
 #include <hpp/model/configuration.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
       void DifferentiableFunction::finiteDifferenceForward
         (matrixOut_t jacobian, vectorIn_t x,
          DevicePtr_t robot, value_type eps) const
@@ -98,5 +98,5 @@ namespace hpp {
           hppDout (error, "Central finite difference: NaN");
         }
       }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

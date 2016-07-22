@@ -14,16 +14,16 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/constraints/static-stability.hh"
+#include "hpp/_constraints/static-stability.hh"
 
 #include <limits>
 #include <hpp/model/device.hh>
 #include <hpp/model/fcl-to-eigen.hh>
 
-#include "hpp/constraints/tools.hh"
+#include "hpp/_constraints/tools.hh"
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     const value_type StaticStability::G = 9.81;
     const Eigen::Matrix <value_type, 6, 1> StaticStability::Gravity
       = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-1, 0, 0, 0).finished();
@@ -203,5 +203,5 @@ namespace hpp {
         lambdaDot.noalias () += (u(i0) / (v(i0)*v(i0)) ) * vDot.row(i0);
       }
     }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

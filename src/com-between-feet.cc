@@ -17,7 +17,7 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/com-between-feet.hh>
+#include <hpp/_constraints/com-between-feet.hh>
 
 #include <hpp/util/debug.hh>
 #include <hpp/model/device.hh>
@@ -25,7 +25,7 @@
 #include <hpp/model/center-of-mass-computation.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     namespace {
       static size_type size (std::vector<bool> mask)
       {
@@ -157,5 +157,5 @@ namespace hpp {
           = xmxrDotu_->jacobian ();
       }
     }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

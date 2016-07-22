@@ -14,14 +14,14 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/constraints/convex-shape-contact.hh"
+#include "hpp/_constraints/convex-shape-contact.hh"
 
 #include <limits>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
@@ -287,5 +287,5 @@ namespace hpp {
       }
       jacobian.row (2) = sibling_->jacobian_.row (3);
     }
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

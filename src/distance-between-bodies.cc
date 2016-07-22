@@ -22,10 +22,10 @@
 #include <hpp/model/body.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
-#include <hpp/constraints/distance-between-bodies.hh>
+#include <hpp/_constraints/distance-between-bodies.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
 
     static void cross (const fcl::Vec3f& v, eigen::matrix3_t& m)
     {
@@ -157,5 +157,5 @@ namespace hpp {
       }
     }
 
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

@@ -17,24 +17,24 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/relative-com.hh>
+#include <hpp/_constraints/relative-com.hh>
 
 #include <hpp/util/debug.hh>
 #include <hpp/model/device.hh>
 #include <hpp/model/joint.hh>
 #include <hpp/model/center-of-mass-computation.hh>
 
-#include <hpp/constraints/macros.hh>
+#include <hpp/_constraints/macros.hh>
 
 namespace hpp {
-  namespace constraints {
+  namespace _constraints {
     namespace {
-      static void convert (const constraints::vector3_t& v, model::vectorOut_t res)
+      static void convert (const _constraints::vector3_t& v, model::vectorOut_t res)
       {
         res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
       }
 
-      static void convert (const constraints::matrix3_t& m, eigen::matrix3_t& res)
+      static void convert (const _constraints::matrix3_t& m, eigen::matrix3_t& res)
       {
         res (0,0) = m (0,0); res (0,1) = m (0,1); res (0,2) = m (0,2);
         res (1,0) = m (1,0); res (1,1) = m (1,1); res (1,2) = m (1,2);
@@ -150,5 +150,5 @@ namespace hpp {
       hppDnum (info, "Jv = " << std::endl << Jjoint.topRows (3));
     }
 
-  } // namespace constraints
+  } // namespace _constraints
 } // namespace hpp

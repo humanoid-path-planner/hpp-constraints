@@ -18,8 +18,10 @@
 
 #include <boost/math/constants/constants.hpp>
 
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/fcl/math/transform.h>
+
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
 
 #include <hpp/constraints/macros.hh>
 
@@ -48,7 +50,7 @@ namespace hpp {
         template <bool rel, bool pos> static inline void log (
             const GenericTransformationData<rel, pos, true>& d)
           {
-            const matrix3_t& Rerror (d.M.getRotation ());
+            const matrix3_t& Rerror (d.M.rotation ());
             value_type tr = Rerror.trace();
             if (tr > 3)       d.theta = 0; // acos((3-1)/2)
             else if (tr < -1) d.theta = ::boost::math::constants::pi<value_type>(); // acos((-1-1)/2)
@@ -81,7 +83,7 @@ namespace hpp {
           {
             if (d.theta < 1e-6) {
               if (d.R1isID) d.JlogXTR1inJ1.setIdentity ();
-              else          d.JlogXTR1inJ1.noalias() = d.F1inJ1.getRotation().derived().transpose();
+              else          d.JlogXTR1inJ1.noalias() = d.F1inJ1.rotation().derived().transpose();
             } else {
               // Jlog = alpha I
               const value_type ct = cos(d.theta), st = sin(d.theta);
@@ -99,7 +101,7 @@ namespace hpp {
               const value_type alpha = 1/(d.theta*d.theta) - st_1mct/(2*d.theta);
               d.JlogXTR1inJ1.noalias() += alpha * d.value.template tail<3>() * d.value.template tail<3>().transpose ();
               if (!d.R1isID)
-                d.JlogXTR1inJ1 *= d.F1inJ1.getRotation().derived().transpose();
+                d.JlogXTR1inJ1 *= d.F1inJ1.rotation().derived().transpose();
             }
           } 
       };
@@ -107,10 +109,10 @@ namespace hpp {
       template <typename Data, typename Derived> void assign_if
         (bool cond, const Data& d, matrixOut_t J,
          const Eigen::MatrixBase<Derived>& rhs,
-         const size_type& startRow, const size_type& leftCols)
+         const size_type& startRow)
       {
-        if (cond) d.jacobian.template middleRows<3>(startRow)                   .noalias() = rhs;
-        else               J.template middleRows<3>(startRow).leftCols(leftCols).noalias() = rhs;
+        if (cond) d.jacobian.template middleRows<3>(startRow)                 .noalias() = rhs;
+        else               J.template middleRows<3>(startRow).leftCols(d.cols).noalias() = rhs;
       }
 
       template <bool lflag /*rel*/, bool rflag /*false*/> struct binary
@@ -127,31 +129,33 @@ namespace hpp {
         template <bool rel, bool pos> static inline void Jorientation (
             const GenericTransformationData<rel, pos, true>& d, matrixOut_t J)
         {
-          const size_type& leftCols = d.joint2->jacobian().cols();
           assign_if(!d.fullOri, d, J,
-            d.JlogXTR1inJ1 * (d.joint2->jacobian().template bottomRows<3>()),
-            d.rowOri, leftCols);
+            (d.JlogXTR1inJ1 * d.R2()) * d.J2().template bottomRows<3>(),
+            d.rowOri);
         }
         template <bool rel, bool ori> static inline void Jtranslation (
             const GenericTransformationData<rel, true, ori>& d,
             matrixOut_t J)
         {
-          const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
-          const size_type& leftCols = d.joint2->jacobian().cols();
+          const JointJacobian_t& J2 (d.J2());
+          const matrix3_t& R2 (d.R2());
+          const matrix3_t& R1inJ1 (d.F1inJ1.rotation ());
 
+          // hpp-model: J = 1RT* ( 0Jt2 - [ 0R2 2t* ]x 0Jw2 )
+          // pinocchio: J = 1RT* ( 0R2 2Jt2 - [ 0R2 2t* ]x 0R2 2Jw2 )
           if (!d.t2isZero) {
-            d.tmpJac.noalias() = d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
+            d.tmpJac.noalias() = ( R2.colwise().cross(d.cross2)) * J2.bottomRows<3>();
+            d.tmpJac.noalias() += R2 * J2.topRows<3>();
             if (d.R1isID) {
-              assign_if (!d.fullPos, d, J, d.tmpJac + d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+              assign_if (!d.fullPos, d, J, d.tmpJac, 0);
             } else { // Generic case
-              d.tmpJac.noalias() += d.joint2->jacobian().template topRows<3>();
-              assign_if (!d.fullPos, d, J, transpose(R1inJ1) * d.tmpJac, 0, leftCols);
+              assign_if (!d.fullPos, d, J, R1inJ1.transpose() * d.tmpJac, 0);
             }
           } else {
             if (d.R1isID)
-              assign_if (!d.fullPos, d, J,                     d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+              assign_if (!d.fullPos, d, J, R2 * J2.topRows<3>(), 0);
             else
-              assign_if (!d.fullPos, d, J, transpose(R1inJ1) * d.joint2->jacobian().template topRows<3>(), 0, leftCols);
+              assign_if (!d.fullPos, d, J, (R1inJ1.transpose() * R2) * J2.topRows<3>(), 0);
           }
         }
       };
@@ -161,33 +165,36 @@ namespace hpp {
             const GenericTransformationData<true, pos, true>& d,
             matrixOut_t J)
         {
-          const Transform3f& J1 = d.joint1->currentTransformation ();
-          const matrix3_t& R1 (J1.getRotation ());
-          const size_type& leftCols = d.joint2->jacobian().cols();
           d.tmpJac.noalias() =
-                  d.joint2->jacobian().template bottomRows<3>()
-                - d.joint1->jacobian().template bottomRows<3>();
+                  d.R2() * d.J2().template bottomRows<3>()
+                - d.R1() * d.J1().template bottomRows<3>();
           assign_if(!d.fullOri, d, J,
-              d.JlogXTR1inJ1 * transpose (R1) * d.tmpJac,
-              d.rowOri, leftCols);
+              d.JlogXTR1inJ1 * d.R1().transpose () * d.tmpJac,
+              d.rowOri);
         }
         template <bool ori> static inline void Jtranslation (
             const GenericTransformationData<true, true, ori>& d,
             matrixOut_t J)
         {
-          const matrix3_t& R1inJ1 (d.F1inJ1.getRotation ());
-          const Transform3f& J1 = d.joint1->currentTransformation ();
-          const matrix3_t& R1 (J1.getRotation ());
-          const size_type& leftCols = d.joint2->jacobian().cols();
+          const JointJacobian_t& J1 (d.J1()); const JointJacobian_t& J2 (d.J2());
+          const matrix3_t&       R1 (d.R1()); const matrix3_t&       R2 (d.R2());
+          const matrix3_t& R1inJ1 (d.F1inJ1.rotation ());
 
+          // J = 1RT* 0RT1 ( A + B )
+          // hpp-model:
+          // A = [ 0t2 - 0t1 0R2 2t* ]x 0Jw1
+          // B = ( 0Jt2 - 0Jt1 - [ 0R2 2t* ]x 0Jw2 )
+          // pinocchio:
+          // A = [ 0t2 - 0t1 0R2 2t* ]x 0R1 1Jw1
+          // B = ( 0R2 2Jt2 - 0R1 1Jt1 - [ 0R2 2t* ]x 0R2 2Jw2 )
           d.tmpJac.noalias() =
-            - d.joint1->jacobian().template bottomRows<3>().colwise().cross(d.cross1)
-            + d.joint2->jacobian().template topRows<3>()
-            - d.joint1->jacobian().template topRows<3>();
+            - R1.colwise().cross(d.cross1) * J1.bottomRows<3>() // A
+            + R2 * J2.topRows<3>()  // B1
+            - R1 * J1.topRows<3>(); // B2
           if (!d.t2isZero)
-            d.tmpJac.noalias() += d.joint2->jacobian().template bottomRows<3>().colwise().cross(d.cross2);
-          if (d.R1isID) assign_if(!d.fullPos, d, J,                     transpose(R1) * d.tmpJac, 0, leftCols);
-          else          assign_if(!d.fullPos, d, J, transpose(R1inJ1) * transpose(R1) * d.tmpJac, 0, leftCols);
+            d.tmpJac.noalias() += R2.colwise().cross(d.cross2) * J2.bottomRows<3>(); // B3
+          if (d.R1isID) assign_if(!d.fullPos, d, J,                       R1.transpose()  * d.tmpJac, 0);
+          else          assign_if(!d.fullPos, d, J, (R1inJ1.transpose() * R1.transpose()) * d.tmpJac, 0);
         }
       };
 
@@ -197,10 +204,10 @@ namespace hpp {
         {
           // There is no joint1
           const Transform3f& J2 = d.joint2->currentTransformation ();
-          d.value.noalias() = J2.transform (d.F2inJ2.getTranslation());
-          if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.getTranslation();
+          d.value.noalias() = J2.act (d.F2inJ2.translation());
+          if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.translation();
           if (!d.R1isID)
-            d.value.applyOnTheLeft(d.F1inJ1.getRotation().derived().transpose());
+            d.value.applyOnTheLeft(d.F1inJ1.rotation().transpose());
         }
       };
       template <> struct relativeTransform<false, true> {
@@ -208,8 +215,8 @@ namespace hpp {
             const GenericTransformationData<runtimeRel, pos, true>& d)
         {
           const Transform3f& J2 = d.joint2->currentTransformation ();
-          d.M = d.F1inJ1.inverseTimes(J2 * d.F2inJ2);
-          if (pos) d.value.template head<3>().noalias() = d.M.getTranslation();
+          d.M = d.F1inJ1.actInv(J2 * d.F2inJ2);
+          if (pos) d.value.template head<3>().noalias() = d.M.translation();
         }
       };
       template <> struct relativeTransform<true, true> {
@@ -223,8 +230,8 @@ namespace hpp {
           }
           const Transform3f& J1 = d.joint1->currentTransformation ();
           const Transform3f& J2 = d.joint2->currentTransformation ();
-          d.M = d.F1inJ1.inverseTimes(J1.inverseTimes(J2 * d.F2inJ2));
-          if (pos) d.value.template head<3>().noalias() = d.M.getTranslation();
+          d.M = d.F1inJ1.actInv(J1.actInv(J2 * d.F2inJ2));
+          if (pos) d.value.template head<3>().noalias() = d.M.translation();
         }
       };
       template <> struct relativeTransform<true, false> {
@@ -237,13 +244,13 @@ namespace hpp {
           }
           const Transform3f& J2 = d.joint2->currentTransformation ();
           const Transform3f& J1 = d.joint1->currentTransformation ();
-          d.value.noalias() = J2.transform (d.F2inJ2.getTranslation())
-                              - J1.getTranslation();
-          d.value.applyOnTheLeft(J1.getRotation().derived().transpose());
+          d.value.noalias() = J2.act (d.F2inJ2.translation())
+                              - J1.translation();
+          d.value.applyOnTheLeft(J1.rotation().derived().transpose());
 
-          if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.getTranslation();
+          if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.translation();
           if (!d.R1isID)
-            d.value.applyOnTheLeft(d.F1inJ1.getRotation().derived().transpose());
+            d.value.applyOnTheLeft(d.F1inJ1.rotation().derived().transpose());
         }
       };
 
@@ -259,9 +266,9 @@ namespace hpp {
             matrixOut_t jacobian, const std::vector<bool>& mask)
         {
           const Transform3f& J2 = d.joint2->currentTransformation ();
-          const vector3_t& t2inJ2 (d.F2inJ2.getTranslation ());
-          const vector3_t& t2 (J2.getTranslation ());
-          const matrix3_t& R2 (J2.getRotation ());
+          const vector3_t& t2inJ2 (d.F2inJ2.translation ());
+          const vector3_t& t2 (J2.translation ());
+          const matrix3_t& R2 (J2.rotation ());
 
           if (!d.t2isZero)
             d.cross2.noalias() = R2*t2inJ2;
@@ -273,7 +280,7 @@ namespace hpp {
           // d.getJoint1(): relative known at run time
           if (rel && d.getJoint1()) {
             const Transform3f& J1 = d.getJoint1()->currentTransformation ();
-            const vector3_t& t1 (J1.getTranslation ());
+            const vector3_t& t1 (J1.translation ());
             d.cross1.noalias() = d.cross2 + t2 - t1;
             binary<rel, pos>::Jtranslation (d, jacobian);
             binary<rel, ori>::Jorientation (d, jacobian);
@@ -285,23 +292,22 @@ namespace hpp {
 
           // Copy necessary rows.
           size_type index=0;
-          const size_type& leftCols = d.joint2->jacobian().cols();
           const std::size_t lPos = (pos?3:0), lOri = (ori?3:0);
           if (!d.fullPos) {
             for (size_type i=0; i<lPos; ++i) {
               if (mask [i]) {
-                jacobian.row(index).leftCols(leftCols).noalias() = d.jacobian.row(i); ++index;
+                jacobian.row(index).leftCols(d.cols).noalias() = d.jacobian.row(i); ++index;
               }
             }
           } else index = lPos;
           if (!d.fullOri) {
             for (size_type i=lPos; i<lPos+lOri; ++i) {
               if (mask [i]) {
-                jacobian.row(index).leftCols(leftCols).noalias() = d.jacobian.row(i); ++index;
+                jacobian.row(index).leftCols(d.cols).noalias() = d.jacobian.row(i); ++index;
               }
             }
           }
-          jacobian.rightCols(jacobian.cols()-leftCols).setZero();
+          jacobian.rightCols(jacobian.cols()-d.cols).setZero();
         }
       };
     }
@@ -314,7 +320,7 @@ namespace hpp {
     {
       GenericTransformation<_Options>* ptr =
         new GenericTransformation<_Options> (name, robot, mask);
-      ptr->joint1 (NULL);
+      ptr->joint1 (JointPtr_t());
       ptr->joint2 (joint2);
       ptr->reference (reference);
       Ptr_t shPtr (ptr);
@@ -331,7 +337,7 @@ namespace hpp {
     {
       GenericTransformation<_Options>* ptr =
         new GenericTransformation<_Options> (name, robot, mask);
-      ptr->joint1 (NULL);
+      ptr->joint1 (JointPtr_t());
       ptr->joint2 (joint2);
       ptr->frame1InJoint1 (frame1);
       ptr->frame2InJoint2 (frame2);
