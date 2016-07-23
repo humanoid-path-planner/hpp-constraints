@@ -32,6 +32,8 @@
 #include "hpp/constraints/relative-com.hh"
 #include "hpp/_constraints/com-between-feet.hh"
 #include "hpp/constraints/com-between-feet.hh"
+#include "hpp/_constraints/distance-between-bodies.hh"
+#include "hpp/constraints/distance-between-bodies.hh"
 
 
 #include <stdlib.h>
@@ -385,6 +387,26 @@ BOOST_AUTO_TEST_CASE (com) {
   check_consistent (rm, rp,
         _c::ComBetweenFeet::create ("ModelComBetweenFeet", rm, eeML, eeMR, tIdM.getTranslation(), tIdM.getTranslation(), eeMR, tIdM.getTranslation()),
         c ::ComBetweenFeet::create ("PinocComBetweenFeet", rp, eePL, eePR, tIdP.translation()   , tIdP.translation()   , eePR, tIdP.translation()),
+        ProportionalCompare(1));
+  // */
+}
+
+BOOST_AUTO_TEST_CASE (distance) {
+  model::DevicePtr_t rm;
+  pinoc::DevicePtr_t rp;
+  setupRobots(rm, rp, true);
+
+  _c::JointPtr_t eeMR = rm->getJointByName ("RAnkleRoll");
+  c ::JointPtr_t eePR = rp->getJointByName ("RAnkleRoll");
+  _c::JointPtr_t eeML = rm->getJointByName ("LAnkleRoll");
+  c ::JointPtr_t eePL = rp->getJointByName ("LAnkleRoll");
+
+
+  /*********************** Distance between bodies **************************/
+  // /*
+  check_consistent (rm, rp,
+        _c::DistanceBetweenBodies::create ("ModelDistanceBetweenBodies", rm, eeMR, eeML),
+        c ::DistanceBetweenBodies::create ("ModelDistanceBetweenBodies", rp, eePR, eePL),
         ProportionalCompare(1));
   // */
 }
