@@ -57,8 +57,9 @@ namespace hpp {
     HPP_PREDEF_CLASS (ConvexShapeContactComplement);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
 
-//NOTYET    typedef pinocchio::ObjectVector_t ObjectVector_t;
-//NOTYET    typedef pinocchio::CollisionObjectPtr_t CollisionObjectPtr_t;
+    typedef pinocchio::ObjectVector_t ObjectVector_t;
+    typedef pinocchio::CollisionObjectPtr_t CollisionObjectPtr_t;
+    typedef pinocchio::CollisionObjectConstPtr_t CollisionObjectConstPtr_t;
     typedef pinocchio::Configuration_t Configuration_t;
     typedef pinocchio::ConfigurationIn_t ConfigurationIn_t;
     typedef pinocchio::ConfigurationOut_t ConfigurationOut_t;

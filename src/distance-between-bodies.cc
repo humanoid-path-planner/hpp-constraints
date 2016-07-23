@@ -18,27 +18,14 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <hpp/fcl/distance.h>
-#include <hpp/model/collision-object.hh>
-#include <hpp/model/body.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/_constraints/distance-between-bodies.hh>
+#include <hpp/pinocchio/collision-object.hh>
+#include <hpp/pinocchio/body.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/constraints/distance-between-bodies.hh>
 
 namespace hpp {
-  namespace _constraints {
-
-    static void cross (const fcl::Vec3f& v, eigen::matrix3_t& m)
-    {
-      m (0,1) = -v [2]; m (1,0) =  v [2];
-      m (0,2) =  v [1]; m (2,0) = -v [1];
-      m (1,2) = -v [0]; m (2,1) =  v [0];
-      m (0,0) = m (1,1) = m (2,2) = 0;
-    }
-
-    static void fclToEigen (const fcl::Vec3f& v, eigen::vector3_t& res)
-    {
-      res [0] = v[0]; res [1] = v[1]; res [2] = v[2];
-    }
+  namespace constraints {
 
     DistanceBetweenBodiesPtr_t DistanceBetweenBodies::create
     (const std::string& name, const DevicePtr_t& robot,
@@ -65,9 +52,8 @@ namespace hpp {
      const JointPtr_t& joint1, const JointPtr_t& joint2) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
 			      name), robot_ (robot), joint1_ (joint1),
-      joint2_ (joint2), objs1_ (joint1_->linkedBody ()->innerObjects
-				(hpp::model::DISTANCE)),
-      objs2_ (joint2_->linkedBody ()->innerObjects (hpp::model::DISTANCE))
+      joint2_ (joint2), objs1_ (joint1_->linkedBody ()->innerObjects()),
+      objs2_ (joint2_->linkedBody ()->innerObjects ())
     {
     }
 
@@ -76,8 +62,7 @@ namespace hpp {
      const JointPtr_t& joint, const ObjectVector_t& objects) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
 			      name), robot_ (robot), joint1_ (joint),
-      joint2_ (0x0), objs1_ (joint1_->linkedBody ()->innerObjects
-			     (hpp::model::DISTANCE)),
+      joint2_ (), objs1_ (joint1_->linkedBody ()->innerObjects ()),
       objs2_ (objects)
     {
     }
@@ -96,12 +81,13 @@ namespace hpp {
       result [0] = std::numeric_limits <value_type>::infinity ();
       for (ObjectVector_t::const_iterator it1 = objs1_.begin ();
 	   it1 != objs1_.end (); ++it1) {
-	CollisionObjectPtr_t obj1 (*it1);
+	CollisionObjectConstPtr_t obj1 (*it1);
 	for (ObjectVector_t::const_iterator it2 = objs2_.begin ();
 	     it2 != objs2_.end (); ++it2) {
-	  CollisionObjectPtr_t obj2 (*it2);
+	  CollisionObjectConstPtr_t obj2 (*it2);
 	  fcl::DistanceResult distanceResult;
-	  fcl::distance (obj1->fcl ().get (), obj2->fcl ().get (),
+	  fcl::distance (obj1->fcl()->collisionGeometry().get(), obj1->getFclTransform(),
+                         obj2->fcl()->collisionGeometry().get(), obj2->getFclTransform(),
 			 distanceRequest, distanceResult);
 	  if (distanceResult.min_distance < result [0]) {
 	    result [0] = distanceResult.min_distance;
@@ -119,43 +105,35 @@ namespace hpp {
     {
       vector_t dist; dist.resize (1);
       impl_compute (dist, arg);
+      const JointJacobian_t& J1 (joint1_->jacobian());
+      const Transform3f& M1 (joint1_->currentTransformation());
+      const matrix3_t& R1 (M1.rotation());
       // P1 - P2
-      eigen::vector3_t P1_minus_P2;
-      fclToEigen (point1_ - point2_, P1_minus_P2);
+      vector3_t P1_minus_P2 (point1_ - point2_);
       // P1 - t1
-      vector3_t P1_minus_t1
-	(point1_ - joint1_->currentTransformation ().getTranslation ());
-      // [P1 - t1]
-      //          x
-      eigen::matrix3_t P1_minus_t1_cross;
-      cross (P1_minus_t1, P1_minus_t1_cross);
+      vector3_t P1_minus_t1 (point1_ - M1.translation ());
       //        T (                              )
       // (P1-P2)  ( J    -   [P1 - t1]  J        )
       //          (  1 [0:3]          x  1 [3:6] )
-      matrix_t tmp1
-	(P1_minus_P2.transpose () * joint1_->jacobian ().topRows (3) -
-	 P1_minus_P2.transpose () * P1_minus_t1_cross *
-	 joint1_->jacobian ().bottomRows (3));
+      jacobian = (
+          P1_minus_P2.transpose () * R1 * J1.topRows<3>()
+          + P1_minus_P2.transpose () * R1.colwise().cross(P1_minus_t1) * J1.bottomRows<3>()
+          ) / dist[0];
       if (joint2_) {
+        const JointJacobian_t& J2 (joint2_->jacobian());
+        const Transform3f& M2 (joint2_->currentTransformation());
+        const matrix3_t& R2 (M2.rotation());
 	// P2 - t2
-	vector3_t P2_minus_t2
-	  (point2_ - joint2_->currentTransformation ().getTranslation ());
-	// [P2 - t2]
-	//          x
-	eigen::matrix3_t P2_minus_t2_cross;
-	cross (P2_minus_t2, P2_minus_t2_cross);
+	vector3_t P2_minus_t2 (point2_ - M2.translation ());
 	//        T (                              )
 	// (P1-P2)  ( J    -   [P1 - t1]  J        )
 	//          (  2 [0:3]          x  2 [3:6] )
 	matrix_t tmp2
-	  (P1_minus_P2.transpose () * joint2_->jacobian ().topRows (3) -
-	   P1_minus_P2.transpose () * P2_minus_t2_cross *
-	   joint2_->jacobian ().bottomRows (3));
-	jacobian = (tmp1 - tmp2)/dist [0];
-      } else {
-	jacobian = tmp1/dist [0];
+	  (  P1_minus_P2.transpose () * R2 * J2.topRows<3>()
+           + P1_minus_P2.transpose () * R2.colwise().cross(P2_minus_t2) * J2.bottomRows<3>());
+	jacobian.noalias() -= tmp2/dist [0];
       }
     }
 
-  } // namespace _constraints
+  } // namespace constraints
 } // namespace hpp

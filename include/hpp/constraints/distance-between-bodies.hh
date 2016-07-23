@@ -20,6 +20,7 @@
 #ifndef HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
 # define HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
 
+# include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/differentiable-function.hh>
 
 namespace hpp {
