@@ -56,6 +56,31 @@ namespace pinoc = hpp::pinocchio;
 _c::Transform3f tIdM = _c::Transform3f();
 c ::Transform3f tIdP = c ::Transform3f::Identity();
 
+void setupRobots(model::DevicePtr_t& rm, pinoc::DevicePtr_t& rp, bool geom = false)
+{
+  rm = hppModel();
+  rp = hppPinocchio(geom);
+
+  _c::Configuration_t qm = rm->neutralConfiguration();
+  // _c::Configuration_t q = rp->neutralConfiguration();
+  c ::Configuration_t qp = m2p::q(qm);
+  if (geom) {
+    rm->controlComputation((_c::Device::Computation_t)(                       _c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
+    rp->controlComputation(( c::Device::Computation_t)( c::Device::GEOMETRY |  c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
+  } else {
+    rm->controlComputation((_c::Device::Computation_t)(_c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
+    rp->controlComputation(( c::Device::Computation_t)( c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
+  }
+  rm->currentConfiguration(qm); rm->computeForwardKinematics();
+  rp->currentConfiguration(qp); rp->computeForwardKinematics();
+
+  /// Set root joint bound.
+  rm->rootJoint()->lowerBound(0,-1); rm->rootJoint()->lowerBound(1,-1); rm->rootJoint()->lowerBound(2,-1);
+  rm->rootJoint()->upperBound(0, 1); rm->rootJoint()->upperBound(1, 1); rm->rootJoint()->upperBound(2, 1);
+  rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
+  rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
+}
+
 struct ProportionalCompare {
   const c::value_type alpha;
   ProportionalCompare (c::value_type _alpha = 1) : alpha (_alpha) {}
@@ -123,23 +148,10 @@ void check_consistent (_c::DevicePtr_t rm, c::DevicePtr_t rp,
   }
 }
 
-BOOST_AUTO_TEST_SUITE ( PinocchioModelValue )
-
 BOOST_AUTO_TEST_CASE (absolute) {
-  model::DevicePtr_t rm = hppModel();
-  pinoc::DevicePtr_t rp = hppPinocchio();
-
-  _c::Configuration_t qm = rm->neutralConfiguration();
-  // _c::Configuration_t q = rp->neutralConfiguration();
-  c ::Configuration_t qp = m2p::q(qm);
-  rm->currentConfiguration(qm); rm->computeForwardKinematics();
-  rp->currentConfiguration(qp); rp->computeForwardKinematics();
-
-  /// Set root joint bound.
-  rm->rootJoint()->lowerBound(0,-1); rm->rootJoint()->lowerBound(1,-1); rm->rootJoint()->lowerBound(2,-1);
-  rm->rootJoint()->upperBound(0, 1); rm->rootJoint()->upperBound(1, 1); rm->rootJoint()->upperBound(2, 1);
-  rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
-  rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
+  model::DevicePtr_t rm;
+  pinoc::DevicePtr_t rp;
+  setupRobots(rm, rp);
 
   _c::JointPtr_t eeM = rm->getJointByName ("RWristPitch");
   c ::JointPtr_t eeP = rp->getJointByName ("RWristPitch");
@@ -221,20 +233,9 @@ BOOST_AUTO_TEST_CASE (absolute) {
 }
 
 BOOST_AUTO_TEST_CASE (relative) {
-  model::DevicePtr_t rm = hppModel();
-  pinoc::DevicePtr_t rp = hppPinocchio();
-
-  _c::Configuration_t qm = rm->neutralConfiguration();
-  // _c::Configuration_t q = rp->neutralConfiguration();
-  c ::Configuration_t qp = m2p::q(qm);
-  rm->currentConfiguration(qm); rm->computeForwardKinematics();
-  rp->currentConfiguration(qp); rp->computeForwardKinematics();
-
-  /// Set root joint bound.
-  rm->rootJoint()->lowerBound(0,-1); rm->rootJoint()->lowerBound(1,-1); rm->rootJoint()->lowerBound(2,-1);
-  rm->rootJoint()->upperBound(0, 1); rm->rootJoint()->upperBound(1, 1); rm->rootJoint()->upperBound(2, 1);
-  rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
-  rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
+  model::DevicePtr_t rm;
+  pinoc::DevicePtr_t rp;
+  setupRobots(rm, rp);
 
   _c::JointPtr_t eeM1 = rm->getJointByName ("RWristPitch");
   c ::JointPtr_t eeP1 = rp->getJointByName ("RWristPitch");
@@ -350,28 +351,14 @@ BOOST_AUTO_TEST_CASE (relative) {
 }
 
 BOOST_AUTO_TEST_CASE (com) {
-  model::DevicePtr_t rm = hppModel();
-  pinoc::DevicePtr_t rp = hppPinocchio();
-
-  _c::Configuration_t qm = rm->neutralConfiguration();
-  // _c::Configuration_t q = rp->neutralConfiguration();
-  c ::Configuration_t qp = m2p::q(qm);
-  rm->controlComputation((_c::Device::Computation_t)(_c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
-  rp->controlComputation(( c::Device::Computation_t)( c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
-  rm->currentConfiguration(qm); rm->computeForwardKinematics();
-  rp->currentConfiguration(qp); rp->computeForwardKinematics();
-
-  /// Set root joint bound.
-  rm->rootJoint()->lowerBound(0,-1); rm->rootJoint()->lowerBound(1,-1); rm->rootJoint()->lowerBound(2,-1);
-  rm->rootJoint()->upperBound(0, 1); rm->rootJoint()->upperBound(1, 1); rm->rootJoint()->upperBound(2, 1);
-  rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
-  rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
+  model::DevicePtr_t rm;
+  pinoc::DevicePtr_t rp;
+  setupRobots(rm, rp);
 
   _c::JointPtr_t eeMR = rm->getJointByName ("RAnkleRoll");
   c ::JointPtr_t eePR = rp->getJointByName ("RAnkleRoll");
   _c::JointPtr_t eeML = rm->getJointByName ("LAnkleRoll");
   c ::JointPtr_t eePL = rp->getJointByName ("LAnkleRoll");
-
 
   _c::Transform3f tfMR (eeMR->currentTransformation ());
   c ::Transform3f tfPR (eePR->currentTransformation ());
@@ -401,5 +388,3 @@ BOOST_AUTO_TEST_CASE (com) {
         ProportionalCompare(1));
   // */
 }
-
-BOOST_AUTO_TEST_SUITE_END ()
