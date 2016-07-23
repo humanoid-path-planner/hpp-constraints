@@ -24,7 +24,7 @@
 # include <hpp/constraints/symbolic-calculus.hh>
 # include <hpp/constraints/differentiable-function.hh>
 
-# include <hpp/model/device.hh>
+# include <hpp/pinocchio/device.hh>
 
 namespace hpp {
   namespace constraints {

@@ -20,7 +20,7 @@
 # include <boost/assign/list_of.hpp>
 
 # include <hpp/_constraints/fwd.hh>
-# include <hpp/_constraints/config.hh>
+# include <hpp/constraints/config.hh>
 # include <hpp/_constraints/symbolic-calculus.hh>
 # include <hpp/_constraints/differentiable-function.hh>
 

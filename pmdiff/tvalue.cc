@@ -34,6 +34,8 @@
 #include "hpp/constraints/com-between-feet.hh"
 #include "hpp/_constraints/distance-between-bodies.hh"
 #include "hpp/constraints/distance-between-bodies.hh"
+#include "hpp/_constraints/symbolic-function.hh"
+#include "hpp/constraints/symbolic-function.hh"
 
 
 #include <stdlib.h>
@@ -374,11 +376,38 @@ BOOST_AUTO_TEST_CASE (com) {
 
   BOOST_REQUIRE(m2p::SE3(tfMR * frameMR).isApprox(tfPR * framePR));
 
+  _c::CenterOfMassComputationPtr_t comM = _c::CenterOfMassComputation::create(rm);
+  c ::CenterOfMassComputationPtr_t comP = c ::CenterOfMassComputation::create(rp);
+  comM->add(rm->rootJoint());
+  comP->add(rp->rootJoint());
+  comM->computeMass();
+  comP->computeMass();
+
+  comM->compute(_c::Device::COM);
+  comP->compute(c ::Device::COM);
+  BOOST_CHECK(comM->com().isApprox(comP->com()));
+  comM->compute(_c::Device::ALL);
+  comP->compute(c ::Device::ALL);
+  BOOST_CHECK(comM->com().isApprox(comP->com()));
+  BOOST_CHECK(comM->jacobian().isApprox(
+        comP->jacobian() * m2p::Xq(rp->rootJoint()->currentTransformation())));
+
+  /*********************** COM via SymbolicFunction **************************/
+  // /*
+  typedef _c::SymbolicFunction<_c::PointCom> MCom;
+  typedef c ::SymbolicFunction<c ::PointCom> PCom;
+
+  check_consistent (rm, rp,
+        MCom::create ("ModelPointCom", rm, _c::PointCom::create(comM)),
+        PCom::create ("PinocPointCom", rp, c ::PointCom::create(comP)),
+        ProportionalCompare(1));
+  // */
+
   /*********************** Relative COM **************************/
   // /*
   check_consistent (rm, rp,
-        _c::RelativeCom::create (rm, eeMR, targetMR),
-        c ::RelativeCom::create (rp, eePR, targetPR),
+        _c::RelativeCom::create (rm, comM, eeMR, targetMR),
+        c ::RelativeCom::create (rp, comP, eePR, targetPR),
         ProportionalCompare(1));
   // */
 
