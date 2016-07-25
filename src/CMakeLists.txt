@@ -22,6 +22,8 @@ ADD_LIBRARY(${LIBRARY_NAME}
   com-between-feet.cc
   distance-between-bodies.cc
   distance-between-points-in-bodies.cc
+  configuration-constraint.cc
+  convex-shape-contact.cc
   )
   # tools.cc
   # position.cc
@@ -30,8 +32,6 @@ ADD_LIBRARY(${LIBRARY_NAME}
   # relative-orientation.cc
   # relative-position.cc
   # relative-transformation.cc
-  # configuration-constraint.cc
-  # convex-shape-contact.cc
   # static-stability.cc
   # qp-static-stability.cc
 

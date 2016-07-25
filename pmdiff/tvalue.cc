@@ -38,7 +38,8 @@
 #include "hpp/constraints/distance-between-bodies.hh"
 #include "hpp/_constraints/distance-between-points-in-bodies.hh"
 #include "hpp/constraints/distance-between-points-in-bodies.hh"
-
+#include <hpp/_constraints/configuration-constraint.hh>
+#include <hpp/constraints/configuration-constraint.hh>
 
 #include <stdlib.h>
 #include <limits>
@@ -59,100 +60,10 @@ namespace _c = hpp::_constraints;
 namespace model = hpp::model    ;
 namespace pinoc = hpp::pinocchio;
 
+#include <../pmdiff/tools.cc>
+
 _c::Transform3f tIdM = _c::Transform3f();
 c ::Transform3f tIdP = c ::Transform3f::Identity();
-
-void setupRobots(model::DevicePtr_t& rm, pinoc::DevicePtr_t& rp, bool geom = false)
-{
-  rm = hppModel();
-  rp = hppPinocchio(geom);
-
-  _c::Configuration_t qm = rm->neutralConfiguration();
-  // _c::Configuration_t q = rp->neutralConfiguration();
-  c ::Configuration_t qp = m2p::q(qm);
-  if (geom) {
-    rm->controlComputation((_c::Device::Computation_t)(                       _c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
-    rp->controlComputation(( c::Device::Computation_t)( c::Device::GEOMETRY |  c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
-  } else {
-    rm->controlComputation((_c::Device::Computation_t)(_c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
-    rp->controlComputation(( c::Device::Computation_t)( c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
-  }
-  rm->currentConfiguration(qm); rm->computeForwardKinematics();
-  rp->currentConfiguration(qp); rp->computeForwardKinematics();
-
-  /// Set root joint bound.
-  rm->rootJoint()->lowerBound(0,-1); rm->rootJoint()->lowerBound(1,-1); rm->rootJoint()->lowerBound(2,-1);
-  rm->rootJoint()->upperBound(0, 1); rm->rootJoint()->upperBound(1, 1); rm->rootJoint()->upperBound(2, 1);
-  rp->rootJoint()->lowerBound(0,-1); rp->rootJoint()->lowerBound(1,-1); rp->rootJoint()->lowerBound(2,-1);
-  rp->rootJoint()->upperBound(0, 1); rp->rootJoint()->upperBound(1, 1); rp->rootJoint()->upperBound(2, 1);
-}
-
-struct ProportionalCompare {
-  const c::value_type alpha;
-  ProportionalCompare (c::value_type _alpha = 1) : alpha (_alpha) {}
-
-  void value(const _c::vector_t& valueM, const c::vector_t& valueP) const {
-    c::vector_t d = valueM - alpha * valueP;
-    if (verboseNum) {
-      std::cout << "---- hpp::model ------" << std::endl;
-      std::cout << valueM.transpose() << std::endl;
-      std::cout << "---- hpp::pinocchio ------" << std::endl;
-      std::cout << valueP.transpose() << std::endl;
-      std::cout << "---- model - " << alpha << " * piniocchio ------" << std::endl;
-      std::cout << d.transpose() << std::endl;
-    }
-    BOOST_CHECK_MESSAGE(d.isZero(1e-10),
-			"Value not matching. Norm of value from model is "
-			<< valueM.norm () <<  ", norm of value Pinocchio is "
-			<< valueP.norm () << ", norm of error is "
-			<< d.norm());
-  }
-
-  void jacobian(const _c::matrix_t& jacobianM, const c::matrix_t& jacobianP) const {
-    c::matrix_t diffJ = jacobianM - jacobianP;
-    if (verboseNum) {
-      std::cout << "---- hpp::model ------" << std::endl;
-      std::cout << jacobianM.transpose() << std::endl;
-      std::cout << "---- hpp::pinocchio ------" << std::endl;
-      std::cout << jacobianP.transpose() << std::endl;
-      std::cout << "---- model - " << alpha << " * piniocchio ------" << std::endl;
-      std::cout << diffJ.transpose() << std::endl;
-    }
-    // // std::cout << diffJ.norm() << std::endl;
-    BOOST_CHECK_MESSAGE(diffJ.isZero(1e-10),
-			"Jacobian not matching. Norm of Jacobian from model is "
-			<< jacobianM.norm () << ", norm of Jacobian from Pinocchio is "
-			<< jacobianP.norm () << ", norm of error is "
-			<< diffJ.norm());
-  }
-};
-
-template <typename Compare>
-void check_consistent (_c::DevicePtr_t rm, c::DevicePtr_t rp,
-    _c::DifferentiableFunctionPtr_t fm, c::DifferentiableFunctionPtr_t fp,
-    const Compare comp = Compare())
-{
-  // std::cout << f->name() << '\n' << g->name() << '\n';
-  BOOST_CHECK(fm->outputSize()==fp->outputSize());
-  BOOST_CHECK(fm->inputSize()==fp->inputSize());
-  BOOST_CHECK(fm->outputDerivativeSize()==fp->outputDerivativeSize());
-  BOOST_CHECK(fm->inputDerivativeSize()==fp->inputDerivativeSize());
-
-  _c::vector_t valueM (fm->outputSize ());
-  c ::vector_t valueP (fp->outputSize ());
-  _c::matrix_t jacobianM (fm->outputSize (), rm->numberDof ());
-  c ::matrix_t jacobianP (fp->outputSize (), rp->numberDof ());
-  for (size_t i = 0; i < NUMBER_RANDOM_SAMPLES; i++) {
-    c ::Configuration_t qp = se3::randomConfiguration(*rp->model());
-    _c::Configuration_t qm = p2m::q(qp);
-    (*fm) (valueM, qm);
-    (*fp) (valueP, qp);
-    comp.value (valueM, valueP);
-    fm->jacobian (jacobianM, qm);
-    fp->jacobian (jacobianP, qp);
-    comp.jacobian (jacobianM, jacobianP * m2p::Xq(rp->rootJoint()->currentTransformation()));
-  }
-}
 
 BOOST_AUTO_TEST_CASE (absolute) {
   model::DevicePtr_t rm;
@@ -180,19 +91,19 @@ BOOST_AUTO_TEST_CASE (absolute) {
   check_consistent (rm, rp,
         _c::Position::create ("ModelPosition", rm, eeM, tIdM),
         c ::Position::create ("PinocPosition", rp, eeP, tIdP),
-        ProportionalCompare(1));
+        Compare());
 
   // Position of the center in some frame.
   check_consistent (rm, rp,
         _c::Position::create ("ModelPosition", rm, eeM, tIdM, randM),
         c ::Position::create ("PinocPosition", rp, eeP, tIdP, randP),
-        ProportionalCompare(1));
+        Compare());
 
   // Position of a point in some frame.
   check_consistent (rm, rp,
         _c::Position::create ("ModelPosition", rm, eeM, frameM, randM),
         c ::Position::create ("PinocPosition", rp, eeP, frameP, randP),
-        ProportionalCompare(1));
+        Compare());
   // */
 
   /*********************** Orientation **************************/
@@ -201,19 +112,19 @@ BOOST_AUTO_TEST_CASE (absolute) {
   check_consistent (rm, rp,
         _c::Orientation::create ("ModelOrientation", rm, eeM, frameM, tIdM),
         c ::Orientation::create ("PinocOrientation", rp, eeP, frameP, tIdP),
-        ProportionalCompare(1));
+        Compare());
 
   // Orientation of a joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::Orientation::create ("ModelOrientation", rm, eeM, frameM * p2m::SE3(frameP.inverse()), randM),
         c ::Orientation::create ("PinocOrientation", rp, eeP, tIdP                               , randP),
-        ProportionalCompare(1));
+        Compare());
 
   // Orientation of a frame in joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::Orientation::create ("ModelOrientation", rm, eeM, frameM * randM, randM),
         c ::Orientation::create ("PinocOrientation", rp, eeP, frameP * randP, randP),
-        ProportionalCompare(1));
+        Compare());
   // */
 
   /*********************** Transformation **************************/
@@ -222,19 +133,19 @@ BOOST_AUTO_TEST_CASE (absolute) {
   check_consistent (rm, rp,
         _c::Transformation::create ("ModelTransformation", rm, eeM, frameM, tIdM),
         c ::Transformation::create ("PinocTransformation", rp, eeP, frameP, tIdP),
-        ProportionalCompare(1));
+        Compare());
 
   // Transformation of a joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::Transformation::create ("ModelTransformation", rm, eeM, frameM * p2m::SE3(frameP.inverse()), randM),
         c ::Transformation::create ("PinocTransformation", rp, eeP, tIdP                               , randP),
-        ProportionalCompare(1));
+        Compare());
 
   // Transformation of a frame in joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::Transformation::create ("ModelTransformation", rm, eeM, frameM * randM, randM),
         c ::Transformation::create ("PinocTransformation", rp, eeP, frameP * randP, randP),
-        ProportionalCompare(1));
+        Compare());
   // */
 }
 
@@ -280,25 +191,25 @@ BOOST_AUTO_TEST_CASE (relative) {
   check_consistent (rm, rp,
         _c::RelativePosition::create ("ModelRelativePosition", rm, eeM1, eeM2, Fp2m1, Fp2m2),
         c ::RelativePosition::create ("PinocRelativePosition", rp, eeP1, eeP2, tIdP , tIdP ),
-        ProportionalCompare(1));
+        Compare());
 
   // Position of the center in world frame.
   check_consistent (rm, rp,
         _c::RelativePosition::create ("ModelRelativePosition", rm, eeM1, eeM2, Fp2m1, frameM2 * randM2),
         c ::RelativePosition::create ("PinocRelativePosition", rp, eeP1, eeP2, tIdP , frameP2 * randP2),
-        ProportionalCompare(1));
+        Compare());
 
   // Position of the center in some frame.
   check_consistent (rm, rp,
         _c::RelativePosition::create ("ModelRelativePosition", rm, eeM1, eeM2, frameM1 * randM1, Fp2m2),
         c ::RelativePosition::create ("PinocRelativePosition", rp, eeP1, eeP2, frameP1 * randP1, tIdP ),
-        ProportionalCompare(1));
+        Compare());
 
   // Position of a point in some frame.
   check_consistent (rm, rp,
         _c::RelativePosition::create ("ModelRelativePosition", rm, eeM1, eeM2, frameM1 * randM1, frameM2 * randM2),
         c ::RelativePosition::create ("PinocRelativePosition", rp, eeP1, eeP2, frameP1 * randP1, frameP2 * randP2),
-        ProportionalCompare(1));
+        Compare());
   // */
 
   /*********************** Orientation **************************/
@@ -307,25 +218,25 @@ BOOST_AUTO_TEST_CASE (relative) {
   check_consistent (rm, rp,
         _c::RelativeOrientation::create ("ModelRelativeOrientation", rm, eeM1, eeM2, Fp2m1, Fp2m2),
         c ::RelativeOrientation::create ("PinocRelativeOrientation", rp, eeP1, eeP2, tIdP , tIdP ),
-        ProportionalCompare(1));
+        Compare());
 
   // Orientation of a joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::RelativeOrientation::create ("ModelRelativeOrientation", rm, eeM1, eeM2, Fp2m1, frameM2 * randM2),
         c ::RelativeOrientation::create ("PinocRelativeOrientation", rp, eeP1, eeP2, tIdP , frameP2 * randP2),
-        ProportionalCompare(1));
+        Compare());
 
   // Orientation of a frame in joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::RelativeOrientation::create ("ModelRelativeOrientation", rm, eeM1, eeM2, frameM1 * randM1, Fp2m2),
         c ::RelativeOrientation::create ("PinocRelativeOrientation", rp, eeP1, eeP2, frameP1 * randP1, tIdP ),
-        ProportionalCompare(1));
+        Compare());
 
   // Orientation of a frame in joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::RelativeOrientation::create ("ModelRelativeOrientation", rm, eeM1, eeM2, frameM1 * randM1, frameM2 * randM2),
         c ::RelativeOrientation::create ("PinocRelativeOrientation", rp, eeP1, eeP2, frameP1 * randP1, frameP2 * randP2),
-        ProportionalCompare(1));
+        Compare());
   // */
 
   /*********************** Transformation **************************/
@@ -334,25 +245,25 @@ BOOST_AUTO_TEST_CASE (relative) {
   check_consistent (rm, rp,
         _c::RelativeTransformation::create ("ModelRelativeTransformation", rm, eeM1, eeM2, Fp2m1, Fp2m2),
         c ::RelativeTransformation::create ("PinocRelativeTransformation", rp, eeP1, eeP2, tIdP , tIdP ),
-        ProportionalCompare(1));
+        Compare());
 
   // Transformation of a joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::RelativeTransformation::create ("ModelRelativeTransformation", rm, eeM1, eeM2, Fp2m1, frameM2 * randM2),
         c ::RelativeTransformation::create ("PinocRelativeTransformation", rp, eeP1, eeP2, tIdP , frameP2 * randP2),
-        ProportionalCompare(1));
+        Compare());
 
   // Transformation of a frame in joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::RelativeTransformation::create ("ModelRelativeTransformation", rm, eeM1, eeM2, frameM1 * randM1, Fp2m2),
         c ::RelativeTransformation::create ("PinocRelativeTransformation", rp, eeP1, eeP2, frameP1 * randP1, tIdP ),
-        ProportionalCompare(1));
+        Compare());
 
   // Transformation of a frame in joint frame wrt to a frame in world frame.
   check_consistent (rm, rp,
         _c::RelativeTransformation::create ("ModelRelativeTransformation", rm, eeM1, eeM2, frameM1 * randM1, frameM2 * randM2),
         c ::RelativeTransformation::create ("PinocRelativeTransformation", rp, eeP1, eeP2, frameP1 * randP1, frameP2 * randP2),
-        ProportionalCompare(1));
+        Compare());
   // */
 }
 
@@ -405,7 +316,7 @@ BOOST_AUTO_TEST_CASE (com) {
   check_consistent (rm, rp,
         MCom::create ("ModelPointCom", rm, _c::PointCom::create(comM)),
         PCom::create ("PinocPointCom", rp, c ::PointCom::create(comP)),
-        ProportionalCompare(1));
+        Compare());
   // */
 
   /*********************** Relative COM **************************/
@@ -413,7 +324,7 @@ BOOST_AUTO_TEST_CASE (com) {
   check_consistent (rm, rp,
         _c::RelativeCom::create (rm, comM, eeMR, targetMR),
         c ::RelativeCom::create (rp, comP, eePR, targetPR),
-        ProportionalCompare(1));
+        Compare());
   // */
 
   /*********************** COM between feet **************************/
@@ -421,7 +332,7 @@ BOOST_AUTO_TEST_CASE (com) {
   check_consistent (rm, rp,
         _c::ComBetweenFeet::create ("ModelComBetweenFeet", rm, eeML, eeMR, tIdM.getTranslation(), tIdM.getTranslation(), eeMR, tIdM.getTranslation()),
         c ::ComBetweenFeet::create ("PinocComBetweenFeet", rp, eePL, eePR, tIdP.translation()   , tIdP.translation()   , eePR, tIdP.translation()),
-        ProportionalCompare(1));
+        Compare());
   // */
 }
 
@@ -452,15 +363,33 @@ BOOST_AUTO_TEST_CASE (distance) {
   // /*
   check_consistent (rm, rp,
         _c::DistanceBetweenBodies::create ("ModelDistanceBetweenBodies", rm, eeMR, eeML),
-        c ::DistanceBetweenBodies::create ("ModelDistanceBetweenBodies", rp, eePR, eePL),
-        ProportionalCompare(1));
+        c ::DistanceBetweenBodies::create ("PinocDistanceBetweenBodies", rp, eePR, eePL),
+        Compare());
   // */
 
   /*********************** Distance between point in bodies **************************/
   // /*
   check_consistent (rm, rp,
         _c::DistanceBetweenPointsInBodies::create ("ModelDistanceBetweenPointInBodies", rm, eeMR, eeML, (frameMR * randMR).getTranslation(), (frameML * randML).getTranslation()),
-        c ::DistanceBetweenPointsInBodies::create ("ModelDistanceBetweenPointInBodies", rp, eePR, eePL, (framePR * randPR).translation(), (framePL * randPL).translation()),
-        ProportionalCompare(1));
+        c ::DistanceBetweenPointsInBodies::create ("PinocDistanceBetweenPointInBodies", rp, eePR, eePL, (framePR * randPR).translation(), (framePL * randPL).translation()),
+        Compare());
+  // */
+}
+
+// ConfigurationConstraint
+BOOST_AUTO_TEST_CASE (others) {
+  model::DevicePtr_t rm;
+  pinoc::DevicePtr_t rp;
+  setupRobots(rm, rp, true);
+
+  _c::Configuration_t goalM = rm->neutralConfiguration();
+  c ::Configuration_t goalP = m2p::q(goalM);
+
+  /*********************** ConfigurationConstraint **************************/
+  // /*
+  check_consistent (rm, rp,
+        _c::ConfigurationConstraint::create ("Model ConfigurationConstraint", rm, goalM),
+        c ::ConfigurationConstraint::create ("Pinoc ConfigurationConstraint", rp, goalP),
+        Compare());
   // */
 }

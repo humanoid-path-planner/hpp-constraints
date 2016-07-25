@@ -14,15 +14,15 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/_constraints/configuration-constraint.hh>
+#include <hpp/constraints/configuration-constraint.hh>
 
 #include <hpp/util/debug.hh>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/configuration.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
-  namespace _constraints {
+  namespace constraints {
     ConfigurationConstraintPtr_t ConfigurationConstraint::create (
         const std::string& name, const DevicePtr_t& robot,
         ConfigurationIn_t goal, std::vector <bool> mask)
@@ -51,14 +51,14 @@ namespace hpp {
       const throw ()
     {
       // TODO: Add ability to put weights on DOF
-      hpp::model::difference (robot_, argument, goal_, diff_);
+      hpp::pinocchio::difference (robot_, argument, goal_, diff_);
       result [0] = 0.5 * mask_.select (diff_, 0).squaredNorm ();
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
         ConfigurationIn_t argument) const throw ()
     {
-      hpp::model::difference (robot_, argument, goal_, diff_);
+      hpp::pinocchio::difference (robot_, argument, goal_, diff_);
       jacobian.leftCols (robot_->numberDof ()) =
         mask_.select (diff_, 0).transpose ();
     }

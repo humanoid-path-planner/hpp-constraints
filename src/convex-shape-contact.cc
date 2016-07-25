@@ -14,14 +14,14 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/_constraints/convex-shape-contact.hh"
+#include "hpp/constraints/convex-shape-contact.hh"
 
 #include <limits>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
 
 namespace hpp {
-  namespace _constraints {
+  namespace constraints {
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
@@ -32,7 +32,6 @@ namespace hpp {
     {
       relativeTransformation_.joint1(robot->rootJoint());
       relativeTransformation_.joint2(robot->rootJoint());
-      result_.resize (6);
       jacobian_.resize (6, robot->numberDof ());
     }
 
@@ -88,7 +87,7 @@ namespace hpp {
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
         // o_it->updateToCurrentTransform ();
-        const fcl::Vec3f& globalOC_ = o_it->center ();
+        const vector3_t& globalOC_ = o_it->center ();
         for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
             f_it != floorConvexShapes_.end (); ++f_it) {
           // f_it->updateToCurrentTransform ();
@@ -184,7 +183,7 @@ namespace hpp {
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
         o_it->updateToCurrentTransform ();
-        const fcl::Vec3f& globalOC_ = o_it->center ();
+        const vector3_t& globalOC_ = o_it->center ();
         for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
             f_it != floorConvexShapes_.end (); ++f_it) {
           f_it->updateToCurrentTransform ();
@@ -287,5 +286,5 @@ namespace hpp {
       }
       jacobian.row (2) = sibling_->jacobian_.row (3);
     }
-  } // namespace _constraints
+  } // namespace constraints
 } // namespace hpp

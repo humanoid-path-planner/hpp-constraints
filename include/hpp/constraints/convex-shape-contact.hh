@@ -18,9 +18,6 @@
 # define HPP_CONSTRAINTS_CONVEX_SHAPE_CONTACT_HH
 
 # include <vector>
-# include <hpp/fcl/math/transform.h>
-# include <hpp/fcl/shape/geometric_shapes.h>
-# include <hpp/constraints/tools.hh>
 
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
@@ -169,7 +166,7 @@ namespace hpp {
 
         mutable bool isInside_;
         mutable ContactType contactType_;
-        mutable vector_t result_;
+        mutable vector6_t result_;
         mutable matrix_t jacobian_;
     };
 
