@@ -87,8 +87,8 @@ void setupRobots(model::DevicePtr_t& rm, pinoc::DevicePtr_t& rp, bool geom = fal
   // _c::Configuration_t q = rp->neutralConfiguration();
   c ::Configuration_t qp = m2p::q(qm);
   if (geom) {
-    rm->controlComputation((_c::Device::Computation_t)(                       _c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
-    rp->controlComputation(( c::Device::Computation_t)( c::Device::GEOMETRY |  c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
+    rm->controlComputation((_c::Device::Computation_t)(_c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
+    rp->controlComputation(( c::Device::Computation_t)( c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
   } else {
     rm->controlComputation((_c::Device::Computation_t)(_c::Device::COM | _c::Device::JACOBIAN | _c::Device::JOINT_POSITION));
     rp->controlComputation(( c::Device::Computation_t)( c::Device::COM |  c::Device::JACOBIAN |  c::Device::JOINT_POSITION));
