@@ -382,6 +382,9 @@ BOOST_AUTO_TEST_CASE (com) {
   c ::CenterOfMassComputationPtr_t comP = c ::CenterOfMassComputation::create(rp);
   comM->add(rm->rootJoint());
   comP->add(rp->rootJoint());
+  // FIXME This does not work for an unknown reason
+  // comM->add(rm->getJointByName("LHipYaw"));
+  // comP->add(rp->getJointByName("LHipYaw"));
   comM->computeMass();
   comP->computeMass();
 
