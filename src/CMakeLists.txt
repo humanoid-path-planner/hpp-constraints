@@ -21,8 +21,8 @@ ADD_LIBRARY(${LIBRARY_NAME}
   relative-com.cc
   com-between-feet.cc
   distance-between-bodies.cc
+  distance-between-points-in-bodies.cc
   )
-  # distance-between-points-in-bodies.cc
   # tools.cc
   # position.cc
   # orientation.cc

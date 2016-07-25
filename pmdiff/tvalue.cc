@@ -32,10 +32,12 @@
 #include "hpp/constraints/relative-com.hh"
 #include "hpp/_constraints/com-between-feet.hh"
 #include "hpp/constraints/com-between-feet.hh"
-#include "hpp/_constraints/distance-between-bodies.hh"
-#include "hpp/constraints/distance-between-bodies.hh"
 #include "hpp/_constraints/symbolic-function.hh"
 #include "hpp/constraints/symbolic-function.hh"
+#include "hpp/_constraints/distance-between-bodies.hh"
+#include "hpp/constraints/distance-between-bodies.hh"
+#include "hpp/_constraints/distance-between-points-in-bodies.hh"
+#include "hpp/constraints/distance-between-points-in-bodies.hh"
 
 
 #include <stdlib.h>
@@ -430,12 +432,32 @@ BOOST_AUTO_TEST_CASE (distance) {
   _c::JointPtr_t eeML = rm->getJointByName ("LAnkleRoll");
   c ::JointPtr_t eePL = rp->getJointByName ("LAnkleRoll");
 
+  c ::Transform3f randPR = se3::SE3::Random();
+  _c::Transform3f randMR (p2m::SE3(randPR));
+
+  c ::Transform3f randPL = se3::SE3::Random();
+  _c::Transform3f randML (p2m::SE3(randPL));
+
+  // This two frames are the position to be compared.
+  _c::Transform3f frameMR = eeMR->linkInJointFrame();
+  c ::Transform3f framePR = rp->model()->getFramePlacement(eeMR->linkName());
+
+  _c::Transform3f frameML = eeML->linkInJointFrame();
+  c ::Transform3f framePL = rp->model()->getFramePlacement(eeML->linkName());
 
   /*********************** Distance between bodies **************************/
   // /*
   check_consistent (rm, rp,
         _c::DistanceBetweenBodies::create ("ModelDistanceBetweenBodies", rm, eeMR, eeML),
         c ::DistanceBetweenBodies::create ("ModelDistanceBetweenBodies", rp, eePR, eePL),
+        ProportionalCompare(1));
+  // */
+
+  /*********************** Distance between point in bodies **************************/
+  // /*
+  check_consistent (rm, rp,
+        _c::DistanceBetweenPointsInBodies::create ("ModelDistanceBetweenPointInBodies", rm, eeMR, eeML, (frameMR * randMR).getTranslation(), (frameML * randML).getTranslation()),
+        c ::DistanceBetweenPointsInBodies::create ("ModelDistanceBetweenPointInBodies", rp, eePR, eePL, (framePR * randPR).translation(), (framePL * randPL).translation()),
         ProportionalCompare(1));
   // */
 }
