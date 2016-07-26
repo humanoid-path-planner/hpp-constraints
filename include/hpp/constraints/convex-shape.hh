@@ -269,7 +269,8 @@ namespace hpp {
               C_.setZero ();
               for (std::size_t i = 0; i < shapeDimension_; ++i)
                 C_ += Pts_[i];
-              C_ /= Pts_.size();
+              // TODO This is very ugly. Why Eigen does not have the operator/=(int) ...
+              C_ /= (value_type)Pts_.size();
               N_ = (Pts_[1] - Pts_[0]).cross (Pts_[2] - Pts_[1]);
               assert (!N_.isZero ());
               N_.normalize ();
