@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE (convexShapeContact) {
   c ::JointPtr_t eeP = rp->getJointByName ("RWristPitch");
 
   _c::Transform3f frameM = eeM->linkInJointFrame();
-  c ::Transform3f frameP = rp->model()->getFramePlacement(eeM->linkName());
+  c ::Transform3f frameP = rp->model().getFramePlacement(eeM->linkName());
 
   c ::Transform3f Fm2p = frameP * m2p::SE3(frameM).inverse();
 

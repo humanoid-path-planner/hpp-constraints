@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE (absolute) {
 
   // This two frames are the position to be compared.
   _c::Transform3f frameM = eeM->linkInJointFrame();
-  c ::Transform3f frameP = rp->model()->getFramePlacement(eeM->linkName());
+  c ::Transform3f frameP = rp->model().getFramePlacement(eeM->linkName());
 
   BOOST_REQUIRE(m2p::SE3(tfM * frameM).isApprox(tfP * frameP));
 
@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_CASE (relative) {
 
   // This two frames are the position to be compared.
   _c::Transform3f frameM1 = eeM1->linkInJointFrame();
-  c ::Transform3f frameP1 = rp->model()->getFramePlacement(eeM1->linkName());
+  c ::Transform3f frameP1 = rp->model().getFramePlacement(eeM1->linkName());
 
   _c::Transform3f frameM2 = eeM2->linkInJointFrame();
-  c ::Transform3f frameP2 = rp->model()->getFramePlacement(eeM2->linkName());
+  c ::Transform3f frameP2 = rp->model().getFramePlacement(eeM2->linkName());
 
   _c::Transform3f Fp2m1 = frameM1 * p2m::SE3(frameP1.inverse());
   _c::Transform3f Fp2m2 = frameM2 * p2m::SE3(frameP2.inverse());
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE (com) {
 
   // This two frames are the position to be compared.
   _c::Transform3f frameMR = eeMR->linkInJointFrame();
-  c ::Transform3f framePR = rp->model()->getFramePlacement(eeMR->linkName());
+  c ::Transform3f framePR = rp->model().getFramePlacement(eeMR->linkName());
 
   BOOST_REQUIRE(m2p::SE3(tfMR * frameMR).isApprox(tfPR * framePR));
 
@@ -354,10 +354,10 @@ BOOST_AUTO_TEST_CASE (distance) {
 
   // This two frames are the position to be compared.
   _c::Transform3f frameMR = eeMR->linkInJointFrame();
-  c ::Transform3f framePR = rp->model()->getFramePlacement(eeMR->linkName());
+  c ::Transform3f framePR = rp->model().getFramePlacement(eeMR->linkName());
 
   _c::Transform3f frameML = eeML->linkInJointFrame();
-  c ::Transform3f framePL = rp->model()->getFramePlacement(eeML->linkName());
+  c ::Transform3f framePL = rp->model().getFramePlacement(eeML->linkName());
 
   /*********************** Distance between bodies **************************/
   // /*

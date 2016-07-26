@@ -17,12 +17,13 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/fcl/distance.h>
-#include <hpp/pinocchio/collision-object.hh>
+#include <hpp/constraints/distance-between-bodies.hh>
+
+#include <pinocchio/algorithm/geometry.hpp>
+
 #include <hpp/pinocchio/body.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <hpp/constraints/distance-between-bodies.hh>
 
 namespace hpp {
   namespace constraints {
@@ -53,8 +54,10 @@ namespace hpp {
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
 			      name), robot_ (robot), joint1_ (joint1),
       joint2_ (joint2), objs1_ (joint1_->linkedBody ()->innerObjects()),
-      objs2_ (joint2_->linkedBody ()->innerObjects ())
+      objs2_ (joint2_->linkedBody ()->innerObjects ()),
+      data_ (robot->geomModel())
     {
+      initGeomData();
     }
 
     DistanceBetweenBodies::DistanceBetweenBodies
@@ -63,8 +66,10 @@ namespace hpp {
       DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
 			      name), robot_ (robot), joint1_ (joint),
       joint2_ (), objs1_ (joint1_->linkedBody ()->innerObjects ()),
-      objs2_ (objects)
+      objs2_ (objects),
+      data_ (robot->geomModel())
     {
+      initGeomData();
     }
 
     void DistanceBetweenBodies::impl_compute
@@ -77,25 +82,9 @@ namespace hpp {
       }
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      fcl::DistanceRequest distanceRequest (true, 0, 0, fcl::GST_INDEP);
-      result [0] = std::numeric_limits <value_type>::infinity ();
-      for (ObjectVector_t::const_iterator it1 = objs1_.begin ();
-	   it1 != objs1_.end (); ++it1) {
-	CollisionObjectConstPtr_t obj1 (*it1);
-	for (ObjectVector_t::const_iterator it2 = objs2_.begin ();
-	     it2 != objs2_.end (); ++it2) {
-	  CollisionObjectConstPtr_t obj2 (*it2);
-	  fcl::DistanceResult distanceResult;
-	  fcl::distance (obj1->fcl()->collisionGeometry().get(), obj1->getFclTransform(),
-                         obj2->fcl()->collisionGeometry().get(), obj2->getFclTransform(),
-			 distanceRequest, distanceResult);
-	  if (distanceResult.min_distance < result [0]) {
-	    result [0] = distanceResult.min_distance;
-	    point1_ = distanceResult.nearest_points [0];
-	    point2_ = distanceResult.nearest_points [1];
-	  }
-	}
-      }
+      se3::updateGeometryPlacements(robot_->model(), robot_->data(), robot_->geomModel(), data_);
+      minIndex_ = se3::computeDistances(data_);
+      result [0] = data_.distance_results[minIndex_].distance();
       latestArgument_ = argument;
       latestResult_ = result;
     }
@@ -108,10 +97,12 @@ namespace hpp {
       const JointJacobian_t& J1 (joint1_->jacobian());
       const Transform3f& M1 (joint1_->currentTransformation());
       const matrix3_t& R1 (M1.rotation());
+      vector3_t point1 (data_.distance_results[minIndex_].closestPointInner());
+      vector3_t point2 (data_.distance_results[minIndex_].closestPointOuter());
       // P1 - P2
-      vector3_t P1_minus_P2 (point1_ - point2_);
+      vector3_t P1_minus_P2 (point1 - point2);
       // P1 - t1
-      vector3_t P1_minus_t1 (point1_ - M1.translation ());
+      vector3_t P1_minus_t1 (point1 - M1.translation ());
       //        T (                              )
       // (P1-P2)  ( J    -   [P1 - t1]  J        )
       //          (  1 [0:3]          x  1 [3:6] )
@@ -124,7 +115,7 @@ namespace hpp {
         const Transform3f& M2 (joint2_->currentTransformation());
         const matrix3_t& R2 (M2.rotation());
 	// P2 - t2
-	vector3_t P2_minus_t2 (point2_ - M2.translation ());
+	vector3_t P2_minus_t2 (point2 - M2.translation ());
 	//        T (                              )
 	// (P1-P2)  ( J    -   [P1 - t1]  J        )
 	//          (  2 [0:3]          x  2 [3:6] )
@@ -135,5 +126,17 @@ namespace hpp {
       }
     }
 
+    void DistanceBetweenBodies::initGeomData()
+    {
+      for (ObjectVector_t::const_iterator it1 = objs1_.begin ();
+	   it1 != objs1_.end (); ++it1) {
+	CollisionObjectConstPtr_t obj1 (*it1);
+	for (ObjectVector_t::const_iterator it2 = objs2_.begin ();
+	     it2 != objs2_.end (); ++it2) {
+	  CollisionObjectConstPtr_t obj2 (*it2);
+          data_.addCollisionPair(obj1->indexInModel(), obj2->indexInModel());
+	}
+      }
+    }
   } // namespace constraints
 } // namespace hpp

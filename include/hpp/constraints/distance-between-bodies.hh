@@ -20,6 +20,10 @@
 #ifndef HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
 # define HPP_CONSTRAINTS_DISTANCE_BETWEEN_BODIES_HH
 
+# include <pinocchio/multibody/geometry.hpp>
+
+# include <hpp/pinocchio/collision-object.hh>
+
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/differentiable-function.hh>
 
@@ -88,13 +92,17 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
+      void initGeomData();
+
+      typedef se3::GeometryData GeometryData;
+
       DevicePtr_t robot_;
       JointPtr_t joint1_;
       JointPtr_t joint2_;
       ObjectVector_t objs1_;
       ObjectVector_t objs2_;
-      mutable vector3_t point1_;
-      mutable vector3_t point2_;
+      mutable GeometryData data_;
+      mutable std::size_t minIndex_;
       mutable Configuration_t latestArgument_;
       mutable vector_t latestResult_;
     }; // class DistanceBetweenBodies

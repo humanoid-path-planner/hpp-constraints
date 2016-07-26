@@ -67,7 +67,7 @@ void check_consistent (_c::DevicePtr_t rm, c::DevicePtr_t rp,
   _c::matrix_t jacobianM (fm->outputSize (), rm->numberDof ());
   c ::matrix_t jacobianP (fp->outputSize (), rp->numberDof ());
   for (size_t i = 0; i < NUMBER_RANDOM_SAMPLES; i++) {
-    c ::Configuration_t qp = se3::randomConfiguration(*rp->model());
+    c ::Configuration_t qp = se3::randomConfiguration(rp->model());
     _c::Configuration_t qm = p2m::q(qp);
     (*fm) (valueM, qm);
     (*fp) (valueP, qp);
