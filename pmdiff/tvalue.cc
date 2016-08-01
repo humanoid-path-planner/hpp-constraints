@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE (com) {
   // comM->add(rm->getJointByName("LHipYaw"));
   // comP->add(rp->getJointByName("LHipYaw"));
   comM->computeMass();
-  comP->computeMass();
+  //DEPRECATED comP->computeMass();
 
   comM->compute(_c::Device::COM);
   comP->compute(c ::Device::COM);
