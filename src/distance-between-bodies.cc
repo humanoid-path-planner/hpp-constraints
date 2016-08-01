@@ -128,13 +128,25 @@ namespace hpp {
 
     void DistanceBetweenBodies::initGeomData()
     {
+      using se3::GeometryModel;
+      const GeometryModel& model = robot_->geomModel();
+      // Deactivate all collision pairs.
+      for (GeometryModel::Index i = 0; i < model.collisionPairs.size(); ++i)
+        data_.activateCollisionPair(i, false);
+      // Activate only the relevant ones.
       for (ObjectVector_t::const_iterator it1 = objs1_.begin ();
 	   it1 != objs1_.end (); ++it1) {
 	CollisionObjectConstPtr_t obj1 (*it1);
 	for (ObjectVector_t::const_iterator it2 = objs2_.begin ();
 	     it2 != objs2_.end (); ++it2) {
 	  CollisionObjectConstPtr_t obj2 (*it2);
-          data_.addCollisionPair(obj1->indexInModel(), obj2->indexInModel());
+          GeometryModel::Index idx = model.findCollisionPair(
+              se3::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
+              );
+          if (idx < model.collisionPairs.size())
+            data_.activateCollisionPair(idx);
+          else
+            throw std::invalid_argument("Collision pair not found");
 	}
       }
     }
