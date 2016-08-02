@@ -24,6 +24,8 @@ ADD_LIBRARY(${LIBRARY_NAME}
   distance-between-points-in-bodies.cc
   configuration-constraint.cc
   convex-shape-contact.cc
+  static-stability.cc
+  qp-static-stability.cc
   )
   # tools.cc
   # position.cc
@@ -32,8 +34,6 @@ ADD_LIBRARY(${LIBRARY_NAME}
   # relative-orientation.cc
   # relative-position.cc
   # relative-transformation.cc
-  # static-stability.cc
-  # qp-static-stability.cc
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-pinocchio)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} qpOASES)

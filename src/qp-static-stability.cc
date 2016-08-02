@@ -14,18 +14,16 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include "hpp/_constraints/qp-static-stability.hh"
-
-#include <hpp/model/fcl-to-eigen.hh>
+#include "hpp/constraints/qp-static-stability.hh"
 
 #include <limits>
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
 
-#include "hpp/_constraints/tools.hh"
+#include "hpp/constraints/tools.hh"
 
 namespace hpp {
-  namespace _constraints {
+  namespace constraints {
     namespace {
       std::size_t forceDatasToNbContacts (
           const std::vector<ConvexShapeContact::ForceData>& fds) {
@@ -214,5 +212,5 @@ namespace hpp {
           || (  dual_.array() > eps && primal_.cwiseAbs().array() <= eps )
           ).all();
     }
-  } // namespace _constraints
+  } // namespace constraints
 } // namespace hpp
