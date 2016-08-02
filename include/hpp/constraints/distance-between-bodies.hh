@@ -64,6 +64,17 @@ namespace hpp {
 						const JointPtr_t& joint,
 						const ObjectVector_t& objects);
 
+      /// Create instance and return shared pointer
+      ///
+      /// \param name name of the constraint,
+      /// \param robot robot that own the bodies,
+      /// \param joint joint that holds the body,
+      /// \param objects list of fixed objects in the environment.
+      static DistanceBetweenBodiesPtr_t create (const std::string& name,
+						const DevicePtr_t& robot,
+						const JointPtr_t& joint,
+						const std::vector<CollisionObjectPtr_t>& objects);
+
       virtual ~DistanceBetweenBodies () throw () {}
 
     protected:
@@ -87,20 +98,30 @@ namespace hpp {
 			     const JointPtr_t& joint,
 			     const ObjectVector_t& objects);
 
+      /// Protected constructor
+      ///
+      /// \param name name of the constraint,
+      /// \param robot robot that own the bodies,
+      /// \param joint joint that holds the body,
+      /// \param objects list of fixed objects in the environment.
+      DistanceBetweenBodies (const std::string& name, const DevicePtr_t& robot,
+			     const JointPtr_t& joint,
+			     const std::vector<CollisionObjectPtr_t>& objects);
+
       virtual void impl_compute (vectorOut_t result,
 				 ConfigurationIn_t argument) const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      void initGeomData();
+      template <typename Iterator1, typename Iterator2>
+      void initGeomData(const Iterator1& begin1, const Iterator1& end1,
+          const Iterator2& begin2, const Iterator2& end2);
 
       typedef se3::GeometryData GeometryData;
 
       DevicePtr_t robot_;
       JointPtr_t joint1_;
       JointPtr_t joint2_;
-      ObjectVector_t objs1_;
-      ObjectVector_t objs2_;
       mutable GeometryData data_;
       mutable std::size_t minIndex_;
       mutable Configuration_t latestArgument_;
