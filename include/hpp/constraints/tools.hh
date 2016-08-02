@@ -33,13 +33,6 @@ namespace hpp {
       m (0,2) = v [1]; m (2,0) = -v [1];
       m (1,2) = -v [0]; m (2,1) = v [0];
     }
-
-    template <typename InType, typename OutType>
-    static OutType convert (const InType& in, const std::size_t s) {
-      OutType out(s);
-      for (size_t i = 0; i < s; ++i) out[i] = in[i];
-      return out;
-    }
   } // namespace constraints
 } // namespace hpp
 

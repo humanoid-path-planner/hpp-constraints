@@ -114,22 +114,6 @@ namespace hpp {
     typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
     typedef boost::shared_ptr<RelativeTransformation>
       RelativeTransformationPtr_t;
-
-    namespace deprecated {
-      HPP_PREDEF_CLASS (Position);
-      HPP_PREDEF_CLASS (Orientation);
-      HPP_PREDEF_CLASS (Transformation);
-      HPP_PREDEF_CLASS (RelativeOrientation);
-      HPP_PREDEF_CLASS (RelativePosition);
-      HPP_PREDEF_CLASS (RelativeTransformation);
-      typedef boost::shared_ptr<Position> PositionPtr_t;
-      typedef boost::shared_ptr<Orientation> OrientationPtr_t;
-      typedef boost::shared_ptr<Transformation> TransformationPtr_t;
-      typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
-      typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
-      typedef boost::shared_ptr<RelativeTransformation>
-        RelativeTransformationPtr_t;
-    } // namespace deprecated
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_FWD_HH

@@ -72,11 +72,10 @@
 
 #include <Eigen/SVD>
 
-#include "hpp/constraints/fwd.hh"
-
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/center-of-mass-computation.hh>
 
+#include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/tools.hh>
 #include <hpp/constraints/macros.hh>
@@ -772,7 +771,7 @@ namespace hpp {
         /// \param jacobianNbCols number of column of the jacobian
         Point (const vector3_t& point, size_t jacobianNbCols) :
           CalculusBase <Point, vector3_t, JacobianMatrix>
-          (convert <vector3_t, vector3_t> (point, 3), JacobianMatrix::Zero (3, jacobianNbCols))
+          (point, JacobianMatrix::Zero (3, jacobianNbCols))
         {
         }
 

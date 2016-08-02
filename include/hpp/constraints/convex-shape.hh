@@ -19,12 +19,15 @@
 
 # include <vector>
 
-# include <hpp/fcl/math/transform.h>
 # include <hpp/fcl/shape/geometric_shapes.h>
+
+// Only for specialization of vector3_t. This is a bad design of Pinocchio.
+# include <pinocchio/multibody/model.hpp>
 
 # include <hpp/pinocchio/joint.hh>
 
-# include <hpp/constraints/differentiable-function.hh>
+# include <hpp/constraints/fwd.hh>
+# include <hpp/constraints/config.hh>
 
 namespace hpp {
   namespace constraints {

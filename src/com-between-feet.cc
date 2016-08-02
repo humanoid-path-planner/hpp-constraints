@@ -48,7 +48,6 @@ namespace hpp {
       CenterOfMassComputationPtr_t comc =
         CenterOfMassComputation::create (robot);
       comc->add (robot->rootJoint ());
-      comc->computeMass ();
       return create (name, robot, comc, jointL, jointR,
           pointL, pointR, jointRef, pointRef, mask);
     }

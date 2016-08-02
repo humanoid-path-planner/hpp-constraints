@@ -17,12 +17,14 @@
 // hpp-constraints. If not, see
 // <http://www.gnu.org/licenses/>.
 
-#include <hpp/fcl/distance.h>
+#include <hpp/constraints/distance-between-points-in-bodies.hh>
+
+#include <pinocchio/spatial/se3.hpp>
+
 #include <hpp/pinocchio/collision-object.hh>
 #include <hpp/pinocchio/body.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <hpp/constraints/distance-between-points-in-bodies.hh>
 
 namespace hpp {
   namespace constraints {

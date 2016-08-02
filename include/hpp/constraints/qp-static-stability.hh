@@ -17,12 +17,11 @@
 #ifndef HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
 # define HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
 
+# include <hpp/constraints/fwd.hh>
+
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/convex-shape-contact.hh>
 # include <hpp/constraints/static-stability.hh>
-# include <hpp/constraints/tools.hh>
-
-# include "hpp/constraints/fwd.hh"
 
 # include <qpOASES.hpp>
 

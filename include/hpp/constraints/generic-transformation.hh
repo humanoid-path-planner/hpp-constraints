@@ -20,7 +20,8 @@
 #ifndef HPP_CONSTRAINTS_GENERIC_TRANSFORMATION_HH
 # define HPP_CONSTRAINTS_GENERIC_TRANSFORMATION_HH
 
-# include <hpp/fcl/math/transform.h>
+# include <pinocchio/spatial/se3.hpp>
+
 # include <hpp/pinocchio/joint.hh>
 
 # include <hpp/constraints/fwd.hh>
