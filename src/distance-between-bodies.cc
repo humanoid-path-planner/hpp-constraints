@@ -155,14 +155,14 @@ namespace hpp {
       using se3::GeometryModel;
       const GeometryModel& model = robot_->geomModel();
       // Deactivate all collision pairs.
-      for (GeometryModel::Index i = 0; i < model.collisionPairs.size(); ++i)
+      for (std::size_t i = 0; i < model.collisionPairs.size(); ++i)
         data_.activateCollisionPair(i, false);
       // Activate only the relevant ones.
       for (Iterator1 it1 = begin1; it1 != end1; ++it1) {
 	CollisionObjectConstPtr_t obj1 (*it1);
 	for (Iterator2 it2 = begin2; it2 != end2; ++it2) {
 	  CollisionObjectConstPtr_t obj2 (*it2);
-          GeometryModel::Index idx = model.findCollisionPair(
+          std::size_t idx = model.findCollisionPair(
               se3::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
               );
           if (idx < model.collisionPairs.size())
