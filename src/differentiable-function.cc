@@ -16,6 +16,7 @@
 
 #include <hpp/constraints/differentiable-function.hh>
 
+#include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
