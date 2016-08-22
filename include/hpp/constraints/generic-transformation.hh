@@ -33,11 +33,11 @@ namespace hpp {
     /// \cond DEVEL
     template <bool rel> struct GenericTransformationJointData
     {
-      JointPtr_t joint2;
+      JointConstPtr_t joint2;
       bool R1isID, R2isID, t1isZero, t2isZero;
       Transform3f F1inJ1, F2inJ2;
-      inline JointPtr_t getJoint1() const { return JointPtr_t(); }
-      inline void setJoint1(const JointPtr_t&) {}
+      inline JointConstPtr_t getJoint1() const { return JointConstPtr_t(); }
+      inline void setJoint1(const JointConstPtr_t&) {}
       const JointJacobian_t& J2 () const { return joint2->jacobian(); }
       const Transform3f& M2 () const { return joint2->currentTransformation(); }
       const vector3_t& t2 () const { return joint2->currentTransformation().translation(); }
@@ -49,9 +49,9 @@ namespace hpp {
     template <> struct GenericTransformationJointData<true> :
       GenericTransformationJointData<false>
     {
-      JointPtr_t joint1;
-      inline JointPtr_t getJoint1() const { return joint1; }
-      inline void setJoint1(const JointPtr_t& j) { joint1 = j; }
+      JointConstPtr_t joint1;
+      inline JointConstPtr_t getJoint1() const { return joint1; }
+      inline void setJoint1(const JointConstPtr_t& j) { joint1 = j; }
       const JointJacobian_t& J1 () const { return joint1->jacobian(); }
       const Transform3f& M1 () const { return joint1->currentTransformation(); }
       const matrix3_t& R1 () const { return joint1->currentTransformation().rotation(); }
@@ -168,7 +168,7 @@ namespace hpp {
       /// \param mask which component of the error vector to take into
       ///        account.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
-          const JointPtr_t& joint2, const Transform3f& reference,
+          const JointConstPtr_t& joint2, const Transform3f& reference,
           std::vector <bool> mask = std::vector<bool>(ValueSize,true));
 
       /// Object builder for absolute functions.
@@ -186,7 +186,7 @@ namespace hpp {
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
-          /* World frame          */ const JointPtr_t& joint2,
+          /* World frame          */ const JointConstPtr_t& joint2,
           const Transform3f& frame2, const Transform3f& frame1,
          std::vector <bool> mask = std::vector<bool>(ValueSize,true));
 
@@ -203,7 +203,7 @@ namespace hpp {
       /// \param mask which component of the error vector to take into
       ///        account.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
-          const JointPtr_t& joint1, const JointPtr_t& joint2,
+          const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
           const Transform3f& reference,
           std::vector <bool> mask = std::vector<bool>(ValueSize,true));
 
@@ -226,7 +226,7 @@ namespace hpp {
       ///       frame in which the error is expressed and the rotation of frame2
       ///       has no effect.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
-	 const JointPtr_t& joint1,  const JointPtr_t& joint2,
+	 const JointConstPtr_t& joint1,  const JointConstPtr_t& joint2,
 	 const Transform3f& frame1, const Transform3f& frame2,
          std::vector <bool> mask = std::vector<bool>(ValueSize,true));
 
@@ -249,25 +249,25 @@ namespace hpp {
       }
 
       /// Set joint 1
-      inline void joint1 (const JointPtr_t& joint) {
+      inline void joint1 (const JointConstPtr_t& joint) {
         // static_assert(IsRelative);
 	d_.setJoint1(joint);
 	assert (!joint || joint->robot () == robot_);
       }
 
       /// Get joint 1
-      inline JointPtr_t joint1 () {
+      inline JointConstPtr_t joint1 () {
 	return d_.getJoint1();
       }
 
       /// Set joint 2
-      inline void joint2 (const JointPtr_t& joint) {
+      inline void joint2 (const JointConstPtr_t& joint) {
 	d_.joint2 = joint;
 	assert (!joint || joint->robot () == robot_);
       }
 
       /// Get joint 2
-      inline JointPtr_t joint2 () {
+      inline JointConstPtr_t joint2 () {
 	return d_.joint2;
       }
 

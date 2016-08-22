@@ -30,6 +30,7 @@ namespace hpp {
     typedef pinocchio::size_type size_type;
     typedef pinocchio::value_type value_type;
     typedef pinocchio::JointPtr_t JointPtr_t;
+    typedef pinocchio::JointConstPtr_t JointConstPtr_t;
     typedef pinocchio::vector3_t vector3_t;
     typedef pinocchio::matrix3_t matrix3_t;
     typedef pinocchio::matrix_t matrix_t;

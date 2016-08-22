@@ -315,12 +315,12 @@ namespace hpp {
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
       GenericTransformation<_Options>::create
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint2,
+     const JointConstPtr_t& joint2,
      const Transform3f& reference, std::vector <bool> mask)
     {
       GenericTransformation<_Options>* ptr =
         new GenericTransformation<_Options> (name, robot, mask);
-      ptr->joint1 (JointPtr_t());
+      ptr->joint1 (JointConstPtr_t());
       ptr->joint2 (joint2);
       ptr->reference (reference);
       Ptr_t shPtr (ptr);
@@ -331,13 +331,13 @@ namespace hpp {
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
       GenericTransformation<_Options>::create
     (const std::string& name, const DevicePtr_t& robot,
-     /* World frame          */ const JointPtr_t& joint2,
+     /* World frame          */ const JointConstPtr_t& joint2,
      const Transform3f& frame2, const Transform3f& frame1,
      std::vector <bool> mask)
     {
       GenericTransformation<_Options>* ptr =
         new GenericTransformation<_Options> (name, robot, mask);
-      ptr->joint1 (JointPtr_t());
+      ptr->joint1 (JointConstPtr_t());
       ptr->joint2 (joint2);
       ptr->frame1InJoint1 (frame1);
       ptr->frame2InJoint2 (frame2);
@@ -348,7 +348,7 @@ namespace hpp {
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
       GenericTransformation<_Options>::create
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
      const Transform3f& reference, std::vector <bool> mask)
     {
       GenericTransformation<_Options>* ptr =
@@ -364,7 +364,7 @@ namespace hpp {
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
       GenericTransformation<_Options>::create
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint1, const JointPtr_t& joint2,
+     const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
      const Transform3f& frame1, const Transform3f& frame2,
      std::vector <bool> mask)
     {
