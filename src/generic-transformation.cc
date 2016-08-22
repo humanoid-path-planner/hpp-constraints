@@ -28,6 +28,10 @@
 namespace hpp {
   namespace constraints {
     namespace {
+      typedef JointJacobian_t::ConstNRowsBlockXpr<3>::Type HalfJacobian_t;
+      inline HalfJacobian_t omega(const JointJacobian_t& j) { return j.bottomRows<3>(); }
+      inline HalfJacobian_t trans(const JointJacobian_t& j) { return j.topRows<3>(); }
+
       static inline size_type size (std::vector<bool> mask)
       {
         size_type res = 0;
@@ -130,7 +134,7 @@ namespace hpp {
             const GenericTransformationData<rel, pos, true>& d, matrixOut_t J)
         {
           assign_if(!d.fullOri, d, J,
-            (d.JlogXTR1inJ1 * d.R2()) * d.J2().template bottomRows<3>(),
+            (d.JlogXTR1inJ1 * d.R2()) * omega(d.J2()),
             d.rowOri);
         }
         template <bool rel, bool ori> static inline void Jtranslation (
@@ -144,8 +148,8 @@ namespace hpp {
           // hpp-model: J = 1RT* ( 0Jt2 - [ 0R2 2t* ]x 0Jw2 )
           // pinocchio: J = 1RT* ( 0R2 2Jt2 - [ 0R2 2t* ]x 0R2 2Jw2 )
           if (!d.t2isZero) {
-            d.tmpJac.noalias() = ( R2.colwise().cross(d.cross2)) * J2.bottomRows<3>();
-            d.tmpJac.noalias() += R2 * J2.topRows<3>();
+            d.tmpJac.noalias() = ( R2.colwise().cross(d.cross2)) * omega(J2);
+            d.tmpJac.noalias() += R2 * trans(J2);
             if (d.R1isID) {
               assign_if (!d.fullPos, d, J, d.tmpJac, 0);
             } else { // Generic case
@@ -153,9 +157,9 @@ namespace hpp {
             }
           } else {
             if (d.R1isID)
-              assign_if (!d.fullPos, d, J, R2 * J2.topRows<3>(), 0);
+              assign_if (!d.fullPos, d, J, R2 * trans(J2), 0);
             else
-              assign_if (!d.fullPos, d, J, (R1inJ1.transpose() * R2) * J2.topRows<3>(), 0);
+              assign_if (!d.fullPos, d, J, (R1inJ1.transpose() * R2) * trans(J2), 0);
           }
         }
       };
@@ -166,8 +170,8 @@ namespace hpp {
             matrixOut_t J)
         {
           d.tmpJac.noalias() =
-                  d.R2() * d.J2().template bottomRows<3>()
-                - d.R1() * d.J1().template bottomRows<3>();
+                  d.R2() * omega(d.J2())
+                - d.R1() * omega(d.J1());
           assign_if(!d.fullOri, d, J,
               d.JlogXTR1inJ1 * d.R1().transpose () * d.tmpJac,
               d.rowOri);
@@ -188,11 +192,11 @@ namespace hpp {
           // A = [ 0t2 - 0t1 0R2 2t* ]x 0R1 1Jw1
           // B = ( 0R2 2Jt2 - 0R1 1Jt1 - [ 0R2 2t* ]x 0R2 2Jw2 )
           d.tmpJac.noalias() =
-            - R1.colwise().cross(d.cross1) * J1.bottomRows<3>() // A
-            + R2 * J2.topRows<3>()  // B1
-            - R1 * J1.topRows<3>(); // B2
+            - R1.colwise().cross(d.cross1) * omega(J1) // A
+            + R2 * trans(J2)  // B1
+            - R1 * trans(J1); // B2
           if (!d.t2isZero)
-            d.tmpJac.noalias() += R2.colwise().cross(d.cross2) * J2.bottomRows<3>(); // B3
+            d.tmpJac.noalias() += R2.colwise().cross(d.cross2) * omega(J2); // B3
           if (d.R1isID) assign_if(!d.fullPos, d, J,                       R1.transpose()  * d.tmpJac, 0);
           else          assign_if(!d.fullPos, d, J, (R1inJ1.transpose() * R1.transpose()) * d.tmpJac, 0);
         }
