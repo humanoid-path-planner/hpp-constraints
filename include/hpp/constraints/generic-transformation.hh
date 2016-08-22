@@ -71,7 +71,11 @@ namespace hpp {
       GenericTransformationJointData<rel>,
       GenericTransformationOriData<ori>
     {
-      enum { NbRows = (pos?3:0)+(ori?3:0) };
+      enum {
+        NbRows = (pos?3:0)+(ori?3:0),
+        RowPos = (pos? 0:-1),
+        RowOri = (ori?(pos?3:0):-1)
+      };
       typedef Eigen::Matrix<value_type, NbRows, 1> ValueType;
       typedef Eigen::Matrix<value_type, NbRows, Eigen::Dynamic> JacobianType;
       bool fullPos, fullOri;

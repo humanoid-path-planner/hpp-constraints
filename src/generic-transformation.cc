@@ -107,15 +107,16 @@ namespace hpp {
               if (!d.R1isID)
                 d.JlogXTR1inJ1 *= d.F1inJ1.rotation().derived().transpose();
             }
-          } 
+          }
       };
 
-      template <typename Data, typename Derived> void assign_if
+      template <bool ori, typename Data, typename Derived> void assign_if
         (bool cond, const Data& d, matrixOut_t J,
          const Eigen::MatrixBase<Derived>& rhs,
          const size_type& startRow)
       {
-        if (cond) d.jacobian.template middleRows<3>(startRow)                 .noalias() = rhs;
+        const int& rowCache = (ori ? Data::RowOri : Data::RowPos);
+        if (cond) d.jacobian.template middleRows<3>(rowCache)                 .noalias() = rhs;
         else               J.template middleRows<3>(startRow).leftCols(d.cols).noalias() = rhs;
       }
 
@@ -133,7 +134,7 @@ namespace hpp {
         template <bool rel, bool pos> static inline void Jorientation (
             const GenericTransformationData<rel, pos, true>& d, matrixOut_t J)
         {
-          assign_if(!d.fullOri, d, J,
+          assign_if<true>(!d.fullOri, d, J,
             (d.JlogXTR1inJ1 * d.R2()) * omega(d.J2()),
             d.rowOri);
         }
@@ -151,15 +152,15 @@ namespace hpp {
             d.tmpJac.noalias() = ( R2.colwise().cross(d.cross2)) * omega(J2);
             d.tmpJac.noalias() += R2 * trans(J2);
             if (d.R1isID) {
-              assign_if (!d.fullPos, d, J, d.tmpJac, 0);
+              assign_if<false> (!d.fullPos, d, J, d.tmpJac, 0);
             } else { // Generic case
-              assign_if (!d.fullPos, d, J, R1inJ1.transpose() * d.tmpJac, 0);
+              assign_if<false> (!d.fullPos, d, J, R1inJ1.transpose() * d.tmpJac, 0);
             }
           } else {
             if (d.R1isID)
-              assign_if (!d.fullPos, d, J, R2 * trans(J2), 0);
+              assign_if<false> (!d.fullPos, d, J, R2 * trans(J2), 0);
             else
-              assign_if (!d.fullPos, d, J, (R1inJ1.transpose() * R2) * trans(J2), 0);
+              assign_if<false> (!d.fullPos, d, J, (R1inJ1.transpose() * R2) * trans(J2), 0);
           }
         }
       };
@@ -172,7 +173,7 @@ namespace hpp {
           d.tmpJac.noalias() =
                   d.R2() * omega(d.J2())
                 - d.R1() * omega(d.J1());
-          assign_if(!d.fullOri, d, J,
+          assign_if<true>(!d.fullOri, d, J,
               d.JlogXTR1inJ1 * d.R1().transpose () * d.tmpJac,
               d.rowOri);
         }
@@ -197,8 +198,8 @@ namespace hpp {
             - R1 * trans(J1); // B2
           if (!d.t2isZero)
             d.tmpJac.noalias() += R2.colwise().cross(d.cross2) * omega(J2); // B3
-          if (d.R1isID) assign_if(!d.fullPos, d, J,                       R1.transpose()  * d.tmpJac, 0);
-          else          assign_if(!d.fullPos, d, J, (R1inJ1.transpose() * R1.transpose()) * d.tmpJac, 0);
+          if (d.R1isID) assign_if<false>(!d.fullPos, d, J,                       R1.transpose()  * d.tmpJac, 0);
+          else          assign_if<false>(!d.fullPos, d, J, (R1inJ1.transpose() * R1.transpose()) * d.tmpJac, 0);
         }
       };
 
