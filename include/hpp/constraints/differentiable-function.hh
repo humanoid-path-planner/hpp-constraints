@@ -164,7 +164,6 @@ namespace hpp {
           DevicePtr_t robot = DevicePtr_t (),
           value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon())) const;
 
-    private:
       /// Dimension of input vector.
       size_type inputSize_;
       /// Dimension of input derivative
@@ -173,9 +172,13 @@ namespace hpp {
       size_type outputSize_;
       /// Dimension of output derivative vector
       size_type outputDerivativeSize_;
+
+    private:
       std::string name_;
       /// Context of creation of function
       std::string context_;
+
+      friend class DifferentiableFunctionStack;
     }; // class DifferentiableFunction
     inline std::ostream&
     operator<< (std::ostream& os, const DifferentiableFunction& f)

@@ -28,6 +28,7 @@ SET(PROJECT_URL "https://github.com/humanoid-path-planner/hpp-constraints")
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
+  include/hpp/constraints/differentiable-function-stack.hh
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
