@@ -852,7 +852,7 @@ namespace hpp {
         void impl_value () {
           const Transform3f& M = joint_->currentTransformation ();
           this->value_.head<3>() = M.translation ();
-          computeLog (this->value_.tail<3>(), theta_, M.rotation());
+          computeLog (M.rotation(), theta_, this->value_.tail<3>());
         }
         void impl_jacobian () {
           computeValue ();

@@ -14,24 +14,10 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-// #include <hpp/model/device.hh>
-// #include <hpp/model/joint.hh>
-// #include <hpp/model/configuration.hh>
-// #include <hpp/model/object-factory.hh>
-
-// #include "hpp/constraints/position.hh"
-// #include "hpp/constraints/orientation.hh"
-// #include "hpp/constraints/transformation.hh"
-// #include "hpp/constraints/relative-position.hh"
-// #include "hpp/constraints/relative-orientation.hh"
-// #include "hpp/constraints/relative-transformation.hh"
-// #include "hpp/constraints/generic-transformation.hh"
-// #include "hpp/constraints/tools.hh"
-
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
 
-#include <../src/generic-transformation.cc>
+#include <hpp/constraints/tools.hh>
 
 using namespace hpp::constraints;
 
@@ -56,10 +42,10 @@ matrix3_t exponential (const vector3_t& aa)
 
 vector3_t log (const matrix3_t R)
 {
-  GenericTransformationData<false, false, true> data(0);
-  data.M = R;
-  unary<true>::log(data);
-  return data.value;
+  vector3_t log;
+  value_type theta;
+  computeLog(R, theta, log);
+  return log;
 }
 
 bool check (const vector3_t& aa, const value_type eps = -1)

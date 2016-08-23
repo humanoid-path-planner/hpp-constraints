@@ -27,7 +27,6 @@ ADD_LIBRARY(${LIBRARY_NAME}
   static-stability.cc
   qp-static-stability.cc
   )
-  # tools.cc
   # position.cc
   # orientation.cc
   # transformation.cc
