@@ -20,7 +20,6 @@
 #include <boost/math/constants/constants.hpp>
 
 #include <hpp/constraints/fwd.hh>
-#include <hpp/constraints/macros.hh>
 
 namespace hpp {
   namespace constraints {
@@ -34,7 +33,6 @@ namespace hpp {
       if (tr > 3)       theta = 0; // acos((3-1)/2)
       else if (tr < -1) theta = PI; // acos((-1-1)/2)
       else              theta = acos ((tr - 1)/2);
-      hppDnum (info, "theta=" << theta);
       assert (theta == theta);
       // From runs of tests/logarithm.cc: 1e-6 is too small.
       if (theta < PI - 1e-2) {
