@@ -16,13 +16,12 @@
 
 #include <hpp/constraints/generic-transformation.hh>
 
-#include <boost/math/constants/constants.hpp>
-
 #include <hpp/fcl/math/transform.h>
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 
+#include <hpp/constraints/tools.hh>
 #include <hpp/constraints/macros.hh>
 
 namespace hpp {
@@ -81,6 +80,11 @@ namespace hpp {
               d.value((pos?3:0)+1) = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1) : 0);
               d.value((pos?3:0)+2) = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2) : 0);
             }
+
+            vector3_t log; value_type theta;
+            computeLog(d.M.rotation(), theta, log);
+            assert (log.isApprox(d.value.template tail<3>()));
+            assert (std::abs(theta - d.theta) < Eigen::NumTraits<value_type>::dummy_precision());
           }
         template <bool rel, bool pos> static inline void Jlog (
             const GenericTransformationData<rel, pos, true>& d)
@@ -107,6 +111,9 @@ namespace hpp {
               if (!d.R1isID)
                 d.JlogXTR1inJ1 *= d.F1inJ1.rotation().derived().transpose();
             }
+            matrix3_t Jlog;
+            computeJlog(d.theta, d.value.template tail<3>(), Jlog);
+            assert ((Jlog * d.F1inJ1.rotation().transpose()).isApprox(d.JlogXTR1inJ1));
           }
       };
 
