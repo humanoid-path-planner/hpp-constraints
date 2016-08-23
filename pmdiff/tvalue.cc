@@ -387,6 +387,7 @@ BOOST_AUTO_TEST_CASE (others) {
 
   /*********************** ConfigurationConstraint **************************/
   // /*
+  // FIXME This do not work because hpp::pinocchio::difference and hpp::model::difference do not return the same result
   check_consistent (rm, rp,
         _c::ConfigurationConstraint::create ("Model ConfigurationConstraint", rm, goalM),
         c ::ConfigurationConstraint::create ("Pinoc ConfigurationConstraint", rp, goalP),
