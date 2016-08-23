@@ -53,67 +53,71 @@ namespace hpp {
         template <bool rel, bool pos> static inline void log (
             const GenericTransformationData<rel, pos, true>& d)
           {
+            computeLog(d.M.rotation(), d.theta, d.value.template tail<3>());
+            hppDnum (info, "theta=" << theta);
+#if NDEBUG  // This is a check meant to disappear within next commits.
+            // The code is the same as in computeLog and computeJlog
+            vector3_t log; value_type theta;
             const matrix3_t& Rerror (d.M.rotation ());
             value_type tr = Rerror.trace();
-            if (tr > 3)       d.theta = 0; // acos((3-1)/2)
-            else if (tr < -1) d.theta = ::boost::math::constants::pi<value_type>(); // acos((-1-1)/2)
-            else              d.theta = acos ((tr - 1)/2);
-            hppDnum (info, "theta_=" << d.theta);
-            assert (d.theta == d.theta);
+            if (tr > 3)       theta = 0; // acos((3-1)/2)
+            else if (tr < -1) theta = ::boost::math::constants::pi<value_type>(); // acos((-1-1)/2)
+            else              theta = acos ((tr - 1)/2);
+            assert (theta == d.theta);
             // From runs of tests/logarithm.cc: 1e-6 is too small.
             if (d.theta < M_PI - 1e-2) {
-              const value_type t = ((d.theta > 1e-6)? d.theta / sin(d.theta) : 1) / 2;
-              d.value((pos?3:0)+0) = t * (Rerror (2, 1) - Rerror (1, 2));
-              d.value((pos?3:0)+1) = t * (Rerror (0, 2) - Rerror (2, 0));
-              d.value((pos?3:0)+2) = t * (Rerror (1, 0) - Rerror (0, 1));
+              const value_type t = ((theta > 1e-6)? theta / sin(theta) : 1) / 2;
+              log = t * (Rerror (2, 1) - Rerror (1, 2));
+              log = t * (Rerror (0, 2) - Rerror (2, 0));
+              log = t * (Rerror (1, 0) - Rerror (0, 1));
             } else {
               // 1e-2: A low value is not required since the computation is
               // using explicit formula. However, the precision of this method
               // is the square root of the precision with the antisymmetric
               // method (Nominal case).
-              const value_type cphi = cos(d.theta - M_PI);
-              const value_type beta  = d.theta*d.theta / ( 1 + cphi );
+              const value_type cphi = cos(theta - M_PI);
+              const value_type beta  = theta*theta / ( 1 + cphi );
               const value_type tmp0 = (Rerror (0, 0) + cphi) * beta;
               const value_type tmp1 = (Rerror (1, 1) + cphi) * beta;
               const value_type tmp2 = (Rerror (2, 2) + cphi) * beta;
-              d.value((pos?3:0)+0) = (Rerror (2, 1) > Rerror (1, 2) ? 1 : -1 ) * (tmp0 > 0 ? sqrt(tmp0) : 0);
-              d.value((pos?3:0)+1) = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1) : 0);
-              d.value((pos?3:0)+2) = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2) : 0);
+              log = (Rerror (2, 1) > Rerror (1, 2) ? 1 : -1 ) * (tmp0 > 0 ? sqrt(tmp0) : 0);
+              log = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1) : 0);
+              log = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2) : 0);
             }
-
-            vector3_t log; value_type theta;
-            computeLog(d.M.rotation(), theta, log);
             assert (log.isApprox(d.value.template tail<3>()));
             assert (std::abs(theta - d.theta) < Eigen::NumTraits<value_type>::dummy_precision());
+#endif // NDEBUG
           }
         template <bool rel, bool pos> static inline void Jlog (
             const GenericTransformationData<rel, pos, true>& d)
           {
+            computeJlog(d.theta, d.value.template tail<3>(), d.JlogXTR1inJ1);
+
+#if NDEBUG
+            matrix3_t Jlog;
             if (d.theta < 1e-6) {
-              if (d.R1isID) d.JlogXTR1inJ1.setIdentity ();
-              else          d.JlogXTR1inJ1.noalias() = d.F1inJ1.rotation().derived().transpose();
+              Jlog.setIdentity ();
             } else {
               // Jlog = alpha I
               const value_type ct = cos(d.theta), st = sin(d.theta);
               const value_type st_1mct = st/(1-ct);
 
-              d.JlogXTR1inJ1.setZero ();
-              d.JlogXTR1inJ1.diagonal().setConstant (d.theta*st_1mct);
+              Jlog.setZero ();
+              Jlog.diagonal().setConstant (d.theta*st_1mct);
 
               // Jlog += -r_{\times}/2
-              d.JlogXTR1inJ1(0,1) =  d.value((pos?3:0)+2); d.JlogXTR1inJ1(1,0) = -d.value((pos?3:0)+2);
-              d.JlogXTR1inJ1(0,2) = -d.value((pos?3:0)+1); d.JlogXTR1inJ1(2,0) =  d.value((pos?3:0)+1);
-              d.JlogXTR1inJ1(1,2) =  d.value((pos?3:0)+0); d.JlogXTR1inJ1(2,1) = -d.value((pos?3:0)+0);
-              d.JlogXTR1inJ1 /= 2;
+              Jlog(0,1) =  d.value((pos?3:0)+2); Jlog(1,0) = -d.value((pos?3:0)+2);
+              Jlog(0,2) = -d.value((pos?3:0)+1); Jlog(2,0) =  d.value((pos?3:0)+1);
+              Jlog(1,2) =  d.value((pos?3:0)+0); Jlog(2,1) = -d.value((pos?3:0)+0);
+              Jlog /= 2;
 
               const value_type alpha = 1/(d.theta*d.theta) - st_1mct/(2*d.theta);
-              d.JlogXTR1inJ1.noalias() += alpha * d.value.template tail<3>() * d.value.template tail<3>().transpose ();
-              if (!d.R1isID)
-                d.JlogXTR1inJ1 *= d.F1inJ1.rotation().derived().transpose();
+              Jlog.noalias() += alpha * d.value.template tail<3>() * d.value.template tail<3>().transpose ();
             }
-            matrix3_t Jlog;
-            computeJlog(d.theta, d.value.template tail<3>(), Jlog);
-            assert ((Jlog * d.F1inJ1.rotation().transpose()).isApprox(d.JlogXTR1inJ1));
+            assert(Jlog.isApprox(d.JlogXTR1inJ1));
+#endif // NDEBUG
+
+            if (!d.R1isID) d.JlogXTR1inJ1 *= d.F1inJ1.rotation().transpose();
           }
       };
 
