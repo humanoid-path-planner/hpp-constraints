@@ -16,88 +16,193 @@
 
 #include <hpp/constraints/differentiable-function.hh>
 
+#include <pinocchio/algorithm/finite-differences.hpp>
+
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {
   namespace constraints {
-      void DifferentiableFunction::finiteDifferenceForward
-        (matrixOut_t jacobian, vectorIn_t x,
-         DevicePtr_t robot, value_type eps) const
+    namespace {
+      typedef std::vector<se3::JointIndex> JointIndexVector;
+
+      JointIndexVector fromVelocityRank (const se3::Model& model)
       {
-        // TODO: When robot is not null, it would be better to iterate over the
-        // joints.
-        using std::abs;
-
-        size_type n = inputDerivativeSize();
-        vector_t h = vector_t::Zero (inputDerivativeSize ());
-        vector_t x_dx = x;
-        vector_t f_x   (outputSize()),
-                 f_x_dx(outputSize());
-        impl_compute (f_x, x);
-
-        for (size_type j = 0; j < n; ++j) {
-          if (robot) {
-            JointPtr_t jt = robot->getJointAtVelocityRank (j);
-            h[j] = eps * x.segment (jt->rankInConfiguration (),
-                                    jt->configSize ()).norm();
-          }
-          else h[j] = eps * abs(x[j]);
-          if (h[j] == 0) h[j] = eps;
-
-          if (robot) integrate (robot, x, h, x_dx);
-          else x_dx[j] += h[j];
-
-          impl_compute (f_x_dx, x_dx);
-          jacobian.col (j) = (f_x_dx - f_x) / h[j];
-          if (jacobian.col(j).hasNaN ()) {
-            hppDout (error, "Forward finite difference: NaN");
-          }
-          x_dx[j] = x[j];
-          h[j] = 0;
+        JointIndexVector ret (model.nv, 0);
+        for (se3::JointIndex j = 1; j < model.joints.size(); ++j) {
+          const std::size_t i = model.joints[j].idx_v();
+          for (std::size_t k = 0; k < (std::size_t)model.joints[j].nv(); ++k) ret[i+k] = j;
         }
-        if (jacobian.hasNaN ()) {
-          hppDout (error, "Forward finite difference: NaN");
-        }
+        return ret;
       }
 
-      void DifferentiableFunction::finiteDifferenceCentral
-        (matrixOut_t jacobian, vectorIn_t x,
-         DevicePtr_t robot, value_type eps) const
+      struct FiniteDiffRobotOp
       {
-        using std::abs;
-        using hpp::pinocchio::integrate;
+        FiniteDiffRobotOp (const DevicePtr_t& r, const value_type& epsilon)
+          : robot(r), model(robot->model()), 
+          // velocityRankToJointIndex (fromVelocityRank(model)),
+          increments(se3::finiteDifferenceIncrement(model)),
+          epsilon(epsilon),
+          v(robot->numberDof())
+        {}
 
-        size_type n = inputDerivativeSize();
-        vector_t x_dx = x;
-        vector_t h = vector_t::Zero (inputDerivativeSize ());
-        vector_t f_x_mdx (outputSize()),
-                 f_x_pdx (outputSize());
-
-        for (size_type j = 0; j < n; ++j) {
-          if (robot) {
-            JointPtr_t jt = robot->getJointAtVelocityRank (j);
-            h[j] = eps * x.segment (jt->rankInConfiguration (),
-                                    jt->configSize ()).norm();
+        inline value_type step (const size_type& i, const vector_t& x) const
+        {
+          assert(i >= 0);
+          value_type r;
+          if (i < increments.size()) {
+            return increments[i];
+          // if ((std::size_t)i < velocityRankToJointIndex.size()) {
+            // const se3::JointModel& joint
+              // (model.joints[velocityRankToJointIndex[i]]);
+            // r = x.segment(joint.idx_q(), joint.nq()).norm();
+          } else {
+            r = std::abs(x[i]);
           }
-          else h[j] = eps * abs(x[j]);
-          if (h[j] == 0) h[j] = eps;
 
-          if (robot) integrate (robot, x, -h, x_dx);
-          else x_dx[j] -= h[j];
-          impl_compute (f_x_mdx, x_dx);
-
-          if (robot) integrate (robot, x, h, x_dx);
-          else x_dx[j] = x[j] + h[j];
-          impl_compute (f_x_pdx, x_dx);
-
-          jacobian.col (j) = (f_x_pdx - f_x_mdx) / (2*h[j]);
-          x_dx[j] = x[j];
-          h[j] = 0;
+          if (r == 0) return epsilon;
+          else        return epsilon * r;
         }
-        if (jacobian.hasNaN ()) {
-          hppDout (error, "Central finite difference: NaN");
+
+        template <bool forward>
+        inline void integrate (const vector_t& x, const vector_t& h, const size_type& /*i*/, vector_t& result) const
+        {
+          // Use only the joint corresponding to velocity index i
+          if (forward)
+            hpp::pinocchio::integrate (robot, x,  h, result);
+          else
+            hpp::pinocchio::integrate (robot, x, -h, result);
         }
+
+        inline value_type difference (const vector_t& x0, const vector_t& x1, const size_type& i) const
+        {
+          hpp::pinocchio::difference (robot, x0, x1, v);
+          return v[i];
+        }
+
+        inline void reset (const vector_t& x, const size_type& /*i*/, vector_t& result) const
+        {
+          // Use only the joint corresponding to velocity index i
+          result = x;
+        }
+
+        const DevicePtr_t& robot;
+        const se3::Model& model;
+        // const JointIndexVector velocityRankToJointIndex;
+        const vector_t increments;
+        const value_type& epsilon;
+        mutable vector_t v;
+      };
+
+      struct FiniteDiffVectorSpaceOp
+      {
+        FiniteDiffVectorSpaceOp (const value_type& epsilon) : epsilon(epsilon) {}
+
+        inline value_type step (const size_type i, const vector_t& x) const
+        {
+          const value_type r = std::abs(x[i]);
+
+          if (r == 0) return epsilon;
+          else        return epsilon * r;
+        }
+
+        template <bool forward>
+        inline void integrate (const vector_t& x, const vector_t& h, const size_type& i, vector_t& result) const
+        {
+          result[i] = x[i] + (forward ? h[i] : -h[i]);
+        }
+
+        inline value_type difference (const vector_t& x0, const vector_t& x1, const size_type& i) const
+        {
+          return x0[i] - x1[i];
+        }
+
+        inline void reset (const vector_t& x, const size_type& i, vector_t& result) const
+        {
+          result[i] = x[i];
+        }
+
+        const value_type& epsilon;
+      };
+
+      template <typename FiniteDiffOp, typename Function>
+        void finiteDiffCentral(matrixOut_t jacobian, vectorIn_t x,
+            const FiniteDiffOp& op, const Function& f)
+        {
+          size_type n = jacobian.cols();
+          vector_t x_pdx = x;
+          vector_t x_mdx = x;
+          vector_t h = vector_t::Zero (jacobian.cols());
+          vector_t f_x_mdx (jacobian.rows()),
+                   f_x_pdx (jacobian.rows());
+
+          for (size_type j = 0; j < n; ++j) {
+            h[j] = op.step(j, x);
+
+            op.template integrate<false>(x, h, j, x_mdx);
+            f (f_x_mdx, x_mdx);
+
+            op.template integrate<true >(x, h, j, x_pdx);
+            f (f_x_pdx, x_pdx);
+
+            jacobian.col (j) = ((f_x_pdx - f_x_mdx) / h[j]) / 2;
+
+            op.reset(x, j, x_mdx);
+            op.reset(x, j, x_pdx);
+            h[j] = 0;
+          }
+          if (jacobian.hasNaN ()) {
+            hppDout (error, "Central finite difference: NaN");
+          }
+        }
+
+      template <typename FiniteDiffOp, typename Function>
+        void finiteDiffForward(matrixOut_t jacobian, vectorIn_t x,
+            const FiniteDiffOp& op, const Function& f)
+        {
+          size_type n = jacobian.cols();
+          vector_t x_dx = x;
+          vector_t h = vector_t::Zero (jacobian.cols());
+          vector_t f_x     (jacobian.rows()),
+                   f_x_pdx (jacobian.rows());
+
+          f (f_x, x);
+
+          for (size_type j = 0; j < n; ++j) {
+            h[j] = op.step(j, x);
+
+            op.template integrate<true >(x, h, j, x_dx);
+            f (f_x_pdx, x_dx);
+
+            jacobian.col (j) = (f_x_pdx - f_x) / h[j];
+
+            op.reset(x, j, x_dx);
+            h[j] = 0;
+          }
+          if (jacobian.hasNaN ()) {
+            hppDout (warning, "Finite difference of \"" << f.name() << "\" has NaN values.");
+          }
+        }
+    }
+
+    void DifferentiableFunction::finiteDifferenceForward
+      (matrixOut_t jacobian, vectorIn_t x,
+       DevicePtr_t robot, value_type eps) const
+      {
+        if (robot)
+          finiteDiffForward(jacobian, x, FiniteDiffRobotOp(robot, eps), *this);
+        else
+          finiteDiffForward(jacobian, x, FiniteDiffVectorSpaceOp(eps), *this);
+      }
+
+    void DifferentiableFunction::finiteDifferenceCentral
+      (matrixOut_t jacobian, vectorIn_t x,
+       DevicePtr_t robot, value_type eps) const
+      {
+        if (robot)
+          finiteDiffCentral(jacobian, x, FiniteDiffRobotOp(robot, eps), *this);
+        else
+          finiteDiffCentral(jacobian, x, FiniteDiffVectorSpaceOp(eps), *this);
       }
   } // namespace constraints
 } // namespace hpp
