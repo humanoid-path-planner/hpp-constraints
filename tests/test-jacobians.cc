@@ -14,10 +14,11 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/configuration.hh>
-#include <hpp/model/object-factory.hh>
+#include <pinocchio/parsers/sample-models.hpp>
+
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 #include "hpp/constraints/generic-transformation.hh"
 #include "hpp/constraints/symbolic-function.hh"
@@ -28,12 +29,12 @@
 #include "hpp/constraints/tools.hh"
 
 // The following 6 includes are deprecated and will be removed
-#include "hpp/constraints/position.hh"
-#include "hpp/constraints/orientation.hh"
-#include "hpp/constraints/transformation.hh"
-#include "hpp/constraints/relative-position.hh"
-#include "hpp/constraints/relative-orientation.hh"
-#include "hpp/constraints/relative-transformation.hh"
+// #include "hpp/constraints/position.hh"
+// #include "hpp/constraints/orientation.hh"
+// #include "hpp/constraints/transformation.hh"
+// #include "hpp/constraints/relative-position.hh"
+// #include "hpp/constraints/relative-orientation.hh"
+// #include "hpp/constraints/relative-transformation.hh"
 
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
@@ -42,13 +43,13 @@
 #include <limits>
 #include <math.h>
 
-using hpp::model::Configuration_t;
-using hpp::model::ConfigurationPtr_t;
-using hpp::model::Device;
-using hpp::model::DevicePtr_t;
-using hpp::model::JointPtr_t;
-using hpp::model::JointVector_t;
-using hpp::model::BodyPtr_t;
+using hpp::pinocchio::Configuration_t;
+using hpp::pinocchio::ConfigurationPtr_t;
+using hpp::pinocchio::Device;
+using hpp::pinocchio::DevicePtr_t;
+using hpp::pinocchio::JointPtr_t;
+using hpp::pinocchio::JointVector_t;
+using hpp::pinocchio::BodyPtr_t;
 
 using std::numeric_limits;
 using boost::assign::list_of;
@@ -62,9 +63,11 @@ const static double HESSIAN_MAXIMUM_COEF = 1e1;
 const static double DQ_MAX = 1e-2;
 const static size_t MAX_NB_ERROR = 5;
 
-static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
-
-hpp::model::ObjectFactory objectFactory;
+static matrix3_t I3 = matrix3_t::Identity();
+static vector3_t zero = vector3_t::Identity();
+static se3::SE3 MId = se3::SE3::Identity();
+se3::SE3 toSE3(const matrix3_t& R) { return se3::SE3(R, zero); }
+se3::SE3 toSE3(const vector3_t& t) { return se3::SE3(I3, t); }
 
 class BasicConfigurationShooter
 {
@@ -74,240 +77,22 @@ public:
   }
   virtual ConfigurationPtr_t shoot () const
   {
-    JointVector_t jv = robot_->getJointVector ();
     ConfigurationPtr_t config (new Configuration_t (robot_->configSize ()));
-    for (JointVector_t::const_iterator itJoint = jv.begin ();
-	 itJoint != jv.end (); itJoint++) {
-      std::size_t rank = (*itJoint)->rankInConfiguration ();
-      (*itJoint)->configuration ()->uniformlySample (rank, *config);
-    }
+    *config = se3::randomConfiguration(robot_->model());
     return config;
   }
 private:
   const DevicePtr_t& robot_;
 }; // class BasicConfigurationShooter
 
-JointPtr_t createFreeflyerJoint (DevicePtr_t robot)
-{
-  const std::string& name = robot->name ();
-  fcl::Transform3f mat; mat.setIdentity ();
-  JointPtr_t joint, parent;
-  const fcl::Vec3f T = mat.getTranslation ();
-  std::string jointName = name + "_x";
-  // Translation along x
-  fcl::Matrix3f permutation;
-  joint = objectFactory.createJointTranslation (mat);
-  joint->name (jointName);
-  joint->isBounded (0, 1);
-  joint->lowerBound (0, -4);
-  joint->upperBound (0, +4);
-  robot->rootJoint (joint);
-  parent = joint;
-
-  // Translation along y
-  permutation (0,0) = 0; permutation (0,1) = -1; permutation (0,2) = 0;
-  permutation (1,0) = 1; permutation (1,1) =  0; permutation (1,2) = 0;
-  permutation (2,0) = 0; permutation (2,1) =  0; permutation (2,2) = 1;
-  fcl::Transform3f pos;
-  pos.setRotation (permutation * mat.getRotation ());
-  pos.setTranslation (T);
-  joint = objectFactory.createJointTranslation (pos);
-  jointName = name + "_y";
-  joint->name (jointName);
-  joint->isBounded (0, 1);
-  joint->lowerBound (0, -4);
-  joint->upperBound (0, +4);
-  parent->addChildJoint (joint);
-  parent = joint;
-
-  // Translation along z
-  permutation (0,0) = 0; permutation (0,1) = 0; permutation (0,2) = -1;
-  permutation (1,0) = 0; permutation (1,1) = 1; permutation (1,2) =  0;
-  permutation (2,0) = 1; permutation (2,1) = 0; permutation (2,2) =  0;
-  pos.setRotation (permutation * mat.getRotation ());
-  pos.setTranslation (T);
-  joint = objectFactory.createJointTranslation (pos);
-  jointName = name + "_z";
-  joint->name (jointName);
-  joint->isBounded (0, 1);
-  joint->lowerBound (0, -4);
-  joint->upperBound (0, +4);
-  parent->addChildJoint (joint);
-  parent = joint;
-  // joint SO3
-  joint = objectFactory.createJointSO3 (mat);
-  jointName = name + "_SO3";
-  joint->name (jointName);
-  parent->addChildJoint (joint);
-  return joint;
-}
-
 DevicePtr_t createRobot ()
 {
   DevicePtr_t robot = Device::create ("test");
-  JointPtr_t waist = createFreeflyerJoint (robot);
-  JointPtr_t parent = waist;
-  BodyPtr_t body;
-  fcl::Transform3f pos;
-  fcl::Matrix3f orient;
-  // Right leg joint 0
-  orient (0,0) = 0; orient (0,1) = 0; orient (0,2) = -1;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) =  0;
-  orient (2,0) = 1; orient (2,1) = 0; orient (2,2) =  0;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  JointPtr_t joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("RLEG_0");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("RLEG_BODY0");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Right leg joint 1
-  orient (0,0) = 1; orient (0,1) = 0; orient (0,2) = 0;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("RLEG_1");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("RLEG_BODY1");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Right leg joint 2
-  orient (0,0) = 0; orient (0,1) = -1; orient (0,2) = 0;
-  orient (1,0) = 1; orient (1,1) =  0; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("RLEG_2");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("RLEG_BODY2");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Right leg joint 3: knee
-  orient (0,0) = 0; orient (0,1) = -1; orient (0,2) = 0;
-  orient (1,0) = 1; orient (1,1) =  0; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, -0.35));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("RLEG_3");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("RLEG_BODY3");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Right leg joint 4: ankle
-  orient (0,0) = 0; orient (0,1) = -1; orient (0,2) = 0;
-  orient (1,0) = 1; orient (1,1) =  0; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("RLEG_4");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("RLEG_BODY4");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Right leg joint 5: ankle
-  orient (0,0) = 1; orient (0,1) = 0; orient (0,2) = 0;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("RLEG_5");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("RLEG_BODY5");
-  joint->setLinkedBody (body);
-
-  // Left leg
-  parent = waist;
-  // Left leg joint 0
-  orient (0,0) = 0; orient (0,1) = 0; orient (0,2) = -1;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) =  0;
-  orient (2,0) = 1; orient (2,1) = 0; orient (2,2) =  0;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("LLEG_0");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("LLEG_BODY0");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Left leg joint 1
-  orient (0,0) = 1; orient (0,1) = 0; orient (0,2) = 0;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("LLEG_1");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("LLEG_BODY1");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Left leg joint 2
-  orient (0,0) = 0; orient (0,1) = -1; orient (0,2) = 0;
-  orient (1,0) = 1; orient (1,1) =  0; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, 0));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("LLEG_2");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("LLEG_BODY2");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Left leg joint 3: knee
-  orient (0,0) = 0; orient (0,1) = -1; orient (0,2) = 0;
-  orient (1,0) = 1; orient (1,1) =  0; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, -0.35));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("LLEG_3");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("LLEG_BODY3");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Left leg joint 4: ankle
-  orient (0,0) = 0; orient (0,1) = -1; orient (0,2) = 0;
-  orient (1,0) = 1; orient (1,1) =  0; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) =  0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("LLEG_4");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("LLEG_BODY4");
-  joint->setLinkedBody (body);
-  parent = joint;
-  // Left leg joint 5: ankle
-  orient (0,0) = 1; orient (0,1) = 0; orient (0,2) = 0;
-  orient (1,0) = 0; orient (1,1) = 1; orient (1,2) = 0;
-  orient (2,0) = 0; orient (2,1) = 0; orient (2,2) = 1;
-  pos.setRotation (orient);
-  pos.setTranslation (fcl::Vec3f (0, -0.08, -0.70));
-  joint = objectFactory.createBoundedJointRotation (pos);
-  joint->name ("LLEG_5");
-  parent->addChildJoint (joint);
-  body = objectFactory.createBody ();
-  body->name ("LLEG_BODY5");
-  joint->setLinkedBody (body);
-
+  se3::buildModels::humanoidSimple(robot->model(), true);
+  robot->createData();
+  robot->controlComputation((Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
+  robot->currentConfiguration(robot->neutralConfiguration());
+  robot->computeForwardKinematics();
   return robot;
 }
 
@@ -324,18 +109,18 @@ ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointP
    *
    *  Object = point
   **/
-  std::vector <fcl::Vec3f> square(4);
-  square[0] = fcl::Vec3f ( 5, 5,0); square[1] = fcl::Vec3f ( 5,-5,0);
-  square[2] = fcl::Vec3f ( 0,-5,0); square[3] = fcl::Vec3f ( 0, 5,0);
+  std::vector <vector3_t> square(4);
+  square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
+  square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
   ConvexShape sCs (square);
 
-  std::vector <fcl::Vec3f> penta(5);
-  penta[0] = fcl::Vec3f ( 0, 5,0); penta[1] = fcl::Vec3f ( 0,-5,0);
-  penta[2] = fcl::Vec3f (-2,-6,0); penta[3] = fcl::Vec3f (-5, 0,0);
-  penta[4] = fcl::Vec3f (-2, 6,0);
+  std::vector <vector3_t> penta(5);
+  penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
+  penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
+  penta[4] = vector3_t (-2, 6,0);
   ConvexShape pCs (penta);
 
-  std::vector <fcl::Vec3f> point(1, fcl::Vec3f (0,0,0));
+  std::vector <vector3_t> point(1, vector3_t (0,0,0));
   ConvexShape pointCs (point, j);
 
   ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
@@ -362,20 +147,20 @@ ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr
    *  |   \
    *  +----+
   **/
-  std::vector <fcl::Vec3f> square(4);
-  square[0] = fcl::Vec3f ( 5, 5,0); square[1] = fcl::Vec3f ( 5,-5,0);
-  square[2] = fcl::Vec3f ( 0,-5,0); square[3] = fcl::Vec3f ( 0, 5,0);
+  std::vector <vector3_t> square(4);
+  square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
+  square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
   ConvexShape sCs (square);
 
-  std::vector <fcl::Vec3f> penta(5);
-  penta[0] = fcl::Vec3f ( 0, 5,0); penta[1] = fcl::Vec3f ( 0,-5,0);
-  penta[2] = fcl::Vec3f (-2,-6,0); penta[3] = fcl::Vec3f (-5, 0,0);
-  penta[4] = fcl::Vec3f (-2, 6,0);
+  std::vector <vector3_t> penta(5);
+  penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
+  penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
+  penta[4] = vector3_t (-2, 6,0);
   ConvexShape pCs (penta);
 
-  std::vector <fcl::Vec3f> trapeze(4);
-  trapeze[0] = fcl::Vec3f (-0.1, 0.1,0); trapeze[1] = fcl::Vec3f ( 0.1, 0.1,0);
-  trapeze[2] = fcl::Vec3f ( 0.2,-0.1,0); trapeze[3] = fcl::Vec3f (-0.1,-0.1,0);
+  std::vector <vector3_t> trapeze(4);
+  trapeze[0] = vector3_t (-0.1, 0.1,0); trapeze[1] = vector3_t ( 0.1, 0.1,0);
+  trapeze[2] = vector3_t ( 0.2,-0.1,0); trapeze[3] = vector3_t (-0.1,-0.1,0);
   ConvexShape tCs (trapeze, j);
 
   ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
@@ -388,36 +173,36 @@ ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr
 
 ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, JointPtr_t j)
 {
-  fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
-  fcl::Vec3f p[12];
-  p[0] = fcl::Vec3f (-5,-5,0); p[1] = fcl::Vec3f (-5, 5,0); p[2] = fcl::Vec3f ( 5,-5,0);
-  p[3] = fcl::Vec3f ( 5, 5,0); p[4] = fcl::Vec3f (-5, 5,0); p[5] = fcl::Vec3f ( 5,-5,0);
-  p[6] = fcl::Vec3f ( 0, 0,1); p[7] = fcl::Vec3f (  1,0,1); p[8] = fcl::Vec3f (0,  1,1);
-  p[9] = fcl::Vec3f ( 0, 0,0); p[10] = fcl::Vec3f (0.1,0,0); p[11] = fcl::Vec3f (0,0.1,0);
-  fcl::TriangleP f1 (p[0],p[1],p[2]),
-                 f2 (p[3],p[4],p[5]),
-                 th (p[6],p[7],p[8]),
-                 o  (p[9],p[10],p[11]);
+  vector3_t x (1,0,0), y (0,1,0), z (0,0,1);
+  vector3_t p[12];
+  p[0] = vector3_t (-5,-5,0); p[1] = vector3_t (-5, 5,0); p[2] = vector3_t ( 5,-5,0);
+  p[3] = vector3_t ( 5, 5,0); p[4] = vector3_t (-5, 5,0); p[5] = vector3_t ( 5,-5,0);
+  p[6] = vector3_t ( 0, 0,1); p[7] = vector3_t (  1,0,1); p[8] = vector3_t (0,  1,1);
+  p[9] = vector3_t ( 0, 0,0); p[10] = vector3_t (0.1,0,0); p[11] = vector3_t (0,0.1,0);
+  std::vector<vector3_t> f1 = list_of (p[0])(p[1])(p[2]),
+                         f2 = list_of (p[3])(p[4])(p[5]),
+                         th = list_of (p[6])(p[7])(p[8]),
+                         o  = list_of (p[9])(p[10])(p[11]);
   ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
   ConvexShapeContact& f = *fptr;
   f.addObject (ConvexShape (o, j));
-  f.addFloor (ConvexShape (th, 0x0));
-  f.addFloor (ConvexShape (f1, 0x0));
-  f.addFloor (ConvexShape (f2, 0x0));
+  f.addFloor (ConvexShape (th, JointPtr_t()));
+  f.addFloor (ConvexShape (f1, JointPtr_t()));
+  f.addFloor (ConvexShape (f2, JointPtr_t()));
   return fptr;
 }
 
 BOOST_AUTO_TEST_CASE (triangle) {
   /// First test ConvexShape class (as a triangle)
-  fcl::Vec3f x (1,0,0), y (0,1,0), z (0,0,1);
-  fcl::Vec3f p[9];
-  p[0] = fcl::Vec3f (0,0,0);
-  p[1] = fcl::Vec3f (1,0,0);
-  p[2] = fcl::Vec3f (0,1,0);
-  p[3] = fcl::Vec3f (1,1,1);
-  p[4] = fcl::Vec3f (0.2,0.2,0);
-  p[5] = fcl::Vec3f (1,1,0);
-  p[6] = fcl::Vec3f (-1,-1,1);
+  vector3_t x (1,0,0), y (0,1,0), z (0,0,1);
+  vector3_t p[9];
+  p[0] = vector3_t (0,0,0);
+  p[1] = vector3_t (1,0,0);
+  p[2] = vector3_t (0,1,0);
+  p[3] = vector3_t (1,1,1);
+  p[4] = vector3_t (0.2,0.2,0);
+  p[5] = vector3_t (1,1,0);
+  p[6] = vector3_t (-1,-1,1);
   ConvexShape t (p[0],p[1],p[2]);
   BOOST_CHECK_MESSAGE ((t.normal () - z).isZero (), "Norm of triangle is wrong");
   BOOST_CHECK_MESSAGE ((t.center () - (x+y)/3).isZero (), "Center of triangle is wrong");
@@ -435,10 +220,21 @@ BOOST_AUTO_TEST_CASE (triangle) {
   BOOST_CHECK_MESSAGE (std::abs (t.distance (t.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
 }
 
+template<bool forward>
+void checkJacobianDiffIsZero(const std::string& name, const matrix_t& diff, const value_type& eps)
+{
+  size_type row, col;
+  value_type maxError = diff.cwiseAbs().maxCoeff(&row,&col);
+  BOOST_CHECK_MESSAGE(maxError < /* HESSIAN_MAXIMUM_COEF * */ eps,
+      "Jacobian of " << name << " seems wrong (" << (forward? "forward":"central") <<  "). DOF " << col << " at row " << row << ": "
+      << maxError << " > " << /* HESSIAN_MAXIMUM_COEF << " * " << */ eps
+      );
+}
+
 BOOST_AUTO_TEST_CASE (jacobian) {
   DevicePtr_t device = createRobot ();
-  JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
-             ee2 = device->getJointByName ("RLEG_5");
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
   Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
@@ -459,41 +255,42 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         ConfigurationConstraint::create ("testConfigConstraint",
           device, goal)
       ));
-  functions.push_back ( DFptr (
-        "deprecated Orientation",
-        deprecated::Orientation::create (device, ee2, tf2.getRotation())
-      ));
-  functions.push_back ( DFptr (
-        "deprecated Orientation with mask (0,1,1)",
-        deprecated::Orientation::create (device, ee1, tf1.getRotation(), mask011)
-      ));
+  // functions.push_back ( DFptr (
+        // "deprecated Orientation",
+        // deprecated::Orientation::create (device, ee2, tf2.rotation())
+      // ));
+  // functions.push_back ( DFptr (
+        // "deprecated Orientation with mask (0,1,1)",
+        // deprecated::Orientation::create (device, ee1, tf1.rotation(), mask011)
+      // ));
   functions.push_back ( DFptr (
         "Orientation",
-        Orientation::create ("Orientation", device, ee2, tf2.getRotation())
+        Orientation::create ("Orientation", device, ee2, toSE3(tf2.rotation()))
       ));
   functions.push_back ( DFptr (
         "Orientation with mask (0,1,1)",
-        Orientation::create ("Orientation", device, ee1, tf1.getRotation(), mask011)
+        Orientation::create ("Orientation", device, ee1, toSE3(tf1.rotation()), mask011)
       ));
-  functions.push_back ( DFptr (
-        "deprecated Position",
-        deprecated::Position::create (device, ee1, tf1.getTranslation(),
-          tf2.getTranslation(), tf2.getRotation())
-      ));
+  // functions.push_back ( DFptr (
+        // "deprecated Position",
+        // deprecated::Position::create (device, ee1, tf1.translation(),
+          // tf2.translation(), tf2.rotation())
+      // ));
   functions.push_back ( DFptr (
         "Position",
-        Position::create ("Position", device, ee1, tf1.getTranslation(), tf2)
+        Position::create ("Position", device, ee1, toSE3(tf1.translation()), tf2)
       ));
-  functions.push_back ( DFptr (
-        "deprecated Position with mask (0,1,1)",
-        deprecated::Position::create (device, ee1, tf1.getTranslation(),
-          tf2.getTranslation(), tf2.getRotation (), mask011)
-      ));
+  // functions.push_back ( DFptr (
+        // "deprecated Position with mask (0,1,1)",
+        // deprecated::Position::create (device, ee1, tf1.translation(),
+          // tf2.translation(), tf2.rotation (), mask011)
+      // ));
   functions.push_back ( DFptr (
         "Position with mask (0,1,1)",
-        Position::create ("Position", device, ee1, tf1.getTranslation(),
+        Position::create ("Position (0,1,1)", device, ee1, toSE3(tf1.translation()),
           tf2, mask011)
       ));
+  // /*
   functions.push_back ( DFptr (
         "RelativeOrientation",
         RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2)
@@ -502,14 +299,14 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         "RelativeOrientation with mask (0,1,1)",
         RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2, mask011)
       ));
-  functions.push_back ( DFptr (
-        "deprecated::RelativeOrientation",
-        deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.getRotation())
-      ));
-  functions.push_back ( DFptr (
-        "deprecated::RelativeOrientation with mask (0,1,1)",
-        deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.getRotation(), mask011)
-      ));
+  // functions.push_back ( DFptr (
+        // "deprecated::RelativeOrientation",
+        // deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.rotation())
+      // ));
+  // functions.push_back ( DFptr (
+        // "deprecated::RelativeOrientation with mask (0,1,1)",
+        // deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.rotation(), mask011)
+      // ));
   functions.push_back ( DFptr (
         "RelativePosition",
         RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2)
@@ -518,16 +315,16 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         "RelativePosition with mask (0,1,1)",
         RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2, mask011)
       ));
-  functions.push_back ( DFptr (
-        "deprecated::RelativePosition",
-        deprecated::RelativePosition::create (device, ee1, ee2, tf1.getTranslation(),
-          tf2.getTranslation())
-      ));
-  functions.push_back ( DFptr (
-        "deprecated::RelativePosition with mask (0,1,1)",
-        deprecated::RelativePosition::create (device, ee1, ee2, tf1.getTranslation(),
-          tf2.getTranslation(), mask011)
-      ));
+  // functions.push_back ( DFptr (
+        // "deprecated::RelativePosition",
+        // deprecated::RelativePosition::create (device, ee1, ee2, tf1.translation(),
+          // tf2.translation())
+      // ));
+  // functions.push_back ( DFptr (
+        // "deprecated::RelativePosition with mask (0,1,1)",
+        // deprecated::RelativePosition::create (device, ee1, ee2, tf1.translation(),
+          // tf2.translation(), mask011)
+      // ));
 
   device->currentConfiguration (*cs.shoot ());
   device->computeForwardKinematics ();
@@ -556,10 +353,9 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   // DifferentiableFunctionStack
   DifferentiableFunctionStackPtr_t stack =
     DifferentiableFunctionStack::create("Stack");
-  stack->add (Position::create ("Position", device, ee1, vector3_t (0,0,0),
-        vector3_t (0,0,0)));
+  stack->add (Position::create ("Position", device, ee1, MId, MId));
   stack->add (RelativeOrientation::create (
-        "RelativeOrientation", device, ee1, ee2, identity (),
+        "RelativeOrientation", device, ee1, ee2, MId,
         list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
   // Cannot be tested with intervals as we later iterate on the robot DOFs
   // DifferentiableFunctionStackPtr_t stack2 =
@@ -571,24 +367,43 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         // list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
   // stack2->add (SizeInterval_t(0,4));
   // functions.push_back (DFptr (stack2->name (), stack2));
+  //*/
 
   ConfigurationPtr_t q1, q2 (new Configuration_t(device->currentConfiguration()));
   vector_t value1, value2, dvalue, error;
   vector_t errorNorm (MAX_NB_ERROR);
   vector_t dq (device->numberDof ()); dq.setZero ();
-  matrix_t jacobian;
+  matrix_t jacobian, fdCentral, fdForward, errorJacobian;
   for (DFs::iterator fit = functions.begin(); fit != functions.end(); ++fit) {
     DF& f = *(fit->second);
     value1 = vector_t (f.outputSize ());
     value2 = vector_t (f.outputSize ());
     errorNorm.setZero ();
-    jacobian = matrix_t (f.outputDerivativeSize (), f.inputDerivativeSize ());
+    jacobian.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
+    fdForward.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
+    fdCentral.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
+
     for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) {
       q1 = cs.shoot ();
       f (value1, *q1);
       jacobian.setZero ();
       f.jacobian (jacobian, *q1);
+
+      const value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon());
+
+      // fdForward.setZero(); f.finiteDifferenceForward(fdForward, *q1, device, eps);
+      fdCentral.setZero(); f.finiteDifferenceCentral(fdCentral, *q1, device, eps);
+
+      // Forward: check the error
+      // errorJacobian = jacobian - fdForward;
+      // checkJacobianDiffIsZero<true> (f.name(), errorJacobian, eps);
+
+      // Central: check the error
+      errorJacobian = jacobian - fdCentral;
+      checkJacobianDiffIsZero<false> (f.name(), errorJacobian, sqrt(eps));
+
       // We check the jacobian for each DOF.
+      /*
       for (int idof = 0; idof < device->numberDof (); idof++){
         dvalue = jacobian.col (idof);
         // dq = (0,...,0,1,0,...,0), the 1 being at the rank idof.
@@ -598,7 +413,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
         for (i_error = 0; i_error < MAX_NB_ERROR; i_error++) {
           //dq[idof] = DQ_MAX * std::pow (10, - i_error);
           dq[idof] = dq[idof] / 10;
-          hpp::model::integrate (device, *q1, dq, *q2);
+          hpp::pinocchio::integrate (device, *q1, dq, *q2);
           f (value2, *q2);
           error = value2 - value1 - dq[idof] * dvalue;
           errorNorm [i_error] = error.norm ();
@@ -610,28 +425,27 @@ BOOST_AUTO_TEST_CASE (jacobian) {
               << ", dof " << idof << ", config " << i << ".");
         dq(idof) = 0;
       }
+      //*/
     }
   }
 }
 
 BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   DevicePtr_t device = createRobot ();
-  JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
-             ee2 = device->getJointByName ("RLEG_5");
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
 
   /// Create the constraints
   typedef DifferentiableFunction DF;
   typedef DifferentiableFunctionPtr_t DFptr;
-  DFptr pos = Position::create ("Position", device, ee1, vector3_t (0,0,0),
-          vector3_t (0,0,0));
+  DFptr pos = Position::create ("Position", device, ee1, MId, MId);
   Traits<PointInJoint>::Ptr_t pij  = PointInJoint::create (ee1, vector3_t(0,0,0));
   Traits<PointInJoint>::Ptr_t pij2 = PointInJoint::create (ee2, vector3_t(0,0,0));
   Traits<CalculusBaseAbstract<> >::Ptr_t relpos_sb_ptr =
     JointTranspose (ee1) * (pij2 - pij);
-  DFptr relpos = RelativePosition::create ("RelPos", device, ee1, ee2, vector3_t (0,0,0),
-          vector3_t (0,0,0));
+  DFptr relpos = RelativePosition::create ("RelPos", device, ee1, ee2, MId, MId);
 
   ConfigurationPtr_t q1, q2 = cs.shoot ();
   vector_t value = vector_t (pos->outputSize ());
@@ -665,15 +479,15 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
 
 BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   DevicePtr_t device = createRobot ();
-  JointPtr_t ee1 = device->getJointByName ("LLEG_5"),
-             ee2 = device->getJointByName ("RLEG_5");
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
 
   /// Create the constraints
   typedef DifferentiableFunction DF;
   typedef DifferentiableFunctionPtr_t DFptr;
-  DFptr trans = Transformation::create ("Transform", device, ee1, fcl::Transform3f ());
+  DFptr trans = Transformation::create ("Transform", device, ee1, MId);
   Traits<JointFrame>::Ptr_t jf  = JointFrame::create (ee1);
   DFptr sf = SymbolicFunction<JointFrame>::create ("SymbolicFunctionTest", device, jf);
 
