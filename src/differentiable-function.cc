@@ -69,9 +69,9 @@ namespace hpp {
         {
           // Use only the joint corresponding to velocity index i
           if (forward)
-            hpp::pinocchio::integrate (robot, x,  h, result);
+            hpp::pinocchio::integrate<false> (robot, x,  h, result);
           else
-            hpp::pinocchio::integrate (robot, x, -h, result);
+            hpp::pinocchio::integrate<false> (robot, x, -h, result);
         }
 
         inline value_type difference (const vector_t& x0, const vector_t& x1, const size_type& i) const
