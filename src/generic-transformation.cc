@@ -54,12 +54,13 @@ namespace hpp {
             const GenericTransformationData<rel, pos, true>& d)
           {
             computeLog(d.M.rotation(), d.theta, d.value.template tail<3>());
-            hppDnum (info, "theta=" << theta);
+            hppDnum (info, "theta=" << d.theta);
           }
         template <bool rel, bool pos> static inline void Jlog (
             const GenericTransformationData<rel, pos, true>& d)
           {
             computeJlog(d.theta, d.value.template tail<3>(), d.JlogXTR1inJ1);
+            hppDnum (info, "Jlog_: " << d.JlogXTR1inJ1);
             if (!d.R1isID) d.JlogXTR1inJ1 *= d.F1inJ1.rotation().transpose();
           }
       };
@@ -233,7 +234,6 @@ namespace hpp {
             d.cross2.noalias() = R2*t2inJ2;
 
           unary<ori>::Jlog (d);
-          hppDnum (info, "Jlog_: " << d.JlogXTR1inJ1);
 
           // rel:           relative known at compile time
           // d.getJoint1(): relative known at run time

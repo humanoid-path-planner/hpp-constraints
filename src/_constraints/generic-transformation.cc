@@ -267,7 +267,6 @@ namespace hpp {
             d.cross2.noalias() = R2*t2inJ2;
 
           unary<ori>::Jlog (d);
-          hppDnum (info, "Jlog_: " << d.JlogXTR1inJ1);
 
           // rel:           relative known at compile time
           // d.getJoint1(): relative known at run time
