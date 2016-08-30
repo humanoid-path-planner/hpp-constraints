@@ -391,6 +391,25 @@ namespace hpp {
     {
       computeError (arg);
       compute<IsRelative, ComputePosition, ComputeOrientation>::jacobian (d_, jacobian, mask_);
+
+#ifdef CHECK_JACOBIANS
+      const value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon());
+      matrix_t Jfd (outputDerivativeSize(), inputDerivativeSize());
+      Jfd.setZero();
+      finiteDifferenceCentral(Jfd, arg, robot_, eps);
+      size_type row, col;
+      value_type maxError = (jacobian - Jfd).cwiseAbs().maxCoeff(&row,&col);
+      if (maxError > std::sqrt(eps)) {
+        hppDout (error, "Jacobian of " << name() << " does not match central finite difference. "
+            "DOF " << col << " at row " << row << ": "
+            << maxError << " > " << /* HESSIAN_MAXIMUM_COEF << " * " << */ std::sqrt(eps)
+            );
+        hppDnum (error,
+            "Jacobian is \n" << jacobian <<
+            "\nFinite diff is \n" << Jfd <<
+            "\nDifference is \n" << (jacobian - Jfd));
+      }
+#endif
     }
 
     /// Force instanciation of relevant classes
