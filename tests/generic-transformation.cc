@@ -486,6 +486,7 @@ BOOST_AUTO_TEST_CASE (consistency) {
   Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
+  std::vector<bool> mask001 (3, false); mask001[2] = true;
   std::vector<bool> mask011 (3, true); mask011[0] = false;
 
   device->currentConfiguration (*cs.shoot ());
@@ -509,6 +510,10 @@ BOOST_AUTO_TEST_CASE (consistency) {
   check_consistent (device,
         deprecated::Position::create ("Position"           , device, ee2, tf2.getTranslation(), tf1.getTranslation(), transpose(tf1.getRotation())),
         Position::create             ("PositionFromGeneric", device, ee2, tf2, tf1),
+        ProportionalCompare(-1));
+  check_consistent (device,
+        deprecated::Position::create ("Position"           , device, ee2, Tid.getTranslation(), tf2.getTranslation(), Tid.getRotation(), mask001),
+        Position::create             ("PositionFromGeneric", device, ee2, Tid.getTranslation(), tf2.getTranslation(), mask001),
         ProportionalCompare(-1));
   check_consistent (device,
         deprecated::Position::create ("Position"           , device, ee2, tf2.getTranslation(), tf1.getTranslation(), transpose(tf1.getRotation()), mask011),
