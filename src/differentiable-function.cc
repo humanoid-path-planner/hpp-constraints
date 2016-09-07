@@ -19,6 +19,7 @@
 #include <pinocchio/algorithm/finite-differences.hpp>
 
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/configuration.hh>
 
 namespace hpp {

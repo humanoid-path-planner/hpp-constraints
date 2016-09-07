@@ -15,6 +15,7 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #include <pinocchio/parsers/sample-models.hpp>
+#include <pinocchio/algorithm/joint-configuration.hpp>
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
