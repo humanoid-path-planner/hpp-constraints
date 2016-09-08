@@ -104,8 +104,8 @@ namespace hpp {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
       se3::updateGeometryPlacements(robot_->model(), robot_->data(), robot_->geomModel(), data_);
-      minIndex_ = se3::computeDistances(data_);
-      result [0] = data_.distance_results[minIndex_].distance();
+      minIndex_ = se3::computeDistances(robot_->geomModel(), data_);
+      result [0] = data_.distanceResults[minIndex_].min_distance;
       latestArgument_ = argument;
       latestResult_ = result;
     }
@@ -118,8 +118,8 @@ namespace hpp {
       const JointJacobian_t& J1 (joint1_->jacobian());
       const Transform3f& M1 (joint1_->currentTransformation());
       const matrix3_t& R1 (M1.rotation());
-      vector3_t point1 (data_.distance_results[minIndex_].closestPointInner());
-      vector3_t point2 (data_.distance_results[minIndex_].closestPointOuter());
+      vector3_t point1 (data_.distanceResults[minIndex_].nearest_points[0]);
+      vector3_t point2 (data_.distanceResults[minIndex_].nearest_points[1]);
       // P1 - P2
       vector3_t P1_minus_P2 (point1 - point2);
       // P1 - t1
