@@ -260,7 +260,7 @@ namespace hpp {
       }
 
       /// Get joint 1
-      inline JointConstPtr_t joint1 () {
+      inline JointConstPtr_t joint1 () const {
 	return d_.getJoint1();
       }
 
@@ -271,7 +271,7 @@ namespace hpp {
       }
 
       /// Get joint 2
-      inline JointConstPtr_t joint2 () {
+      inline JointConstPtr_t joint2 () const {
 	return d_.joint2;
       }
 
