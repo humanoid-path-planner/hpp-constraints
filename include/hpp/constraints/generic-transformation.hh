@@ -294,6 +294,8 @@ namespace hpp {
 	return d_.F2inJ2;
       }
 
+      virtual std::ostream& print (std::ostream& o) const;
+
       ///Constructor
       ///
       /// \param name the name of the constraints,

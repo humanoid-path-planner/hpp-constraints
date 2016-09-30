@@ -271,6 +271,21 @@ namespace hpp {
       };
     }
 
+    template <int _Options> std::ostream&
+      GenericTransformation<_Options>::print (std::ostream& os) const
+    {
+      os << (IsRelative ? "Relative" : "") <<
+            (IsPosition ? (IsOrientation ? "Transformation" : "Position")
+                   : "Orientation") << ": " << name()
+       << "\n\tJoint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
+       << "\n\tFrame in joint 1" << frame1InJoint1()
+       << "\n\tJoint2: "         << joint2()->name()
+       << "\n\tFrame in joint 2" << frame2InJoint2()
+       << "\n\tmask: ";
+      for (size_type i=0; i<ValueSize; ++i) os << mask_ [i] << ", ";
+      return os;
+    }
+
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
       GenericTransformation<_Options>::create
     (const std::string& name, const DevicePtr_t& robot,

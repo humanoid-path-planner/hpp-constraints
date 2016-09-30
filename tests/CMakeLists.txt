@@ -45,7 +45,7 @@ MACRO(ADD_TESTCASE NAME GENERATED)
 ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (test-jacobians FALSE)
-# ADD_TESTCASE (generic-transformation FALSE)
+ADD_TESTCASE (generic-transformation FALSE)
 # ADD_TESTCASE (triangles FALSE)
 ADD_TESTCASE (logarithm FALSE)
 ADD_TESTCASE (svd FALSE)
