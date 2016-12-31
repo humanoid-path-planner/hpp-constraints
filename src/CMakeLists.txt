@@ -14,28 +14,49 @@
 # hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 SET(LIBRARY_NAME ${PROJECT_NAME})
-ADD_LIBRARY(${LIBRARY_NAME}
-  SHARED
-  differentiable-function.cc
-  distance-between-bodies.cc
-  distance-between-points-in-bodies.cc
-  tools.cc
-  position.cc
-  orientation.cc
-  transformation.cc
-  relative-com.cc
-  com-between-feet.cc
-  relative-orientation.cc
-  relative-position.cc
-  relative-transformation.cc
-  generic-transformation.cc
-  configuration-constraint.cc
-  convex-shape-contact.cc
-  static-stability.cc
-  qp-static-stability.cc
-  )
+IF (USE_QPOASES)
+  ADD_LIBRARY(${LIBRARY_NAME}
+    SHARED
+    differentiable-function.cc
+    distance-between-bodies.cc
+    distance-between-points-in-bodies.cc
+    tools.cc
+    position.cc
+    orientation.cc
+    transformation.cc
+    relative-com.cc
+    com-between-feet.cc
+    relative-orientation.cc
+    relative-position.cc
+    relative-transformation.cc
+    generic-transformation.cc
+    configuration-constraint.cc
+    convex-shape-contact.cc
+    static-stability.cc
+    )
+  PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} qpOASES)
+ELSE ()
+  ADD_LIBRARY(${LIBRARY_NAME}
+    SHARED
+    differentiable-function.cc
+    distance-between-bodies.cc
+    distance-between-points-in-bodies.cc
+    tools.cc
+    position.cc
+    orientation.cc
+    transformation.cc
+    relative-com.cc
+    com-between-feet.cc
+    relative-orientation.cc
+    relative-position.cc
+    relative-transformation.cc
+    generic-transformation.cc
+    configuration-constraint.cc
+    convex-shape-contact.cc
+    static-stability.cc
+    )
+ENDIF ()
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-model)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} qpOASES)
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)
