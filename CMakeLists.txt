@@ -26,6 +26,9 @@ SET(PROJECT_DESCRIPTION
   "Definition of basic geometric constraints for motion planning")
 SET(PROJECT_URL "https://github.com/humanoid-path-planner/hpp-constraints")
 
+# Add a cache variable to allow not compiling and running tests
+set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
+
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
   include/hpp/constraints/differentiable-function-stack.hh
@@ -72,8 +75,6 @@ IF (USE_QPOASES)
 ENDIF ()
 
 SETUP_PROJECT()
-SET(BOOST_COMPONENT math unit_test_framework)
-SEARCH_FOR_BOOST()
 SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
 SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
@@ -82,7 +83,11 @@ if (${USE_QPOASES})
 ENDIF ()
 
 ADD_SUBDIRECTORY (src)
-ADD_SUBDIRECTORY (tests)
+IF (RUN_TESTS)
+  SET(BOOST_COMPONENT math unit_test_framework)
+  SEARCH_FOR_BOOST()
+ ADD_SUBDIRECTORY(tests)
+ENDIF ()
 
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
 
