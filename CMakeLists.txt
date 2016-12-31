@@ -15,6 +15,7 @@
 
 # Requires at least CMake 2.6 to configure the package.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_POLICY (SET CMP0012 NEW)
 
 SET(CXX_DISABLE_WERROR TRUE)
 INCLUDE(cmake/base.cmake)
@@ -48,8 +49,6 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/relative-position.hh
   include/hpp/constraints/relative-transformation.hh
   include/hpp/constraints/configuration-constraint.hh
-  include/hpp/constraints/static-stability.hh
-  include/hpp/constraints/qp-static-stability.hh
 )
 
 # Activate hpp-util logging if requested
@@ -64,13 +63,25 @@ IF (HPP_CONSTRAINTS_NUMERIC_DEBUG)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_CONSTRAINTS_NUMERIC_DEBUG")
 ENDIF()
 
+# Add a cache variabie to remove dependency to qpOASES
+SET(USE_QPOASES TRUE CACHE BOOL "Use qpOASES solver for static stability")
+IF (${USE_QPOASES})
+  SET(${PROJECT_NAME}_HEADERS ${${PROJECT_NAME}_HEADERS}
+    include/hpp/constraints/static-stability.hh
+    include/hpp/constraints/qp-static-stability.hh
+    )
+  PKG_CONFIG_APPEND_CFLAGS (-DHPP_CONSTRAINTS_USE_QPOASES)
+ENDIF ()
+
 SETUP_PROJECT()
 SET(BOOST_COMPONENT math unit_test_framework)
 SEARCH_FOR_BOOST()
 SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
 SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
-ADD_REQUIRED_DEPENDENCY("qpOASES >= 3.2")
+if (${USE_QPOASES})
+  ADD_REQUIRED_DEPENDENCY("qpOASES >= 3.2")
+ENDIF ()
 
 ADD_SUBDIRECTORY (src)
 ADD_SUBDIRECTORY (tests)
