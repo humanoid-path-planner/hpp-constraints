@@ -72,6 +72,7 @@ IF (USE_QPOASES)
     include/hpp/constraints/static-stability.hh
     include/hpp/constraints/qp-static-stability.hh
     )
+  PKG_CONFIG_APPEND_CFLAGS (-DHPP_CONSTRAINTS_USE_QPOASES)
 ENDIF ()
 
 SETUP_PROJECT()
