@@ -20,6 +20,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/simple-device.hh>
 
 #include "hpp/constraints/generic-transformation.hh"
 #include "hpp/constraints/symbolic-function.hh"
@@ -88,12 +89,15 @@ private:
 
 DevicePtr_t createRobot ()
 {
-  DevicePtr_t robot = Device::create ("test");
-  se3::buildModels::humanoidSimple(robot->model(), true);
-  robot->createData();
-  robot->controlComputation((Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
-  robot->currentConfiguration(robot->neutralConfiguration());
-  robot->computeForwardKinematics();
+  DevicePtr_t robot =
+    hpp::pinocchio::humanoidSimple("test", true,
+        (Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
+  robot->rootJoint()->lowerBound(0, -1);
+  robot->rootJoint()->lowerBound(1, -1);
+  robot->rootJoint()->lowerBound(2, -1);
+  robot->rootJoint()->upperBound(0,  1);
+  robot->rootJoint()->upperBound(1,  1);
+  robot->rootJoint()->upperBound(2,  1);
   return robot;
 }
 
