@@ -136,7 +136,7 @@ namespace hpp {
 
       phi_.invalidate ();
       phi_.computeValue ();
-      phi_.computeSVD ();
+      // phi_.computeSVD ();
 
       qpOASES::returnValue ret = solveQP (result);
       if (ret != qpOASES::SUCCESSFUL_RETURN) {
@@ -153,7 +153,7 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       phi_.invalidate ();
-      phi_.computeSVD ();
+      // phi_.computeSVD ();
       phi_.computeJacobian ();
 
       vector_t res(1);
@@ -169,6 +169,7 @@ namespace hpp {
             "Jacobian WILL be wrong.");
       }
 
+      // TODO preallocate this.
       matrix_t JT_phi_F (nbContacts_, robot_->numberDof());
       matrix_t J_F (6, robot_->numberDof());
       phi_.jacobianTransposeTimes (phi_.value () * primal_, JT_phi_F);
@@ -185,7 +186,7 @@ namespace hpp {
       // Try to find a positive solution
       using qpOASES::SUCCESSFUL_RETURN;
 
-      H_ = phi_.value ().transpose () * phi_.value();
+      H_ = phi_.value().transpose () * phi_.value();
       G_ = phi_.value().transpose () * Gravity;
 
       qpOASES::int_t nwsr = nWSR;

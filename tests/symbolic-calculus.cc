@@ -23,11 +23,6 @@
 
 #include <Eigen/Geometry>
 
-#include <hpp/model/device.hh>
-#include <hpp/model/joint.hh>
-#include <hpp/model/configuration.hh>
-#include <hpp/model/object-factory.hh>
-
 #include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>
 
