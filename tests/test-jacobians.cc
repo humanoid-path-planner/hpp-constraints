@@ -374,7 +374,9 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   // functions.push_back (DFptr (stack2->name (), stack2));
   //*/
 
-  ConfigurationPtr_t q1, q2 (new Configuration_t(device->currentConfiguration()));
+  std::vector<ConfigurationPtr_t> cfgs (NUMBER_JACOBIAN_CALCULUS);
+  for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) cfgs[i] = cs.shoot();
+  Configuration_t q1(device->currentConfiguration());
   vector_t value1, value2, dvalue, error;
   vector_t errorNorm (MAX_NB_ERROR);
   vector_t dq (device->numberDof ()); dq.setZero ();
@@ -389,15 +391,15 @@ BOOST_AUTO_TEST_CASE (jacobian) {
     fdCentral.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
 
     for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) {
-      q1 = cs.shoot ();
-      f (value1, *q1);
+      q1 = *cfgs[i];
+      f (value1, q1);
       jacobian.setZero ();
-      f.jacobian (jacobian, *q1);
+      f.jacobian (jacobian, q1);
 
       const value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon());
 
-      // fdForward.setZero(); f.finiteDifferenceForward(fdForward, *q1, device, eps);
-      fdCentral.setZero(); f.finiteDifferenceCentral(fdCentral, *q1, device, eps);
+      // fdForward.setZero(); f.finiteDifferenceForward(fdForward, q1, device, eps);
+      fdCentral.setZero(); f.finiteDifferenceCentral(fdCentral, q1, device, eps);
 
       // Forward: check the error
       // errorJacobian = jacobian - fdForward;
@@ -443,7 +445,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   BasicConfigurationShooter cs (device);
 
   /// Create the constraints
-  typedef DifferentiableFunction DF;
   typedef DifferentiableFunctionPtr_t DFptr;
   DFptr pos = Position::create ("Position", device, ee1, MId, MId);
   Traits<PointInJoint>::Ptr_t pij  = PointInJoint::create (ee1, vector3_t(0,0,0));
@@ -490,7 +491,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   BasicConfigurationShooter cs (device);
 
   /// Create the constraints
-  typedef DifferentiableFunction DF;
   typedef DifferentiableFunctionPtr_t DFptr;
   DFptr trans = Transformation::create ("Transform", device, ee1, MId);
   Traits<JointFrame>::Ptr_t jf  = JointFrame::create (ee1);
