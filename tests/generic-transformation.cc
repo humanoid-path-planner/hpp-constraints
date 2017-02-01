@@ -39,8 +39,6 @@ using hpp::pinocchio::Transform3f;
 
 using namespace hpp::constraints;
 
-static matrix3_t identity () { matrix3_t R; R.setIdentity (); return R;}
-
 class BasicConfigurationShooter
 {
 public:
