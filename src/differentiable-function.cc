@@ -21,6 +21,7 @@
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/liegroup.hh>
 
 namespace hpp {
   namespace constraints {
@@ -68,11 +69,12 @@ namespace hpp {
         template <bool forward>
         inline void integrate (const vector_t& x, const vector_t& h, const size_type& /*i*/, vector_t& result) const
         {
+          using hpp::pinocchio::LieGroupTpl;
           // Use only the joint corresponding to velocity index i
           if (forward)
-            hpp::pinocchio::integrate<false> (robot, x,  h, result);
+            hpp::pinocchio::integrate<false, LieGroupTpl> (robot, x,  h, result);
           else
-            hpp::pinocchio::integrate<false> (robot, x, -h, result);
+            hpp::pinocchio::integrate<false, LieGroupTpl> (robot, x, -h, result);
         }
 
         inline value_type difference (const vector_t& x0, const vector_t& x1, const size_type& i) const
