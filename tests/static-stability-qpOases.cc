@@ -327,7 +327,7 @@ REFER_NAMESPACE_QPOASES returnValue solve (DevicePtr_t& device,
         solution.data());
   // qp.printProperties ();
   // qp.printOptions ();
-  // BOOST_MESSAGE ("G:\n" << gmap);
+  // BOOST_TEST_MESSAGE ("G:\n" << gmap);
   std::cout << "A:\n" << A << "\n";
   qp.getPrimalSolution (solution.data());
   qp.getDualSolution (dual.data());
@@ -381,42 +381,42 @@ BOOST_AUTO_TEST_CASE (static_stability_phi) {
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, center, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << center.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << center.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, c67, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << c67.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << c67.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, point2, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << point2.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << point2.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, point3, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << point3.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << point3.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 }
 
 BOOST_AUTO_TEST_CASE (static_stability_jacobian) {
@@ -459,40 +459,40 @@ BOOST_AUTO_TEST_CASE (static_stability_jacobian) {
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, center, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << center.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << center.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, c67, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << c67.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << c67.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, point2, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << point2.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << point2.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 
   BOOST_CHECK_MESSAGE (REFER_NAMESPACE_QPOASES SUCCESSFUL_RETURN ==
       solve (device, point3, nbC, f, qp, solution, dual),
       "QP problem could not be solved");
-  BOOST_MESSAGE ("Configuration : " << point3.transpose());
-  BOOST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
-  BOOST_MESSAGE ("QP solution is: " << solution.transpose());
-  BOOST_MESSAGE ("QP dual sol is: " << dual.transpose());
-  BOOST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
-  BOOST_MESSAGE ("QP obj is: " << qp.getObjVal ());
+  BOOST_TEST_MESSAGE ("Configuration : " << point3.transpose());
+  BOOST_TEST_MESSAGE ("COM position  : " << device->positionCenterOfMass ());
+  BOOST_TEST_MESSAGE ("QP solution is: " << solution.transpose());
+  BOOST_TEST_MESSAGE ("QP dual sol is: " << dual.transpose());
+  BOOST_TEST_MESSAGE ("Error is:       " << (f.phi().value() * solution + StaticStability::Gravity).transpose());
+  BOOST_TEST_MESSAGE ("QP obj is: " << qp.getObjVal ());
 }
