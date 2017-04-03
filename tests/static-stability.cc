@@ -310,10 +310,10 @@ BOOST_AUTO_TEST_CASE (static_stability) {
   c << 1, 0, 0;
   device->currentConfiguration (c);
   device->computeForwardKinematics ();
-  // BOOST_MESSAGE ("\"rot\" initial transform:\n" << rot->currentTransformation ());
-  // BOOST_MESSAGE ("\"rot\" current transform:\n" << rot->currentTransformation ());
-  // BOOST_MESSAGE ("\"slider\" initial transform:\n" << slider->currentTransformation ());
-  // BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
+  // BOOST_TEST_MESSAGE ("\"rot\" initial transform:\n" << rot->currentTransformation ());
+  // BOOST_TEST_MESSAGE ("\"rot\" current transform:\n" << rot->currentTransformation ());
+  // BOOST_TEST_MESSAGE ("\"slider\" initial transform:\n" << slider->currentTransformation ());
+  // BOOST_TEST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
 
   BOOST_CHECK_MESSAGE (slider->currentTransformation ().isIdentity (),
       "This transform shoud be identity:\n" << slider->currentTransformation ());
@@ -336,9 +336,9 @@ BOOST_AUTO_TEST_CASE (static_stability) {
   valid.push_back ((Configuration_t (3) << 1,0,-1).finished ());
   for (std::list<Configuration_t>::const_iterator it = valid.begin();
       it != valid.end (); ++it) {
-    BOOST_MESSAGE ("Config " << it->transpose ());
+    BOOST_TEST_MESSAGE ("Config " << it->transpose ());
     f (value, *it);
-    BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
+    BOOST_TEST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
     BOOST_CHECK_MESSAGE (value.segment<6> (nbC).isZero (),
         "(I - phi * phi^+) * G =\n" << value.segment<6> (nbC).transpose());
     BOOST_CHECK_MESSAGE ((value.segment<nbCH> (0).array () > -Eigen::NumTraits<value_type>::dummy_precision()).all(),
@@ -350,15 +350,15 @@ BOOST_AUTO_TEST_CASE (static_stability) {
         "Contact forces =\n" << valueH.segment<nbCH> (0).transpose());
   }
 
-  BOOST_MESSAGE ("Starting invalid");
+  BOOST_TEST_MESSAGE ("Starting invalid");
   invalid.push_back ((Configuration_t (3) << 0,1,0.5).finished ());
   invalid.push_back ((Configuration_t (3) << 1,0,2.5).finished ());
   invalid.push_back ((Configuration_t (3) << 1,0,-1.5).finished ());
   for (std::list<Configuration_t>::const_iterator it = invalid.begin();
       it != invalid.end (); ++it) {
-    BOOST_MESSAGE ("Config " << it->transpose ());
+    BOOST_TEST_MESSAGE ("Config " << it->transpose ());
     f (value, *it);
-    BOOST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
+    BOOST_TEST_MESSAGE ("\"slider\" current transform:\n" << slider->currentTransformation ());
     BOOST_CHECK_MESSAGE (!value.segment<6> (nbC).isZero ()
         || (value.segment<nbC> (0).array () < - Eigen::NumTraits<value_type>::dummy_precision()).any(),
         "Should not be stable:\n"
