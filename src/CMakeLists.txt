@@ -26,6 +26,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   convex-shape-contact.cc
   static-stability.cc
   qp-static-stability.cc
+  iterative-solver.cc
   )
   # position.cc
   # orientation.cc
@@ -35,7 +36,10 @@ ADD_LIBRARY(${LIBRARY_NAME}
   # relative-transformation.cc
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-pinocchio)
-PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} qpOASES)
+PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-statistics)
+IF (${USE_QPOASES})
+  PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} qpOASES)
+ENDIF (${USE_QPOASES})
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)
 

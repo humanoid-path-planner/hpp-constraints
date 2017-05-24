@@ -33,6 +33,7 @@ set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
   include/hpp/constraints/differentiable-function-stack.hh
+  include/hpp/constraints/active-set-differentiable-function.hh
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
@@ -52,6 +53,8 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/relative-position.hh
   include/hpp/constraints/relative-transformation.hh
   include/hpp/constraints/configuration-constraint.hh
+  include/hpp/constraints/solver.hh
+  include/hpp/constraints/iterative-solver.hh
 )
 
 SET(${PROJECT_NAME}_OLDHEADERS
@@ -111,7 +114,8 @@ SETUP_PROJECT()
 SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
 SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")
-if (${USE_QPOASES})
+ADD_REQUIRED_DEPENDENCY("hpp-statistics")
+IF (${USE_QPOASES})
   ADD_REQUIRED_DEPENDENCY("qpOASES >= 3.2")
 ENDIF ()
 

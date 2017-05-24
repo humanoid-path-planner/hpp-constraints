@@ -49,6 +49,9 @@ namespace hpp {
     typedef Eigen::Matrix <value_type, 5, 1> vector5_t;
     typedef Eigen::Matrix <value_type, 6, 1> vector6_t;
 
+    typedef std::pair<size_type, size_type> interval_t;
+    typedef std::vector < interval_t > intervals_t;
+
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
     HPP_PREDEF_CLASS (RelativeCom);
