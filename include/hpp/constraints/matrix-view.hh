@@ -42,7 +42,74 @@ namespace Eigen {
         MaxColsAtCompileTime = ArgType::MaxColsAtCompileTime
       };
     };
+
+      template <bool row> struct return_first {
+        template <typename First, typename Second>
+        static inline First run (First f, Second) { return f; }
+      };
+      template <> struct return_first <false> {
+        template <typename First, typename Second>
+        static inline Second run (First, Second s) { return s; }
+      };
+
   } // namespace internal
+
+  template <int _Rows, int _Cols, bool _allRows, bool _allCols>
+  class MatrixIndexes
+  {
+    public:
+      typedef MatrixXd::Index Index;
+      typedef std::vector<Index> Indexes_t;
+      struct empty_struct {
+        empty_struct (const Index&) {}
+        empty_struct (const Indexes_t&) {}
+        static inline Index size() { return 0; }
+        inline Index operator[](const Index&) const { return 0; }
+      };
+      typedef typename internal::conditional<_allRows, empty_struct, Indexes_t>::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, empty_struct, Indexes_t>::type ColIndexes_t;
+
+      template <typename Derived> struct View {
+        typedef MatrixView<Derived, _Rows, _Cols, _allRows, _allCols> type;
+      };
+
+      MatrixIndexes () : m_rows(), m_cols() {}
+
+      MatrixIndexes (const Index& rows, const Index& cols)
+        : m_rows(rows), m_cols(cols)
+      {
+        // for (Index i = 0; i < m_rows.size(); ++i) m_rows[i] = i;
+        // for (Index i = 0; i < m_cols.size(); ++i) m_cols[i] = i;
+      }
+
+      MatrixIndexes (const Index& size)
+        : m_rows(size), m_cols(size)
+      {
+        // for (Index i = 0; i < indexes().size(); ++i) indexes()[i] = i;
+      }
+
+      MatrixIndexes (const Indexes_t& rows, const Indexes_t& cols)
+        : m_rows(rows), m_cols(cols) {}
+
+      /// Valid only when _allRows or _allCols is true
+      MatrixIndexes (const Indexes_t& indexes)
+        : m_rows(indexes), m_cols(indexes)
+      {}
+      
+      template <typename Derived>
+      EIGEN_STRONG_INLINE typename View<Derived>::type view(MatrixBase<Derived>& other) const {
+        return View<Derived>::type (other.derived(), m_rows, m_cols);
+      }
+
+      inline const Indexes_t& indexes() const
+      {
+        EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
+        return internal::return_first<_allRows>::run(m_rows, m_cols);
+      }
+
+      RowIndexes_t m_rows;
+      ColIndexes_t m_cols;
+  };
 
   template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
   class MatrixView : public MatrixBase< MatrixView<ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -54,17 +121,13 @@ namespace Eigen {
       typedef Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime> PlainObject;
       // typedef typename internal::ref_selector<MatrixView>::type Nested; 
       typedef typename internal::ref_selector<ArgType>::type ArgTypeNested;
-      typedef std::vector<Index> Indexes_t;
       // typedef typename Base::CoeffReturnType CoeffReturnType;
       // typedef typename Base::Scalar Scalar;
 
-      struct empty_struct {
-        empty_struct (const Indexes_t&) {}
-        static inline Index size() { return 0; }
-        inline Index operator[](const Index&) const { return 0; }
-      };
-      typedef typename internal::conditional<_allRows, empty_struct, Indexes_t>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, empty_struct, Indexes_t>::type ColIndexes_t;
+      typedef MatrixIndexes<_Rows, _Cols, _allRows, _allCols> MatrixIndexes_t;
+      typedef typename MatrixIndexes_t::Indexes_t Indexes_t;
+      typedef typename MatrixIndexes_t::RowIndexes_t RowIndexes_t;
+      typedef typename MatrixIndexes_t::ColIndexes_t ColIndexes_t;
 
       using Base::operator=;
 
@@ -94,9 +157,10 @@ namespace Eigen {
 
       ArgType& m_arg;
       // Indexes_t m_rows, m_cols;
-      RowIndexes_t m_rows;
-      ColIndexes_t m_cols;
+      const RowIndexes_t& m_rows;
+      const ColIndexes_t& m_cols;
   };
+
   // Eigen 3.3.3
   /*
   namespace internal {
