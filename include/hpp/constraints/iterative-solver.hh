@@ -58,6 +58,9 @@ namespace hpp {
 
         void update ();
 
+        /// Set the velocity variable that must be changed.
+        /// The other variables will be left unchanged by the iterative
+        /// algorithm.
         void reduction (const intervals_t intervals)
         {
           reduction_ = intervals;
@@ -99,6 +102,30 @@ namespace hpp {
           return squaredNorm_;
         }
 
+        void lastIsOptional (bool optional)
+        {
+          lastIsOptional_ = optional;
+        }
+
+        bool lastIsOptional () const
+        {
+          return lastIsOptional_;
+        }
+
+        /// Compute a right hand side using the input arg.
+        /// This does not set the right hand side.
+        /// To set the right hand side using this function, one must call
+        /// rightHandSide (rightHandSideFromArgument (arg))
+        vector_t rightHandSideFromInput (vectorIn_t arg) const;
+
+        /// Set the level set parameter.
+        /// \param rhs the level set parameter.
+        void rightHandSide (const vector_t& rhs);
+
+        /// Get the level set parameter.
+        /// \return the parameter.
+        vector_t rightHandSide () const;
+
       protected:
         typedef Eigen::JacobiSVD <matrix_t> SVD_t;
 
@@ -123,6 +150,7 @@ namespace hpp {
         size_type maxIterations_;
 
         std::vector<DifferentiableFunctionStack> stacks_;
+        size_type dimension_;
         bool lastIsOptional_;
         intervals_t reduction_;
         Integration_t integrate_;

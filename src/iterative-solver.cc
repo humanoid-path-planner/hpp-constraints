@@ -38,6 +38,7 @@ namespace hpp {
     HierarchicalIterativeSolver::HierarchicalIterativeSolver()
       : Solver (Solver::Iterative),
       stacks_ (),
+      dimension_ (0),
       lastIsOptional_ (false),
       datas_(),
       statistics_ ("HierarchicalIterativeSolver")
@@ -54,8 +55,10 @@ namespace hpp {
           _int != reduction_.end (); ++_int)
         reducedSize += _int->second;
 
+      dimension_ = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
+        dimension_ += f.outputSize();
         datas_[i].value        .resize(f.outputSize());
         datas_[i].rightHandSide.resize(f.outputSize());
         datas_[i].rightHandSide.setZero();
@@ -125,6 +128,43 @@ namespace hpp {
       hppDout (info, "After projection: " << arg.transpose ());
       assert (!arg.hasNaN());
       return true;
+    }
+
+    vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg) const
+    {
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        const DifferentiableFunctionStack& f = stacks_[i];
+        Data& d = datas_[i];
+        f.value (d.rightHandSide, arg);
+      }
+      return rightHandSide();
+    }
+
+    void HierarchicalIterativeSolver::rightHandSide (const vector_t& rhs)
+    {
+      assert (rhs.size() == dimension_);
+      size_type row = 0;
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        const DifferentiableFunctionStack& f = stacks_[i];
+        Data& d = datas_[i];
+        d.rightHandSide = rhs.segment (row, d.rightHandSide.size());
+        row += d.rightHandSide.size();
+      }
+      assert (row == dimension_);
+    }
+
+    vector_t HierarchicalIterativeSolver::rightHandSide () const
+    {
+      vector_t rhs(dimension_);
+      size_type row = 0;
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        const DifferentiableFunctionStack& f = stacks_[i];
+        const Data& d = datas_[i];
+        rhs.segment(row, d.rightHandSide.size()) = d.rightHandSide;
+        row += d.rightHandSide.size();
+      }
+      assert (row == dimension_);
+      return rhs;
     }
 
     void HierarchicalIterativeSolver::computeValueAndJacobian (vectorIn_t arg, const std::size_t priority) const
