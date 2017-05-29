@@ -68,3 +68,36 @@ BOOST_AUTO_TEST_CASE(matrix_view)
   std::cout << m << '\n' << std::endl;
 }
 
+BOOST_AUTO_TEST_CASE(matrix_block_view)
+{
+  typedef MatrixBlockView<const MatrixXd, Dynamic, Dynamic, false, false> MatrixXdConstView;
+  typedef MatrixBlockView<MatrixXd, Dynamic, 0, false, true> MatrixRowView;
+  typedef MatrixBlockView<VectorXd, Dynamic, 0, false, true> VectorView;
+
+  // EIGEN_STATIC_ASSERT_LVALUE(MatrixRowView)
+
+  typedef MatrixBlockIndexes<false, true> RowsIndexes;
+  typedef MatrixBlockIndexes<true, false> ColsIndexes;
+  typedef MatrixBlockIndexes<true, false> Indexes;
+
+  MatrixXd m (10, 10);
+  for (MatrixXd::Index i = 0; i < m.rows(); ++i)
+    for (MatrixXd::Index j = 0; j < m.cols(); ++j)
+      m(i, j) = MatrixXd::Scalar(m.cols() * i + j);
+  std::cout << m << '\n' << std::endl;
+
+  RowsIndexes rows;
+  rows.addRow(2, 2);
+  rows.addRow(6, 4);
+
+  ColsIndexes cols;
+  cols.addCol(2, 2);
+  cols.addCol(6, 4);
+
+  MatrixXd res;
+  rows.view<Dynamic, Dynamic>(m).writeTo(res);
+  std::cout << res << std::endl;
+
+  rows.view<Dynamic, Dynamic>(m).setZero();
+  std::cout << m << std::endl;
+}
