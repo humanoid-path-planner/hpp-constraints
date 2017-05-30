@@ -377,12 +377,12 @@ namespace Eigen {
 
       typedef MatrixBlockIndexes<_allRows, _allCols> MatrixIndexes_t;
       typedef typename MatrixIndexes_t::BlockIndexes_t Indexes_t;
-      typedef typename MatrixIndexes_t::RowIndexes_t RowIndexes_t;
-      typedef typename MatrixIndexes_t::ColIndexes_t ColIndexes_t;
+      typedef typename internal::conditional<_allRows, const typename MatrixIndexes_t::empty_struct, const Indexes_t& >::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, const typename MatrixIndexes_t::empty_struct, const Indexes_t& >::type ColIndexes_t;
 
       // using Base::operator=;
 
-      MatrixBlockView (ArgType& arg, const Index& nbRows, const RowIndexes_t& rows, const Index& nbCols, const ColIndexes_t& cols)
+      MatrixBlockView (ArgType& arg, const Index& nbRows, const RowIndexes_t rows, const Index& nbCols, const ColIndexes_t cols)
         : m_arg (arg), m_nbRows(nbRows), m_rows(rows), m_nbCols(nbCols), m_cols(cols) {}
 
       /// Valid only when _allRows or _allCols is true
@@ -427,9 +427,10 @@ namespace Eigen {
       }
 
       ArgType& m_arg;
-      Index m_nbRows, m_nbCols;
-      const RowIndexes_t& m_rows;
-      const ColIndexes_t& m_cols;
+      Index m_nbRows;
+      RowIndexes_t m_rows;
+      Index m_nbCols;
+      ColIndexes_t m_cols;
   };
 
   // Eigen 3.3.3

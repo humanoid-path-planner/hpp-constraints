@@ -65,6 +65,10 @@ BOOST_AUTO_TEST_CASE(one_layer)
   solver.update();
 
   BOOST_CHECK(solver.solve(q));
-  BOOST_CHECK(solver.solve(qrand));
+
+  Configuration_t tmp = qrand;
+  BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(qrand), HierarchicalIterativeSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<lineSearch::ErrorNormBased>(qrand), HierarchicalIterativeSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<lineSearch::FixedSequence >(qrand), HierarchicalIterativeSolver::SUCCESS);
 }
 

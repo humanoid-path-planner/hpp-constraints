@@ -25,14 +25,62 @@
 #include <hpp/constraints/config.hh>
 
 #include <hpp/constraints/matrix-view.hh>
-#include <hpp/constraints/solver.hh>
 #include <hpp/constraints/differentiable-function-stack.hh>
 
 namespace hpp {
   namespace constraints {
-    class HPP_CONSTRAINTS_DLLAPI HierarchicalIterativeSolver : public Solver
+    namespace lineSearch {
+      /// Implements the backtracking line search algorithm
+      /// See https://en.wikipedia.org/wiki/Backtracking_line_search
+      struct Backtracking {
+        Backtracking ();
+
+        template <typename SolverType>
+        inline bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+
+        template <typename SolverType>
+        inline value_type computeLocalSlope(const SolverType& solver) const;
+
+        const value_type c, tau, smallAlpha; // 0.8 ^ 7 = 0.209, 0.8 ^ 8 = 0.1677
+        mutable vector_t arg_darg;
+      };
+
+      /// The step size is computed using the recursion:
+      /// \f[ alpha <- alpha - K * (alphaMax - alpha) \f]
+      struct FixedSequence {
+        FixedSequence();
+
+        template <typename SolverType>
+        inline bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+
+        value_type alpha;
+        const value_type alphaMax, K;
+      };
+
+      /// The step size is computed using the formula
+      /// \f[ const value_type alpha = C - K * std::tanh(a * r + b) \f]
+      struct ErrorNormBased {
+        enum { N = 4, M = 8 };
+
+        ErrorNormBased(value_type alphaMin = 0.2,
+            value_type _a = 4 / (std::pow(10, (int)M) - std::pow(10, (int)N)),
+            value_type _b = 2 - 4 / (1 - std::pow (10, (int)(N - M))));
+
+        template <typename SolverType>
+        inline bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+
+        const value_type C, K, a, b;
+      };
+    }
+
+    class HPP_CONSTRAINTS_DLLAPI HierarchicalIterativeSolver
     {
       public:
+        enum Status {
+          ERROR_INCREASED,
+          MAX_ITERATION_REACHED,
+          SUCCESS
+        };
         /// This function integrates velocity during unit time, from argument.
         /// It should be robust to cases where from and result points to the
         /// same vector in memory (aliasing)
@@ -70,12 +118,24 @@ namespace hpp {
           update ();
         }
 
-        bool solve (vectorOut_t arg) const;
+        template <typename LineSearchType>
+        Status solve (vectorOut_t arg) const;
+
+        Status solve (vectorOut_t arg) const
+        {
+          return solve<lineSearch::FixedSequence> (arg);
+        }
 
         /// Set the integration function
         void integration (const Integration_t& integrate)
         {
           integrate_ = integrate;
+        }
+
+        /// Get the integration function
+        const Integration_t& integration () const
+        {
+          return integrate_;
         }
 
         /// Set maximal number of iterations
@@ -94,10 +154,15 @@ namespace hpp {
         {
           squaredErrorThreshold_ = threshold * threshold;
         }
-        /// Get errorimal number of threshold in config projector
+        /// Get error threshold
         value_type errorThreshold () const
         {
           return sqrt (squaredErrorThreshold_);
+        }
+        /// Get error threshold
+        value_type squaredErrorThreshold () const
+        {
+          return squaredErrorThreshold_;
         }
 
         value_type residualError() const
@@ -143,10 +208,9 @@ namespace hpp {
           matrix_t PK;
         };
 
-        void computeValueAndJacobian (vectorIn_t arg) const;
-        void computeValueAndJacobian (vectorIn_t arg, const std::size_t priority) const;
+        template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
         void computeError () const;
-        void computeIncrement (const value_type& alpha) const;
+        void computeDescentDirection () const;
         void expandDqSmall () const;
 
         value_type squaredErrorThreshold_;
@@ -164,8 +228,12 @@ namespace hpp {
         mutable std::vector<Data> datas_;
 
         mutable ::hpp::statistics::SuccessStatistics statistics_;
+
+        friend struct lineSearch::Backtracking;
     }; // class IterativeSolver
   } // namespace constraints
 } // namespace hpp
+
+#include <hpp/constraints/impl/iterative-solver.hh>
 
 #endif // HPP_CONSTRAINTS_ITERATIVE_SOLVER_HH

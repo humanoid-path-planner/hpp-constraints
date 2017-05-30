@@ -28,16 +28,8 @@
 
 namespace hpp {
   namespace constraints {
-    namespace {
-      HPP_DEFINE_TIMECOUNTER (iterative_solver);
-    }
-
-    HPP_DEFINE_REASON_FAILURE (REASON_MAX_ITER, "Max Iterations reached");
-    HPP_DEFINE_REASON_FAILURE (REASON_ERROR_INCREASED, "Error increased");
-
     HierarchicalIterativeSolver::HierarchicalIterativeSolver()
-      : Solver (Solver::Iterative),
-      stacks_ (),
+      : stacks_ (),
       dimension_ (0),
       lastIsOptional_ (false),
       reduction_ (),
@@ -61,7 +53,7 @@ namespace hpp {
         datas_[i].rightHandSide.resize(f.outputSize());
         datas_[i].rightHandSide.setZero();
 
-        assert(nDofs == f.inputDerivativeSize());
+        assert((size_type)nDofs == f.inputDerivativeSize());
         datas_[i].jacobian.resize(f.outputDerivativeSize(), f.inputDerivativeSize());
         datas_[i].jacobian.setZero();
         datas_[i].reducedJ.resize(f.outputDerivativeSize(), reducedSize);
@@ -74,58 +66,6 @@ namespace hpp {
       dq_.resize(nDofs);
       dqSmall_.resize(reducedSize);
       projector_.resize(reducedSize, reducedSize);
-    }
-
-    bool HierarchicalIterativeSolver::solve (vectorOut_t arg) const
-    {
-      hppDout (info, "before projection: " << arg.transpose ());
-      assert (!arg.hasNaN());
-      HPP_START_TIMECOUNTER (iterative_solver);
-
-      value_type alpha = .2;
-      value_type alphaMax = .95;
-      size_type errorDecreased = 3, iter = 0;
-      value_type previousSquaredNorm =
-	std::numeric_limits<value_type>::infinity();
-
-      // Fill value and Jacobian
-      computeValueAndJacobian (arg);
-      computeError();
-
-      while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
-	     iter < maxIterations_) {
-
-        computeIncrement (alpha);
-        integrate_(arg, dq_, arg);
-
-	// Increase alpha towards alphaMax
-	computeValueAndJacobian (arg);
-	alpha = alphaMax - .8*(alphaMax - alpha);
-        computeError ();
-	hppDout (info, "squareNorm = " << squaredNorm_);
-	--errorDecreased;
-	if (squaredNorm_ < previousSquaredNorm) errorDecreased = 3;
-	previousSquaredNorm = squaredNorm_;
-	++iter;
-
-      }
-
-      if (squaredNorm_ > squaredErrorThreshold_) {
-        statistics_.addFailure ((!errorDecreased)?REASON_ERROR_INCREASED:REASON_MAX_ITER);
-        statistics_.isLowRatio (true);
-      } else {
-        statistics_.addSuccess();
-      }
-      HPP_STOP_TIMECOUNTER (iterative_solver);
-      HPP_DISPLAY_TIMECOUNTER (iterative_solver);
-      hppDout (info, "number of iterations: " << iter);
-      if (squaredNorm_ > squaredErrorThreshold_) {
-	hppDout (info, "Projection failed.");
-	return false;
-      }
-      hppDout (info, "After projection: " << arg.transpose ());
-      assert (!arg.hasNaN());
-      return true;
     }
 
     vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg) const
@@ -163,29 +103,7 @@ namespace hpp {
       return rhs;
     }
 
-    void HierarchicalIterativeSolver::computeValueAndJacobian (vectorIn_t arg, const std::size_t priority) const
-    {
-      assert(priority < stacks_.size());
-      const DifferentiableFunctionStack& f = stacks_[priority];
-      Data& d = datas_[priority];
-
-      f.value   (d.value, arg);
-      f.jacobian(d.jacobian, arg);
-      // TODO (*(*it)->comparisonType ()) (v, jacobian);
-      d.error = d.value - d.rightHandSide;
-
-      // Copy columns that are not reduced
-      reduction_.view (d.jacobian).writeTo(d.reducedJ);
-    }
-
-    inline void HierarchicalIterativeSolver::computeValueAndJacobian (vectorIn_t arg) const
-    {
-      for (std::size_t i = 0; i < stacks_.size (); ++i) {
-        computeValueAndJacobian(arg, i);
-      }
-    }
-
-    inline void HierarchicalIterativeSolver::computeError () const
+    void HierarchicalIterativeSolver::computeError () const
     {
       const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
       squaredNorm_ = 0;
@@ -195,7 +113,7 @@ namespace hpp {
       }
     }
 
-    void HierarchicalIterativeSolver::computeIncrement (const value_type& alpha) const
+    void HierarchicalIterativeSolver::computeDescentDirection () const
     {
       if (stacks_.empty()) {
         dq_.setZero();
@@ -205,7 +123,7 @@ namespace hpp {
         Data& d = datas_[0];
         d.svd.compute (d.reducedJ);
         HPP_DEBUG_SVDCHECK (d.svd);
-        dqSmall_ = d.svd.solve (- alpha * d.error);
+        dqSmall_ = d.svd.solve (- d.error);
       } else {
         projector_.setIdentity();
         vector_t err;
@@ -219,7 +137,7 @@ namespace hpp {
           /// projector is of size numberDof
           bool first = (i == 0);
           bool last = (i == stacks_.size() - 1);
-          err = - alpha * d.error;
+          err = - d.error;
           if (first) {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);
