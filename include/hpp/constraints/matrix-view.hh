@@ -14,6 +14,9 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef HPP_CONSTRAINTS_MATRIX_VIEW_HH
+#define HPP_CONSTRAINTS_MATRIX_VIEW_HH
+
 #include <Eigen/Core>
 #include <vector>
 
@@ -280,13 +283,23 @@ namespace Eigen {
     };
   } // namespace internal
 
+  template <typename IndexType>
+  struct BlockIndex {
+    typedef IndexType Index;
+    typedef std::pair<Index, Index> type;
+    typedef std::vector<type> vector_t;
+
+    static bool overlap (const type& a, const type& b);
+    static vector_t difference (const type& a, const type& b);
+  };
+
   template <bool _allRows, bool _allCols>
   class MatrixBlockIndexes
   {
     public:
       typedef MatrixXd::Index Index;
-      typedef std::pair<Index, Index> BlockIndex;
-      typedef std::vector<BlockIndex> BlockIndexes_t;
+      typedef BlockIndex<Index>::type     BlockIndex_t;
+      typedef BlockIndex<Index>::vector_t BlockIndexes_t;
       struct empty_struct {
         empty_struct () {}
         empty_struct (const BlockIndexes_t&) {}
@@ -327,13 +340,13 @@ namespace Eigen {
 
       inline void addRow (const Index& row, const Index size)
       {
-        m_rows.push_back(BlockIndex(row, size));
+        m_rows.push_back(BlockIndex_t(row, size));
         m_nbRows += size;
       }
 
       inline void addCol (const Index& col, const Index size)
       {
-        m_cols.push_back(BlockIndex(col, size));
+        m_cols.push_back(BlockIndex_t(col, size));
         m_nbCols += size;
       }
 
@@ -361,6 +374,8 @@ namespace Eigen {
       RowIndexes_t m_rows;
       ColIndexes_t m_cols;
   };
+
+  typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
 
   template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
   class MatrixBlockView : public MatrixBase< MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -420,6 +435,12 @@ namespace Eigen {
         evalTo(dst.derived());
       }
 
+      EIGEN_STRONG_INLINE PlainObject eval () {
+        PlainObject dst;
+        writeTo(dst);
+        return dst;
+      }
+
       template <typename OtherDerived>
       EIGEN_STRONG_INLINE MatrixBlockView& operator= (const EigenBase<OtherDerived>& other) {
         internal::evalRows<const OtherDerived, MatrixBlockView, _allRows, _allCols>::write(other.derived(), *this);
@@ -462,3 +483,7 @@ namespace Eigen {
   }
   */
 } // namespace Eigen
+
+#include <hpp/constraints/impl/matrix-view.hh>
+
+#endif // HPP_CONSTRAINTS_MATRIX_VIEW_HH

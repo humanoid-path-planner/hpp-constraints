@@ -26,6 +26,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   convex-shape-contact.cc
   static-stability.cc
   qp-static-stability.cc
+  explicit-solver.cc
   iterative-solver.cc
   )
   # position.cc

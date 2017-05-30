@@ -23,6 +23,30 @@
 
 using namespace Eigen;
 
+BOOST_AUTO_TEST_CASE(block_index)
+{
+  typedef BlockIndex<MatrixXd::Index> BlockIndex_t;
+  BlockIndex_t::type
+    a ( 0, 1),
+    b ( 1, 2),
+    c ( 0, 0),
+    d ( 0, 2);
+
+  BOOST_CHECK(!BlockIndex_t::overlap (a, b));
+  BOOST_CHECK(!BlockIndex_t::overlap (a, c));
+  BOOST_CHECK(!BlockIndex_t::overlap (c, b));
+  BOOST_CHECK( BlockIndex_t::overlap (a, a));
+  BOOST_CHECK( BlockIndex_t::overlap (a, d));
+  BOOST_CHECK( BlockIndex_t::overlap (b, d));
+
+  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, b).size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, c).size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex_t::difference (c, b).size(), 0);
+  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, a).size(), 0);
+  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, d).size(), 0);
+  BOOST_CHECK_EQUAL(BlockIndex_t::difference (b, d).size(), 1);
+}
+
 BOOST_AUTO_TEST_CASE(matrix_view)
 {
   typedef MatrixView<const MatrixXd, Dynamic, Dynamic, false, false> MatrixXdConstView;
