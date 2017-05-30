@@ -187,7 +187,7 @@ namespace Eigen {
       {
         std::size_t col = 0;
         for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          dst.middleCols(col, src.m_cols[j].second) =
+          dst.derived().middleCols(col, src.m_cols[j].second) =
             src.m_arg.block(row,        src.m_cols[j].first,
                             dst.rows(), src.m_cols[j].second);
           col += src.m_cols[j].second;
@@ -209,7 +209,7 @@ namespace Eigen {
       {
         std::size_t col = 0;
         for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          dst.middleCols(col, src.m_cols[j].second) =
+          dst.derived().middleCols(col, src.m_cols[j].second) =
             src.m_arg.middleCols(src.m_cols[j].first, src.m_cols[j].second);
           col += src.m_cols[j].second;
         }
@@ -219,7 +219,7 @@ namespace Eigen {
         std::size_t col = 0;
         for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
           src.m_arg.middleCols(src.m_cols[j].first, src.m_cols[j].second)
-            = dst.middleCols(col, src.m_cols[j].second);
+            = dst.derived().middleCols(col, src.m_cols[j].second);
           col += src.m_cols[j].second;
         }
       }
@@ -227,7 +227,7 @@ namespace Eigen {
     template <typename Dst, typename Src> struct evalCols<Dst, Src, false, true > {
       static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
       {
-        dst = src.m_arg.middleRows(row, dst.rows());
+        dst.derived() = src.m_arg.middleRows(row, dst.rows());
       }
       static inline void write (Dst& dst, const Src& src, const typename Dst::Index& row)
       {
@@ -249,7 +249,7 @@ namespace Eigen {
     template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalRows {
       static inline void run (Dst& dst, const Src& src)
       {
-        evalCols<Dst, Src, _allRows, _allCols>::run(dst, src);
+        evalCols<Dst, Src, _allRows, _allCols>::run(dst.derived(), src);
       }
       static inline void write (Dst& dst, const Src& src)
       {
@@ -337,12 +337,12 @@ namespace Eigen {
         m_nbCols += size;
       }
 
-      template <int _Rows, int _Cols, typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived, _Rows, _Cols>::type view(MatrixBase<Derived>& other) const {
+      template <typename Derived>
+      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type view(MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
-          return typename View<Derived, _Rows, _Cols>::type (other.derived(), nbIndexes(), indexes());
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndexes(), indexes());
         else
-          return typename View<Derived, _Rows, _Cols>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
       inline const BlockIndexes_t& indexes() const
@@ -417,12 +417,13 @@ namespace Eigen {
       EIGEN_STRONG_INLINE void writeTo (Dest& dst) {
         dst.resize(rows(), cols());
         // dst._resize_to_match(*this);
-        evalTo(dst);
+        evalTo(dst.derived());
       }
 
       template <typename OtherDerived>
       EIGEN_STRONG_INLINE MatrixBlockView& operator= (const EigenBase<OtherDerived>& other) {
         internal::evalRows<const OtherDerived, MatrixBlockView, _allRows, _allCols>::write(other.derived(), *this);
+        return *this;
       }
 
       ArgType& m_arg;

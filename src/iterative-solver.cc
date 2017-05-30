@@ -40,6 +40,7 @@ namespace hpp {
       stacks_ (),
       dimension_ (0),
       lastIsOptional_ (false),
+      reduction_ (),
       datas_(),
       statistics_ ("HierarchicalIterativeSolver")
     {}
@@ -49,11 +50,8 @@ namespace hpp {
       assert(!stacks_.empty());
       // Compute reduced size
       const std::size_t nDofs = stacks_[0].inputDerivativeSize();
-      std::size_t reducedSize = 0;
-      if (reduction_.empty()) reducedSize = nDofs;
-      for (intervals_t::const_iterator _int = reduction_.begin ();
-          _int != reduction_.end (); ++_int)
-        reducedSize += _int->second;
+      if (reduction_.m_nbCols == 0) reduction_.addCol(0, nDofs);
+      std::size_t reducedSize = reduction_.nbIndexes();
 
       dimension_ = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
@@ -80,7 +78,7 @@ namespace hpp {
 
     bool HierarchicalIterativeSolver::solve (vectorOut_t arg) const
     {
-      // hppDout (info, "before projection: " << arg.transpose ());
+      hppDout (info, "before projection: " << arg.transpose ());
       assert (!arg.hasNaN());
       HPP_START_TIMECOUNTER (iterative_solver);
 
@@ -145,7 +143,6 @@ namespace hpp {
       assert (rhs.size() == dimension_);
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
-        const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
         d.rightHandSide = rhs.segment (row, d.rightHandSide.size());
         row += d.rightHandSide.size();
@@ -158,7 +155,6 @@ namespace hpp {
       vector_t rhs(dimension_);
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
-        const DifferentiableFunctionStack& f = stacks_[i];
         const Data& d = datas_[i];
         rhs.segment(row, d.rightHandSide.size()) = d.rightHandSide;
         row += d.rightHandSide.size();
@@ -178,16 +174,8 @@ namespace hpp {
       // TODO (*(*it)->comparisonType ()) (v, jacobian);
       d.error = d.value - d.rightHandSide;
 
-      size_type col = 0;
       // Copy columns that are not reduced
-      for (intervals_t::const_iterator _int = reduction_.begin ();
-          _int != reduction_.end (); ++_int) {
-        size_type col0 = _int->first;
-        size_type nbCols = _int->second;
-        d.reducedJ.middleCols (col, nbCols) =
-          d.jacobian.middleCols (col0, nbCols);
-        col += nbCols;
-      }
+      reduction_.view (d.jacobian).writeTo(d.reducedJ);
     }
 
     inline void HierarchicalIterativeSolver::computeValueAndJacobian (vectorIn_t arg) const
@@ -254,19 +242,7 @@ namespace hpp {
 
     void HierarchicalIterativeSolver::expandDqSmall () const
     {
-      if (reduction_.empty ()) {
-	dq_ = dqSmall_;
-	return;
-      }
-      size_type col = 0;
-      for (intervals_t::const_iterator _int = reduction_.begin ();
-          _int != reduction_.end (); ++_int) {
-	size_type col0 = _int->first;
-	size_type nbCols = _int->second;
-
-	dq_.segment (col0, nbCols) = dqSmall_.segment (col, nbCols);
-	col += nbCols;
-      }
+      Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndexes(), reduction_.indexes()) = dqSmall_;
     }
   } // namespace constraints
 } // namespace hpp

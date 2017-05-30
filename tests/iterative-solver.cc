@@ -31,10 +31,16 @@ using namespace hpp::constraints;
 
 BOOST_AUTO_TEST_CASE(one_layer)
 {
-  DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
   BOOST_REQUIRE (device);
-  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
-             ee2 = device->getJointByName ("rleg5_joint");
+  device->rootJoint()->lowerBound (0, -1);
+  device->rootJoint()->lowerBound (1, -1);
+  device->rootJoint()->lowerBound (2, -1);
+  device->rootJoint()->upperBound (0,  1);
+  device->rootJoint()->upperBound (1,  1);
+  device->rootJoint()->upperBound (2,  1);
+  JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
+             ee2 = device->getJointByName ("RAnkleRoll");
 
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
@@ -44,7 +50,7 @@ BOOST_AUTO_TEST_CASE(one_layer)
   solver.errorThreshold(1e-3);
   solver.integration(boost::bind(hpp::pinocchio::integrate<true, se3::LieGroupTpl>, device, _1, _2, _3));
 
-  device->currentConfiguration (qrand);
+  device->currentConfiguration (q);
   device->computeForwardKinematics ();
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
@@ -54,10 +60,11 @@ BOOST_AUTO_TEST_CASE(one_layer)
 
   DifferentiableFunctionStack& stack = solver.stack(0);
   stack.add(Orientation::create ("Orientation", device, ee2, tf2));
-  stack.add(Position::create    ("Position"   , device, ee2, tf2, tf1));
+  stack.add(Position::create    ("Position"   , device, ee2, tf2));
 
   solver.update();
 
   BOOST_CHECK(solver.solve(q));
+  BOOST_CHECK(solver.solve(qrand));
 }
 

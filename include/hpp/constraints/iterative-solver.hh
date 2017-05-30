@@ -24,6 +24,7 @@
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 
+#include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/solver.hh>
 #include <hpp/constraints/differentiable-function-stack.hh>
 
@@ -63,7 +64,9 @@ namespace hpp {
         /// algorithm.
         void reduction (const intervals_t intervals)
         {
-          reduction_ = intervals;
+          reduction_ = Eigen::MatrixBlockIndexes<true, false>();
+          for (std::size_t i = 0; i < intervals.size(); ++i)
+            reduction_.addCol(intervals[i].first, intervals[i].second);
           update ();
         }
 
@@ -152,7 +155,7 @@ namespace hpp {
         std::vector<DifferentiableFunctionStack> stacks_;
         size_type dimension_;
         bool lastIsOptional_;
-        intervals_t reduction_;
+        Eigen::MatrixBlockIndexes<true, false> reduction_;
         Integration_t integrate_;
 
         mutable vector_t dq_, dqSmall_;
