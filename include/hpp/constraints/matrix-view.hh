@@ -290,8 +290,21 @@ namespace Eigen {
     typedef std::pair<Index, Index> type;
     typedef std::vector<type> vector_t;
 
+    static IndexType cardinal (const vector_t& a);
+
+    static void sort   (vector_t& a);
+    /// Assumes a is sorted
+    static void shrink (vector_t& a);
+
     static bool overlap (const type& a, const type& b);
-    static vector_t difference (const type& a, const type& b);
+    /// The sum is the union
+    static vector_t sum (const type& a, const type& b);
+    /// Assumes b is sorted
+    static vector_t difference (const type    & a, const type    & b);
+    /// Assumes b is sorted
+    static vector_t difference (const vector_t& a, const type    & b);
+    /// Assumes b is sorted
+    static vector_t difference (const type    & a, const vector_t& b);
   };
 
   template <bool _allRows, bool _allCols>
@@ -311,6 +324,18 @@ namespace Eigen {
 
       MatrixBlockIndexes () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
 
+      /// \warning rows and cols must be sorted
+      MatrixBlockIndexes (const BlockIndexes_t& rows, const BlockIndexes_t& cols)
+        : m_nbRows(BlockIndex<Index>::cardinal(rows)), m_nbCols(BlockIndex<Index>::cardinal(rows)), m_rows(rows), m_cols(cols)
+      {}
+
+      /// \warning idx must be sorted and shrinked
+      MatrixBlockIndexes (const BlockIndexes_t& idx)
+        : m_nbRows(_allRows ? 0 : BlockIndex<Index>::cardinal(idx))
+        , m_nbCols(_allCols ? 0 : BlockIndex<Index>::cardinal(idx))
+        , m_rows(idx), m_cols(idx)
+      {}
+
       /*
       MatrixBlockIndexes (const Index& rows, const Index& cols)
         : m_rows(rows), m_cols(cols)
@@ -324,9 +349,6 @@ namespace Eigen {
       {
         // for (Index i = 0; i < indexes().size(); ++i) indexes()[i] = i;
       }
-
-      MatrixBlockIndexes (const Indexes_t& rows, const Indexes_t& cols)
-        : m_rows(rows), m_cols(cols) {}
 
       /// Valid only when _allRows or _allCols is true
       MatrixBlockIndexes (const Indexes_t& indexes)
@@ -344,6 +366,16 @@ namespace Eigen {
       {
         m_cols.push_back(BlockIndex_t(col, size));
         m_nbCols += size;
+      }
+
+      template<bool Sort, bool Shrink, bool Cardinal>
+      inline void updateRows() {
+        update<Sort, Shrink, Cardinal> (m_rows, m_nbRows);
+      }
+
+      template<bool Sort, bool Shrink, bool Cardinal>
+      inline void updateCols() {
+        update<Sort, Shrink, Cardinal> (m_cols, m_nbCols);
       }
 
       template <typename Derived>
@@ -374,9 +406,24 @@ namespace Eigen {
         return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
       }
 
+      template<bool Sort, bool Shrink, bool Cardinal>
+      inline void updateIndexes() {
+        update<Sort, Shrink, Cardinal> (
+            internal::return_first<_allRows>::run(m_cols  , m_rows  ), 
+            internal::return_first<_allRows>::run(m_nbCols, m_nbRows));
+      }
+
       Index m_nbRows, m_nbCols;
       RowIndexes_t m_rows;
       ColIndexes_t m_cols;
+
+    private:
+      template<bool Sort, bool Shrink, bool Cardinal>
+      static inline void update(BlockIndexes_t& b, Index& idx) {
+        if (Sort)     BlockIndex<Index>::sort(b);
+        if (Shrink)   BlockIndex<Index>::shrink(b);
+        if (Cardinal) idx = BlockIndex<Index>::cardinal(b);
+      }
   };
 
   typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
