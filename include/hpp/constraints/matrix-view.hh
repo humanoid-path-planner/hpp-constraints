@@ -55,6 +55,13 @@ namespace Eigen {
         static inline Second& run (First&, Second& s) { return s; }
       };
 
+      struct empty_struct {
+        typedef MatrixXd::Index Index;
+        empty_struct () {}
+        template <typename In_t> empty_struct (In_t) {}
+        static inline Index size() { return 0; }
+        inline Index operator[](const Index&) const { return 0; }
+      };
   } // namespace internal
 
   template <int _Rows, int _Cols, bool _allRows, bool _allCols>
@@ -63,14 +70,8 @@ namespace Eigen {
     public:
       typedef MatrixXd::Index Index;
       typedef std::vector<Index> Indexes_t;
-      struct empty_struct {
-        empty_struct (const Index&) {}
-        empty_struct (const Indexes_t&) {}
-        static inline Index size() { return 0; }
-        inline Index operator[](const Index&) const { return 0; }
-      };
-      typedef typename internal::conditional<_allRows, empty_struct, Indexes_t>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, empty_struct, Indexes_t>::type ColIndexes_t;
+      typedef typename internal::conditional<_allRows, internal::empty_struct, Indexes_t>::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, Indexes_t>::type ColIndexes_t;
 
       template <typename Derived> struct View {
         typedef MatrixView<Derived, _Rows, _Cols, _allRows, _allCols> type;
@@ -300,17 +301,12 @@ namespace Eigen {
       typedef MatrixXd::Index Index;
       typedef BlockIndex<Index>::type     BlockIndex_t;
       typedef BlockIndex<Index>::vector_t BlockIndexes_t;
-      struct empty_struct {
-        empty_struct () {}
-        empty_struct (const BlockIndexes_t&) {}
-        static inline Index size() { return 0; }
-        inline Index operator[](const Index&) const { return 0; }
-      };
-      typedef typename internal::conditional<_allRows, empty_struct, BlockIndexes_t>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, empty_struct, BlockIndexes_t>::type ColIndexes_t;
+      typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexes_t>::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexes_t>::type ColIndexes_t;
 
       template <typename Derived, int _Rows, int _Cols> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
+        typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
       };
 
       MatrixBlockIndexes () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
@@ -358,6 +354,14 @@ namespace Eigen {
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
+      template <typename Derived>
+      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type viewTranspose(MatrixBase<Derived>& other) const {
+        if (_allCols || _allRows)
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndexes(), indexes());
+        else
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
+      }
+
       inline const BlockIndexes_t& indexes() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
@@ -376,6 +380,7 @@ namespace Eigen {
   };
 
   typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
+  typedef Eigen::MatrixBlockIndexes<true, false> ColBlockIndexes;
 
   template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
   class MatrixBlockView : public MatrixBase< MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -392,8 +397,8 @@ namespace Eigen {
 
       typedef MatrixBlockIndexes<_allRows, _allCols> MatrixIndexes_t;
       typedef typename MatrixIndexes_t::BlockIndexes_t Indexes_t;
-      typedef typename internal::conditional<_allRows, const typename MatrixIndexes_t::empty_struct, const Indexes_t& >::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, const typename MatrixIndexes_t::empty_struct, const Indexes_t& >::type ColIndexes_t;
+      typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndexes_t;
 
       // using Base::operator=;
 
