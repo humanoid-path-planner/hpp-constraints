@@ -58,9 +58,8 @@ BOOST_AUTO_TEST_CASE(one_layer)
   solver.addStack();
   BOOST_CHECK(solver.numberStacks() == 1);
 
-  DifferentiableFunctionStack& stack = solver.stack(0);
-  stack.add(Orientation::create ("Orientation", device, ee2, tf2));
-  stack.add(Position::create    ("Position"   , device, ee2, tf2));
+  solver.add(Orientation::create ("Orientation", device, ee2, tf2), 0);
+  solver.add(Position::create    ("Position"   , device, ee2, tf2), 0);
 
   solver.update();
 

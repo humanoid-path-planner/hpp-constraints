@@ -76,8 +76,16 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI HierarchicalIterativeSolver
     {
       public:
+        enum ComparisonType {
+          Equality,
+          EqualToZero,
+          Superior,
+          Inferior
+        };
+
         typedef Eigen::ColBlockIndexes Reduction_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
+        typedef std::vector<ComparisonType> ComparisonTypes_t;
 
         enum Status {
           ERROR_INCREASED,
@@ -91,7 +99,7 @@ namespace hpp {
 
         HierarchicalIterativeSolver ();
 
-        DifferentiableFunctionStack& stack(const std::size_t priority)
+        const DifferentiableFunctionStack& stack(const std::size_t priority)
         {
           assert(priority < stacks_.size());
           return stacks_[priority];
@@ -107,6 +115,13 @@ namespace hpp {
           stacks_.push_back(DifferentiableFunctionStack());
           datas_.push_back(Data());
         }
+
+        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority)
+        {
+          add (f, priority, ComparisonTypes_t(f->outputSize(), EqualToZero));
+        }
+
+        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority, const ComparisonTypes_t& comp);
 
         void update ();
 
@@ -178,6 +193,17 @@ namespace hpp {
           return squaredErrorThreshold_;
         }
 
+        /// Get the inequality threshold
+        value_type inequalityThreshold () const
+        {
+          return inequalityThreshold_;
+        }
+        /// set the inequality threshold
+        void inequalityThreshold (const value_type& it)
+        {
+          inequalityThreshold_ = it;
+        }
+
         value_type residualError() const
         {
           return squaredNorm_;
@@ -214,11 +240,13 @@ namespace hpp {
           /// \cond
           EIGEN_MAKE_ALIGNED_OPERATOR_NEW
           /// \endcond
+          ComparisonTypes_t comparison;
           vector_t value, rightHandSide, error;
           matrix_t jacobian, reducedJ;
 
           SVD_t svd;
           matrix_t PK;
+          std::vector<std::size_t> inequalityIndexes;
         };
 
         template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
@@ -226,7 +254,7 @@ namespace hpp {
         void computeDescentDirection () const;
         void expandDqSmall () const;
 
-        value_type squaredErrorThreshold_;
+        value_type squaredErrorThreshold_, inequalityThreshold_;
         size_type maxIterations_;
 
         std::vector<DifferentiableFunctionStack> stacks_;

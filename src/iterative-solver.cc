@@ -28,6 +28,36 @@
 
 namespace hpp {
   namespace constraints {
+    namespace {
+      template <bool Superior, bool ComputeJac, typename Derived>
+      void compare (value_type& val, const Eigen::MatrixBase<Derived>& jac, const value_type& thr)
+      {
+        if ((Superior && val < thr) || (!Superior && - thr < val)) {
+          if (Superior) val -= thr;
+          else          val += thr;
+        } else {
+          val = 0;
+          if (ComputeJac) const_cast<Eigen::MatrixBase<Derived>&> (jac).derived().setZero();
+        }
+      }
+
+      template <bool ComputeJac>
+      void applyComparison (
+          const HierarchicalIterativeSolver::ComparisonTypes_t comparison,
+          const std::vector<std::size_t>& indexes,
+          vector_t& value, matrix_t& jacobian, const value_type& thr)
+      {
+        for (std::size_t i = 0; i < indexes.size(); ++i) {
+          const std::size_t j = indexes[i];
+          switch (comparison[j]) {
+            case HierarchicalIterativeSolver::Superior: compare<true , ComputeJac> (value[j], jacobian.row(j), thr); break;
+            case HierarchicalIterativeSolver::Inferior: compare<false, ComputeJac> (value[j], jacobian.row(j), thr); break;
+            default: break;
+          }
+        }
+      }
+    }
+
     HierarchicalIterativeSolver::HierarchicalIterativeSolver()
       : stacks_ (),
       dimension_ (0),
@@ -36,6 +66,26 @@ namespace hpp {
       datas_(),
       statistics_ ("HierarchicalIterativeSolver")
     {}
+
+    void HierarchicalIterativeSolver::add (
+        const DifferentiableFunctionPtr_t& f,
+        const std::size_t& priority,
+        const ComparisonTypes_t& comp)
+    {
+      assert (comp.size() == (std::size_t)f->outputSize());
+      if (stacks_.size() < priority + 1) {
+        stacks_.resize (priority, DifferentiableFunctionStack());
+        datas_. resize (priority, Data());
+      }
+      stacks_[priority].add(f);
+      Data& d = datas_[priority];
+      for (std::size_t i = 0; i < comp.size(); ++i) {
+        if (comp[i] == Superior || comp[i] == Inferior)
+          d.inequalityIndexes.push_back (d.comparison.size());
+        d.comparison.push_back (comp[i]);
+      }
+      update();
+    }
 
     void HierarchicalIterativeSolver::update()
     {
@@ -113,6 +163,7 @@ namespace hpp {
         f.value   (d.value, arg);
         if (ComputeJac) f.jacobian(d.jacobian, arg);
         d.error = d.value - d.rightHandSide;
+        applyComparison<ComputeJac>(d.comparison, d.inequalityIndexes, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
         if (ComputeJac) reduction_.view (d.jacobian).writeTo(d.reducedJ);
