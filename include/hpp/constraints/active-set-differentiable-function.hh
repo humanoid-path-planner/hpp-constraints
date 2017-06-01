@@ -41,7 +41,7 @@ namespace hpp {
 
         const DifferentiableFunction& function() const
         {
-          return function_;
+          return *function_;
         }
 
         const DifferentiableFunctionPtr_t& functionPtr() const

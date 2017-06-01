@@ -27,6 +27,7 @@ namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
     HPP_PREDEF_CLASS (DifferentiableFunctionStack);
+    HPP_PREDEF_CLASS (ActiveSetDifferentiableFunction);
     typedef pinocchio::size_type size_type;
     typedef pinocchio::value_type value_type;
     typedef pinocchio::JointPtr_t JointPtr_t;
@@ -76,6 +77,8 @@ namespace hpp {
     DifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DifferentiableFunctionStack>
     DifferentiableFunctionStackPtr_t;
+    typedef boost::shared_ptr <ActiveSetDifferentiableFunction>
+    ActiveSetDifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DistanceBetweenBodies>
     DistanceBetweenBodiesPtr_t;
     typedef boost::shared_ptr <DistanceBetweenPointsInBodies>
