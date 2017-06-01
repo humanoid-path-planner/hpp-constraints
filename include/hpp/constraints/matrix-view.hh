@@ -312,10 +312,11 @@ namespace Eigen {
   {
     public:
       typedef MatrixXd::Index Index;
-      typedef BlockIndex<Index>::type     BlockIndex_t;
-      typedef BlockIndex<Index>::vector_t BlockIndexes_t;
-      typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexes_t>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexes_t>::type ColIndexes_t;
+      typedef BlockIndex<Index>           BlockIndex_t;
+      typedef BlockIndex_t::type     BlockIndexType;
+      typedef BlockIndex_t::vector_t BlockIndexesType;
+      typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexesType>::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexesType>::type ColIndexes_t;
 
       template <typename Derived, int _Rows, int _Cols> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
@@ -325,12 +326,12 @@ namespace Eigen {
       MatrixBlockIndexes () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
 
       /// \warning rows and cols must be sorted
-      MatrixBlockIndexes (const BlockIndexes_t& rows, const BlockIndexes_t& cols)
+      MatrixBlockIndexes (const BlockIndexesType& rows, const BlockIndexesType& cols)
         : m_nbRows(BlockIndex<Index>::cardinal(rows)), m_nbCols(BlockIndex<Index>::cardinal(rows)), m_rows(rows), m_cols(cols)
       {}
 
       /// \warning idx must be sorted and shrinked
-      MatrixBlockIndexes (const BlockIndexes_t& idx)
+      MatrixBlockIndexes (const BlockIndexesType& idx)
         : m_nbRows(_allRows ? 0 : BlockIndex<Index>::cardinal(idx))
         , m_nbCols(_allCols ? 0 : BlockIndex<Index>::cardinal(idx))
         , m_rows(idx), m_cols(idx)
@@ -358,13 +359,13 @@ namespace Eigen {
 
       inline void addRow (const Index& row, const Index size)
       {
-        m_rows.push_back(BlockIndex_t(row, size));
+        m_rows.push_back(BlockIndexType(row, size));
         m_nbRows += size;
       }
 
       inline void addCol (const Index& col, const Index size)
       {
-        m_cols.push_back(BlockIndex_t(col, size));
+        m_cols.push_back(BlockIndexType(col, size));
         m_nbCols += size;
       }
 
@@ -394,7 +395,7 @@ namespace Eigen {
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
-      inline const BlockIndexes_t& indexes() const
+      inline const BlockIndexesType& indexes() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_cols, m_rows);
@@ -419,7 +420,7 @@ namespace Eigen {
 
     private:
       template<bool Sort, bool Shrink, bool Cardinal>
-      static inline void update(BlockIndexes_t& b, Index& idx) {
+      static inline void update(BlockIndexesType& b, Index& idx) {
         if (Sort)     BlockIndex<Index>::sort(b);
         if (Shrink)   BlockIndex<Index>::shrink(b);
         if (Cardinal) idx = BlockIndex<Index>::cardinal(b);
@@ -443,7 +444,7 @@ namespace Eigen {
       // typedef typename Base::Scalar Scalar;
 
       typedef MatrixBlockIndexes<_allRows, _allCols> MatrixIndexes_t;
-      typedef typename MatrixIndexes_t::BlockIndexes_t Indexes_t;
+      typedef typename MatrixIndexes_t::BlockIndexesType Indexes_t;
       typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndexes_t;
 

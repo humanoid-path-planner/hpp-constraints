@@ -76,6 +76,9 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI HierarchicalIterativeSolver
     {
       public:
+        typedef Eigen::ColBlockIndexes Reduction_t;
+        typedef lineSearch::FixedSequence DefaultLineSearch;
+
         enum Status {
           ERROR_INCREASED,
           MAX_ITERATION_REACHED,
@@ -112,18 +115,28 @@ namespace hpp {
         /// algorithm.
         void reduction (const intervals_t intervals)
         {
-          reduction_ = Eigen::MatrixBlockIndexes<true, false>();
+          reduction_ = Reduction_t();
           for (std::size_t i = 0; i < intervals.size(); ++i)
             reduction_.addCol(intervals[i].first, intervals[i].second);
+          reduction_.updateIndexes<true, true, true>();
+          update ();
+        }
+
+        /// Set the velocity variable that must be changed.
+        /// The other variables will be left unchanged by the iterative
+        /// algorithm.
+        void reduction (const Reduction_t& reduction)
+        {
+          reduction_ = reduction;
           update ();
         }
 
         template <typename LineSearchType>
-        Status solve (vectorOut_t arg) const;
+        Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
 
-        Status solve (vectorOut_t arg) const
+        inline Status solve (vectorOut_t arg) const
         {
-          return solve<lineSearch::FixedSequence> (arg);
+          return solve (arg, DefaultLineSearch());
         }
 
         /// Set the integration function
@@ -219,7 +232,7 @@ namespace hpp {
         std::vector<DifferentiableFunctionStack> stacks_;
         size_type dimension_;
         bool lastIsOptional_;
-        Eigen::MatrixBlockIndexes<true, false> reduction_;
+        Reduction_t reduction_;
         Integration_t integrate_;
 
         mutable vector_t dq_, dqSmall_;
