@@ -55,8 +55,10 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/relative-transformation.hh
   include/hpp/constraints/configuration-constraint.hh
   include/hpp/constraints/explicit-solver.hh
+  include/hpp/constraints/hybrid-solver.hh
   include/hpp/constraints/iterative-solver.hh
 
+  include/hpp/constraints/impl/hybrid-solver.hh
   include/hpp/constraints/impl/iterative-solver.hh
   include/hpp/constraints/impl/matrix-view.hh
 )

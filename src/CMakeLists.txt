@@ -27,6 +27,7 @@ ADD_LIBRARY(${LIBRARY_NAME}
   static-stability.cc
   qp-static-stability.cc
   explicit-solver.cc
+  hybrid-solver.cc
   iterative-solver.cc
   )
   # position.cc
