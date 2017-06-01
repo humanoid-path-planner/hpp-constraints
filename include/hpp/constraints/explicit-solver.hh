@@ -82,6 +82,11 @@ namespace hpp {
             const ColBlockIndexes& inDer,
             const RowBlockIndexes& outDer);
 
+        /// \warning the two functions must have the same input and output
+        /// indexes.
+        bool replace (const DifferentiableFunctionPtr_t& oldf,
+                      const DifferentiableFunctionPtr_t& newd);
+
         ExplicitSolver (const std::size_t& argSize, const std::size_t derSize)
           : argSize_ (argSize), derSize_ (derSize)
           ,  inArgs_ (),  inDers_ ()

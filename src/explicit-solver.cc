@@ -95,6 +95,23 @@ namespace hpp {
       return true;
     }
 
+    bool ExplicitSolver::replace (
+        const DifferentiableFunctionPtr_t& oldf,
+        const DifferentiableFunctionPtr_t& newf)
+    {
+      assert(oldf->inputSize() == newf->inputSize()
+          && oldf->inputDerivativeSize() == newf->inputDerivativeSize()
+          && oldf->outputSize() == newf->outputSize()
+          && oldf->outputDerivativeSize() == newf->outputDerivativeSize());
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        if (functions_[i].f == oldf) {
+          functions_[i].f = newf;
+          return true;
+        }
+      }
+      return false;
+    }
+
     void ExplicitSolver::computeFunction(const std::size_t& iF, vectorOut_t arg, Computed_t& computed) const
     {
       if (computed[iF]) return;

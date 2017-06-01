@@ -337,6 +337,13 @@ namespace Eigen {
         , m_rows(idx), m_cols(idx)
       {}
 
+      /// \warning idx must be sorted and shrinked
+      MatrixBlockIndexes (const BlockIndexType& idx)
+        : m_nbRows(_allRows ? 0 : idx.second)
+        , m_nbCols(_allCols ? 0 : idx.second)
+        , m_rows(BlockIndexesType(1,idx)), m_cols(BlockIndexesType(1,idx))
+      {}
+
       /*
       MatrixBlockIndexes (const Index& rows, const Index& cols)
         : m_rows(rows), m_cols(cols)
