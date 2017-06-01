@@ -26,6 +26,7 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/constraints/generic-transformation.hh>
+#include <hpp/constraints/symbolic-calculus.hh>
 
 using namespace hpp::constraints;
 
@@ -50,6 +51,19 @@ class LockedJoint : public DifferentiableFunction
     {
       ExplicitSolver::RowBlockIndexes ret;
       ret.addRow (idx_, length_);
+      return ret;
+    }
+
+    ExplicitSolver::ColBlockIndexes inDer () const
+    {
+      ExplicitSolver::ColBlockIndexes ret;
+      return ret;
+    }
+
+    ExplicitSolver::RowBlockIndexes outDer () const
+    {
+      ExplicitSolver::RowBlockIndexes ret;
+      ret.addRow (idx_ - 1, length_);
       return ret;
     }
 
@@ -90,6 +104,20 @@ class TestFunction : public DifferentiableFunction
       return ret;
     }
 
+    ExplicitSolver::ColBlockIndexes inDer () const
+    {
+      ExplicitSolver::ColBlockIndexes ret;
+      ret.addCol(idxIn_ - 1, length_); // TODO this assumes there is only the freeflyer
+      return ret;
+    }
+
+    ExplicitSolver::RowBlockIndexes outDer () const
+    {
+      ExplicitSolver::RowBlockIndexes ret;
+      ret.addRow (idxOut_ - 1, length_); // TODO this assumes there is only the freeflyer
+      return ret;
+    }
+
     void impl_compute (vectorOut_t result,
                        vectorIn_t arg) const
     {
@@ -103,12 +131,118 @@ class TestFunction : public DifferentiableFunction
     }
 };
 
+matrix3_t exponential (const vector3_t& aa)
+{
+  matrix3_t R, xCross;
+  xCross.setZero();
+  xCross(1, 0) = + aa(2); xCross(0, 1) = - aa(2);
+  xCross(2, 0) = - aa(1); xCross(0, 2) = + aa(1);
+  xCross(2, 1) = + aa(0); xCross(1, 2) = - aa(0);
+  R.setIdentity();
+  value_type theta = aa.norm();
+  if (theta < 1e-6) {
+    R += xCross;
+    R += 0.5 * xCross.transpose() * xCross;
+  } else {
+    R += sin(theta) / theta * xCross;
+    R += 2 * std::pow(sin(theta/2),2) / std::pow(theta,2) * xCross * xCross;
+  }
+  return R;
+}
+
+class ExplicitTransformation : public DifferentiableFunction
+{
+  public:
+    JointPtr_t joint_;
+    size_type in_, inDer_;
+    RelativeTransformationPtr_t rt_;
+
+    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l, size_type inDer, size_type lDer)
+      : DifferentiableFunction(l, lDer, 7, 6, "ExplicitTransformation"),
+        joint_ (joint), in_ (in), inDer_ (inDer)
+    {
+      rt_ = RelativeTransformation::create("RT", joint_->robot(),
+          joint_->robot()->rootJoint(),
+          joint_,
+          Transform3f::Identity());
+    }
+
+    ExplicitSolver::RowBlockIndexes inArg () const
+    {
+      ExplicitSolver::RowBlockIndexes ret;
+      ret.addRow(in_, inputSize());
+      return ret;
+    }
+
+    ExplicitSolver::RowBlockIndexes outArg () const
+    {
+      ExplicitSolver::RowBlockIndexes ret;
+      ret.addRow (0, 7);
+      return ret;
+    }
+
+    ExplicitSolver::ColBlockIndexes inDer () const
+    {
+      ExplicitSolver::ColBlockIndexes ret;
+      ret.addCol(inDer_, inputDerivativeSize());
+      return ret;
+    }
+
+    ExplicitSolver::RowBlockIndexes outDer () const
+    {
+      ExplicitSolver::RowBlockIndexes ret;
+      ret.addRow (0, 6);
+      return ret;
+    }
+
+    vector_t config (vectorIn_t arg) const
+    {
+      vector_t q = joint_->robot()->neutralConfiguration();
+      q.segment(in_, inputSize()) = arg;
+      return q;
+      // joint_->robot()->currentConfiguration(q);
+      // joint_->robot()->computeForwardKinematics();
+    }
+
+    void impl_compute (vectorOut_t result,
+                       vectorIn_t arg) const
+    {
+      // forwardKinematics(arg);
+      vector_t value(6);
+      vector_t q = config(arg);
+      rt_->value(value, q);
+      result.head<3>() = value.head<3>();
+      result.tail<4>() = Eigen::Quaternion<value_type>(exponential(value.tail<3>())).coeffs();
+
+      // Transform3f tf1 = joint_->robot()->rootJoint()->currentTransformation();
+      // Transform3f tf2 = joint_->currentTransformation();
+      // Transform3f tf = tf2.inverse() * tf1;
+
+      // result.head<3> = tf.translation();
+      // result.tail<4> = Eigen::Quaternion<value_type>(tf.rotation());
+    }
+
+    void impl_jacobian (matrixOut_t jacobian,
+                        vectorIn_t arg) const
+    {
+      // forwardKinematics(arg);
+      matrix_t J(6, rt_->inputDerivativeSize());
+      vector_t q = config(arg);
+      rt_->jacobian(J, q);
+
+      inDer().view(J).writeTo(jacobian);
+    }
+};
+
 typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<TestFunction> TestFunctionPtr_t;
+typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(locked_joints)
 {
   DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
+  device->controlComputation((Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
+
   BOOST_REQUIRE (device);
   device->rootJoint()->lowerBound (0, -1);
   device->rootJoint()->lowerBound (1, -1);
@@ -118,10 +252,12 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   device->rootJoint()->upperBound (2,  1);
 
   JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
-             ee2 = device->getJointByName ("RAnkleRoll");
+             ee2 = device->getJointByName ("RAnkleRoll"),
+             ee3 = device->getJointByName ("RAnklePitch");
 
   LockedJointPtr_t l1 (new LockedJoint (ee1->rankInConfiguration(), 1, vector_t::Zero(1)));
   LockedJointPtr_t l2 (new LockedJoint (ee2->rankInConfiguration(), 1, vector_t::Zero(1)));
+  LockedJointPtr_t l3 (new LockedJoint (ee3->rankInConfiguration(), 1, vector_t::Zero(1)));
   TestFunctionPtr_t t1 (new TestFunction (ee1->rankInConfiguration(), ee2->rankInConfiguration(), 1));
 
   Configuration_t q = device->currentConfiguration (),
@@ -129,24 +265,82 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg()));
-    BOOST_CHECK(!solver.add(l1, l1->inArg(), l1->outArg()));
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg()));
+    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
+    BOOST_CHECK(!solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
+    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()));
 
     BOOST_CHECK(solver.solve(qrand));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], 0);
+
+    matrix_t jacobian (device->numberDof(), device->numberDof());
+    solver.jacobian(jacobian, q);
+    BOOST_CHECK(solver.viewJacobian (jacobian).eval().isZero());
+    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
   }
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg()));
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg()));
+    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
 
     BOOST_CHECK(solver.solve(qrand));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], 0);
+
+    matrix_t jacobian (device->numberDof(), device->numberDof());
+    solver.jacobian(jacobian, q);
+    BOOST_CHECK(solver.viewJacobian (jacobian).eval().isZero());
+    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+  }
+
+  {
+    ExplicitSolver solver (device->configSize(), device->numberDof());
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+
+    matrix_t jacobian (device->numberDof(), device->numberDof());
+    solver.jacobian(jacobian, q);
+    BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
+    BOOST_CHECK_EQUAL(solver.viewJacobian(jacobian).eval().norm(), 1);
+    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+  }
+
+  {
+    ExplicitSolver solver (device->configSize(), device->numberDof());
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+    BOOST_CHECK(!solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()));
+    BOOST_CHECK( solver.add(l3, l3->inArg(), l3->outArg(), l3->inDer(), l3->outDer()));
+
+    matrix_t jacobian (device->numberDof(), device->numberDof());
+    solver.jacobian(jacobian, q);
+    BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
+    BOOST_CHECK_EQUAL(solver.viewJacobian(jacobian).eval().norm(), 1);
+    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+  }
+
+  {
+    // Find a joint such that the config parameters for the chain from the root
+    // joint to it are the n first parameters (i.e. q.segment(0, n)).
+    // We take the one which gives the longest block
+    JointPtr_t parent = device->rootJoint(), current = device->getJointAtConfigRank(7);
+    while (current->parentJoint()->index() == parent->index()) {
+      parent = current;
+      current = device->getJointAtConfigRank(current->rankInConfiguration() + current->configSize());
+    }
+    std::cout << parent->name() << std::endl;
+
+    ExplicitTransformationPtr_t et (new ExplicitTransformation (parent, 7, 6,
+          parent->rankInConfiguration() + parent->configSize() - 7,
+          parent->rankInVelocity()      + parent->numberDof () - 6));
+
+    ExplicitSolver solver (device->configSize(), device->numberDof());
+    BOOST_CHECK( solver.add(et, et->inArg(), et->outArg(), et->inDer(), et->outDer()));
+    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()));
+
+    matrix_t jacobian (device->numberDof(), device->numberDof());
+    solver.jacobian(jacobian, qrand);
+    // BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
+    // BOOST_CHECK_EQUAL(jacobian.norm(), 1);
+    std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
   }
 }
-
-

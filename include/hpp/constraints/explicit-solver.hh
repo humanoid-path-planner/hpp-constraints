@@ -18,7 +18,7 @@
 #ifndef HPP_CONSTRAINTS_EXPLICIT_SOLVER_HH
 #define HPP_CONSTRAINTS_EXPLICIT_SOLVER_HH
 
-#include <deque>
+#include <vector>
 
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
@@ -67,6 +67,9 @@ namespace hpp {
     {
       public:
         typedef Eigen::RowBlockIndexes RowBlockIndexes;
+        typedef Eigen::ColBlockIndexes ColBlockIndexes;
+        // typedef Eigen::MatrixBlockIndexes<false, false> MatrixBlockIndexes;
+        typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
 
         bool solve (vectorOut_t arg) const;
 
@@ -74,44 +77,97 @@ namespace hpp {
         /// A function can be added iif its outputs do not interfere with the
         /// output of another function.
         bool add (const DifferentiableFunctionPtr_t& f,
-            const RowBlockIndexes& input,
-            const RowBlockIndexes& output);
+            const RowBlockIndexes& inArg,
+            const RowBlockIndexes& outArg,
+            const ColBlockIndexes& inDer,
+            const RowBlockIndexes& outDer);
 
         ExplicitSolver (const std::size_t& argSize, const std::size_t derSize)
           : argSize_ (argSize), derSize_ (derSize)
-          , freeDofs_ ()
-          , dofFunction_ (Eigen::VectorXi::Constant(argSize, -1))
+          ,  inArgs_ (),  inDers_ ()
+          , outArgs_ (), outDers_ ()
+          , argFunction_ (Eigen::VectorXi::Constant(argSize, -1))
+          , derFunction_ (Eigen::VectorXi::Constant(derSize, -1))
+          // , Jg (derSize, derSize)
         {
-          freeDofs_.addRow(0, argSize);
+          inArgs_.addRow(0, argSize);
+          inDers_.addCol(0, derSize);
         }
 
-        const RowBlockIndexes& freeDofs () const;
+        const RowBlockIndexes& inArgs () const
+        {
+          return inArgs_;
+        }
+
+        const ColBlockIndexes& inDers () const
+        {
+          return inDers_;
+        }
+
+        const RowBlockIndexes& outArgs () const
+        {
+          return outArgs_;
+        }
+
+        const RowBlockIndexes& outDers () const
+        {
+          return outDers_;
+        }
+
+        const std::size_t& argSize () const
+        {
+          return argSize_;
+        }
+
+        const std::size_t& derSize () const
+        {
+          return derSize_;
+        }
+
+        inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
+        {
+          return MatrixBlockView(jacobian,
+              outDers_.nbIndexes(), outDers_.indexes(),
+              inDers_.nbIndexes(), inDers_.indexes());
+        }
+
+        // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndexes(), freeDers().nbIndexes())
+        /// \param jacobian must be of dimensions (derSize, derSize) but only a subsegment will be used.
+        /// \warning it is assumed solve(arg) has been called before.
+        void jacobian(matrixOut_t jacobian, vectorIn_t arg) const;
 
       private:
         typedef std::vector<bool> Computed_t;
 
         void computeFunction(const std::size_t& i, vectorOut_t arg, Computed_t& computed) const;
+        void computeJacobian(const std::size_t& i, matrixOut_t J) const;
+        void computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed);
 
         const std::size_t argSize_, derSize_;
 
         struct Function {
-          Function (DifferentiableFunctionPtr_t _f, RowBlockIndexes ia, RowBlockIndexes oa)
-            : f (_f), inArg (ia), outArg (oa)
+          Function (DifferentiableFunctionPtr_t _f, RowBlockIndexes ia, RowBlockIndexes oa, ColBlockIndexes id, RowBlockIndexes od)
+            : f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od)
           {}
           DifferentiableFunctionPtr_t f;
           RowBlockIndexes inArg, outArg;
+          ColBlockIndexes inDer;
+          RowBlockIndexes outDer;
+
+          mutable vector_t value;
+          mutable matrix_t jacobian;
         };
 
-        RowBlockIndexes freeDofs_;
+        RowBlockIndexes inArgs_;
+        ColBlockIndexes inDers_;
+        RowBlockIndexes outArgs_, outDers_;
 
-        std::deque<Function> functions_;
+        std::vector<Function> functions_;
+        std::vector<std::size_t> computationOrder_;
         /// For dof i, dofFunction_[i] is the index of the function that computes it.
         /// -1 means it is the output of no function.
-        Eigen::VectorXi dofFunction_;
-        // /// If dof[i] depends on dof[j], then dof[j] must be computed before dof[i]
-        // std::vector<int> dofDependency_;
-        // /// The dof that 
-        // std::vector<int> dofLeaves_;
+        Eigen::VectorXi argFunction_, derFunction_;
+        // mutable matrix_t Jg;
     }; // class ExplicitSolver
   } // namespace constraints
 } // namespace hpp
