@@ -104,7 +104,7 @@ namespace hpp {
     }
 
     template <typename LineSearchType>
-    HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (
+    inline HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (
         vectorOut_t arg,
         LineSearchType lineSearch) const
     {
@@ -144,23 +144,6 @@ namespace hpp {
       hppDout (info, "After projection: " << arg.transpose ());
       assert (!arg.hasNaN());
       return SUCCESS;
-    }
-
-    template <bool ComputeJac>
-    inline void HierarchicalIterativeSolver::computeValue (vectorIn_t arg) const
-    {
-      for (std::size_t i = 0; i < stacks_.size (); ++i) {
-        const DifferentiableFunctionStack& f = stacks_[i];
-        Data& d = datas_[i];
-
-        f.value   (d.value, arg);
-        if (ComputeJac) f.jacobian(d.jacobian, arg);
-        // TODO (*(*it)->comparisonType ()) (v, jacobian);
-        d.error = d.value - d.rightHandSide;
-
-        // Copy columns that are not reduced
-        if (ComputeJac) reduction_.view (d.jacobian).writeTo(d.reducedJ);
-      }
     }
 
   } // namespace constraints

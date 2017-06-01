@@ -103,14 +103,31 @@ namespace hpp {
       return rhs;
     }
 
+    template <bool ComputeJac>
+    void HierarchicalIterativeSolver::computeValue (vectorIn_t arg) const
+    {
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        const DifferentiableFunctionStack& f = stacks_[i];
+        Data& d = datas_[i];
+
+        f.value   (d.value, arg);
+        if (ComputeJac) f.jacobian(d.jacobian, arg);
+        d.error = d.value - d.rightHandSide;
+
+        // Copy columns that are not reduced
+        if (ComputeJac) reduction_.view (d.jacobian).writeTo(d.reducedJ);
+      }
+    }
+
+    template void HierarchicalIterativeSolver::computeValue<false>(vectorIn_t arg) const;
+    template void HierarchicalIterativeSolver::computeValue<true >(vectorIn_t arg) const;
+
     void HierarchicalIterativeSolver::computeError () const
     {
       const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
       squaredNorm_ = 0;
-      for (std::size_t i = 0; i < end; ++i) {
-        datas_[i].error = datas_[i].value - datas_[i].rightHandSide;
-        squaredNorm_ += datas_[i].value.squaredNorm();
-      }
+      for (std::size_t i = 0; i < end; ++i)
+        squaredNorm_ += datas_[i].error.squaredNorm();
     }
 
     void HierarchicalIterativeSolver::computeDescentDirection () const

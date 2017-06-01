@@ -22,5 +22,17 @@ namespace hpp {
     {
       reduction(explicit_.inDers());
     }
+
+    void HybridSolver::updateJacobian (vectorIn_t arg) const
+    {
+      // Compute Je_
+      explicit_.jacobian(JeExpanded_, arg);
+      explicit_.viewJacobian(JeExpanded_).writeTo(Je_);
+
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        Data& d = datas_[i];
+        d.reducedJ.noalias() += explicit_.outDers().viewTranspose(d.jacobian).eval() * Je_;
+      }
+    }
   } // namespace constraints
 } // namespace hpp
