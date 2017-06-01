@@ -58,7 +58,7 @@ namespace hpp {
         datas_[i].jacobian.setZero();
         datas_[i].reducedJ.resize(f.outputDerivativeSize(), reducedSize);
 
-        datas_[i].svd = SVD_t (f.outputSize(), reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
+        datas_[i].svd = SVD_t (f.outputDerivativeSize(), reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
         datas_[i].svd.setThreshold (SVD_THRESHOLD);
         datas_[i].PK.resize (reducedSize, reducedSize);
       }
@@ -123,6 +123,7 @@ namespace hpp {
         Data& d = datas_[0];
         d.svd.compute (d.reducedJ);
         HPP_DEBUG_SVDCHECK (d.svd);
+        // TODO Eigen::JacobiSVD does a dynamic allocation here.
         dqSmall_ = d.svd.solve (- d.error);
       } else {
         projector_.setIdentity();
@@ -142,10 +143,12 @@ namespace hpp {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);
             HPP_DEBUG_SVDCHECK (d.svd);
+            // TODO Eigen::JacobiSVD does a dynamic allocation here.
             dqSmall_ = d.svd.solve (err);
           } else {
             d.svd.compute (d.reducedJ * projector_);
             HPP_DEBUG_SVDCHECK (d.svd);
+            // TODO Eigen::JacobiSVD does a dynamic allocation here.
             dqSmall_ += d.svd.solve (err - d.reducedJ * dqSmall_);
           }
           if (last) break; // No need to compute projector for next step.

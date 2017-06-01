@@ -382,7 +382,7 @@ namespace hpp {
 	robot_->currentConfiguration (argument);
 	robot_->computeForwardKinematics ();
         compute<IsRelative, ComputePosition, ComputeOrientation>::error (d_);
-	latestArgument_.noalias() = argument;
+	latestArgument_ = argument;
       }
     }
 

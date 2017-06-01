@@ -42,7 +42,7 @@ namespace hpp {
         inline value_type computeLocalSlope(const SolverType& solver) const;
 
         const value_type c, tau, smallAlpha; // 0.8 ^ 7 = 0.209, 0.8 ^ 8 = 0.1677
-        mutable vector_t arg_darg;
+        mutable vector_t arg_darg, df, darg;
       };
 
       /// The step size is computed using the recursion:

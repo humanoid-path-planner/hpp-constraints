@@ -23,7 +23,7 @@ namespace hpp {
       inline Backtracking::Backtracking () : c (0.001), tau (0.7), smallAlpha (0.2) {}
 
       template <typename SolverType>
-      inline bool Backtracking::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
+      inline bool Backtracking::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t u)
       {
         arg_darg.resize(arg.size());
 
@@ -37,7 +37,8 @@ namespace hpp {
           value_type alpha = 1;
 
           while (alpha > smallAlpha) {
-            solver.integration() (arg, alpha * darg, arg_darg);
+            darg = alpha * u;
+            solver.integration() (arg, darg, arg_darg);
             solver.template computeValue<false> (arg_darg);
             solver.computeError ();
             // Check if we are doing better than the linear approximation with coef
@@ -46,7 +47,7 @@ namespace hpp {
             const value_type f_arg_darg_norm2 = solver.residualError();
             if (f_arg_norm2 - f_arg_darg_norm2 >= - alpha * t) {
               arg = arg_darg;
-              darg *= alpha;
+              u = darg;
               return true;
             }
             // Prepare next step
@@ -57,7 +58,7 @@ namespace hpp {
               "||f(q + alpha * dq)||**2");
         }
 
-        darg *= smallAlpha;
+        u *= smallAlpha;
         solver.integration() (arg, darg, arg);
         return false;
       }
@@ -68,7 +69,10 @@ namespace hpp {
         value_type slope = 0;
         for (std::size_t i = 0; i < solver.stacks_.size (); ++i) {
           typename SolverType::Data& d = solver.datas_[i];
-          slope += (d.reducedJ * solver.dqSmall_).dot(d.error);
+          const size_type nrows = d.reducedJ.rows();
+          if (df.size() < nrows) df.resize(nrows);
+          df.head(nrows).noalias() = d.reducedJ * solver.dqSmall_;
+          slope += df.head(nrows).dot(d.error);
         }
         return slope;
       }
