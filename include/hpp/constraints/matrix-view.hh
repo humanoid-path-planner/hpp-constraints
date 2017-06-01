@@ -60,7 +60,7 @@ namespace Eigen {
         empty_struct () {}
         template <typename In_t> empty_struct (In_t) {}
         static inline Index size() { return 0; }
-        inline Index operator[](const Index&) const { return 0; }
+        inline const Index& operator[](const Index& i) const { return i; }
       };
   } // namespace internal
 
@@ -393,6 +393,22 @@ namespace Eigen {
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndexes(), indexes());
         else
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
+      }
+
+      template <typename Derived>
+      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type view(const MatrixBase<Derived>& other) const {
+        if (_allCols || _allRows)
+          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndexes(), indexes());
+        else
+          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
+      }
+
+      template <typename Derived>
+      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type viewTranspose(const MatrixBase<Derived>& other) const {
+        if (_allCols || _allRows)
+          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndexes(), indexes());
+        else
+          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
       inline const BlockIndexesType& indexes() const

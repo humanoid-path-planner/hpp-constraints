@@ -240,13 +240,15 @@ namespace hpp {
           /// \cond
           EIGEN_MAKE_ALIGNED_OPERATOR_NEW
           /// \endcond
-          ComparisonTypes_t comparison;
           vector_t value, rightHandSide, error;
           matrix_t jacobian, reducedJ;
 
           SVD_t svd;
           matrix_t PK;
+
+          ComparisonTypes_t comparison;
           std::vector<std::size_t> inequalityIndexes;
+          Eigen::RowBlockIndexes equalityIndexes;
         };
 
         template <bool ComputeJac> void computeValue (vectorIn_t arg) const;

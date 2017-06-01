@@ -80,10 +80,20 @@ namespace hpp {
       stacks_[priority].add(f);
       Data& d = datas_[priority];
       for (std::size_t i = 0; i < comp.size(); ++i) {
-        if (comp[i] == Superior || comp[i] == Inferior)
-          d.inequalityIndexes.push_back (d.comparison.size());
+        switch (comp[i]) {
+          case Superior:
+          case Inferior:
+            d.inequalityIndexes.push_back (d.comparison.size());
+            break;
+          case Equality:
+            d.equalityIndexes.addRow(d.comparison.size(), 1);
+            break;
+          default:
+            break;
+        }
         d.comparison.push_back (comp[i]);
       }
+      d.equalityIndexes.updateRows<true, true, true>();
       update();
     }
 
@@ -123,33 +133,38 @@ namespace hpp {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
-        f.value (d.rightHandSide, arg);
+        f.value (d.value, arg);
+        // TODO avoid dynamic allocation
+        d.equalityIndexes.view(d.rightHandSide) = d.equalityIndexes.view(d.value).eval();
       }
       return rightHandSide();
     }
 
     void HierarchicalIterativeSolver::rightHandSide (const vector_t& rhs)
     {
-      assert (rhs.size() == dimension_);
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.rightHandSide = rhs.segment (row, d.rightHandSide.size());
-        row += d.rightHandSide.size();
+        d.equalityIndexes.view(d.rightHandSide)
+          = rhs.segment(row, d.equalityIndexes.m_nbRows);
+        row += d.equalityIndexes.m_nbRows;
       }
-      assert (row == dimension_);
+      assert (row == rhs.size());
     }
 
     vector_t HierarchicalIterativeSolver::rightHandSide () const
     {
-      vector_t rhs(dimension_);
+      vector_t rhs;
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const Data& d = datas_[i];
-        rhs.segment(row, d.rightHandSide.size()) = d.rightHandSide;
-        row += d.rightHandSide.size();
+        const size_type nRows = d.equalityIndexes.m_nbRows;
+        rhs.conservativeResize(rhs.size() + nRows);
+        vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
+        d.equalityIndexes.view(d.rightHandSide).writeTo(seg);
+        row += nRows;
       }
-      assert (row == dimension_);
+      // assert (row == dimension_);
       return rhs;
     }
 
