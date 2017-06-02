@@ -213,12 +213,11 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   Transform3f tf2 (ee2->currentTransformation ());
   Transform3f tf3 (ee3->currentTransformation ());
 
-  solver.addStack();
-  BOOST_CHECK(solver.numberStacks() == 1);
-
   solver.add(Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2), 0);
   solver.add(Orientation::create ("Orientation LWristPitch", device, ee3, tf3), 0);
   // solver.add(Position::create    ("Position"   , device, ee2, tf2), 0);
+
+  BOOST_CHECK(solver.numberStacks() == 1);
 
   ExplicitTransformationPtr_t et;
   {
@@ -238,7 +237,6 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   }
 
   BOOST_CHECK(solver.explicitSolver().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()));
-  solver.update();
   solver.explicitSolverHasChanged();
 
   // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), HybridSolver::SUCCESS);

@@ -99,31 +99,42 @@ namespace hpp {
 
         HierarchicalIterativeSolver ();
 
-        const DifferentiableFunctionStack& stack(const std::size_t priority)
-        {
-          assert(priority < stacks_.size());
-          return stacks_[priority];
-        }
+        /// \name Problem definition
+        /// \{
 
-        std::size_t numberStacks() const
-        {
-          return stacks_.size();
-        }
-
-        void addStack ()
-        {
-          stacks_.push_back(DifferentiableFunctionStack());
-          datas_.push_back(Data());
-        }
-
+        /// Add an equality constraint to a priority
         void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority)
         {
           add (f, priority, ComparisonTypes_t(f->outputSize(), EqualToZero));
         }
 
+        /// Add a constraint \f{ f(q) comp 0 \f} to a priority
         void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority, const ComparisonTypes_t& comp);
 
-        void update ();
+        /// Set the integration function
+        void integration (const Integration_t& integrate)
+        {
+          integrate_ = integrate;
+        }
+
+        /// Get the integration function
+        const Integration_t& integration () const
+        {
+          return integrate_;
+        }
+
+        /// \}
+
+        template <typename LineSearchType>
+        Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
+
+        inline Status solve (vectorOut_t arg) const
+        {
+          return solve (arg, DefaultLineSearch());
+        }
+
+        /// \name Parameters
+        /// \{
 
         /// Set the velocity variable that must be changed.
         /// The other variables will be left unchanged by the iterative
@@ -144,26 +155,6 @@ namespace hpp {
         {
           reduction_ = reduction;
           update ();
-        }
-
-        template <typename LineSearchType>
-        Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
-
-        inline Status solve (vectorOut_t arg) const
-        {
-          return solve (arg, DefaultLineSearch());
-        }
-
-        /// Set the integration function
-        void integration (const Integration_t& integrate)
-        {
-          integrate_ = integrate;
-        }
-
-        /// Get the integration function
-        const Integration_t& integration () const
-        {
-          return integrate_;
         }
 
         /// Set maximal number of iterations
@@ -204,11 +195,6 @@ namespace hpp {
           inequalityThreshold_ = it;
         }
 
-        value_type residualError() const
-        {
-          return squaredNorm_;
-        }
-
         void lastIsOptional (bool optional)
         {
           lastIsOptional_ = optional;
@@ -219,11 +205,34 @@ namespace hpp {
           return lastIsOptional_;
         }
 
+        /// \}
+
+        /// \name Stack
+        /// \{
+
+        const DifferentiableFunctionStack& stack(const std::size_t priority)
+        {
+          assert(priority < stacks_.size());
+          return stacks_[priority];
+        }
+
+        std::size_t numberStacks() const
+        {
+          return stacks_.size();
+        }
+
+        /// \}
+
         bool isSatisfied (vectorIn_t arg) const
         {
           computeValue<false>(arg);
           computeError();
           return squaredNorm_ < squaredErrorThreshold_;
+        }
+
+        value_type residualError() const
+        {
+          return squaredNorm_;
         }
 
         /// Compute a right hand side using the input arg.
@@ -258,8 +267,18 @@ namespace hpp {
           Eigen::RowBlockIndexes equalityIndexes;
         };
 
+        /// Allocate datas and update sizes of the problem
+        /// Should be called whenever the stack is modified.
+        void update ();
+
+        /// Compute the value of each level, and the jacobian if ComputeJac is true.
         template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
+        /// If lastIsOptional() is true, then the last level is ignored.
+        /// \warning computeValue must have been called first.
         void computeError () const;
+        /// Compute a SVD decomposition of each level and find the best descent
+        /// direction at the first order.
+        /// \warning computeValue<true> must have been called first.
         void computeDescentDirection () const;
         void expandDqSmall () const;
 

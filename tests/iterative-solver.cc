@@ -55,15 +55,12 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
 
-  solver.addStack();
-  BOOST_CHECK(solver.numberStacks() == 1);
-
   solver.add(Orientation::create ("Orientation", device, ee2, tf2), 0);
   solver.add(Position::create    ("Position"   , device, ee2, tf2), 0);
 
-  solver.update();
+  BOOST_CHECK(solver.numberStacks() == 1);
 
-  BOOST_CHECK(solver.solve(q));
+  BOOST_CHECK(solver.isSatisfied(q));
 
   Configuration_t tmp = qrand;
   BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(qrand), HierarchicalIterativeSolver::SUCCESS);

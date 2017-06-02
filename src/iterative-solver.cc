@@ -73,9 +73,10 @@ namespace hpp {
         const ComparisonTypes_t& comp)
     {
       assert (comp.size() == (std::size_t)f->outputSize());
-      if (stacks_.size() < priority + 1) {
-        stacks_.resize (priority, DifferentiableFunctionStack());
-        datas_. resize (priority, Data());
+      const std::size_t minSize = priority + 1;
+      if (stacks_.size() < minSize) {
+        stacks_.resize (minSize, DifferentiableFunctionStack());
+        datas_. resize (minSize, Data());
       }
       stacks_[priority].add(f);
       Data& d = datas_[priority];
