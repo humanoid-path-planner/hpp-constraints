@@ -144,7 +144,7 @@ namespace hpp {
       private:
         typedef std::vector<bool> Computed_t;
 
-        void computeFunction(const std::size_t& i, vectorOut_t arg, Computed_t& computed) const;
+        void computeFunction(const std::size_t& i, vectorOut_t arg) const;
         void computeJacobian(const std::size_t& i, matrixOut_t J) const;
         void computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed);
 
@@ -153,7 +153,10 @@ namespace hpp {
         struct Function {
           Function (DifferentiableFunctionPtr_t _f, RowBlockIndexes ia, RowBlockIndexes oa, ColBlockIndexes id, RowBlockIndexes od)
             : f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od)
-          {}
+          {
+            value   .resize(_f->outputSize());
+            jacobian.resize(_f->outputDerivativeSize(), _f->inputDerivativeSize());
+          }
           DifferentiableFunctionPtr_t f;
           RowBlockIndexes inArg, outArg;
           ColBlockIndexes inDer;

@@ -33,9 +33,8 @@ namespace hpp {
 
     bool ExplicitSolver::solve (vectorOut_t arg) const
     {
-      Computed_t computed(functions_.size(), false);
-      for(std::size_t i = 0; i < computed.size(); ++i) {
-        computeFunction(i, arg, computed);
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        computeFunction(computationOrder_[i], arg);
       }
       return true;
     }
@@ -112,24 +111,12 @@ namespace hpp {
       return false;
     }
 
-    void ExplicitSolver::computeFunction(const std::size_t& iF, vectorOut_t arg, Computed_t& computed) const
+    void ExplicitSolver::computeFunction(const std::size_t& iF, vectorOut_t arg) const
     {
-      if (computed[iF]) return;
       const Function& f = functions_[iF];
-      // Computed dependencies
-      for (std::size_t i = 0; i < f.inArg.indexes().size(); ++i) {
-        for (size_type j = 0; j < f.inArg.indexes()[i].second; ++j) {
-          if (argFunction_[f.inArg.indexes()[i].first + j] < 0) continue;
-          assert((std::size_t)argFunction_[f.inArg.indexes()[i].first + j] < functions_.size());
-          computeFunction(argFunction_[f.inArg.indexes()[i].first + j], arg, computed);
-        }
-      }
       // Compute this function
-      // TODO dynamic allocation could be avoided.
-      vector_t result(f.f->outputSize());
-      f.f->value(result, f.inArg.view(arg).eval());
-      f.outArg.view(arg) = result;
-      computed[iF] = true;
+      f.f->value(f.value, f.inArg.view(arg).eval());
+      f.outArg.view(arg) = f.value;
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
@@ -142,7 +129,6 @@ namespace hpp {
       // Compute the function jacobians
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
-        f.jacobian.resize(f.f->outputDerivativeSize(), f.f->inputDerivativeSize());
         f.f->jacobian(f.jacobian, f.inArg.view(arg).eval());
       }
       for(std::size_t i = 0; i < functions_.size(); ++i) {

@@ -54,6 +54,7 @@ namespace hpp {
           computeDescentDirection ();
           lineSearch (*this, arg, dq_);
           explicit_.solve (arg);
+          return isSatisfied(arg);
         }
 
       private:
