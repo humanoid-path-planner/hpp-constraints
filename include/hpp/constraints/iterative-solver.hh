@@ -219,6 +219,13 @@ namespace hpp {
           return lastIsOptional_;
         }
 
+        bool isSatisfied (vectorIn_t arg) const
+        {
+          computeValue<false>(arg);
+          computeError();
+          return squaredNorm_ < squaredErrorThreshold_;
+        }
+
         /// Compute a right hand side using the input arg.
         /// This does not set the right hand side.
         /// To set the right hand side using this function, one must call
