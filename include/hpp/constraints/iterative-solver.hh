@@ -136,12 +136,6 @@ namespace hpp {
           return solve (arg, DefaultLineSearch());
         }
 
-        inline void oneStep () const;
-
-        /// Project the point arg + darg onto the null space of the jacobian
-        /// at arg.
-        void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const;
-
         bool isSatisfied (vectorIn_t arg) const
         {
           computeValue<false>(arg);
@@ -239,7 +233,7 @@ namespace hpp {
           return stacks_.size();
         }
 
-        const size_type& dimension ()
+        const size_type& dimension () const
         {
           return dimension_;
         }
@@ -318,6 +312,10 @@ namespace hpp {
 
         /// Compute a SVD decomposition of each level and find the best descent
         /// direction at the first order.
+        /// Linearization of the system of equations
+        /// rhs - v_{i} = J (q_i) (dq_{i+1} - q_{i})
+        /// q_{i+1} - q_{i} = J(q_i)^{+} ( rhs - v_{i} )
+        /// dq = J(q_i)^{+} ( rhs - v_{i} )
         /// \warning computeValue<true> must have been called first.
         void computeDescentDirection () const;
         void expandDqSmall () const;

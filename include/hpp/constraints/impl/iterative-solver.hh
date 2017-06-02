@@ -148,21 +148,6 @@ namespace hpp {
       return SUCCESS;
     }
 
-    inline void HierarchicalIterativeSolver::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
-    {
-      computeValue<true> (arg);
-      getReducedJacobian (reducedJ_);
-
-      svd_.compute (reducedJ_);
-
-      reduction_.view(darg).writeTo(dqSmall_);
-
-      vector_t tmp = getV1(svd_).adjoint() * dqSmall_;
-      dqSmall_.noalias() -= getV1(svd_) * tmp;
-
-      result = reduction_.view(dqSmall_);
-    }
-
   } // namespace constraints
 } // namespace hpp
 

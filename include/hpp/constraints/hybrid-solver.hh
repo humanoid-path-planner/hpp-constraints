@@ -46,8 +46,12 @@ namespace hpp {
           return solve(arg, DefaultLineSearch());
         }
 
+        /// Project the point arg + darg onto the null space of the jacobian
+        /// at arg.
+        void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const;
+
         template <typename LineSearchType>
-        bool oneStep (vectorIn_t arg, LineSearchType& lineSearch) const
+        bool oneStep (vectorOut_t arg, LineSearchType& lineSearch) const
         {
           computeValue<true> (arg);
           updateJacobian (arg);
@@ -57,11 +61,13 @@ namespace hpp {
           return isSatisfied(arg);
         }
 
+        /// Computes the jacobian of the explicit functions and
+        /// updates the jacobian of the problem using the chain rule.
+        void updateJacobian (vectorIn_t arg) const;
+
       private:
         template <typename LineSearchType>
         Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
-
-        void updateJacobian (vectorIn_t arg) const;
 
         ExplicitSolver explicit_;
         mutable matrix_t Je_, JeExpanded_;
