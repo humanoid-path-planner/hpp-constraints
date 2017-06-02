@@ -18,6 +18,58 @@
 
 #include <queue>
 
+#include <pinocchio/multibody/joint/joint.hpp>
+#include <pinocchio/algorithm/joint-configuration.hpp>
+
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/liegroup.hh>
+
+namespace se3 {
+  using ::hpp::constraints::vectorIn_t;
+  using ::hpp::constraints::vectorOut_t;
+  using ::hpp::constraints::size_type;
+
+  struct DifferenceStep : public fusion::JointModelVisitor<DifferenceStep >
+  {
+    typedef boost::fusion::vector<vectorIn_t,
+                                  vectorIn_t,
+                                  size_type&,
+                                  vectorOut_t,
+                                  size_type& > ArgsType;
+
+    JOINT_MODEL_VISITOR_INIT(DifferenceStep);
+
+    template<typename JointModel>
+    static void algo(const JointModelBase<JointModel>& jmodel,
+                    vectorIn_t  q0,
+                    vectorIn_t  q1,
+                    size_type& rowArg,
+                    vectorOut_t result,
+                    size_type& rowDer)
+    {
+      ::hpp::pinocchio::LieGroupTpl::template operation<JointModel>::type ::difference (
+          q0.segment(rowArg, jmodel.nq()),
+          q1.segment(rowArg, jmodel.nq()),
+          result.segment(rowDer, jmodel.nv()));
+      rowArg += jmodel.nq();
+      rowDer += jmodel.nv();
+    }
+  };
+
+  template<>
+  void DifferenceStep::algo (const JointModelBase<JointModelComposite>& jmodel,
+                    vectorIn_t  q0,
+                    vectorIn_t  q1,
+                    size_type& rowArg,
+                    vectorOut_t result,
+                    size_type& rowDer)
+  {
+    ::se3::details::Dispatch< DifferenceStep >::run(jmodel.derived(),
+        ArgsType(q0, q1, rowArg, result, rowDer));
+  }
+}
+
+
 namespace hpp {
   namespace constraints {
     typedef Eigen::BlockIndex<size_type> BlockIndex;
@@ -31,12 +83,72 @@ namespace hpp {
       }
     }
 
+    void difference (const DevicePtr_t& robot,
+        const Eigen::BlockIndex<size_type>::vector_t& indexes,
+        vectorIn_t arg0,
+        vectorIn_t arg1,
+        vectorOut_t result)
+    {
+      typedef typename se3::DifferenceStep DiffStep;
+      const se3::Model& model = robot->model();
+      std::size_t iJoint = 1;
+
+      size_type rowArg = 0, rowDer = 0;
+      for (std::size_t i = 0; i < indexes.size(); ++i) {
+        const Eigen::BlockIndex<size_type>::type& interval = indexes[i];
+        size_type j = 0;
+        while (j < interval.second) {
+          size_type iArg = interval.first + j;
+
+          if (iArg >= model.nq) { // Extra dofs, assume vector space
+            // TODO this could be optimized for cases where there are many
+            // extra dofs.
+            result[rowDer] = arg1[rowArg] - arg0[rowArg];
+            ++rowArg;
+            ++rowDer;
+            continue;
+          }
+          while (model.joints[iJoint].idx_q() != iArg) {
+            ++iJoint;
+            if (iJoint >= model.joints.size()) throw std::runtime_error("Joint index out of bounds");
+          }
+
+          const se3::JointModel& jmodel = model.joints[iJoint];
+
+          assert (jmodel.idx_q() >= interval.first);
+          assert (jmodel.nq()    <= interval.second);
+
+          // Compute difference
+          DiffStep::ArgsType args (arg0, arg1, rowArg, result, rowDer);
+          DiffStep::run(model.joints[iJoint], args);
+
+          ++iJoint;
+          j += jmodel.nq();
+        }
+      }
+    }
+
     bool ExplicitSolver::solve (vectorOut_t arg) const
     {
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         computeFunction(computationOrder_[i], arg);
       }
       return true;
+    }
+
+    bool ExplicitSolver::isSatisfied (vectorIn_t arg, vectorOut_t error) const
+    {
+      assert(error.size() == outDers_.nbIndexes());
+      size_type row = 0;
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        const Function& f = functions_[computationOrder_[i]];
+        f.f->value(f.value, f.inArg.view(arg).eval());
+        difference_ (f.inArg.indexes(),
+            f.value, f.outArg.view(arg).eval(),
+            error.segment(row, f.outDer.nbIndexes()));
+        row += f.outDer.nbIndexes();
+      }
+      return error.isZero();
     }
 
     bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,

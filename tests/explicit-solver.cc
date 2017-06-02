@@ -281,10 +281,14 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
+    solver.difference (boost::bind(hpp::constraints::difference, device, _1, _2, _3, _4));
     BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
 
     BOOST_CHECK(solver.solve(qrand));
+    vector_t error(solver.outDers().nbIndexes());
+    BOOST_CHECK(solver.isSatisfied(qrand, error));
+    // std::cout << error.transpose() << std::endl;
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], 0);
 
@@ -327,7 +331,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
       parent = current;
       current = device->getJointAtConfigRank(current->rankInConfiguration() + current->configSize());
     }
-    std::cout << parent->name() << std::endl;
+    // std::cout << parent->name() << std::endl;
 
     ExplicitTransformationPtr_t et (new ExplicitTransformation (parent, 7, 6,
           parent->rankInConfiguration() + parent->configSize() - 7,
@@ -341,6 +345,6 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     solver.jacobian(jacobian, qrand);
     // BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
     // BOOST_CHECK_EQUAL(jacobian.norm(), 1);
-    std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
   }
 }

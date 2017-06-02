@@ -20,6 +20,8 @@
 
 #include <vector>
 
+#include <boost/function.hpp>
+
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 
@@ -28,40 +30,11 @@
 
 namespace hpp {
   namespace constraints {
-    /*
-    struct HPP_CONSTRAINTS_DLLAPI ExplicitFunction :
-      public DifferentiableFunction
-    {
-      public:
-        ExplicitFunction (const DifferentiableFunctionPtr_t& function,
-	 const SizeIntervals_t& outputConf,
-	 const SizeIntervals_t& outputVelocity)
-          : function_ (function)
-        {}
-
-      protected:
-        virtual void impl_compute (vectorOut_t result,
-                                   vectorIn_t argument) const
-        {
-          implicit_->value(value, argument);
-          input_.view(argument).writeTo(result);
-        }
-
-        virtual void impl_jacobian (matrixOut_t jacobian,
-                                    vectorIn_t arg) const
-        {
-        }
-
-      private:
-        typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
-
-        DifferentiableFunctionPtr_t implicit_;
-        RowBlockIndexes input_ ;
-        RowBlockIndexes output_;
-        mutable vector_t value;
-        mutable matrix_t jacobian;
-    }; // class ExplicitSolver
-    */
+    void difference (const DevicePtr_t& robot,
+        const Eigen::BlockIndex<size_type>::vector_t& indexes,
+        vectorIn_t arg0,
+        vectorIn_t arg1,
+        vectorOut_t result);
 
     class HPP_CONSTRAINTS_DLLAPI ExplicitSolver
     {
@@ -70,8 +43,14 @@ namespace hpp {
         typedef Eigen::ColBlockIndexes ColBlockIndexes;
         // typedef Eigen::MatrixBlockIndexes<false, false> MatrixBlockIndexes;
         typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
+        /// This function sets \f{ result = arg1 - arg0 \f}
+        /// \param indexes the index in the parameter vector (configuration)
+        /// \note result may be of a different size than arg0 and arg1
+        typedef boost::function<void (const Eigen::BlockIndex<size_type>::vector_t& indexes, vectorIn_t arg0, vectorIn_t arg1, vectorOut_t result)> Difference_t;
 
         bool solve (vectorOut_t arg) const;
+
+        bool isSatisfied (vectorIn_t arg, vectorOut_t error) const;
 
         /// Returns true if the function was added, false otherwise
         /// A function can be added iif its outputs do not interfere with the
@@ -136,6 +115,18 @@ namespace hpp {
               inDers_.nbIndexes(), inDers_.indexes());
         }
 
+        /// Set the integration function
+        void difference (const Difference_t& difference)
+        {
+          difference_ = difference;
+        }
+
+        /// Get the integration function
+        const Difference_t& difference () const
+        {
+          return difference_;
+        }
+
         // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndexes(), freeDers().nbIndexes())
         /// \param jacobian must be of dimensions (derSize, derSize) but only a subsegment will be used.
         /// \warning it is assumed solve(arg) has been called before.
@@ -175,6 +166,7 @@ namespace hpp {
         /// For dof i, dofFunction_[i] is the index of the function that computes it.
         /// -1 means it is the output of no function.
         Eigen::VectorXi argFunction_, derFunction_;
+        Difference_t difference_;
         // mutable matrix_t Jg;
     }; // class ExplicitSolver
   } // namespace constraints
