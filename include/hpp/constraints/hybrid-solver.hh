@@ -46,6 +46,16 @@ namespace hpp {
           return solve(arg, DefaultLineSearch());
         }
 
+        template <typename LineSearchType>
+        bool oneStep (vectorIn_t arg, LineSearchType& lineSearch) const
+        {
+          computeValue<true> (arg);
+          updateJacobian (arg);
+          computeDescentDirection ();
+          lineSearch (*this, arg, dq_);
+          explicit_.solve (arg);
+        }
+
       private:
         template <typename LineSearchType>
         Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
