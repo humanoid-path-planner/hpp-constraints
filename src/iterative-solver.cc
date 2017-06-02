@@ -141,7 +141,28 @@ namespace hpp {
       return rightHandSide();
     }
 
-    void HierarchicalIterativeSolver::rightHandSide (const vector_t& rhs)
+    void HierarchicalIterativeSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg) const
+    {
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        Data& d = datas_[i];
+        const DifferentiableFunctionStack::Functions_t& fs = stacks_[i].functions();
+        size_type row = 0;
+        for (std::size_t j = 0; j < fs.size(); ++j) {
+          if (f == fs[j]) {
+            f->value (d.value.segment(row, f->outputSize()), arg);
+            for (size_type k = 0; k < f->outputSize(); ++k) {
+              if (d.comparison[row + k] == Equality) {
+                d.rightHandSide[row + k] = d.value[row + k];
+              }
+            }
+            return;
+          }
+          row += fs[i]->outputSize();
+        }
+      }
+    }
+
+    void HierarchicalIterativeSolver::rightHandSide (vectorIn_t rhs)
     {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
@@ -155,18 +176,25 @@ namespace hpp {
 
     vector_t HierarchicalIterativeSolver::rightHandSide () const
     {
-      vector_t rhs;
+      vector_t rhs(rightHandSideSize());
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const Data& d = datas_[i];
         const size_type nRows = d.equalityIndexes.m_nbRows;
-        rhs.conservativeResize(rhs.size() + nRows);
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
         d.equalityIndexes.view(d.rightHandSide).writeTo(seg);
         row += nRows;
       }
-      // assert (row == dimension_);
+      assert (row == rhs.size());
       return rhs;
+    }
+
+    size_type HierarchicalIterativeSolver::rightHandSideSize () const
+    {
+      size_type rhsSize = 0;
+      for (std::size_t i = 0; i < stacks_.size (); ++i)
+        rhsSize += datas_[i].equalityIndexes.m_nbRows;
+      return rhsSize;
     }
 
     template <bool ComputeJac>

@@ -221,6 +221,11 @@ namespace hpp {
           return stacks_.size();
         }
 
+        const size_type& dimension ()
+        {
+          return dimension_;
+        }
+
         /// \}
 
         bool isSatisfied (vectorIn_t arg) const
@@ -230,9 +235,21 @@ namespace hpp {
           return squaredNorm_ < squaredErrorThreshold_;
         }
 
+        /// Returns the squared norm of the error vector
         value_type residualError() const
         {
           return squaredNorm_;
+        }
+
+        /// Returns the error vector
+        void residualError(vectorOut_t error) const
+        {
+          size_type row = 0;
+          for (std::size_t i = 0; i < datas_.size(); ++i) {
+            const Data& d = datas_[i]; 
+            error.segment(row, d.error.size()) = d.error;
+            row += d.error.size();
+          }
         }
 
         /// Compute a right hand side using the input arg.
@@ -241,13 +258,18 @@ namespace hpp {
         /// rightHandSide (rightHandSideFromArgument (arg))
         vector_t rightHandSideFromInput (vectorIn_t arg) const;
 
+        void rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg) const;
+
         /// Set the level set parameter.
         /// \param rhs the level set parameter.
-        void rightHandSide (const vector_t& rhs);
+        void rightHandSide (vectorIn_t rhs);
 
         /// Get the level set parameter.
         /// \return the parameter.
         vector_t rightHandSide () const;
+
+        /// Get size of the level set parameter.
+        size_type rightHandSideSize () const;
 
       protected:
         typedef Eigen::JacobiSVD <matrix_t> SVD_t;
