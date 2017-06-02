@@ -125,6 +125,9 @@ namespace hpp {
 
         /// \}
 
+        /// \name Problem resolution
+        /// \{
+
         template <typename LineSearchType>
         Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
 
@@ -132,6 +135,21 @@ namespace hpp {
         {
           return solve (arg, DefaultLineSearch());
         }
+
+        inline void oneStep () const;
+
+        /// Project the point arg + darg onto the null space of the jacobian
+        /// at arg.
+        void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const;
+
+        bool isSatisfied (vectorIn_t arg) const
+        {
+          computeValue<false>(arg);
+          computeError();
+          return squaredNorm_ < squaredErrorThreshold_;
+        }
+
+        /// \}
 
         /// \name Parameters
         /// \{
@@ -228,13 +246,6 @@ namespace hpp {
 
         /// \}
 
-        bool isSatisfied (vectorIn_t arg) const
-        {
-          computeValue<false>(arg);
-          computeError();
-          return squaredNorm_ < squaredErrorThreshold_;
-        }
-
         /// Returns the squared norm of the error vector
         value_type residualError() const
         {
@@ -271,6 +282,18 @@ namespace hpp {
         /// Get size of the level set parameter.
         size_type rightHandSideSize () const;
 
+        /// \name Access to internal datas
+        /// You should know what you do when you call these functions
+        /// \{
+        /// Compute the value of each level, and the jacobian if ComputeJac is true.
+        template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
+        void getValue (vectorOut_t v) const;
+        void getReducedJacobian (matrixOut_t J) const;
+        /// If lastIsOptional() is true, then the last level is ignored.
+        /// \warning computeValue must have been called first.
+        void computeError () const;
+        /// \}
+
       protected:
         typedef Eigen::JacobiSVD <matrix_t> SVD_t;
 
@@ -293,11 +316,6 @@ namespace hpp {
         /// Should be called whenever the stack is modified.
         void update ();
 
-        /// Compute the value of each level, and the jacobian if ComputeJac is true.
-        template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
-        /// If lastIsOptional() is true, then the last level is ignored.
-        /// \warning computeValue must have been called first.
-        void computeError () const;
         /// Compute a SVD decomposition of each level and find the best descent
         /// direction at the first order.
         /// \warning computeValue<true> must have been called first.
@@ -314,9 +332,10 @@ namespace hpp {
         Integration_t integrate_;
 
         mutable vector_t dq_, dqSmall_;
-        mutable matrix_t projector_;
+        mutable matrix_t projector_, reducedJ_;
         mutable value_type squaredNorm_;
         mutable std::vector<Data> datas_;
+        mutable SVD_t svd_;
 
         mutable ::hpp::statistics::SuccessStatistics statistics_;
 

@@ -127,6 +127,8 @@ namespace hpp {
       dq_.resize(nDofs);
       dqSmall_.resize(reducedSize);
       projector_.resize(reducedSize, reducedSize);
+      reducedJ_.resize(dimension_, reducedSize);
+      svd_ = SVD_t (dimension_, reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
     }
 
     vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg) const
@@ -216,6 +218,26 @@ namespace hpp {
 
     template void HierarchicalIterativeSolver::computeValue<false>(vectorIn_t arg) const;
     template void HierarchicalIterativeSolver::computeValue<true >(vectorIn_t arg) const;
+
+    void HierarchicalIterativeSolver::getValue (vectorOut_t v) const
+    {
+      size_type row = 0;
+      for (std::size_t i = 0; i < datas_.size(); ++i) {
+        const Data& d = datas_[i];
+        v.segment(row, d.value.rows()) = d.value;
+        row += d.value.rows();
+      }
+    }
+
+    void HierarchicalIterativeSolver::getReducedJacobian (matrixOut_t J) const
+    {
+      size_type row = 0;
+      for (std::size_t i = 0; i < datas_.size(); ++i) {
+        const Data& d = datas_[i];
+        J.middleRows(row, d.reducedJ.rows()) = d.reducedJ;
+        row += d.reducedJ.rows();
+      }
+    }
 
     void HierarchicalIterativeSolver::computeError () const
     {
