@@ -46,6 +46,24 @@ namespace hpp {
           return solve(arg, DefaultLineSearch());
         }
 
+        bool isSatisfied (vectorIn_t arg) const
+        {
+          return 
+            HierarchicalIterativeSolver::isSatisfied (arg)
+            && explicit_.isSatisfied (arg);
+        }
+
+        bool isSatisfied (vectorIn_t arg, vectorOut_t error) const
+        {
+          assert (error.size() == dimension() + explicit_.outDers().nbIndexes());
+          bool iterative =
+            HierarchicalIterativeSolver::isSatisfied (arg);
+          residualError(error.head(dimension()));
+          bool _explicit =
+            explicit_.isSatisfied (arg, error.tail(explicit_.outDers().nbIndexes()));
+          return iterative && _explicit;
+        }
+
         /// Project the point arg + darg onto the null space of the jacobian
         /// at arg.
         void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const;
@@ -58,7 +76,7 @@ namespace hpp {
           computeDescentDirection ();
           lineSearch (*this, arg, dq_);
           explicit_.solve (arg);
-          return isSatisfied(arg);
+          return HierarchicalIterativeSolver::isSatisfied(arg);
         }
 
         /// Computes the jacobian of the explicit functions and

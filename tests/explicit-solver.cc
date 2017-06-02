@@ -23,6 +23,7 @@
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/liegroup.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/constraints/generic-transformation.hh>
@@ -281,7 +282,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    solver.difference (boost::bind(hpp::constraints::difference, device, _1, _2, _3, _4));
+    solver.difference (boost::bind(hpp::pinocchio::difference<hpp::pinocchio::LieGroupTpl>, device, _1, _2, _3));
     BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
 

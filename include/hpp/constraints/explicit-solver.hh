@@ -44,11 +44,12 @@ namespace hpp {
         // typedef Eigen::MatrixBlockIndexes<false, false> MatrixBlockIndexes;
         typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
         /// This function sets \f{ result = arg1 - arg0 \f}
-        /// \param indexes the index in the parameter vector (configuration)
         /// \note result may be of a different size than arg0 and arg1
-        typedef boost::function<void (const Eigen::BlockIndex<size_type>::vector_t& indexes, vectorIn_t arg0, vectorIn_t arg1, vectorOut_t result)> Difference_t;
+        typedef boost::function<void (vectorIn_t arg0, vectorIn_t arg1, vectorOut_t result)> Difference_t;
 
         bool solve (vectorOut_t arg) const;
+
+        bool isSatisfied (vectorIn_t arg) const;
 
         bool isSatisfied (vectorIn_t arg, vectorOut_t error) const;
 
@@ -73,6 +74,7 @@ namespace hpp {
           , argFunction_ (Eigen::VectorXi::Constant(argSize, -1))
           , derFunction_ (Eigen::VectorXi::Constant(derSize, -1))
           // , Jg (derSize, derSize)
+          , arg_ (argSize), diff_(derSize), diffSmall_()
         {
           inArgs_.addRow(0, argSize);
           inDers_.addCol(0, derSize);
@@ -168,6 +170,7 @@ namespace hpp {
         Eigen::VectorXi argFunction_, derFunction_;
         Difference_t difference_;
         // mutable matrix_t Jg;
+        mutable vector_t arg_, diff_, diffSmall_;
     }; // class ExplicitSolver
   } // namespace constraints
 } // namespace hpp

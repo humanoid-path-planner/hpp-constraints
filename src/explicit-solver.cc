@@ -139,16 +139,17 @@ namespace hpp {
     bool ExplicitSolver::isSatisfied (vectorIn_t arg, vectorOut_t error) const
     {
       assert(error.size() == outDers_.nbIndexes());
-      size_type row = 0;
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        const Function& f = functions_[computationOrder_[i]];
-        f.f->value(f.value, f.inArg.view(arg).eval());
-        difference_ (f.inArg.indexes(),
-            f.value, f.outArg.view(arg).eval(),
-            error.segment(row, f.outDer.nbIndexes()));
-        row += f.outDer.nbIndexes();
-      }
+      arg_ = arg;
+      solve (arg_);
+      difference_ (arg, arg_, diff_);
+      outDers_.view(diff_).writeTo(error);
       return error.isZero();
+    }
+
+    bool ExplicitSolver::isSatisfied (vectorIn_t arg) const
+    {
+      diffSmall_.resize(outDers_.nbIndexes());
+      return isSatisfied (arg, diffSmall_);
     }
 
     bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
