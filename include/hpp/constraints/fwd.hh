@@ -62,6 +62,8 @@ namespace hpp {
     HPP_PREDEF_CLASS (ConvexShapeContact);
     HPP_PREDEF_CLASS (ConvexShapeContactComplement);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
+    HPP_PREDEF_CLASS (AffineFunction);
+    HPP_PREDEF_CLASS (ConstantFunction);
 
     typedef pinocchio::ObjectVector_t ObjectVector_t;
     typedef pinocchio::CollisionObjectPtr_t CollisionObjectPtr_t;
@@ -93,6 +95,8 @@ namespace hpp {
     typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
     typedef boost::shared_ptr<ConfigurationConstraint>
       ConfigurationConstraintPtr_t;
+    typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
+    typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
     typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeContact StaticStabilityGravity;
     typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeContactComplement StaticStabilityGravityComplement;

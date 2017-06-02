@@ -66,6 +66,7 @@ SET(${PROJECT_NAME}_HEADERS
 SET(${PROJECT_NAME}_OLDHEADERS
   include/hpp/_constraints/differentiable-function.hh
   include/hpp/_constraints/differentiable-function-stack.hh
+  include/hpp/_constraints/affine-function.hh
   include/hpp/_constraints/distance-between-bodies.hh
   include/hpp/_constraints/fwd.hh
   include/hpp/_constraints/svd.hh
