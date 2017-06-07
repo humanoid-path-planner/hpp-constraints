@@ -140,4 +140,7 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
 
   cols.view(m).setZero();
   std::cout << m << std::endl;
+
+  res = cols.view(m);
+  std::cout << res << std::endl;
 }
