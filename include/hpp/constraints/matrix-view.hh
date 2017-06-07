@@ -186,6 +186,21 @@ namespace Eigen {
       };
     };
 
+    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+    struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,false> {
+      typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
+      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { return evalTo(dst, other); }
+      template<typename ActualDerived, typename ActualOtherDerived>
+        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { other.evalTo(dst); return dst; }
+    };
+    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+    struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,true> {
+      typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
+      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { return evalTo(dst, other); }
+      template<typename ActualDerived, typename ActualOtherDerived>
+        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
+    };
+
     template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalCols {
       static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
       {
@@ -453,15 +468,16 @@ namespace Eigen {
   typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
   typedef Eigen::MatrixBlockIndexes<true, false> ColBlockIndexes;
 
-  template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
-  class MatrixBlockView : public MatrixBase< MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> >
+  template <typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+  class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
   {
     public:
-      typedef MatrixBase< MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
+      typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
 
       typedef Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime> PlainObject;
       // typedef typename internal::ref_selector<MatrixBlockView>::type Nested; 
+      typedef _ArgType ArgType;
       typedef typename internal::ref_selector<ArgType>::type ArgTypeNested;
       // typedef typename Base::CoeffReturnType CoeffReturnType;
       // typedef typename Base::Scalar Scalar;
@@ -484,6 +500,18 @@ namespace Eigen {
       EIGEN_STRONG_INLINE Index rows() const { return m_nbRows; }
       EIGEN_STRONG_INLINE Index cols() const { return m_nbCols; }
 
+      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index index) const {
+        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      }
+      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index row, Index col) const {
+        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      }
+      EIGEN_STRONG_INLINE Scalar& coeffRef(Index index) {
+        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      }
+      EIGEN_STRONG_INLINE Scalar& coeffRef(Index row, const Index& col) {
+        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      }
       /*
       EIGEN_STRONG_INLINE const Index& argIndex(const Index& index) const {
         // EIGEN_STATIC_ASSERT_VECTOR_ONLY(PlainObject)
@@ -492,26 +520,21 @@ namespace Eigen {
       }
       EIGEN_STRONG_INLINE const Index& argRow(const Index& row) const { if (_allRows) return row; else return m_rows[row]; }
       EIGEN_STRONG_INLINE const Index& argCol(const Index& col) const { if (_allCols) return col; else return m_cols[col]; }
-
-      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index index) const { return m_arg.coeff(argIndex(index)); };
-      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index row, Index col) const { return m_arg.coeff(argRow(row), argCol(col)); };
-      EIGEN_STRONG_INLINE Scalar& coeffRef(Index index) { return m_arg.coeffRef(argIndex(index)); };
-      EIGEN_STRONG_INLINE Scalar& coeffRef(Index row, const Index& col) { return m_arg.coeffRef(argRow(row), argCol(col)); };
       */
 
       template <typename Dest>
-      EIGEN_STRONG_INLINE void evalTo (Dest& dst) {
+      EIGEN_STRONG_INLINE void evalTo (Dest& dst) const {
         internal::evalRows<Dest, MatrixBlockView, _allRows, _allCols>::run(dst, *this);
       }
 
       template <typename Dest>
-      EIGEN_STRONG_INLINE void writeTo (Dest& dst) {
+      EIGEN_STRONG_INLINE void writeTo (Dest& dst) const {
         dst.resize(rows(), cols());
         // dst._resize_to_match(*this);
         evalTo(dst.derived());
       }
 
-      EIGEN_STRONG_INLINE PlainObject eval () {
+      EIGEN_STRONG_INLINE PlainObject eval () const {
         PlainObject dst;
         writeTo(dst);
         return dst;
