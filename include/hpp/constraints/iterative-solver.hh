@@ -99,7 +99,7 @@ namespace hpp {
         /// same vector in memory (aliasing)
         typedef boost::function<void (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)> Integration_t;
 
-        HierarchicalIterativeSolver ();
+        HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize);
 
         /// \name Problem definition
         /// \{
@@ -326,6 +326,7 @@ namespace hpp {
         size_type maxIterations_;
 
         std::vector<DifferentiableFunctionStack> stacks_;
+        size_type argSize_, derSize_;
         size_type dimension_;
         bool lastIsOptional_;
         Reduction_t reduction_;

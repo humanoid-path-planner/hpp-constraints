@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
-  HierarchicalIterativeSolver solver;
+  HierarchicalIterativeSolver solver(device->configSize(), device->numberDof());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
   solver.integration(boost::bind(hpp::pinocchio::integrate<true, se3::LieGroupTpl>, device, _1, _2, _3));

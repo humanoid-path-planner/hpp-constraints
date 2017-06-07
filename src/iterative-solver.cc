@@ -58,14 +58,18 @@ namespace hpp {
       }
     }
 
-    HierarchicalIterativeSolver::HierarchicalIterativeSolver()
+    HierarchicalIterativeSolver::HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize)
       : stacks_ (),
+      argSize_ (argSize),
+      derSize_ (derSize),
       dimension_ (0),
       lastIsOptional_ (false),
       reduction_ (),
       datas_(),
       statistics_ ("HierarchicalIterativeSolver")
-    {}
+    {
+      reduction_.addCol (0, derSize_);
+    }
 
     void HierarchicalIterativeSolver::add (
         const DifferentiableFunctionPtr_t& f,
@@ -100,10 +104,7 @@ namespace hpp {
 
     void HierarchicalIterativeSolver::update()
     {
-      assert(!stacks_.empty());
       // Compute reduced size
-      const std::size_t nDofs = stacks_[0].inputDerivativeSize();
-      if (reduction_.m_nbCols == 0) reduction_.addCol(0, nDofs);
       std::size_t reducedSize = reduction_.nbIndexes();
 
       dimension_ = 0;
@@ -114,7 +115,7 @@ namespace hpp {
         datas_[i].rightHandSide.resize(f.outputSize());
         datas_[i].rightHandSide.setZero();
 
-        assert((size_type)nDofs == f.inputDerivativeSize());
+        assert(derSize_ == f.inputDerivativeSize());
         datas_[i].jacobian.resize(f.outputDerivativeSize(), f.inputDerivativeSize());
         datas_[i].jacobian.setZero();
         datas_[i].reducedJ.resize(f.outputDerivativeSize(), reducedSize);
@@ -124,7 +125,7 @@ namespace hpp {
         datas_[i].PK.resize (reducedSize, reducedSize);
       }
 
-      dq_.resize(nDofs);
+      dq_ = vector_t::Zero(derSize_);
       dqSmall_.resize(reducedSize);
       projector_.resize(reducedSize, reducedSize);
       reducedJ_.resize(dimension_, reducedSize);

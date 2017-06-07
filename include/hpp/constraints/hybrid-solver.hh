@@ -18,7 +18,7 @@ namespace hpp {
     {
       public:
         HybridSolver (const std::size_t& argSize, const std::size_t derSize)
-          : HierarchicalIterativeSolver(), explicit_ (argSize, derSize),
+          : HierarchicalIterativeSolver(argSize, derSize), explicit_ (argSize, derSize),
           JeExpanded_ (derSize, derSize)
         {}
 
