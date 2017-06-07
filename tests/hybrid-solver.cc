@@ -178,7 +178,7 @@ class ExplicitTransformation : public DifferentiableFunction
       vector_t q = config(arg);
       rt_->jacobian(J, q);
 
-      inDer().view(J).writeTo(jacobian);
+      inDer().rview(J).writeTo(jacobian);
     }
 };
 

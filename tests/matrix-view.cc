@@ -104,15 +104,15 @@ BOOST_AUTO_TEST_CASE(matrix_view)
 
 BOOST_AUTO_TEST_CASE(matrix_block_view)
 {
-  typedef MatrixBlockView<const MatrixXd, Dynamic, Dynamic, false, false> MatrixXdConstView;
-  typedef MatrixBlockView<MatrixXd, Dynamic, 0, false, true> MatrixRowView;
-  typedef MatrixBlockView<VectorXd, Dynamic, 0, false, true> VectorView;
+  // typedef MatrixBlockView<const MatrixXd, Dynamic, Dynamic, false, false> MatrixXdConstView;
+  // typedef MatrixBlockView<MatrixXd, Dynamic, 0, false, true> MatrixRowView;
+  // typedef MatrixBlockView<VectorXd, Dynamic, 0, false, true> VectorView;
 
   // EIGEN_STATIC_ASSERT_LVALUE(MatrixRowView)
 
   typedef MatrixBlockIndexes<false, true> RowsIndexes;
   typedef MatrixBlockIndexes<true, false> ColsIndexes;
-  typedef MatrixBlockIndexes<true, false> Indexes;
+  // typedef MatrixBlockIndexes<true, false> Indexes;
 
   MatrixXd m (10, 10);
   for (MatrixXd::Index i = 0; i < m.rows(); ++i)
@@ -129,21 +129,27 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   cols.addCol(6, 4);
 
   MatrixXd res, res1;
-  rows.view(m).writeTo(res);
+  rows.lview(m).writeTo(res);
   std::cout << res << std::endl;
 
-  res = rows.view(m);
+  res = rows.rview(m);
   std::cout << res << std::endl;
 
-  res1 = rows.view(m);
+  res1 = rows.rview(m);
   std::cout << res1 << std::endl;
 
-  rows.view(m).setZero();
+  res1 = rows.rview(m.leftCols<8>());
+  std::cout << res1 << std::endl;
+
+  rows.lview(m) = MatrixXd::Ones(rows.nbIndexes(), m.cols());
+  rows.lview(m.leftCols<4>()) = MatrixXd::Ones(rows.nbIndexes(), 4);
+
+  rows.lview(m).setZero();
   std::cout << m << std::endl;
 
-  cols.view(m).writeTo(res);
+  cols.lview(m).writeTo(res);
   std::cout << res << std::endl;
 
-  cols.view(m).setZero();
+  cols.lview(m).setZero();
   std::cout << m << std::endl;
 }

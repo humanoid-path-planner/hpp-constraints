@@ -142,7 +142,7 @@ namespace hpp {
       arg_ = arg;
       solve (arg_);
       difference_ (arg, arg_, diff_);
-      outDers_.view(diff_).writeTo(error);
+      outDers_.rview(diff_).writeTo(error);
       return error.isZero();
     }
 
@@ -168,7 +168,7 @@ namespace hpp {
         if (BlockIndex::overlap(inArg.indexes()[i], outIdx))
           return false;
       // Check that no other function already computes its outputs.
-      if ((outArg.view(argFunction_).eval().array() >= 0).any())
+      if ((outArg.rview(argFunction_).eval().array() >= 0).any())
         return false;
       // Check that it does not insert a loop.
       std::queue<size_type> idxArg;
@@ -184,8 +184,8 @@ namespace hpp {
 
       // Add the function
       int idx = int(functions_.size());
-      outArg.view(argFunction_).setConstant(idx);
-      outDer.view(derFunction_).setConstant(idx);
+      outArg.lview(argFunction_).setConstant(idx);
+      outDer.lview(derFunction_).setConstant(idx);
       functions_.push_back (Function(f, inArg, outArg, inDer, outDer));
 
       /// Computation order
@@ -228,8 +228,8 @@ namespace hpp {
     {
       const Function& f = functions_[iF];
       // Compute this function
-      f.f->value(f.value, f.inArg.view(arg).eval());
-      f.outArg.view(arg) = f.value;
+      f.f->value(f.value, f.inArg.rview(arg).eval());
+      f.outArg.lview(arg) = f.value;
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
@@ -242,7 +242,7 @@ namespace hpp {
       // Compute the function jacobians
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
-        f.f->jacobian(f.jacobian, f.inArg.view(arg).eval());
+        f.f->jacobian(f.jacobian, f.inArg.rview(arg).eval());
       }
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         computeJacobian(computationOrder_[i], jacobian);

@@ -212,7 +212,7 @@ namespace Eigen {
           col += src.m_cols[j].second;
         }
       }
-      static inline void write (Dst& dst, const Src& src, const typename Dst::Index& row)
+      static inline void write (const Dst& dst, Src& src, const typename Dst::Index& row)
       {
         std::size_t col = 0;
         for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
@@ -248,29 +248,18 @@ namespace Eigen {
       {
         dst.derived() = src.m_arg.middleRows(row, dst.rows());
       }
-      static inline void write (Dst& dst, const Src& src, const typename Dst::Index& row)
+      static inline void write (Dst& dst, Src& src, const typename Dst::Index& row)
       {
         src.m_arg.middleRows(row, dst.rows()) = dst;
       }
     };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, true , true > {
-      static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
-      {
-        // TODO change this assert. This does not make sense, call evalTo of Base class of MatrixBlockView
-        // EIGEN_STATIC_ASSERT(false, YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX);
-      }
-      static inline void write (Dst& dst, const Src& src, const typename Dst::Index& row)
-      {
-        // TODO change this assert. This does not make sense, call evalTo of Base class of MatrixBlockView
-        // EIGEN_STATIC_ASSERT(false, YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX);
-      }
-    };
+    template <typename Dst, typename Src> struct evalCols<Dst, Src, true , true > {};
     template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalRows {
       static inline void run (Dst& dst, const Src& src)
       {
         evalCols<Dst, Src, _allRows, _allCols>::run(dst.derived(), src);
       }
-      static inline void write (Dst& dst, const Src& src)
+      static inline void write (Dst& dst, Src& src)
       {
         evalCols<Dst, Src, _allRows, _allCols>::write(dst, src);
       }
@@ -286,7 +275,7 @@ namespace Eigen {
           row += src.m_rows[i].second;
         }
       }
-      static inline void write (Dst& dst, const Src& src)
+      static inline void write (Dst& dst, Src& src)
       {
         std::size_t row = 0;
         for (std::size_t i = 0; i < src.m_rows.size(); ++i) {
@@ -402,23 +391,25 @@ namespace Eigen {
       }
 
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type view(MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type lview(const MatrixBase<Derived>& other) const {
+        Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndexes(), indexes());
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, nbIndexes(), indexes());
         else
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type viewTranspose(MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type lviewTranspose(const MatrixBase<Derived>& other) const {
+        Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndexes(), indexes());
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, nbIndexes(), indexes());
         else
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type view(const MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type rview(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndexes(), indexes());
         else
@@ -426,7 +417,7 @@ namespace Eigen {
       }
 
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type viewTranspose(const MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type rviewTranspose(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndexes(), indexes());
         else
@@ -542,6 +533,7 @@ namespace Eigen {
 
       template <typename OtherDerived>
       EIGEN_STRONG_INLINE MatrixBlockView& operator= (const EigenBase<OtherDerived>& other) {
+        EIGEN_STATIC_ASSERT_LVALUE(ArgType);
         internal::evalRows<const OtherDerived, MatrixBlockView, _allRows, _allCols>::write(other.derived(), *this);
         return *this;
       }

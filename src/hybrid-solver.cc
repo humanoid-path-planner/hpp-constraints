@@ -31,7 +31,7 @@ namespace hpp {
 
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.reducedJ.noalias() += explicit_.outDers().viewTranspose(d.jacobian).eval() * Je_;
+        d.reducedJ.noalias() += explicit_.outDers().rviewTranspose(d.jacobian).eval() * Je_;
       }
     }
   } // namespace constraints

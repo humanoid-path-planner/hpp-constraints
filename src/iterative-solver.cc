@@ -139,7 +139,7 @@ namespace hpp {
         Data& d = datas_[i];
         f.value (d.value, arg);
         // TODO avoid dynamic allocation
-        d.equalityIndexes.view(d.rightHandSide) = d.equalityIndexes.view(d.value).eval();
+        d.equalityIndexes.lview(d.rightHandSide) = d.equalityIndexes.rview(d.value).eval();
       }
       return rightHandSide();
     }
@@ -170,7 +170,7 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.equalityIndexes.view(d.rightHandSide)
+        d.equalityIndexes.lview(d.rightHandSide)
           = rhs.segment(row, d.equalityIndexes.m_nbRows);
         row += d.equalityIndexes.m_nbRows;
       }
@@ -185,7 +185,7 @@ namespace hpp {
         const Data& d = datas_[i];
         const size_type nRows = d.equalityIndexes.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        d.equalityIndexes.view(d.rightHandSide).writeTo(seg);
+        d.equalityIndexes.rview(d.rightHandSide).writeTo(seg);
         row += nRows;
       }
       assert (row == rhs.size());
@@ -213,7 +213,7 @@ namespace hpp {
         applyComparison<ComputeJac>(d.comparison, d.inequalityIndexes, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
-        if (ComputeJac) reduction_.view (d.jacobian).writeTo(d.reducedJ);
+        if (ComputeJac) reduction_.rview (d.jacobian).writeTo(d.reducedJ);
       }
     }
 
