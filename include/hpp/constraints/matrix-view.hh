@@ -189,14 +189,14 @@ namespace Eigen {
     template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
     struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,false> {
       typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
-      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { return evalTo(dst, other); }
+      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { other.writeTo(dst); return dst; }
       template<typename ActualDerived, typename ActualOtherDerived>
         static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { other.evalTo(dst); return dst; }
     };
     template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
     struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,true> {
       typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
-      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { return evalTo(dst, other); }
+      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { other.writeTo(dst.transpose()); return dst; }
       template<typename ActualDerived, typename ActualOtherDerived>
         static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
     };
