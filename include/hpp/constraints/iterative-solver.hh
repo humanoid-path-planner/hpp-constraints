@@ -29,6 +29,8 @@
 
 namespace hpp {
   namespace constraints {
+    /// \addtogroup solvers
+    /// \{
     namespace lineSearch {
       /// Implements the backtracking line search algorithm
       /// See https://en.wikipedia.org/wiki/Backtracking_line_search
@@ -339,6 +341,7 @@ namespace hpp {
 
         friend struct lineSearch::Backtracking;
     }; // class IterativeSolver
+    /// \}
   } // namespace constraints
 } // namespace hpp
 

@@ -11,6 +11,8 @@
 
 namespace hpp {
   namespace constraints {
+    /// \addtogroup solvers
+    /// \{
     class HPP_CONSTRAINTS_DLLAPI HybridSolver
       : public HierarchicalIterativeSolver
     {
@@ -90,6 +92,7 @@ namespace hpp {
         ExplicitSolver explicit_;
         mutable matrix_t Je_, JeExpanded_;
     }; // class HybridSolver
+    /// \}
   } // namespace constraints
 } // namespace hpp
 

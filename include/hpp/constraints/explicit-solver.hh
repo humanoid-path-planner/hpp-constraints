@@ -36,6 +36,12 @@ namespace hpp {
         vectorIn_t arg1,
         vectorOut_t result);
 
+    /// \addtogroup solvers
+    /// \{
+
+    /// Solve system of explicit functions
+    ///
+    /// The system is defined as a set of functions \f$ f_i \f$.
     class HPP_CONSTRAINTS_DLLAPI ExplicitSolver
     {
       public:
@@ -172,6 +178,7 @@ namespace hpp {
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;
     }; // class ExplicitSolver
+    /// \}
   } // namespace constraints
 } // namespace hpp
 
