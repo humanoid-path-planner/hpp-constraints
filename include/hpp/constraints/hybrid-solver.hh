@@ -27,6 +27,11 @@ namespace hpp {
           return explicit_;
         }
 
+        const ExplicitSolver& explicitSolver () const
+        {
+          return explicit_;
+        }
+
         /// Should be called whenever explicit solver is modified
         void explicitSolverHasChanged();
 
