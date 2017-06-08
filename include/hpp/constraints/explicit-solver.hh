@@ -40,7 +40,20 @@ namespace hpp {
 
     /// Solve system of explicit functions
     ///
-    /// The system is defined as a set of functions \f$ f_i \f$.
+    /// The solver works on a given set of variables \f$ X = (x_i) \f$.
+    /// It contains a set of functions \f$ f_j \f$ that takes as input a subset of \f$ X \f$ and
+    /// outputs values of corresponding to another subset of \f$ X \f$.
+    /// There can be no cycles in the dependencies. Moreover, two functions must have
+    /// non-intersecting output subset.
+    /// For instance, \f$ (x_0, x_2) = f_0( x_1, x_3 ) \f$ and
+    /// \f$ (x_3) = f_1( x_4 ) \f$ is a valid input. It would not be possible to
+    /// add \f$ (x_0) = f_2( x_2 ) \f$ because it would introduce a cycle,
+    /// or \f$ (x_3) = f_3( x_1 ) \f$ because \f$ x_3 \f$ would be computed by
+    /// two different function.
+    ///
+    /// The resolution consists in modyfing the output values of each function,
+    /// while respecting the dependendy order. Considering \f$ f_0, f_1 \f$
+    /// above, \f$ f_1 \f$ must be computed before.
     class HPP_CONSTRAINTS_DLLAPI ExplicitSolver
     {
       public:
@@ -102,31 +115,39 @@ namespace hpp {
           return squaredErrorThreshold_;
         }
 
+        /// The set of variable indexes which are not affected by the
+        /// resolution.
         const RowBlockIndexes& inArgs () const
         {
           return inArgs_;
         }
 
+        /// The set of derivative variable indexes which are not affected by the
+        /// resolution.
         const ColBlockIndexes& inDers () const
         {
           return inDers_;
         }
 
+        /// The set of variable indexes which are computed.
         const RowBlockIndexes& outArgs () const
         {
           return outArgs_;
         }
 
+        /// The set of derivative variable indexes which are computed.
         const RowBlockIndexes& outDers () const
         {
           return outDers_;
         }
 
+        /// The number of variables
         const std::size_t& argSize () const
         {
           return argSize_;
         }
 
+        /// The number of derivative variables
         const std::size_t& derSize () const
         {
           return derSize_;
