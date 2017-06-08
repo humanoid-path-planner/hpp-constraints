@@ -16,6 +16,10 @@
 
 #include <hpp/constraints/hybrid-solver.hh>
 
+#include <hpp/constraints/macros.hh>
+
+Eigen::IOFormat IPythonFormat (Eigen::FullPrecision, 0, ", ", ",\n", "[", "]", "numpy.array([\n", "])\n");
+
 namespace hpp {
   namespace constraints {
     void HybridSolver::explicitSolverHasChanged()
@@ -29,9 +33,14 @@ namespace hpp {
       explicit_.jacobian(JeExpanded_, arg);
       explicit_.viewJacobian(JeExpanded_).writeTo(Je_);
 
+      hppDnum (info, "Jacobian of explicit system is \n" << Je_.format(IPythonFormat));
+
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
+        hppDnum (info, "Jacobian of stack " << i << " before update: \n" << d.reducedJ.format(IPythonFormat));
+        hppDnum (info, "Jacobian of explicit variable of stack " << i << ": \n" << explicit_.outDers().rviewTranspose(d.jacobian).eval().format(IPythonFormat));
         d.reducedJ.noalias() += explicit_.outDers().rviewTranspose(d.jacobian).eval() * Je_;
+        hppDnum (info, "Jacobian of stack " << i << " after update: \n" << d.reducedJ.format(IPythonFormat));
       }
     }
   } // namespace constraints
