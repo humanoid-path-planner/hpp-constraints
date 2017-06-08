@@ -143,7 +143,8 @@ namespace hpp {
       solve (arg_);
       difference_ (arg, arg_, diff_);
       outDers_.rview(diff_).writeTo(error);
-      return error.isZero();
+      hppDout (info, "Squared error norm is " << error.squaredNorm());
+      return error.squaredNorm() < squaredErrorThreshold_;
     }
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg) const

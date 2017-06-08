@@ -1,4 +1,3 @@
-
 // Copyright (c) 2017, Joseph Mirabel
 // Authors: Joseph Mirabel (joseph.mirabel@laas.fr)
 //
@@ -79,11 +78,28 @@ namespace hpp {
           , outArgs_ (), outDers_ ()
           , argFunction_ (Eigen::VectorXi::Constant(argSize, -1))
           , derFunction_ (Eigen::VectorXi::Constant(derSize, -1))
+          , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
           // , Jg (derSize, derSize)
           , arg_ (argSize), diff_(derSize), diffSmall_()
         {
           inArgs_.addRow(0, argSize);
           inDers_.addCol(0, derSize);
+        }
+
+        /// Set error threshold
+        void errorThreshold (const value_type& threshold)
+        {
+          squaredErrorThreshold_ = threshold * threshold;
+        }
+        /// Get error threshold
+        value_type errorThreshold () const
+        {
+          return sqrt (squaredErrorThreshold_);
+        }
+        /// Get error threshold
+        value_type squaredErrorThreshold () const
+        {
+          return squaredErrorThreshold_;
         }
 
         const RowBlockIndexes& inArgs () const
@@ -175,6 +191,7 @@ namespace hpp {
         /// -1 means it is the output of no function.
         Eigen::VectorXi argFunction_, derFunction_;
         Difference_t difference_;
+        value_type squaredErrorThreshold_;
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;
     }; // class ExplicitSolver
