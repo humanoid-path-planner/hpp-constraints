@@ -321,6 +321,10 @@ namespace hpp {
         /// \warning computeValue<true> must have been called first.
         void computeDescentDirection () const;
         void expandDqSmall () const;
+        void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
+        {
+          integrate_ (from, velocity, result);
+        }
 
         value_type squaredErrorThreshold_, inequalityThreshold_;
         size_type maxIterations_;

@@ -118,12 +118,21 @@ namespace hpp {
           return HierarchicalIterativeSolver::errorThreshold();
         }
 
+      protected:
+        void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
+        {
+          HierarchicalIterativeSolver::integrate(from, velocity, result);
+          explicit_.solve (result);
+        }
+
       private:
         template <typename LineSearchType>
         Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
 
         ExplicitSolver explicit_;
         mutable matrix_t Je_, JeExpanded_;
+
+        friend struct lineSearch::Backtracking;
     }; // class HybridSolver
     /// \}
   } // namespace constraints

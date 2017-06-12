@@ -40,7 +40,7 @@ namespace hpp {
 
           while (alpha > smallAlpha) {
             darg = alpha * u;
-            solver.integration() (arg, darg, arg_darg);
+            solver.integrate (arg, darg, arg_darg);
             solver.template computeValue<false> (arg_darg);
             solver.computeError ();
             // Check if we are doing better than the linear approximation with coef
