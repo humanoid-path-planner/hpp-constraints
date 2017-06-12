@@ -144,7 +144,15 @@ namespace hpp {
       difference_ (arg, arg_, diff_);
       outDers_.rview(diff_).writeTo(error);
       hppDout (info, "Squared error norm is " << error.squaredNorm());
-      return error.squaredNorm() < squaredErrorThreshold_;
+      // TODO: this threshold a very bad way of solving a numerical issue.
+      // in hpp-core, a numerical constraint may have both a explicit and an
+      // implicit formulation.
+      // 1. The implicit formulation never gives an exact solution so we must
+      //    allow a threshold.
+      // 2. The explicit function may give slightly different results so we must
+      //    allow for a greater threshold. Note the factor 10 is very likely
+      //    over-estimated.
+      return error.squaredNorm() < 10*squaredErrorThreshold_;
     }
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg) const
