@@ -78,12 +78,12 @@ namespace hpp {
 
       svd_.compute (reducedJ_);
 
-      reduction_.rview(darg).writeTo(dqSmall_);
+      dqSmall_ = reduction_.rviewTranspose(darg);
 
       vector_t tmp = getV1(svd_).adjoint() * dqSmall_;
       dqSmall_.noalias() -= getV1(svd_) * tmp;
 
-      result = reduction_.rview(dqSmall_);
+      reduction_.lviewTranspose(result) = dqSmall_;
     }
   } // namespace constraints
 } // namespace hpp

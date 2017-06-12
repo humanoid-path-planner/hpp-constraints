@@ -247,5 +247,10 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   BOOST_CHECK_EQUAL(solver.solve<lineSearch::ErrorNormBased>(qrand), HybridSolver::SUCCESS);
   qrand = tmp;
   BOOST_CHECK_EQUAL(solver.solve<lineSearch::FixedSequence >(qrand), HybridSolver::SUCCESS);
+
+  vector_t dq (device->numberDof());
+  dq.setRandom();
+  qrand = tmp;
+  solver.projectOnKernel (qrand, dq, tmp);
 }
 
