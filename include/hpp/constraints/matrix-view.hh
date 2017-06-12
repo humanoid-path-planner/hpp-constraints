@@ -287,7 +287,7 @@ namespace Eigen {
         }
       }
     };
-    template <bool print> struct print_indexes { template <typename BlockIndexType> static void run (std::ostream& os, const BlockIndexType& bi) {} };
+    template <bool print> struct print_indexes { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
     template <> struct print_indexes <true> {
       template <typename BlockIndexType>
       static void run (std::ostream& os, const BlockIndexType& bi) {

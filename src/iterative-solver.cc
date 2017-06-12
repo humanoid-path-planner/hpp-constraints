@@ -144,7 +144,7 @@ namespace hpp {
       return rightHandSide();
     }
 
-    void HierarchicalIterativeSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg) const
+    bool HierarchicalIterativeSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg) const
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
@@ -158,11 +158,33 @@ namespace hpp {
                 d.rightHandSide[row + k] = d.value[row + k];
               }
             }
-            return;
+            return true;
           }
           row += fs[i]->outputSize();
         }
       }
+      return false;
+    }
+
+    bool HierarchicalIterativeSolver::rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs) const
+    {
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        Data& d = datas_[i];
+        const DifferentiableFunctionStack::Functions_t& fs = stacks_[i].functions();
+        size_type row = 0;
+        for (std::size_t j = 0; j < fs.size(); ++j) {
+          if (f == fs[j]) {
+            for (size_type k = 0; k < f->outputSize(); ++k) {
+              if (d.comparison[row + k] == Equality) {
+                d.rightHandSide[row + k] = rhs[row + k];
+              }
+            }
+            return true;
+          }
+          row += fs[i]->outputSize();
+        }
+      }
+      return false;
     }
 
     void HierarchicalIterativeSolver::rightHandSide (vectorIn_t rhs)
