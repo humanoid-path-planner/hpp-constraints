@@ -128,6 +128,9 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   cols.addCol(2, 2);
   cols.addCol(6, 4);
 
+  std::cout << rows << std::endl;
+  std::cout << cols << std::endl;
+
   MatrixXd res, res1;
   rows.lview(m).writeTo(res);
   std::cout << res << std::endl;

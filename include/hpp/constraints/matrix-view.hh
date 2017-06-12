@@ -19,6 +19,7 @@
 
 #include <Eigen/Core>
 #include <vector>
+#include <iostream>
 
 namespace Eigen {
   // template <typename Index> struct interval {
@@ -286,6 +287,14 @@ namespace Eigen {
         }
       }
     };
+    template <bool print> struct print_indexes { template <typename BlockIndexType> static void run (std::ostream& os, const BlockIndexType& bi) {} };
+    template <> struct print_indexes <true> {
+      template <typename BlockIndexType>
+      static void run (std::ostream& os, const BlockIndexType& bi) {
+        for (std::size_t i = 0; i < bi.size(); ++i)
+          os << "[ " << bi[i].first << ", " << bi[i].second << "], ";
+      }
+    };
   } // namespace internal
 
   template <typename IndexType>
@@ -455,6 +464,22 @@ namespace Eigen {
         if (Cardinal) idx = BlockIndex<Index>::cardinal(b);
       }
   };
+
+  template <bool _allRows, bool _allCols>
+  std::ostream& operator<< (std::ostream& os, MatrixBlockIndexes<_allRows, _allCols> mbi)
+  {
+    if (!_allRows) {
+      os << "Rows: ";
+      internal::print_indexes<!_allRows>::run (os, mbi.m_rows);
+      os << '\n';
+    }
+    if (!_allCols) {
+      os << "Cols: ";
+      internal::print_indexes<!_allCols>::run (os, mbi.m_cols);
+      os << '\n';
+    }
+    return os;
+  }
 
   typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
   typedef Eigen::MatrixBlockIndexes<true, false> ColBlockIndexes;
