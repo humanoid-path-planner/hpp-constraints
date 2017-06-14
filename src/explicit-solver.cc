@@ -152,7 +152,7 @@ namespace hpp {
       // 2. The explicit function may give slightly different results so we must
       //    allow for a greater threshold. Note the factor 10 is very likely
       //    over-estimated.
-      return error.squaredNorm() < 10*squaredErrorThreshold_;
+      return error.squaredNorm() < squaredErrorThreshold_;
     }
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg) const
