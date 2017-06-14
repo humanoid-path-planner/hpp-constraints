@@ -15,6 +15,7 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/constraints/iterative-solver.hh>
+#include <hpp/constraints/impl/iterative-solver.hh>
 
 #include <limits>
 #include <hpp/util/debug.hh>
@@ -56,6 +57,19 @@ namespace hpp {
           }
         }
       }
+    }
+
+    namespace lineSearch {
+      Backtracking::Backtracking () : c (0.001), tau (0.7), smallAlpha (0.2) {}
+      template bool Backtracking::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
+      FixedSequence::FixedSequence() : alpha (.2), alphaMax (.95), K (.8) {}
+      template bool FixedSequence::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
+      ErrorNormBased::ErrorNormBased(value_type alphaMin, value_type _a, value_type _b)
+          : C (0.5 + alphaMin / 2), K ((1 - alphaMin) / 2), a (_a), b (_b)
+      {}
+      template bool ErrorNormBased::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
     }
 
     HierarchicalIterativeSolver::HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize)
@@ -322,5 +336,9 @@ namespace hpp {
     {
       Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndexes(), reduction_.indexes()) = dqSmall_;
     }
+
+    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
+    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
+    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
   } // namespace constraints
 } // namespace hpp

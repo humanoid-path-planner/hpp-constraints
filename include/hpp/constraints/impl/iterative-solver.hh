@@ -22,8 +22,6 @@
 namespace hpp {
   namespace constraints {
     namespace lineSearch {
-      inline Backtracking::Backtracking () : c (0.001), tau (0.7), smallAlpha (0.2) {}
-
       template <typename SolverType>
       inline bool Backtracking::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t u)
       {
@@ -79,8 +77,6 @@ namespace hpp {
         return slope;
       }
 
-      inline FixedSequence::FixedSequence() : alpha (.2), alphaMax (.95), K (.8) {}
-
       template <typename SolverType>
       inline bool FixedSequence::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
       {
@@ -89,10 +85,6 @@ namespace hpp {
         solver.integration() (arg, darg, arg);
         return true;
       }
-
-      inline ErrorNormBased::ErrorNormBased(value_type alphaMin, value_type _a, value_type _b)
-          : C (0.5 + alphaMin / 2), K ((1 - alphaMin) / 2), a (_a), b (_b)
-      {}
 
       template <typename SolverType>
       inline bool ErrorNormBased::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)

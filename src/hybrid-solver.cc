@@ -15,13 +15,24 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/constraints/hybrid-solver.hh>
+#include <hpp/constraints/impl/hybrid-solver.hh>
+#include <hpp/constraints/impl/iterative-solver.hh>
 
+#include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
 
 Eigen::IOFormat IPythonFormat (Eigen::FullPrecision, 0, ", ", ",\n", "[", "]", "numpy.array([\n", "])\n");
 
 namespace hpp {
   namespace constraints {
+    namespace lineSearch {
+      template bool Backtracking::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
+      template bool FixedSequence::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
+      template bool ErrorNormBased::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+    }
+
     void HybridSolver::explicitSolverHasChanged()
     {
       reduction(explicit_.inDers());
@@ -43,5 +54,25 @@ namespace hpp {
         hppDnum (info, "Jacobian of stack " << i << " after update: \n" << d.reducedJ.format(IPythonFormat));
       }
     }
+
+    void HybridSolver::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
+    {
+      computeValue<true> (arg);
+      updateJacobian(arg);
+      getReducedJacobian (reducedJ_);
+
+      svd_.compute (reducedJ_);
+
+      dqSmall_ = reduction_.rviewTranspose(darg);
+
+      vector_t tmp = getV1(svd_).adjoint() * dqSmall_;
+      dqSmall_.noalias() -= getV1(svd_) * tmp;
+
+      reduction_.lviewTranspose(result) = dqSmall_;
+    }
+
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
   } // namespace constraints
 } // namespace hpp

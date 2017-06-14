@@ -138,6 +138,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-#include <hpp/constraints/impl/hybrid-solver.hh>
-
 #endif // HPP_CONSTRAINTS_HYBRID_SOLVER_HH

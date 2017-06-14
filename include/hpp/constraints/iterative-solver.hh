@@ -38,7 +38,7 @@ namespace hpp {
         Backtracking ();
 
         template <typename SolverType>
-        inline bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
 
         template <typename SolverType>
         inline value_type computeLocalSlope(const SolverType& solver) const;
@@ -53,7 +53,7 @@ namespace hpp {
         FixedSequence();
 
         template <typename SolverType>
-        inline bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
 
         value_type alpha;
         const value_type alphaMax, K;
@@ -69,7 +69,7 @@ namespace hpp {
             value_type _b = 2 - 4 / (1 - std::pow (10, (int)(N - M))));
 
         template <typename SolverType>
-        inline bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
 
         const value_type C, K, a, b;
       };
@@ -351,7 +351,5 @@ namespace hpp {
     /// \}
   } // namespace constraints
 } // namespace hpp
-
-#include <hpp/constraints/impl/iterative-solver.hh>
 
 #endif // HPP_CONSTRAINTS_ITERATIVE_SOLVER_HH
