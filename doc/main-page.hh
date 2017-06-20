@@ -16,5 +16,6 @@ namespace hpp {
     /// robot configuration.
     ///
     /// \defgroup constraints Constraints
+    /// \defgroup solvers Constraint solvers
   } // namespace constraints
 } // namespace hpp

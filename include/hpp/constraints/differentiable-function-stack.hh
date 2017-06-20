@@ -106,6 +106,9 @@ namespace hpp {
         DifferentiableFunctionStack (const std::string& name)
           : DifferentiableFunction (0, 0, 0, 0, name) {}
 
+        DifferentiableFunctionStack ()
+          : DifferentiableFunction (0, 0, 0, 0, "DifferentiableFunctionStack") {}
+
       protected:
         void impl_compute (vectorOut_t result, ConfigurationIn_t arg) const throw ()
         {

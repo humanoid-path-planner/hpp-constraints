@@ -14,6 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#define EIGEN_RUNTIME_NO_MALLOC
 #define BOOST_TEST_MODULE EIGEN_SVD_FEATURE
 #include <boost/test/unit_test.hpp>
 
@@ -29,13 +30,12 @@ using hpp::constraints::projectorOnSpanOfInv;
 using hpp::constraints::matrix_t;
 using hpp::constraints::value_type;
 
-BOOST_AUTO_TEST_CASE(eigen_svd_features)
+template <bool computeFullU, bool computeFullV>
+void test ()
 {
   const std::size_t rows = 4, cols = 6;
   const value_type tol = 1e-6;
   typedef Eigen::JacobiSVD <matrix_t> SVD;
-  const bool computeFullU = false;
-  const bool computeFullV = true;
   int computationFlags =
     ( computeFullU ? Eigen::ComputeFullU : Eigen::ComputeThinU )
     | ( computeFullV ? Eigen::ComputeFullV : Eigen::ComputeThinV );
@@ -52,11 +52,17 @@ BOOST_AUTO_TEST_CASE(eigen_svd_features)
     svd.compute (M);
     BOOST_CHECK_MESSAGE ((svd.matrixV().adjoint() * svd.matrixV() - matrix_t::Identity (svd.matrixV().cols(),svd.matrixV().cols())).isZero(),
                          svd.matrixV().adjoint() * svd.matrixV() - matrix_t::Identity (svd.matrixV().cols(),svd.matrixV().cols()));
+
     pseudoInverse          <SVD> (svd, Mpinv); 
+
+    Eigen::internal::set_is_malloc_allowed(false);
+
     projectorOnKernel      <SVD> (svd, PK, computeFullV); 
     projectorOnSpan        <SVD> (svd, PS);
     projectorOnKernelOfInv <SVD> (svd, PKinv, computeFullU); 
     projectorOnSpanOfInv   <SVD> (svd, PSinv); 
+
+    Eigen::internal::set_is_malloc_allowed(true);
     
     matrix_t Ir = M * Mpinv;
     matrix_t Ic = Mpinv * M;
@@ -73,4 +79,12 @@ BOOST_AUTO_TEST_CASE(eigen_svd_features)
     BOOST_CHECK_MESSAGE ((PS + PK)      .isApprox (matrix_t::Identity(cols, cols)), "PS + PK = I failed");
     BOOST_CHECK_MESSAGE ((PSinv + PKinv).isApprox (matrix_t::Identity(rows, rows)), "PSinv + PKinv = I failed");
   }
+}
+
+BOOST_AUTO_TEST_CASE(eigen_svd_features)
+{
+  test<false, false>();
+  test<true , false>();
+  test<true , true >();
+  test<false, true >();
 }

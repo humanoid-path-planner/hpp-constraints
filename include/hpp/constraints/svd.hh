@@ -68,7 +68,7 @@ namespace hpp {
     }
 
     template < typename SVD >
-    void projectorOnSpan (const SVD svd,
+    void projectorOnSpan (const SVD& svd,
         Eigen::Ref <typename SVD::MatrixType> projector)
     {
       eigen_assert(svd.computeU() && svd.computeV() && "Eigen::JacobiSVD "
@@ -78,7 +78,7 @@ namespace hpp {
     }
 
     template < typename SVD >
-    void projectorOnSpanOfInv (const SVD svd,
+    void projectorOnSpanOfInv (const SVD& svd,
         Eigen::Ref <typename SVD::MatrixType> projector)
     {
       eigen_assert(svd.computeU() && svd.computeV() && "Eigen::JacobiSVD "
@@ -88,7 +88,7 @@ namespace hpp {
     }
 
     template < typename SVD >
-    void projectorOnKernel (const SVD svd,
+    void projectorOnKernel (const SVD& svd,
         Eigen::Ref <typename SVD::MatrixType> projector,
         const bool& computeFullV = false)
     {
@@ -104,7 +104,7 @@ namespace hpp {
     }
 
     template < typename SVD >
-    void projectorOnKernelOfInv (const SVD svd,
+    void projectorOnKernelOfInv (const SVD& svd,
         Eigen::Ref <typename SVD::MatrixType> projector,
         const bool& computeFullU = false)
     {

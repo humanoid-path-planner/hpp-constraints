@@ -33,10 +33,12 @@ set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
   include/hpp/constraints/differentiable-function-stack.hh
+  include/hpp/constraints/active-set-differentiable-function.hh
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
   include/hpp/constraints/tools.hh
+  include/hpp/constraints/matrix-view.hh
   include/hpp/constraints/generic-transformation.hh
   include/hpp/constraints/macros.hh
   include/hpp/constraints/convex-shape.hh
@@ -52,11 +54,19 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/relative-position.hh
   include/hpp/constraints/relative-transformation.hh
   include/hpp/constraints/configuration-constraint.hh
+  include/hpp/constraints/explicit-solver.hh
+  include/hpp/constraints/hybrid-solver.hh
+  include/hpp/constraints/iterative-solver.hh
+
+  include/hpp/constraints/impl/hybrid-solver.hh
+  include/hpp/constraints/impl/iterative-solver.hh
+  include/hpp/constraints/impl/matrix-view.hh
 )
 
 SET(${PROJECT_NAME}_OLDHEADERS
   include/hpp/_constraints/differentiable-function.hh
   include/hpp/_constraints/differentiable-function-stack.hh
+  include/hpp/_constraints/affine-function.hh
   include/hpp/_constraints/distance-between-bodies.hh
   include/hpp/_constraints/fwd.hh
   include/hpp/_constraints/svd.hh
@@ -111,7 +121,8 @@ SETUP_PROJECT()
 SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
 SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")
-if (${USE_QPOASES})
+ADD_REQUIRED_DEPENDENCY("hpp-statistics")
+IF (${USE_QPOASES})
   ADD_REQUIRED_DEPENDENCY("qpOASES >= 3.2")
 ENDIF ()
 

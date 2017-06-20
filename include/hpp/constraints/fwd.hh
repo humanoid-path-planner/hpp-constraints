@@ -27,6 +27,7 @@ namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
     HPP_PREDEF_CLASS (DifferentiableFunctionStack);
+    HPP_PREDEF_CLASS (ActiveSetDifferentiableFunction);
     typedef pinocchio::size_type size_type;
     typedef pinocchio::value_type value_type;
     typedef pinocchio::JointPtr_t JointPtr_t;
@@ -49,6 +50,9 @@ namespace hpp {
     typedef Eigen::Matrix <value_type, 5, 1> vector5_t;
     typedef Eigen::Matrix <value_type, 6, 1> vector6_t;
 
+    typedef std::pair<size_type, size_type> interval_t;
+    typedef std::vector < interval_t > intervals_t;
+
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
     HPP_PREDEF_CLASS (RelativeCom);
@@ -58,6 +62,8 @@ namespace hpp {
     HPP_PREDEF_CLASS (ConvexShapeContact);
     HPP_PREDEF_CLASS (ConvexShapeContactComplement);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
+    HPP_PREDEF_CLASS (AffineFunction);
+    HPP_PREDEF_CLASS (ConstantFunction);
 
     typedef pinocchio::ObjectVector_t ObjectVector_t;
     typedef pinocchio::CollisionObjectPtr_t CollisionObjectPtr_t;
@@ -73,6 +79,8 @@ namespace hpp {
     DifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DifferentiableFunctionStack>
     DifferentiableFunctionStackPtr_t;
+    typedef boost::shared_ptr <ActiveSetDifferentiableFunction>
+    ActiveSetDifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DistanceBetweenBodies>
     DistanceBetweenBodiesPtr_t;
     typedef boost::shared_ptr <DistanceBetweenPointsInBodies>
@@ -87,6 +95,8 @@ namespace hpp {
     typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
     typedef boost::shared_ptr<ConfigurationConstraint>
       ConfigurationConstraintPtr_t;
+    typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
+    typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
     typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeContact StaticStabilityGravity;
     typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeContactComplement StaticStabilityGravityComplement;

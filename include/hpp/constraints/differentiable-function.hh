@@ -35,8 +35,26 @@ namespace hpp {
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
+      vector_t operator () (vectorIn_t argument) const
+      {
+	assert (argument.size () == inputSize ());
+        vector_t result (outputSize());
+	impl_compute (result, argument);
+        return result;
+      }
+      /// \deprecated use value(vectorOut_t, vectorIn_t)
       void operator () (vectorOut_t result,
 			vectorIn_t argument) const
+      {
+	assert (result.size () == outputSize ());
+	assert (argument.size () == inputSize ());
+	impl_compute (result, argument);
+      }
+      /// Evaluate the function at a given parameter.
+      ///
+      /// \note parameters should be of the correct size.
+      void value (vectorOut_t result,
+                  vectorIn_t argument) const
       {
 	assert (result.size () == outputSize ());
 	assert (argument.size () == inputSize ());

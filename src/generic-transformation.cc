@@ -251,7 +251,7 @@ namespace hpp {
 
           // Copy necessary rows.
           size_type index=0;
-          const std::size_t lPos = (pos?3:0), lOri = (ori?3:0);
+          const size_type lPos = (pos?3:0), lOri = (ori?3:0);
           if (!d.fullPos) {
             for (size_type i=0; i<lPos; ++i) {
               if (mask [i]) {
@@ -382,7 +382,7 @@ namespace hpp {
 	robot_->currentConfiguration (argument);
 	robot_->computeForwardKinematics ();
         compute<IsRelative, ComputePosition, ComputeOrientation>::error (d_);
-	latestArgument_.noalias() = argument;
+	latestArgument_ = argument;
       }
     }
 

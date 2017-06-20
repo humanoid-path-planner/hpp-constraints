@@ -28,7 +28,7 @@ ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
 # This macro will create a binary from `NAME.cc', link it against
 # Boost and add it to the test suite.
 #
-MACRO(ADD_TESTCASE NAME GENERATED)
+MACRO(ADD_TESTCASE NAME GENERATED HEADER_ONLY)
   IF (${GENERATED} STREQUAL TRUE)
     ADD_EXECUTABLE(${NAME} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cc)
   ELSE()
@@ -39,13 +39,20 @@ MACRO(ADD_TESTCASE NAME GENERATED)
   PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-pinocchio)
 
   # Link against Boost and project library.
-  TARGET_LINK_LIBRARIES(${NAME}
-    ${Boost_LIBRARIES} hpp-constraints
-    )
+  IF(${HEADER_ONLY})
+    TARGET_LINK_LIBRARIES(${NAME} ${Boost_LIBRARIES})
+  ELSE(${HEADER_ONLY})
+    TARGET_LINK_LIBRARIES(${NAME} ${Boost_LIBRARIES} hpp-constraints)
+  ENDIF(${HEADER_ONLY})
 ENDMACRO(ADD_TESTCASE)
 
-ADD_TESTCASE (generic-transformation FALSE)
-ADD_TESTCASE (logarithm FALSE)
-ADD_TESTCASE (svd FALSE)
-ADD_TESTCASE (convex-shape FALSE)
-ADD_TESTCASE (symbolic-calculus FALSE)
+ADD_TESTCASE (logarithm                 FALSE TRUE )
+ADD_TESTCASE (matrix-view               FALSE TRUE )
+ADD_TESTCASE (svd                       FALSE TRUE )
+
+ADD_TESTCASE (generic-transformation    FALSE FALSE)
+ADD_TESTCASE (convex-shape              FALSE FALSE)
+ADD_TESTCASE (symbolic-calculus         FALSE FALSE)
+ADD_TESTCASE (iterative-solver          FALSE FALSE)
+ADD_TESTCASE (explicit-solver           FALSE FALSE)
+ADD_TESTCASE (hybrid-solver             FALSE FALSE)
