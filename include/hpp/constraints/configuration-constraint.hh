@@ -39,10 +39,23 @@ namespace hpp {
             ConfigurationIn_t goal,
             std::vector <bool> mask = std::vector <bool> (0));
 
+        /// Return a shared pointer to a new instance
+        static ConfigurationConstraintPtr_t create (
+            const std::string& name, const DevicePtr_t& robot,
+            ConfigurationIn_t goal,
+            ConfigurationIn_t weight,
+            std::vector <bool> mask = std::vector <bool> (0));
+
+
         virtual ~ConfigurationConstraint () throw () {}
 
         ConfigurationConstraint (const std::string& name,
             const DevicePtr_t& robot, ConfigurationIn_t goal,
+            std::vector <bool> mask);
+
+        ConfigurationConstraint (const std::string& name,
+            const DevicePtr_t& robot, ConfigurationIn_t goal,
+            ConfigurationIn_t weight,
             std::vector <bool> mask);
 
       protected:
@@ -59,6 +72,7 @@ namespace hpp {
         typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
         DevicePtr_t robot_;
         Configuration_t goal_;
+        Configuration_t weight_;
         EigenBoolVector_t mask_;
         mutable vector_t diff_;
     }; // class ComBetweenFeet

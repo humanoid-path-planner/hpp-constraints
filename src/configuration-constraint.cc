@@ -32,12 +32,37 @@ namespace hpp {
       return ConfigurationConstraintPtr_t (ptr);
     }
 
+    ConfigurationConstraintPtr_t ConfigurationConstraint::create (
+        const std::string& name, const DevicePtr_t& robot,
+        ConfigurationIn_t goal, ConfigurationIn_t weight,
+        std::vector <bool> mask)
+    {
+      ConfigurationConstraint* ptr = new ConfigurationConstraint
+        (name, robot, goal,weight, mask);
+      return ConfigurationConstraintPtr_t (ptr);
+    }
+
     ConfigurationConstraint::ConfigurationConstraint (
         const std::string& name, const DevicePtr_t& robot,
         ConfigurationIn_t goal, std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
           1, name),
-      robot_ (robot), goal_ (goal), diff_ (robot->numberDof())
+      robot_ (robot), goal_ (goal),weight_(), diff_ (robot->numberDof())
+    {
+      mask_ = EigenBoolVector_t (robot->numberDof ());
+      for (std::size_t i = 0; i < mask.size (); ++i) {
+        mask_[i] = mask[i];
+      }
+      mask_.tail (robot->numberDof () - mask.size ()).setConstant (true);
+
+    }
+
+    ConfigurationConstraint::ConfigurationConstraint (
+        const std::string& name, const DevicePtr_t& robot,
+        ConfigurationIn_t goal,ConfigurationIn_t weight, std::vector <bool> mask) :
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+          1, name),
+      robot_ (robot), goal_ (goal),weight_(weight), diff_ (robot->numberDof())
     {
       mask_ = EigenBoolVector_t (robot->numberDof ());
       for (std::size_t i = 0; i < mask.size (); ++i) {
@@ -51,8 +76,19 @@ namespace hpp {
       const throw ()
     {
       // TODO: Add ability to put weights on DOF
+      hppDout(notice,"configuration constraint : arg = "<<model::displayConfig(argument));
       hpp::model::difference (robot_, argument, goal_, diff_);
+      if(weight_.size() == robot_->configSize()){
+        hppDout(notice,"weight : "<<model::displayConfig(weight_));
+        hppDout(notice,"apply weight, before : "<<model::displayConfig(diff_));
+        for (size_t i = 0 ; i < robot_->configSize() ; ++i)
+          diff_[i] = diff_[i] * weight_[i];
+        hppDout(notice,"apply weight, after  : "<<model::displayConfig(diff_));
+      }else{
+        hppDout(notice,"don't use weight");
+      }
       result [0] = 0.5 * mask_.select (diff_, 0).squaredNorm ();
+      hppDout(notice,"configuration constraint : res = "<<model::displayConfig(result));
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
