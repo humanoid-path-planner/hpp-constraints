@@ -39,7 +39,8 @@ namespace hpp {
       }
     } // namespace
 
-    RelativeComPtr_t RelativeCom::create (const DevicePtr_t& robot,
+    RelativeComPtr_t RelativeCom::create (const std::string& name,
+                                          const DevicePtr_t& robot,
 					  const JointPtr_t& joint,
 					  const vector3_t reference,
                                           std::vector <bool> mask)
@@ -47,7 +48,7 @@ namespace hpp {
       CenterOfMassComputationPtr_t comc =
         CenterOfMassComputation::create (robot);
       comc->add (robot->rootJoint ());
-      return create (robot, comc, joint, reference, mask);
+      return create (name, robot, comc, joint, reference, mask);
     }
 
     RelativeComPtr_t RelativeCom::create (
@@ -56,7 +57,17 @@ namespace hpp {
         const JointPtr_t& joint, const vector3_t reference,
         std::vector <bool> mask)
     {
-      RelativeCom* ptr = new RelativeCom (robot, comc, joint, reference, mask);
+      return create ("RelativeCom", robot, comc, joint, reference, mask);
+    }
+
+    RelativeComPtr_t RelativeCom::create (
+        const std::string& name,
+        const DevicePtr_t& robot,
+        const CenterOfMassComputationPtr_t& comc,
+        const JointPtr_t& joint, const vector3_t reference,
+        std::vector <bool> mask)
+    {
+      RelativeCom* ptr = new RelativeCom (robot, comc, joint, reference, mask, name);
       RelativeComPtr_t shPtr (ptr);
       return shPtr;
     }
@@ -64,9 +75,10 @@ namespace hpp {
     RelativeCom::RelativeCom (const DevicePtr_t& robot,
         const CenterOfMassComputationPtr_t& comc,
         const JointPtr_t& joint, const vector3_t reference,
-        std::vector <bool> mask) :
+        std::vector <bool> mask,
+        const std::string& name) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-                               size (mask), "RelativeCom"),
+                               size (mask), name),
       robot_ (robot), comc_ (comc), joint_ (joint), reference_ (reference), mask_ (mask),
       nominalCase_ (false), jacobian_ (3, robot->numberDof()-robot->extraConfigSpace().dimension())
     {

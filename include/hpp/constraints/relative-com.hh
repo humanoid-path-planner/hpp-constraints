@@ -59,19 +59,30 @@ namespace hpp {
       static RelativeComPtr_t create (const DevicePtr_t& robot,
 				      const JointPtr_t& joint,
 				      const vector3_t reference,
-                                      std::vector <bool> mask =
-                                      boost::assign::list_of (true)(true)(true));
+                                      std::vector <bool> mask = std::vector<bool>(3, true))
+      { return create ("RelativeCom", robot, joint, reference, mask); }
+      static RelativeComPtr_t create (const std::string& name,
+                                      const DevicePtr_t& robot,
+				      const JointPtr_t& joint,
+				      const vector3_t reference,
+                                      std::vector <bool> mask = std::vector<bool>(3, true));
       static RelativeComPtr_t create (const DevicePtr_t& robot,
                                       const CenterOfMassComputationPtr_t& comc,
 				      const JointPtr_t& joint,
 				      const vector3_t reference,
-                                      std::vector <bool> mask =
-                                      boost::assign::list_of (true)(true)(true));
+                                      std::vector <bool> mask = std::vector<bool>(3, true));
+      static RelativeComPtr_t create (const std::string& name,
+                                      const DevicePtr_t& robot,
+                                      const CenterOfMassComputationPtr_t& comc,
+				      const JointPtr_t& joint,
+				      const vector3_t reference,
+                                      std::vector <bool> mask = std::vector<bool> (3, true));
       virtual ~RelativeCom () throw () {}
       RelativeCom (const DevicePtr_t& robot,
           const CenterOfMassComputationPtr_t& comc,
           const JointPtr_t& joint, const vector3_t reference,
-          std::vector <bool> mask);
+          std::vector <bool> mask,
+          const std::string& name);
     protected:
       /// Compute value of error
       ///
