@@ -43,7 +43,9 @@ namespace hpp {
           J_ (J), b_ (b),
           aIdx_ (argSelection), JIdx_ (derSelection), C_JIdx_ (CderSelection),
           qshort_ (argSelection.nbIndexes())
-          {}
+          {
+            assert(J_.cols() == b_.cols());
+          }
 
       private:
         /// User implementation of function evaluation
