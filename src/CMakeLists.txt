@@ -14,8 +14,7 @@
 # hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 SET(LIBRARY_NAME ${PROJECT_NAME})
-ADD_LIBRARY(${LIBRARY_NAME}
-  SHARED
+SET (${LIBRARY_NAME}_SOURCES
   differentiable-function.cc
   generic-transformation.cc
   relative-com.cc
@@ -25,17 +24,22 @@ ADD_LIBRARY(${LIBRARY_NAME}
   configuration-constraint.cc
   convex-shape-contact.cc
   static-stability.cc
-  qp-static-stability.cc
   explicit-solver.cc
   hybrid-solver.cc
   iterative-solver.cc
+)
+
+IF (${USE_QPOASES})
+  SET (${LIBRARY_NAME}_SOURCES
+    ${${LIBRARY_NAME}_SOURCES}
+    qp-static-stability.cc
+    )
+ENDIF (${USE_QPOASES})
+
+ADD_LIBRARY(${LIBRARY_NAME}
+  SHARED
+  ${${LIBRARY_NAME}_SOURCES}
   )
-  # position.cc
-  # orientation.cc
-  # transformation.cc
-  # relative-orientation.cc
-  # relative-position.cc
-  # relative-transformation.cc
 
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-pinocchio)
 PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} hpp-statistics)
