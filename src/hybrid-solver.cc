@@ -42,7 +42,7 @@ namespace hpp {
     {
       // Compute Je_
       explicit_.jacobian(JeExpanded_, arg);
-      explicit_.viewJacobian(JeExpanded_).writeTo(Je_);
+      Je_ = explicit_.viewJacobian(JeExpanded_);
 
       hppDnum (info, "Jacobian of explicit system is \n" << Je_.format(IPythonFormat));
 
