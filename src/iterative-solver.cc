@@ -153,6 +153,8 @@ namespace hpp {
         datas_[i].svd = SVD_t (f.outputDerivativeSize(), reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
         datas_[i].svd.setThreshold (SVD_THRESHOLD);
         datas_[i].PK.resize (reducedSize, reducedSize);
+
+        datas_[i].maxRank = 0;
       }
 
       dq_ = vector_t::Zero(derSize_);
@@ -302,6 +304,8 @@ namespace hpp {
 
     void HierarchicalIterativeSolver::computeDescentDirection () const
     {
+      sigma_ = std::numeric_limits<value_type>::max();
+
       if (stacks_.empty()) {
         dq_.setZero();
         return;
@@ -312,6 +316,9 @@ namespace hpp {
         HPP_DEBUG_SVDCHECK (d.svd);
         // TODO Eigen::JacobiSVD does a dynamic allocation here.
         dqSmall_ = d.svd.solve (- d.error);
+        d.maxRank = std::max(d.maxRank, d.svd.rank());
+        if (d.maxRank > 0)
+          sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
       } else {
         projector_.setIdentity();
         vector_t err;
@@ -338,6 +345,11 @@ namespace hpp {
             // TODO Eigen::JacobiSVD does a dynamic allocation here.
             dqSmall_ += d.svd.solve (err - d.reducedJ * dqSmall_);
           }
+          // Update sigma
+          d.maxRank = std::max(d.maxRank, d.svd.rank());
+          if (d.maxRank > 0)
+            sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
+
           if (last) break; // No need to compute projector for next step.
           if (!(d.reducedJ * dqSmall_ - err).isZero ()) break;
           /// compute projector for next step.

@@ -145,6 +145,15 @@ namespace hpp {
           return squaredNorm_ < squaredErrorThreshold_;
         }
 
+        /// Returns the lowest singular value.
+        /// If the jacobian has maximum rank r, then it corresponds to r-th
+        /// greatest singular value. This value is zero when the jacobian is
+        /// singular.
+        const value_type& sigma () const
+        {
+          return sigma_;
+        }
+
         /// \}
 
         /// \name Parameters
@@ -311,6 +320,8 @@ namespace hpp {
           SVD_t svd;
           matrix_t PK;
 
+          mutable size_type maxRank;
+
           ComparisonTypes_t comparison;
           std::vector<std::size_t> inequalityIndexes;
           Eigen::RowBlockIndexes equalityIndexes;
@@ -343,6 +354,8 @@ namespace hpp {
         bool lastIsOptional_;
         Reduction_t reduction_;
         Integration_t integrate_;
+        /// The smallest non-zero singular value
+        mutable value_type sigma_;
 
         mutable vector_t dq_, dqSmall_;
         mutable matrix_t projector_, reducedJ_;
