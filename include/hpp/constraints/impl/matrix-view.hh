@@ -42,7 +42,8 @@ namespace Eigen {
     vector_t res;
     for (std::size_t i = 0; i < array.derived().size(); ++i)
       if (array.derived()[i]) res.push_back (type(i, 1));
-    return shrink(res);
+    shrink(res);
+    return res;
   }
 
   template <typename IndexType>
@@ -148,6 +149,17 @@ namespace Eigen {
     vector_t diff (1, a);
     for (typename vector_t::const_iterator _b = b.begin(); _b != b.end(); ++_b)
       diff = difference (diff, *_b);
+    return diff;
+  }
+
+  template <typename IndexType>
+  typename BlockIndex<IndexType>::vector_t BlockIndex<IndexType>::difference (const vector_t& a, const vector_t& b)
+  {
+    vector_t diff;
+    for (typename vector_t::const_iterator _a = a.begin(); _a != a.end(); ++_a) {
+      vector_t d = difference(*_a, b);
+      diff.insert(diff.end(), d.begin(), d.end());
+    }
     return diff;
   }
 } // namespace Eigen

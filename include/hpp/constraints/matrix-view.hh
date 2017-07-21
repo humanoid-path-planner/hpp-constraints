@@ -315,12 +315,14 @@ namespace Eigen {
     static bool overlap (const type& a, const type& b);
     /// The sum is the union
     static vector_t sum (const type& a, const type& b);
-    /// Assumes b is sorted
+
     static vector_t difference (const type    & a, const type    & b);
-    /// Assumes b is sorted
+    /// Assumes a is sorted
     static vector_t difference (const vector_t& a, const type    & b);
     /// Assumes b is sorted
     static vector_t difference (const type    & a, const vector_t& b);
+    /// Assumes a and b are sorted
+    static vector_t difference (const vector_t& a, const vector_t& b);
   };
 
   template <bool _allRows, bool _allCols>
