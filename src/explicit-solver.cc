@@ -128,6 +128,28 @@ namespace hpp {
       }
     }
 
+    Eigen::ColBlockIndexes ExplicitSolver::activeParameters () const
+    {
+      BlockIndex::vector_t biv;
+      for (std::size_t i = 0; i < functions_.size (); ++i)
+        biv.insert(biv.end(), functions_[i].inArg.indexes().begin(),
+                              functions_[i].inArg.indexes().end());
+      ColBlockIndexes cbi (biv);
+      cbi.updateIndexes<true, true, true>();
+      return cbi;
+    }
+
+    Eigen::ColBlockIndexes ExplicitSolver::activeDerivativeParameters () const
+    {
+      BlockIndex::vector_t biv;
+      for (std::size_t i = 0; i < functions_.size (); ++i)
+        biv.insert(biv.end(), functions_[i].inDer.indexes().begin(),
+                              functions_[i].inDer.indexes().end());
+      ColBlockIndexes cbi (biv);
+      cbi.updateIndexes<true, true, true>();
+      return cbi;
+    }
+
     bool ExplicitSolver::solve (vectorOut_t arg) const
     {
       for(std::size_t i = 0; i < functions_.size(); ++i) {

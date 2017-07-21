@@ -129,6 +129,12 @@ namespace hpp {
           return inDers_;
         }
 
+        /// Configuration parameters involved in the constraint resolution.
+        ColBlockIndexes activeParameters () const;
+
+        /// Velocity parameters involved in the constraint resolution.
+        ColBlockIndexes activeDerivativeParameters () const;
+
         /// The set of variable indexes which are computed.
         const RowBlockIndexes& outArgs () const
         {
