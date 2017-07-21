@@ -116,6 +116,22 @@ namespace hpp {
       update();
     }
 
+    bool_array_t HierarchicalIterativeSolver::activeParameters () const
+    {
+      bool_array_t ap (bool_array_t::Constant(argSize_, false));
+      for (std::size_t i = 0; i < stacks_.size (); ++i)
+        ap = ap || stacks_[i].activeParameters();
+      return ap;
+    }
+
+    bool_array_t HierarchicalIterativeSolver::activeDerivativeParameters () const
+    {
+      bool_array_t ap (bool_array_t::Constant(derSize_, false));
+      for (std::size_t i = 0; i < stacks_.size (); ++i)
+        ap = ap || stacks_[i].activeDerivativeParameters();
+      return ap;
+    }
+
     void HierarchicalIterativeSolver::update()
     {
       // Compute reduced size

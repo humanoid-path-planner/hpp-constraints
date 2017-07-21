@@ -240,6 +240,12 @@ namespace hpp {
           return dimension_;
         }
 
+        /// Configuration parameters involved in the constraint resolution.
+        bool_array_t activeParameters () const;
+
+        /// Velocity parameters involved in the constraint resolution.
+        bool_array_t activeDerivativeParameters () const;
+
         /// \}
 
         /// Returns the squared norm of the error vector
