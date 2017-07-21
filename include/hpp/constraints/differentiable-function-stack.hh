@@ -68,6 +68,11 @@ namespace hpp {
           functions_.push_back(func);
           outputSize_           += func->outputSize();
           outputDerivativeSize_ += func->outputDerivativeSize();
+
+          activeParameters_ =
+            activeParameters_ || func->activeParameters();
+          activeDerivativeParameters_ =
+            activeDerivativeParameters_ || func->activeDerivativeParameters();
         }
 
         /// Remove a function from the stack.
@@ -86,6 +91,15 @@ namespace hpp {
               return true;
             }
           }
+          activeParameters_.setConstant(false);
+          activeDerivativeParameters_.setConstant(false);
+          for (Functions_t::iterator _func = functions_.begin();
+              _func != functions_.end(); ++_func) {
+            activeParameters_ =
+              activeParameters_ || (*_func)->activeParameters();
+            activeDerivativeParameters_ =
+              activeDerivativeParameters_ || (*_func)->activeDerivativeParameters();
+          }
           return false;
         }
 
@@ -96,6 +110,11 @@ namespace hpp {
           for (Functions_t::const_iterator _f = functions.begin();
               _f != functions.end(); ++_f)
             add (*_f);
+
+          activeParameters_ =
+            activeParameters_ || other->activeParameters();
+          activeDerivativeParameters_ =
+            activeDerivativeParameters_ || other->activeDerivativeParameters();
         }
 
         /// \}
@@ -104,10 +123,18 @@ namespace hpp {
         ///
         /// \param name the name of the constraints,
         DifferentiableFunctionStack (const std::string& name)
-          : DifferentiableFunction (0, 0, 0, 0, name) {}
+          : DifferentiableFunction (0, 0, 0, 0, name)
+        {
+          activeParameters_.setConstant(false);
+          activeDerivativeParameters_.setConstant(false);
+        }
 
         DifferentiableFunctionStack ()
-          : DifferentiableFunction (0, 0, 0, 0, "DifferentiableFunctionStack") {}
+          : DifferentiableFunction (0, 0, 0, 0, "DifferentiableFunctionStack")
+        {
+          activeParameters_.setConstant(false);
+          activeDerivativeParameters_.setConstant(false);
+        }
 
       protected:
         void impl_compute (vectorOut_t result, ConfigurationIn_t arg) const throw ()
