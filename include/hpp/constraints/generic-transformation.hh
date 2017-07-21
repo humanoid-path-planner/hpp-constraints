@@ -256,6 +256,7 @@ namespace hpp {
       inline void joint1 (const JointConstPtr_t& joint) {
         // static_assert(IsRelative);
 	d_.setJoint1(joint);
+        computeActiveParams();
 	assert (!joint || joint->robot () == robot_);
       }
 
@@ -267,6 +268,7 @@ namespace hpp {
       /// Set joint 2
       inline void joint2 (const JointConstPtr_t& joint) {
 	d_.joint2 = joint;
+        computeActiveParams();
 	assert (!joint || joint->robot () == robot_);
       }
 
@@ -311,6 +313,7 @@ namespace hpp {
       void init (const WkPtr_t& self)
       {
         self_ = self;
+        computeActiveParams();
       }
 
       /// Compute value of error
@@ -323,6 +326,7 @@ namespace hpp {
 				  ConfigurationIn_t arg) const throw ();
     private:
       void computeError (const ConfigurationIn_t& argument) const;
+      void computeActiveParams ();
       DevicePtr_t robot_;
       GenericTransformationData<IsRelative,ComputePosition,ComputeOrientation>
         d_;

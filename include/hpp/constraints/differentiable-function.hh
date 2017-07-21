@@ -72,6 +72,20 @@ namespace hpp {
 	impl_jacobian (jacobian, argument);
       }
 
+      /// Returns a vector of booleans that indicates whether the corresponding
+      /// configuration parameter influences this constraints.
+      const bool_array_t& activeParameters () const
+      {
+        return activeParameters_;
+      }
+
+      /// Returns a vector of booleans that indicates whether the corresponding
+      /// velocity parameter influences this constraints.
+      const bool_array_t& activeDerivativeParameters () const
+      {
+        return activeDerivativeParameters_;
+      }
+
       /// Get dimension of input vector
       size_type inputSize () const
       {
@@ -153,6 +167,8 @@ namespace hpp {
 			      std::string name = std::string ()) :
 	inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
 	outputSize_ (sizeOutput), outputDerivativeSize_ (sizeOutput),
+        activeParameters_ (bool_array_t::Constant (sizeInput, true)),
+        activeDerivativeParameters_ (bool_array_t::Constant (sizeInputDerivative, true)),
 	name_ (name)
       {
       }
@@ -171,6 +187,8 @@ namespace hpp {
 			      std::string name = std::string ()) :
 	inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
 	outputSize_ (sizeOutput), outputDerivativeSize_ (sizeOutputDerivative),
+        activeParameters_ (bool_array_t::Constant (sizeInput, true)),
+        activeDerivativeParameters_ (bool_array_t::Constant (sizeInputDerivative, true)),
 	name_ (name), context_ ()
       {
       }
@@ -190,6 +208,15 @@ namespace hpp {
       size_type outputSize_;
       /// Dimension of output derivative vector
       size_type outputDerivativeSize_;
+
+      /// Initialized to true by this class. Child class are responsible for
+      /// updating it.
+      /// \sa activeParameters
+      bool_array_t activeParameters_;
+      /// Initialized to true by this class. Child class are responsible for
+      /// updating it.
+      /// \sa activeDerivativeParameters
+      bool_array_t activeDerivativeParameters_;
 
     private:
       std::string name_;

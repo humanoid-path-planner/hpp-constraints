@@ -18,6 +18,8 @@
 
 #include <hpp/fcl/math/transform.h>
 
+#include <pinocchio/multibody/model.hpp>
+
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 
@@ -371,6 +373,43 @@ namespace hpp {
       if (ComputeOrientation)
         d_.fullOri = mask_[iOri + 0] && mask_[iOri + 1] && mask_[iOri + 2];
       else d_.fullOri = false;
+    }
+
+    template <int _Options>
+    inline void GenericTransformation<_Options>::computeActiveParams ()
+    {
+      typedef se3::JointIndex JointIndex;
+      activeParameters_.setConstant (false);
+      activeDerivativeParameters_.setConstant (false);
+
+      const se3::Model& model = robot_->model();
+      const JointIndex id1 = (joint1() ? joint1()->index() : 0),
+                       id2 = (joint2() ? joint2()->index() : 0);
+      JointIndex i1 = id1, i2 = id2;
+
+      std::vector<JointIndex> from1, from2;
+      while (i1 != i2)
+      {
+        JointIndex i;
+        if (i1 > i2) {
+          i = i1;
+          i1 = model.parents[i1];
+        } else /* if (i1 < i2) */ {
+          i = i2;
+          i2 = model.parents[i2];
+        }
+        if (i > 0) {
+          activeParameters_
+            .segment(model.joints[i].idx_q(), 
+                model.joints[i].nq()
+                ).setConstant(true);
+          activeDerivativeParameters_
+            .segment(model.joints[i].idx_v(), 
+                model.joints[i].nv()
+                ).setConstant(true);
+        }
+      }
+      assert (i1 == i2);
     }
 
     template <int _Options>

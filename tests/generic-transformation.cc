@@ -92,4 +92,23 @@ BOOST_AUTO_TEST_CASE (print) {
   std::cout << *RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)      << std::endl;
   std::cout << *RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2) << std::endl;
   std::cout << *RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2) << std::endl;
+
+
+  // Check active parameters
+  bool_array_t ap1 = Orientation::create ("Orientation"           , device, ee1, tf1)->activeParameters();
+  bool_array_t ap2 = Orientation::create ("Orientation"           , device, ee2, tf2)->activeParameters();
+  bool_array_t ap12 = RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)->activeParameters();
+
+  bool_array_t not_ap1 = (ap1 == false);
+  bool_array_t not_ap2 = (ap2 == false);
+  BOOST_CHECK ((ap12 == ((not_ap1 && ap2) || (ap1 && not_ap2))).all());
+
+  // Check active derivative parameters
+  ap1 = Orientation::create ("Orientation"           , device, ee1, tf1)->activeDerivativeParameters();
+  ap2 = Orientation::create ("Orientation"           , device, ee2, tf2)->activeDerivativeParameters();
+  ap12 = RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)->activeDerivativeParameters();
+
+  not_ap1 = (ap1 == false);
+  not_ap2 = (ap2 == false);
+  BOOST_CHECK ((ap12 == ((not_ap1 && ap2) || (ap1 && not_ap2))).all());
 }
