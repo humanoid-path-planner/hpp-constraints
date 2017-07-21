@@ -305,6 +305,9 @@ namespace Eigen {
 
     static IndexType cardinal (const vector_t& a);
 
+    template <typename Derived>
+    static vector_t fromLogicalExpression (const Eigen::ArrayBase<Derived>& array);
+
     static void sort   (vector_t& a);
     /// Assumes a is sorted
     static void shrink (vector_t& a);

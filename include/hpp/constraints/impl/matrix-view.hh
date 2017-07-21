@@ -35,6 +35,17 @@ namespace Eigen {
   }
 
   template <typename IndexType>
+  template <typename Derived>
+  typename BlockIndex<IndexType>::vector_t BlockIndex<IndexType>::fromLogicalExpression
+  (const Eigen::ArrayBase<Derived>& array)
+  {
+    vector_t res;
+    for (std::size_t i = 0; i < array.derived().size(); ++i)
+      if (array.derived()[i]) res.push_back (type(i, 1));
+    return shrink(res);
+  }
+
+  template <typename IndexType>
   void BlockIndex<IndexType>::sort (vector_t& a)
   {
     std::sort (a.begin(), a.end(), internal::BlockIndexCompFull<IndexType>());
