@@ -75,15 +75,11 @@ namespace hpp {
         ConfigurationIn_t argument)
       const throw ()
     {
-      // TODO: Add ability to put weights on DOF
       hppDout(notice,"configuration constraint : arg = "<<model::displayConfig(argument));
       hpp::model::difference (robot_, argument, goal_, diff_);
-      if(weight_.size() == robot_->configSize()){
-        hppDout(notice,"weight : "<<model::displayConfig(weight_));
-        hppDout(notice,"apply weight, before : "<<model::displayConfig(diff_));
-        for (size_t i = 0 ; i < robot_->configSize() ; ++i)
+      if(weight_.size() == robot_->numberDof()){
+        for (size_t i = 0 ; i < robot_->numberDof() ; ++i)
           diff_[i] = diff_[i] * weight_[i];
-        hppDout(notice,"apply weight, after  : "<<model::displayConfig(diff_));
       }else{
         hppDout(notice,"don't use weight");
       }
