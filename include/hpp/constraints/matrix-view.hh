@@ -476,12 +476,11 @@ namespace Eigen {
     if (!_allRows) {
       os << "Rows: ";
       internal::print_indexes<!_allRows>::run (os, mbi.m_rows);
-      os << '\n';
+      if (!_allCols) os << '\n';
     }
     if (!_allCols) {
       os << "Cols: ";
       internal::print_indexes<!_allCols>::run (os, mbi.m_cols);
-      os << '\n';
     }
     return os;
   }
