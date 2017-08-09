@@ -39,7 +39,7 @@ namespace hpp {
 
       hppDout (info, "squareNorm = " << squaredNorm_);
 
-      while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
+      while (squaredNorm_ > .25 * squaredErrorThreshold_ && errorDecreased &&
 	     iter < maxIterations_) {
 
         // Update the jacobian using the jacobian of the explicit system.
