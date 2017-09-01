@@ -345,7 +345,7 @@ namespace Eigen {
 
       /// \warning rows and cols must be sorted
       MatrixBlockIndexes (const BlockIndexesType& rows, const BlockIndexesType& cols)
-        : m_nbRows(BlockIndex<Index>::cardinal(rows)), m_nbCols(BlockIndex<Index>::cardinal(rows)), m_rows(rows), m_cols(cols)
+        : m_nbRows(BlockIndex<Index>::cardinal(rows)), m_nbCols(BlockIndex<Index>::cardinal(cols)), m_rows(rows), m_cols(cols)
       {}
 
       /// \warning idx must be sorted and shrinked
