@@ -92,6 +92,7 @@ namespace hpp {
         enum Status {
           ERROR_INCREASED,
           MAX_ITERATION_REACHED,
+          INFEASIBLE,
           SUCCESS
         };
         /// This function integrates velocity during unit time, from argument.
@@ -325,11 +326,17 @@ namespace hpp {
           ComparisonTypes_t comparison;
           std::vector<std::size_t> inequalityIndexes;
           Eigen::RowBlockIndexes equalityIndexes;
+          Eigen::MatrixBlockIndexes<false,false> activeRowsOfJ;
         };
 
         /// Allocate datas and update sizes of the problem
         /// Should be called whenever the stack is modified.
         void update ();
+
+        /// Compute which rows of the jacobian of stack_[iStack]
+        /// are not zero, using the activeDerivativeParameters of the functions.
+        /// The result is stored in datas_[i].activeRowsOfJ
+        void computeActiveRowsOfJ (std::size_t iStack);
 
         /// Compute a SVD decomposition of each level and find the best descent
         /// direction at the first order.

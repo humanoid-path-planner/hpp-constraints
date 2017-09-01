@@ -50,7 +50,13 @@ namespace hpp {
         Data& d = datas_[i];
         hppDnum (info, "Jacobian of stack " << i << " before update: \n" << d.reducedJ.format(IPythonFormat));
         hppDnum (info, "Jacobian of explicit variable of stack " << i << ": \n" << explicit_.outDers().rviewTranspose(d.jacobian).eval().format(IPythonFormat));
-        d.reducedJ.noalias() += explicit_.outDers().rviewTranspose(d.jacobian).eval() * Je_;
+        d.reducedJ.noalias() +=
+          Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> (d.jacobian,
+              d.activeRowsOfJ.m_nbRows,
+              d.activeRowsOfJ.m_rows,
+              explicit_.outDers().m_nbRows,
+              explicit_.outDers().m_rows).eval()
+          * Je_;
         hppDnum (info, "Jacobian of stack " << i << " after update: \n" << d.reducedJ.format(IPythonFormat));
       }
     }

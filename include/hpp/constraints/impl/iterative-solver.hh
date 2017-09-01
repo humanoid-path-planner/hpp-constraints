@@ -113,6 +113,9 @@ namespace hpp {
       computeValue<true> (arg);
       computeError();
 
+      if (squaredNorm_ > squaredErrorThreshold_
+          && dimension_ == 0) return INFEASIBLE;
+
       while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
 	     iter < maxIterations_) {
 
