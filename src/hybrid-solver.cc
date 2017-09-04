@@ -69,8 +69,9 @@ namespace hpp {
       std::size_t row = 0;
 
       typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+      Eigen::ColBlockIndexes adp (explicit_.activeParameters ());
       Eigen::RowBlockIndexes select (reduction_.indexes());
-      select.m_rows.insert(select.m_rows.end(), explicit_.outDers().m_rows.begin(), explicit_.outDers().m_rows.end());
+      select.m_rows.insert(select.m_rows.end(), adp.m_cols.begin(), adp.m_cols.end());
       select.updateRows<true, true, true>();
 
       BlockIndexes::BlockIndexesType rows;
