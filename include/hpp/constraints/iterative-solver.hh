@@ -336,7 +336,7 @@ namespace hpp {
         /// Compute which rows of the jacobian of stack_[iStack]
         /// are not zero, using the activeDerivativeParameters of the functions.
         /// The result is stored in datas_[i].activeRowsOfJ
-        void computeActiveRowsOfJ (std::size_t iStack);
+        virtual void computeActiveRowsOfJ (std::size_t iStack);
 
         /// Compute a SVD decomposition of each level and find the best descent
         /// direction at the first order.

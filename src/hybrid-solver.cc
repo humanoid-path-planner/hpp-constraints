@@ -61,6 +61,29 @@ namespace hpp {
       }
     }
 
+    void HybridSolver::computeActiveRowsOfJ (std::size_t iStack)
+    {
+      Data& d = datas_[iStack];
+      const DifferentiableFunctionStack& f = stacks_[iStack];
+      const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+      std::size_t row = 0;
+
+      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+      Eigen::RowBlockIndexes select (reduction_.indexes());
+      select.m_rows.insert(select.m_rows.end(), explicit_.outDers().m_rows.begin(), explicit_.outDers().m_rows.end());
+      select.updateRows<true, true, true>();
+
+      BlockIndexes::BlockIndexesType rows;
+      for (std::size_t i = 0; i < fs.size (); ++i) {
+        bool_array_t adp = select.rview(fs[i]->activeDerivativeParameters().matrix()).eval();
+        if (adp.any()) // If at least one element of adp is true
+          rows.push_back (BlockIndexes::BlockIndexType(row, fs[i]->outputDerivativeSize()));
+        row += fs[i]->outputDerivativeSize();
+      }
+      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ.updateRows<true, true, true>();
+    }
+
     void HybridSolver::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
     {
       computeValue<true> (arg);

@@ -125,6 +125,8 @@ namespace hpp {
           explicit_.solve (result);
         }
 
+        void computeActiveRowsOfJ (std::size_t iStack);
+
       private:
         template <typename LineSearchType>
         Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
