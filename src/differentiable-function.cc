@@ -143,10 +143,10 @@ namespace hpp {
             h[j] = op.step(j, x);
 
             op.template integrate<false>(x, h, j, x_mdx);
-            f (f_x_mdx, x_mdx);
+            f.value (f_x_mdx, x_mdx);
 
             op.template integrate<true >(x, h, j, x_pdx);
-            f (f_x_pdx, x_pdx);
+            f.value (f_x_pdx, x_pdx);
 
             jacobian.col (j) = ((f_x_pdx - f_x_mdx) / h[j]) / 2;
 
@@ -169,13 +169,13 @@ namespace hpp {
           vector_t f_x     (jacobian.rows()),
                    f_x_pdx (jacobian.rows());
 
-          f (f_x, x);
+          f.value (f_x, x);
 
           for (size_type j = 0; j < n; ++j) {
             h[j] = op.step(j, x);
 
             op.template integrate<true >(x, h, j, x_dx);
-            f (f_x_pdx, x_dx);
+            f.value (f_x_pdx, x_dx);
 
             jacobian.col (j) = (f_x_pdx - f_x) / h[j];
 

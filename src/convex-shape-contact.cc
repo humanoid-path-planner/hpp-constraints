@@ -113,7 +113,7 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       selectConvexShapes ();
-      relativeTransformation_ (result_, argument);
+      relativeTransformation_.value (result_, argument);
       if (isInside_) {
         result [0] = result_ [0] + normalMargin_;
         result.segment <2> (1).setZero ();
