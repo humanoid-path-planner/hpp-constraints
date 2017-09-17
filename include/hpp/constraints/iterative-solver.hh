@@ -29,6 +29,8 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
     /// \addtogroup solvers
     /// \{
     namespace lineSearch {
@@ -314,7 +316,8 @@ namespace hpp {
           /// \cond
           EIGEN_MAKE_ALIGNED_OPERATOR_NEW
           /// \endcond
-          vector_t value, rightHandSide, error;
+          LiegroupElement output, rightHandSide;
+          vector_t error;
           matrix_t jacobian, reducedJ;
 
           SVD_t svd;

@@ -36,7 +36,7 @@ class LockedJoint : public DifferentiableFunction
     vector_t value_;
 
     LockedJoint(size_type idx, size_type length, vector_t value)
-      : DifferentiableFunction(0, 0, length, length, "LockedJoint"),
+      : DifferentiableFunction(0, 0, length, "LockedJoint"),
         idx_ (idx), length_ (length), value_ (value)
     {}
 
@@ -105,8 +105,11 @@ class ExplicitTransformation : public DifferentiableFunction
     size_type in_, inDer_;
     RelativeTransformationPtr_t rt_;
 
-    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l, size_type inDer, size_type lDer)
-      : DifferentiableFunction(l, lDer, 7, 6, "ExplicitTransformation"),
+    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l,
+                           size_type inDer, size_type lDer)
+      : DifferentiableFunction(l, lDer,
+                               LiegroupSpace::R3 () * LiegroupSpace::SO3 (),
+                               "ExplicitTransformation"),
         joint_ (joint), in_ (in), inDer_ (inDer)
     {
       rt_ = RelativeTransformation::create("RT", joint_->robot(),
@@ -253,4 +256,3 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   qrand = tmp;
   solver.projectOnKernel (qrand, dq, tmp);
 }
-

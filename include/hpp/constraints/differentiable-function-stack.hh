@@ -73,36 +73,8 @@ namespace hpp {
               activeDerivativeParameters_ || func->activeDerivativeParameters();
           }
           functions_.push_back(func);
-          outputSize_           += func->outputSize();
-          outputDerivativeSize_ += func->outputDerivativeSize();
-        }
-
-        /// Remove a function from the stack.
-        /// \return True if the function was removed, False otherwise.
-        ///
-        /// \note The function stops after having removed one element. If there
-        /// are duplicates, the function should be called several times.
-        bool erase (const DifferentiableFunctionPtr_t& func)
-        {
-          for (Functions_t::iterator _func = functions_.begin();
-              _func != functions_.end(); ++_func) {
-            if (func == *_func) {
-              functions_.erase(_func);
-              outputSize_           -= func->outputSize();
-              outputDerivativeSize_ -= func->outputDerivativeSize();
-              return true;
-            }
-          }
-          activeParameters_.setConstant(false);
-          activeDerivativeParameters_.setConstant(false);
-          for (Functions_t::iterator _func = functions_.begin();
-              _func != functions_.end(); ++_func) {
-            activeParameters_ =
-              activeParameters_ || (*_func)->activeParameters();
-            activeDerivativeParameters_ =
-              activeDerivativeParameters_ || (*_func)->activeDerivativeParameters();
-          }
-          return false;
+          result_.push_back (func->outputSpace ().element ());
+          outputSpace_ = outputSpace_ * func->outputSpace ();
         }
 
         /// The output columns selection of other is not taken into account.
@@ -120,22 +92,25 @@ namespace hpp {
         ///
         /// \param name the name of the constraints,
         DifferentiableFunctionStack (const std::string& name)
-          : DifferentiableFunction (0, 0, 0, 0, name)
+          : DifferentiableFunction (0, 0, 0, name)
         {}
 
         DifferentiableFunctionStack ()
-          : DifferentiableFunction (0, 0, 0, 0, "DifferentiableFunctionStack")
+          : DifferentiableFunction (0, 0, 0, "DifferentiableFunctionStack")
         {}
 
       protected:
-        void impl_compute (vectorOut_t result, ConfigurationIn_t arg) const throw ()
+        void impl_compute (LiegroupElement& result, ConfigurationIn_t arg)
+          const throw ()
         {
           size_type row = 0;
+          std::size_t i = 0;
           for (Functions_t::const_iterator _f = functions_.begin();
               _f != functions_.end(); ++_f) {
             const DifferentiableFunction& f = **_f;
-            f.impl_compute(result.segment(row, f.outputSize()), arg);
-            row += f.outputSize();
+            f.impl_compute(result_ [i], arg);
+            result.value ().segment(row, f.outputSize()) = result_ [i].value ();
+            row += f.outputSize(); ++i;
           }
         }
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
@@ -150,6 +125,7 @@ namespace hpp {
         }
       private:
         Functions_t functions_;
+        mutable std::vector <LiegroupElement> result_;
     }; // class DifferentiableFunctionStack
     /// \}
   } // namespace constraints

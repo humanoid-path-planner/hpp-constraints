@@ -24,12 +24,15 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/liegroup.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 
 using namespace hpp::constraints;
+using hpp::pinocchio::LiegroupElement;
+using hpp::pinocchio::LiegroupSpace;
 
 class LockedJoint : public DifferentiableFunction
 {
@@ -38,7 +41,7 @@ class LockedJoint : public DifferentiableFunction
     vector_t value_;
 
     LockedJoint(size_type idx, size_type length, vector_t value)
-      : DifferentiableFunction(0, 0, length, length, "LockedJoint"),
+      : DifferentiableFunction(0, 0, length, "LockedJoint"),
         idx_ (idx), length_ (length), value_ (value)
     {}
 
@@ -87,7 +90,7 @@ class TestFunction : public DifferentiableFunction
     size_type idxIn_, idxOut_, length_;
 
     TestFunction(size_type idxIn, size_type idxOut, size_type length)
-      : DifferentiableFunction(length, length, length, length, "TestFunction"),
+      : DifferentiableFunction(length, length, length, "TestFunction"),
         idxIn_ (idxIn), idxOut_ (idxOut), length_ (length)
     {}
 
@@ -158,8 +161,11 @@ class ExplicitTransformation : public DifferentiableFunction
     size_type in_, inDer_;
     RelativeTransformationPtr_t rt_;
 
-    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l, size_type inDer, size_type lDer)
-      : DifferentiableFunction(l, lDer, 7, 6, "ExplicitTransformation"),
+    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l,
+                           size_type inDer, size_type lDer)
+      : DifferentiableFunction(l, lDer,
+                               LiegroupSpace::R3 () * LiegroupSpace::SO3 (),
+                               "ExplicitTransformation"),
         joint_ (joint), in_ (in), inDer_ (inDer)
     {
       rt_ = RelativeTransformation::create("RT", joint_->robot(),
@@ -205,15 +211,16 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
-    void impl_compute (vectorOut_t result,
+    void impl_compute (LiegroupElement& result,
                        vectorIn_t arg) const
     {
       // forwardKinematics(arg);
       vector_t value(6);
       vector_t q = config(arg);
       rt_->value(value, q);
-      result.head<3>() = value.head<3>();
-      result.tail<4>() = Eigen::Quaternion<value_type>(exponential(value.tail<3>())).coeffs();
+      result.value ().head<3>() = value.head<3>();
+      result.value ().tail<4>() =
+        Eigen::Quaternion<value_type>(exponential(value.tail<3>())).coeffs();
 
       // Transform3f tf1 = joint_->robot()->rootJoint()->currentTransformation();
       // Transform3f tf2 = joint_->currentTransformation();

@@ -136,8 +136,8 @@ namespace hpp {
           vector_t x_pdx = x;
           vector_t x_mdx = x;
           vector_t h = vector_t::Zero (jacobian.cols());
-          vector_t f_x_mdx (jacobian.rows()),
-                   f_x_pdx (jacobian.rows());
+          LiegroupElement f_x_mdx (f.outputSpace ().element ()),
+            f_x_pdx (f.outputSpace ().element ());
 
           for (size_type j = 0; j < n; ++j) {
             h[j] = op.step(j, x);
@@ -166,8 +166,8 @@ namespace hpp {
           size_type n = jacobian.cols();
           vector_t x_dx = x;
           vector_t h = vector_t::Zero (jacobian.cols());
-          vector_t f_x     (jacobian.rows()),
-                   f_x_pdx (jacobian.rows());
+          LiegroupElement f_x (f.outputSpace ().element ()),
+            f_x_pdx (f.outputSpace ().element ());
 
           f.value (f_x, x);
 
@@ -207,5 +207,48 @@ namespace hpp {
         else
           finiteDiffCentral(jacobian, x, FiniteDiffVectorSpaceOp(eps), *this);
       }
+
+    void DifferentiableFunction::value
+    (vectorOut_t result, vectorIn_t argument) const
+    {
+      assert (result.size () == outputSize ());
+      assert (argument.size () == inputSize ());
+      impl_compute (result, argument);
+    }
+
+    DifferentiableFunction::DifferentiableFunction
+    (size_type sizeInput, size_type sizeInputDerivative,
+     size_type sizeOutput, std::string name) :
+      inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
+      outputSpace_ (LiegroupSpace::Rn (sizeOutput)),
+      activeParameters_ (bool_array_t::Constant (sizeInput, true)),
+      activeDerivativeParameters_
+      (bool_array_t::Constant (sizeInputDerivative, true)),
+      name_ (name)
+      {
+      }
+
+    DifferentiableFunction::DifferentiableFunction
+    (size_type sizeInput, size_type sizeInputDerivative,
+     const LiegroupSpace& outputSpace, std::string name) :
+      inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
+      outputSpace_ (outputSpace), activeDerivativeParameters_
+      (bool_array_t::Constant (sizeInputDerivative, true)),
+      name_ (name), context_ ()
+    {
+    }
+
+    void DifferentiableFunction::impl_compute (LiegroupElement& result,
+                                               vectorIn_t argument) const
+    {
+      impl_compute (result.value (), argument);
+    }
+
+    void DifferentiableFunction::impl_compute (vectorOut_t, vectorIn_t) const
+    {
+      throw std::logic_error
+        ("DifferentiableFunction::impl_compute not implemented");
+    }
+
   } // namespace constraints
 } // namespace hpp

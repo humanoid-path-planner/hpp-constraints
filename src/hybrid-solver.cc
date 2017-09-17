@@ -65,7 +65,7 @@ namespace hpp {
 
       dqSmall_ = reduction_.rviewTranspose(darg);
 
-      vector_t tmp = getV1(svd_).adjoint() * dqSmall_;
+      vector_t tmp (getV1(svd_).adjoint() * dqSmall_);
       dqSmall_.noalias() -= getV1(svd_) * tmp;
 
       reduction_.lviewTranspose(result) = dqSmall_;

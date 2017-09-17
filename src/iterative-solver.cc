@@ -141,9 +141,9 @@ namespace hpp {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         dimension_ += f.outputSize();
-        datas_[i].value        .resize(f.outputSize());
-        datas_[i].rightHandSide.resize(f.outputSize());
-        datas_[i].rightHandSide.setZero();
+        datas_[i].output = f.outputSpace().element ();
+        datas_[i].rightHandSide = f.outputSpace ().element ();
+        datas_[i].rightHandSide.setNeutral ();
 
         assert(derSize_ == f.inputDerivativeSize());
         datas_[i].jacobian.resize(f.outputDerivativeSize(), f.inputDerivativeSize());
@@ -169,9 +169,10 @@ namespace hpp {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
-        f.value (d.value, arg);
+        f.value (d.output, arg);
         // TODO avoid dynamic allocation
-        d.equalityIndexes.lview(d.rightHandSide) = d.equalityIndexes.rview(d.value).eval();
+        d.equalityIndexes.lview(d.rightHandSide.value ()) =
+          d.equalityIndexes.rview(d.output.value ()).eval();
       }
       return rightHandSide();
     }
@@ -184,10 +185,12 @@ namespace hpp {
         size_type row = 0;
         for (std::size_t j = 0; j < fs.size(); ++j) {
           if (f == fs[j]) {
-            f->value (d.value.segment(row, f->outputSize()), arg);
+            LiegroupElement tmp (f->outputSpace ().element ());
+            f->value (tmp, arg);
+            d.output.value ().segment(row, f->outputSize()) = tmp.value ();
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide[row + k] = d.value[row + k];
+                d.rightHandSide.value () [row + k] = d.output.value ()[row + k];
               }
             }
             return true;
@@ -208,7 +211,7 @@ namespace hpp {
           if (f == fs[j]) {
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide[row + k] = rhs[row + k];
+                d.rightHandSide.value () [row + k] = rhs [row + k];
               }
             }
             return true;
@@ -224,7 +227,7 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.equalityIndexes.lview(d.rightHandSide)
+        d.equalityIndexes.lview(d.rightHandSide.value ())
           = rhs.segment(row, d.equalityIndexes.m_nbRows);
         row += d.equalityIndexes.m_nbRows;
       }
@@ -239,7 +242,7 @@ namespace hpp {
         const Data& d = datas_[i];
         const size_type nRows = d.equalityIndexes.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        d.equalityIndexes.rview(d.rightHandSide).writeTo(seg);
+        d.equalityIndexes.rview(d.rightHandSide.value ()).writeTo(seg);
         row += nRows;
       }
       assert (row == rhs.size());
@@ -261,9 +264,9 @@ namespace hpp {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
 
-        f.value   (d.value, arg);
+        f.value   (d.output, arg);
         if (ComputeJac) f.jacobian(d.jacobian, arg);
-        d.error = d.value - d.rightHandSide;
+        d.error = d.output - d.rightHandSide;
         applyComparison<ComputeJac>(d.comparison, d.inequalityIndexes, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
@@ -279,8 +282,8 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < datas_.size(); ++i) {
         const Data& d = datas_[i];
-        v.segment(row, d.value.rows()) = d.value;
-        row += d.value.rows();
+        v.segment(row, d.output.value ().rows()) = d.output.value ();
+        row += d.output.value ().rows();
       }
     }
 
