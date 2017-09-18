@@ -68,15 +68,21 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
-      Eigen::ColBlockIndexes adp (explicit_.activeParameters ());
-      Eigen::RowBlockIndexes select (reduction_.indexes());
-      select.m_rows.insert(select.m_rows.end(), adp.m_cols.begin(), adp.m_cols.end());
-      select.updateRows<true, true, true>();
+      Eigen::ColBlockIndexes _explicitActiveParam (explicit_.activeParameters ());
+      bool_array_t explicitActiveParam (bool_array_t::Constant (f.inputSize(), false));
+      if (_explicitActiveParam.nbIndexes() > 0)
+        _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
 
+      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+
+      Eigen::RowBlockIndexes select (reduction_.indexes());
+
+      bool_array_t functionActiveParam;
       BlockIndexes::BlockIndexesType rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
-        bool_array_t adp = select.rview(fs[i]->activeDerivativeParameters().matrix()).eval();
+        functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
+
+        bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
           rows.push_back (BlockIndexes::BlockIndexType(row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
