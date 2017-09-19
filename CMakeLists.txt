@@ -45,14 +45,8 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/convex-shape-contact.hh
   include/hpp/constraints/symbolic-calculus.hh
   include/hpp/constraints/symbolic-function.hh
-  include/hpp/constraints/orientation.hh
-  include/hpp/constraints/position.hh
-  include/hpp/constraints/transformation.hh
   include/hpp/constraints/relative-com.hh
   include/hpp/constraints/com-between-feet.hh
-  include/hpp/constraints/relative-orientation.hh
-  include/hpp/constraints/relative-position.hh
-  include/hpp/constraints/relative-transformation.hh
   include/hpp/constraints/configuration-constraint.hh
   include/hpp/constraints/explicit-solver.hh
   include/hpp/constraints/hybrid-solver.hh
