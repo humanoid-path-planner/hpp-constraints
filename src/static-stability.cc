@@ -20,11 +20,15 @@
 
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 #include "hpp/constraints/tools.hh"
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+
     const value_type StaticStability::G = 9.81;
     const Eigen::Matrix <value_type, 6, 1> StaticStability::Gravity
       = (Eigen::Matrix <value_type, 6, 1>() << 0,0,-1, 0, 0, 0).finished();
@@ -70,7 +74,8 @@ namespace hpp {
       return create ("StaticStability", robot, contacts, com);
     }
 
-    void StaticStability::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
+    void StaticStability::impl_compute (LiegroupElement& result,
+                                        ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -87,11 +92,12 @@ namespace hpp {
         // findBoundIndex (u_, v_, lambda, &iMin, unused_lMax, &iMax);
         value_type lambda = 1;
 
-        result.segment (0, contacts_.size()) = u_ + lambda * v_;
+        result.vector ().segment (0, contacts_.size()) = u_ + lambda * v_;
       } else {
-        result.segment (0, contacts_.size()) = u_;
+        result.vector ().segment (0, contacts_.size()) = u_;
       }
-      result.segment <6> (contacts_.size()) = Gravity + phi_.value() * u_;
+      result.vector ().segment <6> (contacts_.size()) =
+        Gravity + phi_.value() * u_;
     }
 
     void StaticStability::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const

@@ -24,6 +24,10 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+    using hpp::pinocchio::LiegroupSpace;
+
     namespace {
       std::size_t forceDatasToNbContacts (
           const std::vector<ConvexShapeContact::ForceData>& fds) {
@@ -40,18 +44,20 @@ namespace hpp {
     const Eigen::Matrix <value_type, 6, 1> QPStaticStability::MinusGravity
       = (Eigen::Matrix <value_type, 6, 1>() << 0,0,+1, 0, 0, 0).finished();
 
-    QPStaticStability::QPStaticStability ( const std::string& name,
-        const DevicePtr_t& robot, const Contacts_t& contacts,
-        const CenterOfMassComputationPtr_t& com):
+    QPStaticStability::QPStaticStability
+    ( const std::string& name, const DevicePtr_t& robot,
+      const Contacts_t& contacts, const CenterOfMassComputationPtr_t& com):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          1, name),
+                              LiegroupSpace::R1 (), name),
       Zeros (new qpOASES::real_t [contacts.size()]), nWSR (40),
       robot_ (robot), nbContacts_ (contacts.size()),
       com_ (com), H_ (nbContacts_,nbContacts_), G_ (nbContacts_),
       qp_ ((qpOASES::int_t)nbContacts_, qpOASES::HST_SEMIDEF),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
-          Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
-      primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (nbContacts_))
+      Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero
+        (6,nbContacts_*robot->numberDof())),
+      primal_ (vector_t::Zero (nbContacts_)),
+      dual_ (vector_t::Zero (nbContacts_))
     {
       VectorMap_t zeros (Zeros, nbContacts_); zeros.setZero ();
 
@@ -129,7 +135,8 @@ namespace hpp {
       return create ("QPStaticStability", robot, contacts, com);
     }
 
-    void QPStaticStability::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
+    void QPStaticStability::impl_compute (LiegroupElement& result,
+                                          ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -138,7 +145,7 @@ namespace hpp {
       phi_.computeValue ();
       // phi_.computeSVD ();
 
-      qpOASES::returnValue ret = solveQP (result);
+      qpOASES::returnValue ret = solveQP (result.vector ());
       if (ret != qpOASES::SUCCESSFUL_RETURN) {
         hppDout (error, "QP could not be solved. Error is " << ret);
       }

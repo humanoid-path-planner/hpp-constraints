@@ -25,9 +25,14 @@
 # include <hpp/constraints/differentiable-function.hh>
 
 # include <hpp/pinocchio/device.hh>
+# include <hpp/pinocchio/liegroup-element.hh>
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+    using hpp::pinocchio::LiegroupSpace;
+
     template <typename Expression>
     class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction
     {
@@ -61,9 +66,11 @@ namespace hpp {
         virtual ~SymbolicFunction () throw () {}
 
         SymbolicFunction (const std::string& name, const DevicePtr_t& robot,
-            const typename Traits<Expression>::Ptr_t expr,
-            std::vector <bool> mask) :
-          DifferentiableFunction (robot->configSize(), robot->numberDof(), expr->value().size(), name),
+                          const typename Traits<Expression>::Ptr_t expr,
+                          std::vector <bool> mask) :
+          DifferentiableFunction (robot->configSize(), robot->numberDof(),
+                                  LiegroupSpace::Rn (expr->value().size()),
+                                  name),
           robot_ (robot), expr_ (expr), mask_ (mask) {}
 
       protected:
@@ -71,8 +78,8 @@ namespace hpp {
         ///
         /// \param argument configuration of the robot,
         /// \retval result error vector
-        virtual void impl_compute (vectorOut_t result,
-            ConfigurationIn_t argument) const throw ()
+        virtual void impl_compute (LiegroupElement& result,
+                                   ConfigurationIn_t argument) const throw ()
         {
           robot_->currentConfiguration (argument);
           robot_->computeForwardKinematics ();
@@ -81,7 +88,7 @@ namespace hpp {
           size_t index = 0;
           for (std::size_t i = 0; i < mask_.size (); i++) {
             if (mask_[i])
-              result[index++] = expr_->value ()[i];
+              result.vector () [index++] = expr_->value ().vector () [i];
           }
         }
 

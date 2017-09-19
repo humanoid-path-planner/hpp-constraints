@@ -27,6 +27,9 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+
     /// \addtogroup constraints
     /// \{
 
@@ -88,7 +91,7 @@ namespace hpp {
       ///
       /// \param argument configuration of the robot,
       /// \retval result error vector
-      virtual void impl_compute	(vectorOut_t result,
+      virtual void impl_compute	(LiegroupElement& result,
 				 ConfigurationIn_t argument)
 	const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,

@@ -28,6 +28,10 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+    using hpp::pinocchio::LiegroupSpace;
+
     namespace {
       typedef JointJacobian_t::ConstNRowsBlockXpr<3>::Type HalfJacobian_t;
       inline HalfJacobian_t omega(const JointJacobian_t& j) { return j.bottomRows<3>(); }
@@ -359,8 +363,9 @@ namespace hpp {
       (const std::string& name, const DevicePtr_t& robot,
        std::vector <bool> mask) :
         DifferentiableFunction (robot->configSize (), robot->numberDof (),
-			      size (mask), name),
-      robot_ (robot), d_(robot->numberDof()-robot->extraConfigSpace().dimension()), mask_ (mask)
+                                LiegroupSpace::Rn (size (mask)), name),
+        robot_ (robot), d_(robot->numberDof()-robot->extraConfigSpace().
+                           dimension()), mask_ (mask)
     {
       assert(mask.size()==ValueSize);
       std::size_t iOri = 0;
@@ -426,15 +431,14 @@ namespace hpp {
     }
 
     template <int _Options>
-    void GenericTransformation<_Options>::impl_compute (vectorOut_t result,
-					       ConfigurationIn_t argument)
-      const throw ()
+    void GenericTransformation<_Options>::impl_compute
+    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
     {
       computeError (argument);
       size_type index=0;
       for (size_type i=0; i<ValueSize; ++i) {
 	if (mask_ [i]) {
-	  result [index] = d_.value[i]; ++index;
+	  result.vector () [index] = d_.value[i]; ++index;
 	}
       }
     }

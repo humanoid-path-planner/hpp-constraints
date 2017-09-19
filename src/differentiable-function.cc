@@ -214,7 +214,7 @@ namespace hpp {
       assert (argument.size () == inputSize ());
       LiegroupElement res (LiegroupSpace::Rn (outputSize ()));
       impl_compute (res, argument);
-      result = res.value ();
+      result = res.vector ();
     }
 
     DifferentiableFunction::DifferentiableFunction
@@ -233,7 +233,9 @@ namespace hpp {
     (size_type sizeInput, size_type sizeInputDerivative,
      const LiegroupSpacePtr_t& outputSpace, std::string name) :
       inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
-      outputSpace_ (outputSpace), activeDerivativeParameters_
+      outputSpace_ (outputSpace), activeParameters_
+      (bool_array_t::Constant (sizeInput, true)),
+      activeDerivativeParameters_
       (bool_array_t::Constant (sizeInputDerivative, true)),
       name_ (name), context_ ()
     {
@@ -242,7 +244,7 @@ namespace hpp {
     void DifferentiableFunction::impl_compute (LiegroupElement& result,
                                                vectorIn_t argument) const
     {
-      impl_compute (result.value (), argument);
+      impl_compute (result.vector (), argument);
     }
 
     void DifferentiableFunction::impl_compute (vectorOut_t, vectorIn_t) const

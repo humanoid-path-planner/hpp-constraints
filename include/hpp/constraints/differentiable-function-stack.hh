@@ -109,7 +109,7 @@ namespace hpp {
               _f != functions_.end(); ++_f) {
             const DifferentiableFunction& f = **_f;
             f.impl_compute(result_ [i], arg);
-            result.value ().segment(row, f.outputSize()) = result_ [i].value ();
+            result.vector ().segment(row, f.outputSize()) = result_ [i].vector ();
             row += f.outputSize(); ++i;
           }
         }

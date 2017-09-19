@@ -23,6 +23,9 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+
     class HPP_CONSTRAINTS_DLLAPI ActiveSetDifferentiableFunction :
       public DifferentiableFunction
     {
@@ -53,7 +56,7 @@ namespace hpp {
         typedef std::vector < intervals_t > intervalss_t;
 
         /// User implementation of function evaluation
-        virtual void impl_compute (vectorOut_t result,
+        virtual void impl_compute (LiegroupElement& result,
                                    vectorIn_t argument) const
         {
           function_->value(result, argument);

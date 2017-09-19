@@ -26,6 +26,9 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+
     namespace {
       static size_type size (std::vector<bool> mask)
       {
@@ -75,7 +78,7 @@ namespace hpp {
         const JointPtr_t& jointRef, const vector3_t pointRef,
         std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-          size (mask), name),
+                              LiegroupSpace::Rn (size (mask)), name),
       robot_ (robot),
       com_ (PointCom::create (comc)),
       left_ (PointInJoint::create(jointL, pointL)),
@@ -96,7 +99,7 @@ namespace hpp {
       for (int i=0; i<3; i++) pointRef_[i] = pointRef[i];
     }
 
-    void ComBetweenFeet::impl_compute (vectorOut_t result,
+    void ComBetweenFeet::impl_compute (LiegroupElement& result,
         ConfigurationIn_t argument)
       const throw ()
     {
@@ -106,22 +109,22 @@ namespace hpp {
       if (mask_[0]) {
         com_->invalidate ();
         com_->computeValue ();
-        result[index++] = (com_->value () - pointRef_)[2];
+        result.vector () [index++] = (com_->value () - pointRef_)[2];
       }
       if (mask_[1]) {
         expr_->invalidate ();
         expr_->computeValue ();
-        result[index++] = expr_->value ()[2];
+        result.vector () [index++] = expr_->value ()[2];
       }
       if (mask_[2]) {
         xmxlDotu_->invalidate ();
         xmxlDotu_->computeValue ();
-        result[index++] =   xmxlDotu_->value();
+        result.vector () [index++] =   xmxlDotu_->value();
       }
       if (mask_[3]) {
         xmxrDotu_->invalidate ();
         xmxrDotu_->computeValue ();
-        result[index  ] =   xmxrDotu_->value();
+        result.vector () [index  ] =   xmxrDotu_->value();
       }
     }
 

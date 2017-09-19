@@ -27,6 +27,8 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
     /// \addtogroup constraints
     /// \{
     class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {
@@ -78,7 +80,8 @@ namespace hpp {
         qpOASES::real_t* Zeros;
         const qpOASES::int_t nWSR;
 
-        void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+        void impl_compute (LiegroupElement& result, ConfigurationIn_t argument)
+          const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
 

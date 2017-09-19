@@ -26,6 +26,7 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/constraints/generic-transformation.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 using namespace hpp::constraints;
 
@@ -36,7 +37,7 @@ class LockedJoint : public DifferentiableFunction
     vector_t value_;
 
     LockedJoint(size_type idx, size_type length, vector_t value)
-      : DifferentiableFunction(0, 0, length, "LockedJoint"),
+      : DifferentiableFunction(0, 0, LiegroupSpace::Rn (length), "LockedJoint"),
         idx_ (idx), length_ (length), value_ (value)
     {}
 
@@ -66,10 +67,9 @@ class LockedJoint : public DifferentiableFunction
       return ret;
     }
 
-    void impl_compute (vectorOut_t result,
-                       vectorIn_t ) const
+    void impl_compute (LiegroupElement& result, vectorIn_t) const
     {
-      result = value_;
+      result.vector () = value_;
     }
 
     void impl_jacobian (matrixOut_t,
@@ -155,15 +155,16 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
-    void impl_compute (vectorOut_t result,
+    void impl_compute (LiegroupElement& result,
                        vectorIn_t arg) const
     {
       // forwardKinematics(arg);
-      vector_t value(6);
+      LiegroupElement transform (LiegroupSpace::Rn (6));
       vector_t q = config(arg);
-      rt_->value(value, q);
-      result.head<3>() = value.head<3>();
-      result.tail<4>() = Eigen::Quaternion<value_type>(exponential(value.tail<3>())).coeffs();
+      rt_->value(transform, q);
+      result.vector ().head<3>() = transform.vector ().head<3>();
+      result.vector ().tail<4>() = Eigen::Quaternion<value_type>
+        (exponential(transform.vector ().tail<3>())).coeffs();
 
       // Transform3f tf1 = joint_->robot()->rootJoint()->currentTransformation();
       // Transform3f tf2 = joint_->currentTransformation();

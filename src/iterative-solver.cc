@@ -171,8 +171,8 @@ namespace hpp {
         Data& d = datas_[i];
         f.value (d.output, arg);
         // TODO avoid dynamic allocation
-        d.equalityIndexes.lview(d.rightHandSide.value ()) =
-          d.equalityIndexes.rview(d.output.value ()).eval();
+        d.equalityIndexes.lview(d.rightHandSide.vector ()) =
+          d.equalityIndexes.rview(d.output.vector ()).eval();
       }
       return rightHandSide();
     }
@@ -187,10 +187,10 @@ namespace hpp {
           if (f == fs[j]) {
             LiegroupElement tmp (f->outputSpace ());
             f->value (tmp, arg);
-            d.output.value ().segment(row, f->outputSize()) = tmp.value ();
+            d.output.vector ().segment(row, f->outputSize()) = tmp.vector ();
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide.value () [row + k] = d.output.value ()[row + k];
+                d.rightHandSide.vector () [row + k] = d.output.vector ()[row + k];
               }
             }
             return true;
@@ -211,7 +211,7 @@ namespace hpp {
           if (f == fs[j]) {
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide.value () [row + k] = rhs [row + k];
+                d.rightHandSide.vector () [row + k] = rhs [row + k];
               }
             }
             return true;
@@ -227,7 +227,7 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.equalityIndexes.lview(d.rightHandSide.value ())
+        d.equalityIndexes.lview(d.rightHandSide.vector ())
           = rhs.segment(row, d.equalityIndexes.m_nbRows);
         row += d.equalityIndexes.m_nbRows;
       }
@@ -242,7 +242,7 @@ namespace hpp {
         const Data& d = datas_[i];
         const size_type nRows = d.equalityIndexes.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        d.equalityIndexes.rview(d.rightHandSide.value ()).writeTo(seg);
+        d.equalityIndexes.rview(d.rightHandSide.vector ()).writeTo(seg);
         row += nRows;
       }
       assert (row == rhs.size());
@@ -282,8 +282,8 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < datas_.size(); ++i) {
         const Data& d = datas_[i];
-        v.segment(row, d.output.value ().rows()) = d.output.value ();
-        row += d.output.value ().rows();
+        v.segment(row, d.output.vector ().rows()) = d.output.vector ();
+        row += d.output.vector ().rows();
       }
     }
 

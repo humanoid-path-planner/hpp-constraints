@@ -20,10 +20,15 @@
 #ifndef HPP_CONSTRAINTS_DISTANCE_BETWEEN_POINTS_IN_BODIES_HH
 # define HPP_CONSTRAINTS_DISTANCE_BETWEEN_POINTS_IN_BODIES_HH
 
+# include <hpp/pinocchio/liegroup-element.hh>
 # include <hpp/constraints/differentiable-function.hh>
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+    using hpp::pinocchio::LiegroupSpace;
+
     /// Distance between two sets of objects
     ///
     /// This function maps to a configuration of a robot, the distance
@@ -90,7 +95,7 @@ namespace hpp {
 				     const vector3_t& point1,
 				     const vector3_t& point2);
 
-      virtual void impl_compute (vectorOut_t result,
+      virtual void impl_compute (LiegroupElement& result,
 				 ConfigurationIn_t argument) const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
@@ -103,7 +108,7 @@ namespace hpp {
       mutable vector3_t global1_;
       mutable vector3_t global2_;
       mutable Configuration_t latestArgument_;
-      mutable vector_t latestResult_;
+      mutable LiegroupElement latestResult_;
     }; // class DistanceBetweenPointsInBodies
   } // namespace constraints
 } // namespace hpp

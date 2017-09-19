@@ -25,6 +25,9 @@
 
 namespace hpp {
   namespace constraints {
+
+    using hpp::pinocchio::LiegroupElement;
+    using hpp::pinocchio::LiegroupSpace;
     /// \addtogroup constraints
     /// \{
 
@@ -38,8 +41,9 @@ namespace hpp {
             Eigen::RowBlockIndexes& argSelection,
             Eigen::ColBlockIndexes& derSelection,
             Eigen::ColBlockIndexes& CderSelection,
-            const std::string name = "AffineFunction")
-          : DifferentiableFunction (J.cols(), J.cols(), J.rows(), J.rows(), name),
+            const std::string name = "AffineFunction") :
+          DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
+                                  (J.rows()), name),
           J_ (J), b_ (b),
           aIdx_ (argSelection), JIdx_ (derSelection), C_JIdx_ (CderSelection),
           qshort_ (argSelection.nbIndexes())
@@ -49,12 +53,11 @@ namespace hpp {
 
       private:
         /// User implementation of function evaluation
-        void impl_compute (vectorOut_t result,
-            vectorIn_t argument) const
+        void impl_compute (LiegroupElement& result, vectorIn_t argument) const
         {
           aIdx_.view(argument).writeTo (qshort_);
-          result.noalias() = J_ * aIdx_;
-          result += b_;
+          result.vector ().noalias() = J_ * aIdx_;
+          result.vector () += b_;
         }
 
         void impl_jacobian (matrixOut_t jacobian,
@@ -77,19 +80,20 @@ namespace hpp {
       : public DifferentiableFunction
     {
         ConstantFunction (const vector_t& constant,
-                          const size_type& sizeIn, 
+                          const size_type& sizeIn,
                           const size_type& sizeInDer,
-                          const std::string name = "ConstantFunction")
-          : DifferentiableFunction (sizeIn, sizeInDer, constant.rows(), constant.rows(), name),
-          c_ (constant)
+                          const std::string name = "ConstantFunction") :
+          DifferentiableFunction (sizeIn, sizeInDer, LiegroupSpace::Rn
+                                  (constant.rows()), constant.rows(), name),
+          c_ (constant, LiegroupSpace::Rn ())
         {}
 
         /// User implementation of function evaluation
-        void impl_compute (vectorOut_t r, vectorIn_t) const { r = c_; }
+        void impl_compute (LiegroupElement& r, vectorIn_t) const { r = c_; }
 
         void impl_jacobian (matrixOut_t J, vectorIn_t) const { J.setZero(); }
 
-        const vector_t c_;
+        const LiegroupElement c_;
     }; // class ConstantFunction
 
     /// \}
