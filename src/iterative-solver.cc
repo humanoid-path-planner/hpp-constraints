@@ -262,7 +262,7 @@ namespace hpp {
         const Data& d = datas_[i];
         const size_type nRows = d.equalityIndexes.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        d.equalityIndexes.rview(d.rightHandSide).writeTo(seg);
+        seg = d.equalityIndexes.rview(d.rightHandSide);
         row += nRows;
       }
       assert (row == rhs.size());
