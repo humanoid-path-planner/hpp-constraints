@@ -27,6 +27,8 @@ namespace hpp {
   namespace constraints {
 
     using hpp::pinocchio::LiegroupElement;
+    using hpp::pinocchio::LiegroupSpaceConstPtr_t;
+    using hpp::pinocchio::LiegroupSpacePtr_t;
     using hpp::pinocchio::LiegroupSpace;
 
     /// \addtogroup constraints
@@ -43,7 +45,7 @@ namespace hpp {
       LiegroupElement operator () (vectorIn_t argument) const
       {
 	assert (argument.size () == inputSize ());
-        LiegroupElement result (outputSpace_.element ());
+        LiegroupElement result (outputSpace_);
 	impl_compute (result, argument);
         return result;
       }
@@ -60,6 +62,7 @@ namespace hpp {
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
+      /// \deprecated Use the method that takes a reference to LiegroupElement.
       void value (vectorOut_t result,
                   vectorIn_t argument) const HPP_CONSTRAINTS_DEPRECATED;
 
@@ -107,19 +110,19 @@ namespace hpp {
       ///
       /// Getting an output element enables users to know the type of Liegroup
       /// the function output values lie in.
-      const LiegroupSpace& outputSpace () const
+      LiegroupSpacePtr_t outputSpace () const
       {
         return outputSpace_;
       }
       /// Get dimension of output vector
       size_type  outputSize () const
       {
-	return outputSpace_.nq ();
+	return outputSpace_->nq ();
       }
       /// Get dimension of output derivative vector
       size_type  outputDerivativeSize () const
       {
-	return outputSpace_.nv ();
+	return outputSpace_->nv ();
       }
       /// \brief Get function name.
       ///
@@ -187,7 +190,7 @@ namespace hpp {
       /// \param name function name
       DifferentiableFunction (size_type sizeInput,
 			      size_type sizeInputDerivative,
-			      const LiegroupSpace& outputSpace,
+			      const LiegroupSpacePtr_t& outputSpace,
 			      std::string name = std::string ());
 
       /// User implementation of function evaluation
@@ -207,7 +210,7 @@ namespace hpp {
       /// Dimension of input derivative
       size_type inputDerivativeSize_;
       /// Dimension of output vector
-      LiegroupSpace outputSpace_;
+      LiegroupSpacePtr_t outputSpace_;
 
       /// Initialized to true by this class. Child class are responsible for
       /// updating it.

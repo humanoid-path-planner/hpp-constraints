@@ -136,8 +136,8 @@ namespace hpp {
           vector_t x_pdx = x;
           vector_t x_mdx = x;
           vector_t h = vector_t::Zero (jacobian.cols());
-          LiegroupElement f_x_mdx (f.outputSpace ().element ()),
-            f_x_pdx (f.outputSpace ().element ());
+          LiegroupElement f_x_mdx (f.outputSpace ()),
+            f_x_pdx (f.outputSpace ());
 
           for (size_type j = 0; j < n; ++j) {
             h[j] = op.step(j, x);
@@ -166,8 +166,7 @@ namespace hpp {
           size_type n = jacobian.cols();
           vector_t x_dx = x;
           vector_t h = vector_t::Zero (jacobian.cols());
-          LiegroupElement f_x (f.outputSpace ().element ()),
-            f_x_pdx (f.outputSpace ().element ());
+          LiegroupElement f_x (f.outputSpace ()), f_x_pdx (f.outputSpace ());
 
           f.value (f_x, x);
 
@@ -213,7 +212,9 @@ namespace hpp {
     {
       assert (result.size () == outputSize ());
       assert (argument.size () == inputSize ());
-      impl_compute (result, argument);
+      LiegroupElement res (LiegroupSpace::Rn (outputSize ()));
+      impl_compute (res, argument);
+      result = res.value ();
     }
 
     DifferentiableFunction::DifferentiableFunction
@@ -230,7 +231,7 @@ namespace hpp {
 
     DifferentiableFunction::DifferentiableFunction
     (size_type sizeInput, size_type sizeInputDerivative,
-     const LiegroupSpace& outputSpace, std::string name) :
+     const LiegroupSpacePtr_t& outputSpace, std::string name) :
       inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
       outputSpace_ (outputSpace), activeDerivativeParameters_
       (bool_array_t::Constant (sizeInputDerivative, true)),

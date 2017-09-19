@@ -73,7 +73,7 @@ namespace hpp {
               activeDerivativeParameters_ || func->activeDerivativeParameters();
           }
           functions_.push_back(func);
-          result_.push_back (func->outputSpace ().element ());
+          result_.push_back (LiegroupElement (func->outputSpace ()));
           outputSpace_ = outputSpace_ * func->outputSpace ();
         }
 

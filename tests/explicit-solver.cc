@@ -32,6 +32,8 @@
 
 using namespace hpp::constraints;
 using hpp::pinocchio::LiegroupElement;
+using hpp::pinocchio::LiegroupSpaceConstPtr_t;
+using hpp::pinocchio::LiegroupSpacePtr_t;
 using hpp::pinocchio::LiegroupSpace;
 
 class LockedJoint : public DifferentiableFunction
@@ -164,7 +166,8 @@ class ExplicitTransformation : public DifferentiableFunction
     ExplicitTransformation(JointPtr_t joint, size_type in, size_type l,
                            size_type inDer, size_type lDer)
       : DifferentiableFunction(l, lDer,
-                               LiegroupSpace::R3 () * LiegroupSpace::SO3 (),
+                               LiegroupSpacePtr_t (LiegroupSpace::R3 () *
+                                                   LiegroupSpace::SO3 ()),
                                "ExplicitTransformation"),
         joint_ (joint), in_ (in), inDer_ (inDer)
     {

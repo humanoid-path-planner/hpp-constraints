@@ -141,8 +141,8 @@ namespace hpp {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         dimension_ += f.outputSize();
-        datas_[i].output = f.outputSpace().element ();
-        datas_[i].rightHandSide = f.outputSpace ().element ();
+        datas_[i].output = LiegroupElement (f.outputSpace ());
+        datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide.setNeutral ();
 
         assert(derSize_ == f.inputDerivativeSize());
@@ -185,7 +185,7 @@ namespace hpp {
         size_type row = 0;
         for (std::size_t j = 0; j < fs.size(); ++j) {
           if (f == fs[j]) {
-            LiegroupElement tmp (f->outputSpace ().element ());
+            LiegroupElement tmp (f->outputSpace ());
             f->value (tmp, arg);
             d.output.value ().segment(row, f->outputSize()) = tmp.value ();
             for (size_type k = 0; k < f->outputSize(); ++k) {
