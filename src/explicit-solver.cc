@@ -260,7 +260,7 @@ namespace hpp {
       const Function& f = functions_[iF];
       // Compute this function
       f.f->value(f.value, f.inArg.rview(arg).eval());
-      f.outArg.lview(arg) = f.value;
+      f.outArg.lview(arg) = f.value.vector ();
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const

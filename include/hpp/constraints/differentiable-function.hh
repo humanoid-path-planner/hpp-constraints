@@ -59,13 +59,6 @@ namespace hpp {
 	assert (argument.size () == inputSize ());
 	impl_compute (result, argument);
       }
-      /// Evaluate the function at a given parameter.
-      ///
-      /// \note parameters should be of the correct size.
-      /// \deprecated Use the method that takes a reference to LiegroupElement.
-      void value (vectorOut_t result,
-                  vectorIn_t argument) const HPP_CONSTRAINTS_DEPRECATED;
-
       /// Computes the jacobian.
       ///
       /// \retval jacobian jacobian will be stored in this argument
@@ -195,12 +188,7 @@ namespace hpp {
 
       /// User implementation of function evaluation
       virtual void impl_compute (LiegroupElement& result,
-				 vectorIn_t argument) const;
-
-      /// User implementation of function evaluation
-      virtual void impl_compute (vectorOut_t result,
-				 vectorIn_t argument) const
-        HPP_CONSTRAINTS_DEPRECATED;
+				 vectorIn_t argument) const = 0;
 
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  vectorIn_t arg) const = 0;

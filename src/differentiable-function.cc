@@ -207,16 +207,6 @@ namespace hpp {
           finiteDiffCentral(jacobian, x, FiniteDiffVectorSpaceOp(eps), *this);
       }
 
-    void DifferentiableFunction::value
-    (vectorOut_t result, vectorIn_t argument) const
-    {
-      assert (result.size () == outputSize ());
-      assert (argument.size () == inputSize ());
-      LiegroupElement res (LiegroupSpace::Rn (outputSize ()));
-      impl_compute (res, argument);
-      result = res.vector ();
-    }
-
     DifferentiableFunction::DifferentiableFunction
     (size_type sizeInput, size_type sizeInputDerivative,
      size_type sizeOutput, std::string name) :
@@ -239,18 +229,6 @@ namespace hpp {
       (bool_array_t::Constant (sizeInputDerivative, true)),
       name_ (name), context_ ()
     {
-    }
-
-    void DifferentiableFunction::impl_compute (LiegroupElement& result,
-                                               vectorIn_t argument) const
-    {
-      impl_compute (result.vector (), argument);
-    }
-
-    void DifferentiableFunction::impl_compute (vectorOut_t, vectorIn_t) const
-    {
-      throw std::logic_error
-        ("DifferentiableFunction::impl_compute not implemented");
     }
 
   } // namespace constraints

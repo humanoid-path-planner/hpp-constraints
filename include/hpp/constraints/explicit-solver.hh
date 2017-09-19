@@ -193,20 +193,22 @@ namespace hpp {
         const std::size_t argSize_, derSize_;
 
         struct Function {
-          Function (DifferentiableFunctionPtr_t _f, RowBlockIndexes ia, RowBlockIndexes oa, ColBlockIndexes id, RowBlockIndexes od)
-            : f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od)
+          Function (DifferentiableFunctionPtr_t _f, RowBlockIndexes ia,
+                    RowBlockIndexes oa, ColBlockIndexes id, RowBlockIndexes od):
+            f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
+            value (f->outputSpace ())
           {
-            value   .resize(_f->outputSize());
-            jacobian.resize(_f->outputDerivativeSize(), _f->inputDerivativeSize());
+            jacobian.resize(_f->outputDerivativeSize(),
+                            _f->inputDerivativeSize());
           }
           DifferentiableFunctionPtr_t f;
           RowBlockIndexes inArg, outArg;
           ColBlockIndexes inDer;
           RowBlockIndexes outDer;
 
-          mutable vector_t value;
+          mutable LiegroupElement value;
           mutable matrix_t jacobian;
-        };
+        }; // struct Function
 
         RowBlockIndexes inArgs_;
         ColBlockIndexes inDers_;
