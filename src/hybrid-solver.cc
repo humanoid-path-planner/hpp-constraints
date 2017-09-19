@@ -26,6 +26,8 @@ Eigen::IOFormat IPythonFormat (Eigen::FullPrecision, 0, ", ", ",\n", "[", "]", "
 namespace hpp {
   namespace constraints {
     namespace lineSearch {
+      template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
       template bool Backtracking::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
       template bool FixedSequence::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);

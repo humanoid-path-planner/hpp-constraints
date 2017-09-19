@@ -60,6 +60,8 @@ namespace hpp {
     }
 
     namespace lineSearch {
+      template bool Constant::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
       Backtracking::Backtracking () : c (0.001), tau (0.7), smallAlpha (0.2) {}
       template bool Backtracking::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
