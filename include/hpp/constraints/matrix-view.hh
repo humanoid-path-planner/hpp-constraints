@@ -75,8 +75,18 @@ namespace Eigen {
         static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
     };
 
-    template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalCols {
-      static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
+    template <typename Other, typename View, bool AllCols = View::AllCols> struct evalCols {
+      static inline void run (Other& dst, const View& src, const typename Other::Index& row)
+      {
+        dst.derived() = src.derived().m_arg.middleRows(row, dst.rows());
+      }
+      static inline void write (const Other& src, View& dst, const typename Other::Index& row)
+      {
+        dst.m_arg.middleRows(row, src.rows()) = src;
+      }
+    };
+    template <typename Other, typename View> struct evalCols <Other, View, false> {
+      static inline void run (Other& dst, const View& src, const typename Other::Index& row)
       {
         std::size_t col = 0;
         for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
@@ -86,80 +96,50 @@ namespace Eigen {
           col += src.m_cols[j].second;
         }
       }
-      static inline void write (const Dst& dst, Src& src, const typename Dst::Index& row)
+      static inline void write (const Other& src, View& dst, const typename Other::Index& row)
       {
         std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          src.m_arg.block(row,        src.m_cols[j].first,
-                          dst.rows(), src.m_cols[j].second)
-            = dst.middleCols(col, src.m_cols[j].second);
-          col += src.m_cols[j].second;
+        for (std::size_t j = 0; j < dst.m_cols.size(); ++j) {
+          dst.m_arg.block(row,        dst.m_cols[j].first,
+              src.rows(), dst.m_cols[j].second)
+            = src.derived().middleCols(col, dst.m_cols[j].second);
+          col += dst.m_cols[j].second;
         }
       }
     };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, true , false> {
-      static inline void run (Dst& dst, const Src& src)
+    template <typename Other, typename View, bool AllRows = View::AllRows> struct evalRows {
+      static inline void run (Other& dst, const View& src)
       {
-        std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          dst.derived().middleCols(col, src.m_cols[j].second) =
-            src.m_arg.middleCols(src.m_cols[j].first, src.m_cols[j].second);
-          col += src.m_cols[j].second;
-        }
+        evalCols<Other, View>::run(dst.derived(), src, 0);
       }
-      static inline void write (Dst& dst, const Src& src)
+      static inline void write (const Other& src, View& dst)
       {
-        std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          src.m_arg.middleCols(src.m_cols[j].first, src.m_cols[j].second)
-            = dst.derived().middleCols(col, src.m_cols[j].second);
-          col += src.m_cols[j].second;
-        }
+        evalCols<Other, View>::write(src, dst, 0);
       }
     };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, false, true > {
-      static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
-      {
-        dst.derived() = src.m_arg.middleRows(row, dst.rows());
-      }
-      static inline void write (Dst& dst, Src& src, const typename Dst::Index& row)
-      {
-        src.m_arg.middleRows(row, dst.rows()) = dst;
-      }
-    };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, true , true > {};
-    template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalRows {
-      static inline void run (Dst& dst, const Src& src)
-      {
-        evalCols<Dst, Src, _allRows, _allCols>::run(dst.derived(), src);
-      }
-      static inline void write (Dst& dst, Src& src)
-      {
-        evalCols<Dst, Src, _allRows, _allCols>::write(dst, src);
-      }
-    };
-    template <typename Dst, typename Src, bool _allCols> struct evalRows <Dst, Src, false, _allCols> {
-      static inline void run (Dst& dst, const Src& src)
+    template <typename Other, typename View> struct evalRows <Other, View, false> {
+      static inline void run (Other& dst, const View& src)
       {
         std::size_t row = 0;
         for (std::size_t i = 0; i < src.m_rows.size(); ++i) {
-          typename Dst::RowsBlockXpr rows = dst.middleRows(row, src.m_rows[i].second);
-          evalCols<typename Dst::RowsBlockXpr, Src, false, _allCols>::run(rows,
-              src, src.m_rows[i].first);
+          typedef typename Other::RowsBlockXpr Rows_t;
+          Rows_t rows = dst.middleRows(row, src.m_rows[i].second);
+          evalCols<Rows_t, View>::run(rows, src, src.m_rows[i].first);
           row += src.m_rows[i].second;
         }
       }
-      static inline void write (Dst& dst, Src& src)
+      static inline void write (const Other& src, View& dst)
       {
         std::size_t row = 0;
-        for (std::size_t i = 0; i < src.m_rows.size(); ++i) {
-          typename Dst::ConstRowsBlockXpr rows = dst.middleRows(row, src.m_rows[i].second);
-          evalCols<typename Dst::ConstRowsBlockXpr, Src, false, _allCols>::write(rows,
-              src, src.m_rows[i].first);
-          row += src.m_rows[i].second;
+        for (std::size_t i = 0; i < dst.m_rows.size(); ++i) {
+          typedef typename Other::ConstRowsBlockXpr ConstRows_t;
+          ConstRows_t rows = src.middleRows(row, dst.m_rows[i].second);
+          evalCols<ConstRows_t, View>::write(rows, dst, dst.m_rows[i].first);
+          row += dst.m_rows[i].second;
         }
       }
     };
+
     template <bool print> struct print_indexes { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
     template <> struct print_indexes <true> {
       template <typename BlockIndexType>
@@ -377,6 +357,12 @@ namespace Eigen {
   class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
   {
     public:
+      enum {
+        Rows = _Rows,
+        Cols = _Cols,
+        AllRows = _allRows,
+        AllCols = _allCols
+      };
       typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
 
@@ -429,7 +415,7 @@ namespace Eigen {
 
       template <typename Dest>
       EIGEN_STRONG_INLINE void evalTo (Dest& dst) const {
-        internal::evalRows<Dest, MatrixBlockView, _allRows, _allCols>::run(dst, *this);
+        internal::evalRows<Dest, MatrixBlockView>::run(dst, *this);
       }
 
       template <typename Dest>
@@ -448,7 +434,7 @@ namespace Eigen {
       template <typename OtherDerived>
       EIGEN_STRONG_INLINE MatrixBlockView& operator= (const EigenBase<OtherDerived>& other) {
         EIGEN_STATIC_ASSERT_LVALUE(ArgType);
-        internal::evalRows<const OtherDerived, MatrixBlockView, _allRows, _allCols>::write(other.derived(), *this);
+        internal::evalRows<const OtherDerived, MatrixBlockView>::write(other.derived(), *this);
         return *this;
       }
 
