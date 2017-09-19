@@ -48,7 +48,7 @@ namespace hpp {
       Zeros (new qpOASES::real_t [contacts.size()]), nWSR (40),
       robot_ (robot), nbContacts_ (contacts.size()),
       com_ (com), H_ (nbContacts_,nbContacts_), G_ (nbContacts_),
-      qp_ (nbContacts_, qpOASES::HST_SEMIDEF),
+      qp_ ((qpOASES::int_t)nbContacts_, qpOASES::HST_SEMIDEF),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
       primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (nbContacts_))
@@ -80,7 +80,7 @@ namespace hpp {
       Zeros (new qpOASES::real_t [forceDatasToNbContacts (contacts)]), nWSR (40),
       robot_ (robot), nbContacts_ (forceDatasToNbContacts (contacts)),
       com_ (com), H_ (nbContacts_, nbContacts_), G_ (nbContacts_),
-      qp_ (nbContacts_, qpOASES::HST_SEMIDEF),
+      qp_ ((qpOASES::int_t)nbContacts_, qpOASES::HST_SEMIDEF),
       phi_ (Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_),
           Eigen::Matrix<value_type, 6, Eigen::Dynamic>::Zero (6,nbContacts_*robot->numberDof())),
       primal_ (vector_t::Zero (nbContacts_)), dual_ (vector_t::Zero (nbContacts_))
