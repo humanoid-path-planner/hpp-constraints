@@ -348,10 +348,18 @@ namespace Eigen {
         : m_nbRows(BlockIndex<Index>::cardinal(rows)), m_nbCols(BlockIndex<Index>::cardinal(cols)), m_rows(rows), m_cols(cols)
       {}
 
+      /// Build a block index made of a single block
+      MatrixBlockIndexes (Index start, Index size)
+        : m_nbRows(_allRows ? 0 : size)
+        , m_nbCols(_allCols ? 0 : size)
+        , m_rows(BlockIndex_t::type(start, size))
+        , m_cols(BlockIndex_t::type(start, size))
+      {}
+
       /// \warning idx must be sorted and shrinked
       MatrixBlockIndexes (const BlockIndexesType& idx)
-        : m_nbRows(_allRows ? 0 : BlockIndex<Index>::cardinal(idx))
-        , m_nbCols(_allCols ? 0 : BlockIndex<Index>::cardinal(idx))
+        : m_nbRows(_allRows ? 0 : BlockIndex_t::cardinal(idx))
+        , m_nbCols(_allCols ? 0 : BlockIndex_t::cardinal(idx))
         , m_rows(idx), m_cols(idx)
       {}
 
@@ -362,25 +370,29 @@ namespace Eigen {
         , m_rows(BlockIndexesType(1,idx)), m_cols(BlockIndexesType(1,idx))
       {}
 
-      /*
-      MatrixBlockIndexes (const Index& rows, const Index& cols)
-        : m_rows(rows), m_cols(cols)
+      /// Constructor from other MatrixBlockIndexes
+      /// \note This constructor will only be called when
+      /// \code
+      /// MatrixBlockIndexes<true, false> ( MatrixBlockIndexes<false, true> (...));
+      /// MatrixBlockIndexes<false, true> ( MatrixBlockIndexes<true, false> (...));
+      /// \endcode
+      template <bool _otherAllRows, bool _otherAllCols>
+      MatrixBlockIndexes (const MatrixBlockIndexes<_otherAllRows,_otherAllCols>& other)
+        : m_nbRows(other.m_nbCols)
+        , m_nbCols(other.m_nbRows)
+        , m_rows(other.m_cols), m_cols(other.m_rows)
       {
-        // for (Index i = 0; i < m_rows.size(); ++i) m_rows[i] = i;
-        // for (Index i = 0; i < m_cols.size(); ++i) m_cols[i] = i;
+        assert((_allRows != _allCols)
+            && (_otherAllRows == _allCols)
+            && (_otherAllCols == _allRows));
       }
 
-      MatrixBlockIndexes (const Index& size)
-        : m_rows(size), m_cols(size)
-      {
-        // for (Index i = 0; i < indexes().size(); ++i) indexes()[i] = i;
-      }
-
-      /// Valid only when _allRows or _allCols is true
-      MatrixBlockIndexes (const Indexes_t& indexes)
-        : m_rows(indexes), m_cols(indexes)
+      /// Copy constructor
+      MatrixBlockIndexes (const MatrixBlockIndexes<_allRows,_allCols>& other)
+        : m_nbRows(other.m_nbRows)
+        , m_nbCols(other.m_nbCols)
+        , m_rows(other.m_rows), m_cols(other.m_cols)
       {}
-      */
 
       inline void addRow (const Index& row, const Index size)
       {
