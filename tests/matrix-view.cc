@@ -75,9 +75,10 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
       m(i, j) = MatrixXd::Scalar(m.cols() * i + j);
   std::cout << m << '\n' << std::endl;
 
-  RowsIndexes rows;
-  rows.addRow(2, 2);
+  RowsIndexes rows(2,2);
+  // rows contains indexes 2, 3
   rows.addRow(6, 4);
+  // rows contains indexes 2, 3, 6, 7, 8, 9
 
   // Make a ColsIndexes from a RowsIndexes
   ColsIndexes cols (rows);

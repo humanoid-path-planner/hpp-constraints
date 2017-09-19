@@ -38,6 +38,7 @@ namespace Eigen {
         typedef MatrixXd::Index Index;
         empty_struct () {}
         template <typename In_t> empty_struct (In_t) {}
+        template <typename In0_t, typename In1_t> empty_struct (In0_t, In1_t) {}
         static inline Index size() { return 0; }
         inline const Index& operator[](const Index& i) const { return i; }
       };
@@ -205,8 +206,8 @@ namespace Eigen {
       MatrixBlockIndexes (Index start, Index size)
         : m_nbRows(_allRows ? 0 : size)
         , m_nbCols(_allCols ? 0 : size)
-        , m_rows(BlockIndex_t::type(start, size))
-        , m_cols(BlockIndex_t::type(start, size))
+        , m_rows(1, BlockIndex_t::type(start, size))
+        , m_cols(1, BlockIndex_t::type(start, size))
       {}
 
       /// \warning idx must be sorted and shrinked

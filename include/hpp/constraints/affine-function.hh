@@ -34,7 +34,27 @@ namespace hpp {
       : public DifferentiableFunction
     {
       public:
-        AffineFunction (const matrix_t& J, const vector_t& b,
+        AffineFunction (const matrixIn_t& J,
+            const std::string name = "LinearFunction")
+          : DifferentiableFunction (J.cols(), J.cols(), J.rows(), J.rows(), name),
+          J_ (J), b_ (vector_t::Zero(J.rows())),
+          aIdx_ (0, J_.cols()), JIdx_ (0, J_.cols()), C_JIdx_ (0,0),
+          qshort_ (J.cols())
+        {
+          init();
+        }
+
+        AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
+            const std::string name = "LinearFunction")
+          : DifferentiableFunction (J.cols(), J.cols(), J.rows(), J.rows(), name),
+          J_ (J), b_ (b),
+          aIdx_ (0, J_.cols()), JIdx_ (0, J_.cols()), C_JIdx_ (0,0),
+          qshort_ (J.cols())
+        {
+          init();
+        }
+
+        AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
             Eigen::RowBlockIndexes& argSelection,
             Eigen::ColBlockIndexes& derSelection,
             Eigen::ColBlockIndexes& CderSelection,
@@ -43,25 +63,32 @@ namespace hpp {
           J_ (J), b_ (b),
           aIdx_ (argSelection), JIdx_ (derSelection), C_JIdx_ (CderSelection),
           qshort_ (argSelection.nbIndexes())
-          {
-            assert(J_.cols() == b_.cols());
-          }
+        {
+          init();
+        }
 
       private:
         /// User implementation of function evaluation
         void impl_compute (vectorOut_t result,
             vectorIn_t argument) const
         {
-          aIdx_.view(argument).writeTo (qshort_);
-          result.noalias() = J_ * aIdx_;
+          qshort_ = aIdx_.rview(argument);
+          result.noalias() = J_ * qshort_;
           result += b_;
         }
 
         void impl_jacobian (matrixOut_t jacobian,
             vectorIn_t) const
         {
-          JIdx_  .view(jacobian) = J_;
-          C_JIdx_.view(jacobian).setZero();
+          JIdx_  .lview(jacobian) = J_;
+          C_JIdx_.lview(jacobian).setZero();
+        }
+
+        void init ()
+        {
+          assert(J_.rows() == b_.rows());
+          activeParameters_ = (J_.array() != 0).colwise().any();
+          activeDerivativeParameters_ = activeParameters_;
         }
 
         const matrix_t J_;
