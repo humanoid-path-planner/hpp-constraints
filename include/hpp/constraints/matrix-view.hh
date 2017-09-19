@@ -309,11 +309,36 @@ namespace Eigen {
         return internal::return_first<_allRows>::run(m_cols, m_rows);
       }
 
+      inline const RowIndexes_t& rows() const
+      {
+        assert (_allRows);
+        return m_rows;
+      }
+
+      inline const ColIndexes_t& cols() const
+      {
+        assert (_allCols);
+        return m_cols;
+      }
+
       inline const Index& nbIndexes() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
       }
+
+      inline const Index& nbRows() const
+      {
+        assert (_allRows);
+        return m_nbRows;
+      }
+
+      inline const Index& nbCols() const
+      {
+        assert (_allCols);
+        return m_nbCols;
+      }
+
 
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateIndexes() {
