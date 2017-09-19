@@ -63,33 +63,6 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/impl/matrix-view.hh
 )
 
-SET(${PROJECT_NAME}_OLDHEADERS
-  include/hpp/_constraints/differentiable-function.hh
-  include/hpp/_constraints/differentiable-function-stack.hh
-  include/hpp/_constraints/affine-function.hh
-  include/hpp/_constraints/distance-between-bodies.hh
-  include/hpp/_constraints/fwd.hh
-  include/hpp/_constraints/svd.hh
-  include/hpp/_constraints/tools.hh
-  include/hpp/_constraints/generic-transformation.hh
-  include/hpp/_constraints/macros.hh
-  include/hpp/_constraints/convex-shape.hh
-  include/hpp/_constraints/convex-shape-contact.hh
-  include/hpp/_constraints/symbolic-calculus.hh
-  include/hpp/_constraints/symbolic-function.hh
-  include/hpp/_constraints/orientation.hh
-  include/hpp/_constraints/position.hh
-  include/hpp/_constraints/transformation.hh
-  include/hpp/_constraints/relative-com.hh
-  include/hpp/_constraints/com-between-feet.hh
-  include/hpp/_constraints/relative-orientation.hh
-  include/hpp/_constraints/relative-position.hh
-  include/hpp/_constraints/relative-transformation.hh
-  include/hpp/_constraints/configuration-constraint.hh
-  include/hpp/_constraints/static-stability.hh
-  include/hpp/_constraints/qp-static-stability.hh
-)
-
 # Activate hpp-util logging if requested
 SET (HPP_DEBUG FALSE CACHE BOOL "trigger hpp-util debug output")
 IF (HPP_DEBUG)
@@ -127,13 +100,6 @@ IF (${USE_QPOASES})
 ENDIF ()
 
 ADD_SUBDIRECTORY (src)
-
-SET (COMPARE_TO_HPP_MODEL FALSE CACHE BOOL
-  "Enable comparison between hpp-model and hpp-pinocchio")
-IF (COMPARE_TO_HPP_MODEL)
-  ADD_REQUIRED_DEPENDENCY("hpp-model >= 3")
-  ADD_SUBDIRECTORY (pmdiff)
-ENDIF ()
 
 IF (RUN_TESTS)
   SET(BOOST_COMPONENT math unit_test_framework)
