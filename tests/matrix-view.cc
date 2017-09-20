@@ -25,8 +25,8 @@ using namespace Eigen;
 
 BOOST_AUTO_TEST_CASE(block_index)
 {
-  typedef BlockIndex<MatrixXd::Index> BlockIndex_t;
-  BlockIndex_t::type
+  typedef BlockIndex BlockIndex_t;
+  BlockIndex_t::interval_t
     a ( 0, 1),
     b ( 1, 2),
     c ( 0, 0),
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(block_index)
   BlockIndex_t::shrink(v);
   BOOST_CHECK_EQUAL(v.size(), 1);
   BOOST_CHECK_EQUAL(BlockIndex_t::cardinal(v), 3);
-  BOOST_CHECK(v[0] == BlockIndex_t::type(0, 3));
+  BOOST_CHECK(v[0] == BlockIndex_t::interval_t (0, 3));
 }
 
 BOOST_AUTO_TEST_CASE(matrix_view)
@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(matrix_view)
   std::cout << ret << '\n' << std::endl;
 
   VectorXd x (VectorXd::Random(m.cols()));
-  VectorXd y1 = m   * x;
-  VectorXd y2 = ret * x;
-  VectorXd y3 = MatrixRowView(m, rows) * x;
+  VectorXd y1 (m   * x);
+  VectorXd y2 (ret * x);
+  VectorXd y3 (MatrixRowView(m, rows) * x);
 
   BOOST_CHECK(y3.isApprox(y2));
   for (std::size_t i = 0; i < rows.size(); ++i) {

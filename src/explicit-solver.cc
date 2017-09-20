@@ -72,7 +72,7 @@ namespace se3 {
 
 namespace hpp {
   namespace constraints {
-    typedef Eigen::BlockIndex<size_type> BlockIndex;
+    typedef Eigen::BlockIndex BlockIndex;
     typedef Eigen::MatrixBlockView<matrixOut_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixOutView_t;
 
     namespace {
@@ -84,7 +84,7 @@ namespace hpp {
     }
 
     void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex<size_type>::vector_t& indexes,
+        const Eigen::BlockIndex::vector_t& indexes,
         vectorIn_t arg0,
         vectorIn_t arg1,
         vectorOut_t result)
@@ -95,7 +95,7 @@ namespace hpp {
 
       size_type rowArg = 0, rowDer = 0;
       for (std::size_t i = 0; i < indexes.size(); ++i) {
-        const Eigen::BlockIndex<size_type>::type& interval = indexes[i];
+        const Eigen::BlockIndex::interval_t& interval = indexes[i];
         size_type j = 0;
         while (j < interval.second) {
           size_type iArg = interval.first + j;
@@ -191,8 +191,8 @@ namespace hpp {
     {
       assert (outArg.indexes().size() == 1 && "Only contiguous function output is supported.");
       assert (outDer.indexes().size() == 1 && "Only contiguous function output is supported.");
-      const RowBlockIndexes::BlockIndexType& outIdx = outArg.indexes()[0];
-      const RowBlockIndexes::BlockIndexType& outDerIdx = outDer.indexes()[0];
+      const RowBlockIndexes::interval_t& outIdx = outArg.indexes()[0];
+      const RowBlockIndexes::interval_t& outDerIdx = outDer.indexes()[0];
 
       // Sanity check: is it explicit ?
       for (std::size_t i = 0; i < inArg.indexes().size(); ++i)
@@ -230,10 +230,14 @@ namespace hpp {
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
       outArgs_.updateIndexes<true, true, true>();
-      inArgs_ = RowBlockIndexes(BlockIndex::difference(BlockIndex::type(0, argSize_), outArgs_.indexes()));
+      inArgs_ = RowBlockIndexes
+        (BlockIndex::difference (BlockIndex::interval_t(0, argSize_),
+                                 outArgs_.indexes()));
       outDers_.addRow(outDerIdx.first, outDerIdx.second);
       outDers_.updateIndexes<true, true, true>();
-      inDers_ = ColBlockIndexes(BlockIndex::difference(BlockIndex::type(0, derSize_), outDers_.indexes()));
+      inDers_ = ColBlockIndexes
+        (BlockIndex::difference(BlockIndex::interval_t(0, derSize_),
+                                outDers_.indexes()));
 
       return true;
     }

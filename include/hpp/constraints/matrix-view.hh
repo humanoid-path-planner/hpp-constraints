@@ -20,12 +20,10 @@
 #include <Eigen/Core>
 #include <vector>
 #include <iostream>
+#include <hpp/constraints/fwd.hh>
 
 namespace Eigen {
-  // template <typename Index> struct interval {
-    // Index m_start, m_length;
-    // interval (const Index& i, const Index length) : m_start (start), m_length (length) {}
-  // };
+
   template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols> class MatrixView;
 
   namespace internal {
@@ -297,13 +295,15 @@ namespace Eigen {
     };
   } // namespace internal
 
-  template <typename IndexType>
+  /// List of integer intervals
+  ///
+  /// Used to select blocks in a vector or in a matrix.
   struct BlockIndex {
-    typedef IndexType Index;
-    typedef std::pair<Index, Index> type;
-    typedef std::vector<type> vector_t;
+    typedef hpp::constraints::size_type size_type;
+    typedef std::pair<size_type, size_type> interval_t;
+    typedef std::vector<interval_t> vector_t;
 
-    static IndexType cardinal (const vector_t& a);
+    static size_type cardinal (const vector_t& a);
 
     template <typename Derived>
     static vector_t fromLogicalExpression (const Eigen::ArrayBase<Derived>& array);
@@ -312,15 +312,15 @@ namespace Eigen {
     /// Assumes a is sorted
     static void shrink (vector_t& a);
 
-    static bool overlap (const type& a, const type& b);
+    static bool overlap (const interval_t& a, const interval_t& b);
     /// The sum is the union
-    static vector_t sum (const type& a, const type& b);
+    static vector_t sum (const interval_t& a, const interval_t& b);
 
-    static vector_t difference (const type    & a, const type    & b);
+    static vector_t difference (const interval_t    & a, const interval_t    & b);
     /// Assumes a is sorted
-    static vector_t difference (const vector_t& a, const type    & b);
+    static vector_t difference (const vector_t& a, const interval_t    & b);
     /// Assumes b is sorted
-    static vector_t difference (const type    & a, const vector_t& b);
+    static vector_t difference (const interval_t    & a, const vector_t& b);
     /// Assumes a and b are sorted
     static vector_t difference (const vector_t& a, const vector_t& b);
   };
@@ -329,9 +329,9 @@ namespace Eigen {
   class MatrixBlockIndexes
   {
     public:
-      typedef MatrixXd::Index Index;
-      typedef BlockIndex<Index>           BlockIndex_t;
-      typedef BlockIndex_t::type     BlockIndexType;
+    typedef hpp::constraints::size_type size_type;
+      typedef BlockIndex           BlockIndex_t;
+      typedef BlockIndex_t::interval_t interval_t;
       typedef BlockIndex_t::vector_t BlockIndexesType;
       typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexesType>::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexesType>::type ColIndexes_t;
@@ -339,24 +339,26 @@ namespace Eigen {
       template <typename Derived, int _Rows, int _Cols> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
-      };
+      }; // struct View
 
       MatrixBlockIndexes () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
 
       /// \warning rows and cols must be sorted
-      MatrixBlockIndexes (const BlockIndexesType& rows, const BlockIndexesType& cols)
-        : m_nbRows(BlockIndex<Index>::cardinal(rows)), m_nbCols(BlockIndex<Index>::cardinal(rows)), m_rows(rows), m_cols(cols)
+      MatrixBlockIndexes (const BlockIndexesType& rows,
+                          const BlockIndexesType& cols) :
+        m_nbRows(BlockIndex::cardinal(rows)),
+        m_nbCols(BlockIndex::cardinal(rows)), m_rows(rows), m_cols(cols)
       {}
 
       /// \warning idx must be sorted and shrinked
       MatrixBlockIndexes (const BlockIndexesType& idx)
-        : m_nbRows(_allRows ? 0 : BlockIndex<Index>::cardinal(idx))
-        , m_nbCols(_allCols ? 0 : BlockIndex<Index>::cardinal(idx))
+        : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
+        , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
         , m_rows(idx), m_cols(idx)
       {}
 
       /// \warning idx must be sorted and shrinked
-      MatrixBlockIndexes (const BlockIndexType& idx)
+      MatrixBlockIndexes (const interval_t& idx)
         : m_nbRows(_allRows ? 0 : idx.second)
         , m_nbCols(_allCols ? 0 : idx.second)
         , m_rows(BlockIndexesType(1,idx)), m_cols(BlockIndexesType(1,idx))
@@ -382,15 +384,15 @@ namespace Eigen {
       {}
       */
 
-      inline void addRow (const Index& row, const Index size)
+      inline void addRow (const size_type& row, const size_type size)
       {
-        m_rows.push_back(BlockIndexType(row, size));
+        m_rows.push_back(interval_t (row, size));
         m_nbRows += size;
       }
 
-      inline void addCol (const Index& col, const Index size)
+      inline void addCol (const size_type& col, const size_type size)
       {
-        m_cols.push_back(BlockIndexType(col, size));
+        m_cols.push_back(interval_t (col, size));
         m_nbCols += size;
       }
 
@@ -444,7 +446,7 @@ namespace Eigen {
         return internal::return_first<_allRows>::run(m_cols, m_rows);
       }
 
-      inline const Index& nbIndexes() const
+      inline const size_type& nbIndexes() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
@@ -457,18 +459,18 @@ namespace Eigen {
             internal::return_first<_allRows>::run(m_nbCols, m_nbRows));
       }
 
-      Index m_nbRows, m_nbCols;
+      size_type m_nbRows, m_nbCols;
       RowIndexes_t m_rows;
       ColIndexes_t m_cols;
 
     private:
       template<bool Sort, bool Shrink, bool Cardinal>
-      static inline void update(BlockIndexesType& b, Index& idx) {
-        if (Sort)     BlockIndex<Index>::sort(b);
-        if (Shrink)   BlockIndex<Index>::shrink(b);
-        if (Cardinal) idx = BlockIndex<Index>::cardinal(b);
+      static inline void update(BlockIndexesType& b, size_type& idx) {
+        if (Sort)     BlockIndex::sort(b);
+        if (Shrink)   BlockIndex::shrink(b);
+        if (Cardinal) idx = BlockIndex::cardinal(b);
       }
-  };
+  }; // class MatrixBlockIndexes
 
   template <bool _allRows, bool _allCols>
   std::ostream& operator<< (std::ostream& os, MatrixBlockIndexes<_allRows, _allCols> mbi)
@@ -492,6 +494,7 @@ namespace Eigen {
   class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
   {
     public:
+    typedef hpp::constraints::size_type size_type;
       typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
 
@@ -509,28 +512,45 @@ namespace Eigen {
 
       // using Base::operator=;
 
-      MatrixBlockView (ArgType& arg, const Index& nbRows, const RowIndexes_t rows, const Index& nbCols, const ColIndexes_t cols)
-        : m_arg (arg), m_nbRows(nbRows), m_rows(rows), m_nbCols(nbCols), m_cols(cols) {}
+      MatrixBlockView (ArgType& arg, const size_type& nbRows,
+                       const RowIndexes_t rows, const size_type& nbCols,
+                       const ColIndexes_t cols) :
+        m_arg (arg), m_nbRows(nbRows), m_rows(rows), m_nbCols(nbCols),
+        m_cols(cols)
+      {
+      }
 
       /// Valid only when _allRows or _allCols is true
-      MatrixBlockView (ArgType& arg, const Index& nbIndexes, const Indexes_t& indexes)
-        : m_arg (arg), m_nbRows(_allRows ? arg.rows() : nbIndexes), m_rows(indexes), m_nbCols(_allCols ? arg.cols() : nbIndexes), m_cols(indexes)
+      MatrixBlockView (ArgType& arg, const size_type& nbIndexes,
+                       const Indexes_t& indexes) :
+        m_arg (arg), m_nbRows(_allRows ? arg.rows() : nbIndexes),
+        m_rows(indexes), m_nbCols(_allCols ? arg.cols() : nbIndexes),
+        m_cols(indexes)
       {}
       
-      EIGEN_STRONG_INLINE Index rows() const { return m_nbRows; }
-      EIGEN_STRONG_INLINE Index cols() const { return m_nbCols; }
+      EIGEN_STRONG_INLINE size_type rows() const { return m_nbRows; }
+      EIGEN_STRONG_INLINE size_type cols() const { return m_nbCols; }
 
-      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index index) const {
-        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      EIGEN_STRONG_INLINE CoeffReturnType coeff (size_type index) const
+      {
+        assert(false && "It is not possible to access the coefficients of "
+               "MatrixBlockView this way.");
       }
-      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index row, Index col) const {
-        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      EIGEN_STRONG_INLINE CoeffReturnType coeff (size_type row, size_type col)
+        const
+      {
+        assert(false && "It is not possible to access the coefficients of "
+               "MatrixBlockView this way.");
       }
-      EIGEN_STRONG_INLINE Scalar& coeffRef(Index index) {
-        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      EIGEN_STRONG_INLINE Scalar& coeffRef (size_type index)
+      {
+        assert(false && "It is not possible to access the coefficients of "
+               "MatrixBlockView this way.");
       }
-      EIGEN_STRONG_INLINE Scalar& coeffRef(Index row, const Index& col) {
-        assert(false && "It is not possible to access the coefficients of MatrixBlockView this way.");
+      EIGEN_STRONG_INLINE Scalar& coeffRef (size_type row, const size_type& col)
+      {
+        assert(false && "It is not possible to access the coefficients of "
+               "MatrixBlockView this way.");
       }
       /*
       EIGEN_STRONG_INLINE const Index& argIndex(const Index& index) const {
@@ -568,40 +588,12 @@ namespace Eigen {
       }
 
       ArgType& m_arg;
-      Index m_nbRows;
+      size_type m_nbRows;
       RowIndexes_t m_rows;
-      Index m_nbCols;
+      size_type m_nbCols;
       ColIndexes_t m_cols;
   };
 
-  // Eigen 3.3.3
-  /*
-  namespace internal {
-    template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
-      struct evaluator< MatrixView <ArgType, _Rows, _Cols, _allRows, _allCols> >
-      : evaluator_base< MatrixView <ArgType, _Rows, _Cols, _allRows, _allCols> >
-      {
-        typedef MatrixView <ArgType, _Rows, _Cols, _allRows, _allCols> XprType;
-        typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
-        typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
-        typedef typename XprType::CoeffReturnType CoeffReturnType;
-        enum { 
-          CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost,
-          Flags = ArgType::Flags
-        };
-
-        evaluator(const XprType& xpr)
-          : m_xpr (xpr), m_argImpl(xpr.m_arg)
-        { }
-        CoeffReturnType coeff(Index row, Index col) const
-        {
-          return m_argImpl.coeff(m_xpr.argRow(row), m_xpr.argCol(col));
-        }
-        ArgTypeNested& m_xpr;
-        evaluator<ArgTypeNestedCleaned> m_argImpl;
-      };
-  }
-  */
 } // namespace Eigen
 
 #include <hpp/constraints/impl/matrix-view.hh>

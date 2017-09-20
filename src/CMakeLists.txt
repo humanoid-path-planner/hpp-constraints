@@ -23,6 +23,7 @@ SET (${LIBRARY_NAME}_SOURCES
   distance-between-points-in-bodies.cc
   configuration-constraint.cc
   convex-shape-contact.cc
+  matrix-view.cc
   static-stability.cc
   explicit-solver.cc
   hybrid-solver.cc

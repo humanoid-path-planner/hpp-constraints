@@ -47,7 +47,7 @@ MACRO(ADD_TESTCASE NAME GENERATED HEADER_ONLY)
 ENDMACRO(ADD_TESTCASE)
 
 ADD_TESTCASE (logarithm                 FALSE TRUE )
-ADD_TESTCASE (matrix-view               FALSE TRUE )
+ADD_TESTCASE (matrix-view               FALSE FALSE )
 ADD_TESTCASE (svd                       FALSE TRUE )
 
 ADD_TESTCASE (generic-transformation    FALSE FALSE)
