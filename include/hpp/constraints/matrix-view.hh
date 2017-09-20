@@ -236,8 +236,12 @@ namespace Eigen {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
       }; // struct View
 
+      /// Empty constructor
       MatrixBlocks () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
 
+      /// Constructor by vectors of segments
+      /// \param rows set of row indices,
+      /// \param cols set of column indices,
       /// \warning rows and cols must be sorted
       MatrixBlocks (const segments_t& rows,
                           const segments_t& cols) :
@@ -245,7 +249,11 @@ namespace Eigen {
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
       {}
 
-      /// Build a block index made of a single block
+      /// Constructor of single block
+      /// \param first indice for row and column
+      /// \param size number of indices in the block (row and column)
+      /// \note if all rows or all columns are selected (template parameter)
+      ///       the block will contain all rows, respectively all columns.
       MatrixBlocks (size_type start, size_type size)
         : m_nbRows(_allRows ? 0 : size)
         , m_nbCols(_allCols ? 0 : size)
@@ -253,14 +261,21 @@ namespace Eigen {
         , m_cols(1, BlockIndex::segment_t (start, size))
       {}
 
+      /// Constructor by a collection of indices
+      /// \param idx collections of indices (for rows and columns)
       /// \warning idx must be sorted and shrinked
+      /// \note if all rows or all columns are selected (template parameter)
+      ///       the block will contain all rows, respectively all columns.
       MatrixBlocks (const segments_t& idx)
         : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
         , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
         , m_rows(idx), m_cols(idx)
       {}
 
-      /// \warning idx must be sorted and shrinked
+      /// Constructor of a single block
+      /// \param idx segment of row and column indices
+      /// \note if all rows or all columns are selected (template parameter)
+      ///       the block will contain all rows, respectively all columns.
       MatrixBlocks (const segment_t& idx)
         : m_nbRows(_allRows ? 0 : idx.second)
         , m_nbCols(_allCols ? 0 : idx.second)
@@ -291,28 +306,46 @@ namespace Eigen {
         , m_rows(other.m_rows), m_cols(other.m_cols)
       {}
 
+      /// Add consecutive rows
+      /// \param row first row to add
+      /// \param size number of rows to add
       inline void addRow (const size_type& row, const size_type size)
       {
         m_rows.push_back(segment_t (row, size));
         m_nbRows += size;
       }
 
+      /// Add consecutive columns
+      /// \param col first column to add
+      /// \param size number of columns to add
       inline void addCol (const size_type& col, const size_type size)
       {
         m_cols.push_back(segment_t (col, size));
         m_nbCols += size;
       }
 
+      /// Selectively recompute set of rows
+      /// \param Sort whether set of rows should be sorted,
+      /// \param Shrink whether set of rows should be shrunk,
+      /// \param Cardinal whether number of rows should be recomputed
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateRows() {
         update<Sort, Shrink, Cardinal> (m_rows, m_nbRows);
       }
 
+      /// Selectively recompute set of columns
+      /// \param Sort whether set of columns should be sorted,
+      /// \param Shrink whether set of columns should be shrunk,
+      /// \param Cardinal whether number of columns should be recomputed
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateCols() {
         update<Sort, Shrink, Cardinal> (m_cols, m_nbCols);
       }
 
+      /// Writable view of the smaller matrix
+      /// \param other matrix to whick block are extracted
+      /// \return writable view of the smaller matrix composed by concatenation
+      ///         of blocks.
       template <typename Derived>
       EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type lview(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
@@ -322,6 +355,10 @@ namespace Eigen {
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
+      /// Writable view of the smaller matrix transposed
+      /// \param other matrix to whick block are extracted
+      /// \return writable view of the smaller matrix composed by concatenation
+      ///         of blocks and transposed.
       template <typename Derived>
       EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type lviewTranspose(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
@@ -331,6 +368,10 @@ namespace Eigen {
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
+      /// Non-writable view of the smaller matrix
+      /// \param other matrix to whick block are extracted
+      /// \return non-writable view of the smaller matrix composed by
+      ///         concatenation of blocks.
       template <typename Derived>
       EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type rview(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
@@ -339,6 +380,10 @@ namespace Eigen {
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
+      /// Non-writable view of the smaller matrix transposed
+      /// \param other matrix to whick block are extracted
+      /// \return non-writable view of the smaller matrix composed by
+      ///         concatenation of blocks and transposed.
       template <typename Derived>
       EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type rviewTranspose(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
