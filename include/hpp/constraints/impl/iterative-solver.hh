@@ -23,6 +23,13 @@ namespace hpp {
   namespace constraints {
     namespace lineSearch {
       template <typename SolverType>
+      inline bool Constant::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
+      {
+        solver.integration() (arg, darg, arg);
+        return true;
+      }
+
+      template <typename SolverType>
       inline bool Backtracking::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t u)
       {
         arg_darg.resize(arg.size());
@@ -112,6 +119,9 @@ namespace hpp {
       // Fill value and Jacobian
       computeValue<true> (arg);
       computeError();
+
+      if (squaredNorm_ > squaredErrorThreshold_
+          && dimension_ == 0) return INFEASIBLE;
 
       while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
 	     iter < maxIterations_) {

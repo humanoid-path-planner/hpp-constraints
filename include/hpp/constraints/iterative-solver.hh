@@ -34,6 +34,12 @@ namespace hpp {
     /// \addtogroup solvers
     /// \{
     namespace lineSearch {
+      /// No line search. Use alpha = 1
+      struct Constant {
+        template <typename SolverType>
+        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+      };
+
       /// Implements the backtracking line search algorithm
       /// See https://en.wikipedia.org/wiki/Backtracking_line_search
       struct Backtracking {
@@ -45,7 +51,7 @@ namespace hpp {
         template <typename SolverType>
         inline value_type computeLocalSlope(const SolverType& solver) const;
 
-        const value_type c, tau, smallAlpha; // 0.8 ^ 7 = 0.209, 0.8 ^ 8 = 0.1677
+        value_type c, tau, smallAlpha; // 0.8 ^ 7 = 0.209, 0.8 ^ 8 = 0.1677
         mutable vector_t arg_darg, df, darg;
       };
 
@@ -58,7 +64,7 @@ namespace hpp {
         bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
 
         value_type alpha;
-        const value_type alphaMax, K;
+        value_type alphaMax, K;
       };
 
       /// The step size is computed using the formula
@@ -73,7 +79,7 @@ namespace hpp {
         template <typename SolverType>
         bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
 
-        const value_type C, K, a, b;
+        value_type C, K, a, b;
       };
     }
 
@@ -94,6 +100,7 @@ namespace hpp {
         enum Status {
           ERROR_INCREASED,
           MAX_ITERATION_REACHED,
+          INFEASIBLE,
           SUCCESS
         };
         /// This function integrates velocity during unit time, from argument.
@@ -307,6 +314,12 @@ namespace hpp {
         /// If lastIsOptional() is true, then the last level is ignored.
         /// \warning computeValue must have been called first.
         void computeError () const;
+
+        /// Accessor to the last step done
+        const vector_t& lastStep () const
+        {
+          return dq_;
+        }
         /// \}
 
       protected:
@@ -328,11 +341,17 @@ namespace hpp {
           ComparisonTypes_t comparison;
           std::vector<std::size_t> inequalityIndexes;
           Eigen::RowBlockIndexes equalityIndexes;
+          Eigen::MatrixBlockIndexes<false,false> activeRowsOfJ;
         };
 
         /// Allocate datas and update sizes of the problem
         /// Should be called whenever the stack is modified.
         void update ();
+
+        /// Compute which rows of the jacobian of stack_[iStack]
+        /// are not zero, using the activeDerivativeParameters of the functions.
+        /// The result is stored in datas_[i].activeRowsOfJ
+        virtual void computeActiveRowsOfJ (std::size_t iStack);
 
         /// Compute a SVD decomposition of each level and find the best descent
         /// direction at the first order.

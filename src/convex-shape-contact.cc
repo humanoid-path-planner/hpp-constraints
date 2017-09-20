@@ -37,6 +37,8 @@ namespace hpp {
       relativeTransformation_.joint1(robot->rootJoint());
       relativeTransformation_.joint2(robot->rootJoint());
       jacobian_.resize (6, robot->numberDof ());
+      activeParameters_.setConstant(false);
+      activeDerivativeParameters_.setConstant(false);
     }
 
     ConvexShapeContactPtr_t ConvexShapeContact::create (
@@ -68,12 +70,32 @@ namespace hpp {
     void ConvexShapeContact::addObject (const ConvexShape& t)
     {
       objectConvexShapes_.push_back (t);
+
+      relativeTransformation_.joint2 (t.joint_);
+      for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
+          f_it != floorConvexShapes_.end (); ++f_it) {
+        relativeTransformation_.joint1 (f_it->joint_);
+        activeParameters_ = activeParameters_
+          || relativeTransformation_.activeParameters();
+        activeDerivativeParameters_ = activeDerivativeParameters_
+          || relativeTransformation_.activeDerivativeParameters();
+      }
     }
 
     void ConvexShapeContact::addFloor (const ConvexShape& t)
     {
       ConvexShape tt (t); tt.reverse ();
       floorConvexShapes_.push_back (tt);
+
+      relativeTransformation_.joint1 (tt.joint_);
+      for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
+          o_it != objectConvexShapes_.end (); ++o_it) {
+        relativeTransformation_.joint2 (o_it->joint_);
+        activeParameters_ = activeParameters_
+          || relativeTransformation_.activeParameters();
+        activeDerivativeParameters_ = activeDerivativeParameters_
+          || relativeTransformation_.activeDerivativeParameters();
+      }
     }
 
     void ConvexShapeContact::setNormalMargin (const value_type& margin)

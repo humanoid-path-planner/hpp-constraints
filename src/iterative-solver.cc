@@ -60,6 +60,8 @@ namespace hpp {
     }
 
     namespace lineSearch {
+      template bool Constant::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
       Backtracking::Backtracking () : c (0.001), tau (0.7), smallAlpha (0.2) {}
       template bool Backtracking::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
@@ -139,8 +141,10 @@ namespace hpp {
 
       dimension_ = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        computeActiveRowsOfJ (i);
+
         const DifferentiableFunctionStack& f = stacks_[i];
-        dimension_ += f.outputSize();
+        dimension_ += datas_[i].activeRowsOfJ.m_nbRows;
         datas_[i].output = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide.setNeutral ();
@@ -148,7 +152,7 @@ namespace hpp {
         assert(derSize_ == f.inputDerivativeSize());
         datas_[i].jacobian.resize(f.outputDerivativeSize(), f.inputDerivativeSize());
         datas_[i].jacobian.setZero();
-        datas_[i].reducedJ.resize(f.outputDerivativeSize(), reducedSize);
+        datas_[i].reducedJ.resize(datas_[i].activeRowsOfJ.m_nbRows, reducedSize);
 
         datas_[i].svd = SVD_t (f.outputDerivativeSize(), reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
         datas_[i].svd.setThreshold (SVD_THRESHOLD);
@@ -162,6 +166,26 @@ namespace hpp {
       projector_.resize(reducedSize, reducedSize);
       reducedJ_.resize(dimension_, reducedSize);
       svd_ = SVD_t (dimension_, reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    }
+
+    void HierarchicalIterativeSolver::computeActiveRowsOfJ (std::size_t iStack)
+    {
+      Data& d = datas_[iStack];
+      const DifferentiableFunctionStack& f = stacks_[iStack];
+      const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+      std::size_t row = 0;
+
+      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+      BlockIndexes::BlockIndexesType rows;
+      for (std::size_t i = 0; i < fs.size (); ++i) {
+        bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
+        if (adp.any()) // If at least one element of adp is true
+          rows.push_back (BlockIndexes::interval_t
+                          (row, fs[i]->outputDerivativeSize()));
+        row += fs[i]->outputDerivativeSize();
+      }
+      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
     vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg) const
@@ -242,7 +266,7 @@ namespace hpp {
         const Data& d = datas_[i];
         const size_type nRows = d.equalityIndexes.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        d.equalityIndexes.rview(d.rightHandSide.vector ()).writeTo(seg);
+        seg = d.equalityIndexes.rview(d.rightHandSide.vector ());
         row += nRows;
       }
       assert (row == rhs.size());
@@ -270,7 +294,7 @@ namespace hpp {
         applyComparison<ComputeJac>(d.comparison, d.inequalityIndexes, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
-        if (ComputeJac) reduction_.rview (d.jacobian).writeTo(d.reducedJ);
+        if (ComputeJac) d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
       }
     }
 
@@ -318,7 +342,7 @@ namespace hpp {
         d.svd.compute (d.reducedJ);
         HPP_DEBUG_SVDCHECK (d.svd);
         // TODO Eigen::JacobiSVD does a dynamic allocation here.
-        dqSmall_ = d.svd.solve (- d.error);
+        dqSmall_ = d.svd.solve (- Eigen::RowBlockIndexes(d.activeRowsOfJ.m_rows).rview(d.error).eval());
         d.maxRank = std::max(d.maxRank, d.svd.rank());
         if (d.maxRank > 0)
           sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
@@ -335,7 +359,7 @@ namespace hpp {
           /// projector is of size numberDof
           bool first = (i == 0);
           bool last = (i == stacks_.size() - 1);
-          err = - d.error;
+          err = - Eigen::RowBlockIndexes(d.activeRowsOfJ.m_rows).rview(d.error).eval();
           if (first) {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);

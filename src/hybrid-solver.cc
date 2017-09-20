@@ -26,6 +26,8 @@ Eigen::IOFormat IPythonFormat (Eigen::FullPrecision, 0, ", ", ",\n", "[", "]", "
 namespace hpp {
   namespace constraints {
     namespace lineSearch {
+      template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+
       template bool Backtracking::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
       template bool FixedSequence::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
@@ -50,9 +52,46 @@ namespace hpp {
         Data& d = datas_[i];
         hppDnum (info, "Jacobian of stack " << i << " before update: \n" << d.reducedJ.format(IPythonFormat));
         hppDnum (info, "Jacobian of explicit variable of stack " << i << ": \n" << explicit_.outDers().rviewTranspose(d.jacobian).eval().format(IPythonFormat));
-        d.reducedJ.noalias() += explicit_.outDers().rviewTranspose(d.jacobian).eval() * Je_;
+        d.reducedJ.noalias() +=
+          Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> (d.jacobian,
+              d.activeRowsOfJ.m_nbRows,
+              d.activeRowsOfJ.m_rows,
+              explicit_.outDers().m_nbRows,
+              explicit_.outDers().m_rows).eval()
+          * Je_;
         hppDnum (info, "Jacobian of stack " << i << " after update: \n" << d.reducedJ.format(IPythonFormat));
       }
+    }
+
+    void HybridSolver::computeActiveRowsOfJ (std::size_t iStack)
+    {
+      Data& d = datas_[iStack];
+      const DifferentiableFunctionStack& f = stacks_[iStack];
+      const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+      std::size_t row = 0;
+
+      Eigen::ColBlockIndexes _explicitActiveParam (explicit_.activeParameters ());
+      bool_array_t explicitActiveParam (bool_array_t::Constant (f.inputSize(), false));
+      if (_explicitActiveParam.nbIndexes() > 0)
+        _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
+
+      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+
+      Eigen::RowBlockIndexes select (reduction_.indexes());
+
+      bool_array_t functionActiveParam;
+      BlockIndexes::BlockIndexesType rows;
+      for (std::size_t i = 0; i < fs.size (); ++i) {
+        functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
+
+        bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
+        if (adp.any()) // If at least one element of adp is true
+          rows.push_back (BlockIndexes::interval_t
+                          (row, fs[i]->outputDerivativeSize()));
+        row += fs[i]->outputDerivativeSize();
+      }
+      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
     void HybridSolver::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const

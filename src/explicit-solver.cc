@@ -164,7 +164,7 @@ namespace hpp {
       arg_ = arg;
       solve (arg_);
       difference_ (arg, arg_, diff_);
-      outDers_.rview(diff_).writeTo(error);
+      error = outDers_.rview(diff_);
       hppDout (info, "Squared error norm is " << error.squaredNorm());
       // TODO: this threshold a very bad way of solving a numerical issue.
       // in hpp-core, a numerical constraint may have both a explicit and an

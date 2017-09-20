@@ -25,6 +25,8 @@
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
+
+#include <hpp/constraints/affine-function.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 
@@ -188,6 +190,33 @@ class ExplicitTransformation : public DifferentiableFunction
 
 typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
+
+BOOST_AUTO_TEST_CASE(functions)
+{
+  HybridSolver solver(3, 3);
+
+  /// System:
+  /// f (q1, q3) = 0
+  /// q2 = g(q3)
+  Eigen::Matrix<value_type, 2, 3> Jf; Jf << 1, 0, 0, 0, 0, 1;
+  solver.add(AffineFunctionPtr_t(new AffineFunction (Jf)), 0);
+
+  Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
+  Eigen::RowBlockIndexes inArg; inArg.addRow (2,1);
+  Eigen::ColBlockIndexes inDer; inDer.addCol (2,1);
+  Eigen::RowBlockIndexes outArg; outArg.addRow (0,1);
+  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (Jg)),
+      inArg, outArg, inDer, outArg);
+
+  solver.explicitSolverHasChanged();
+  BOOST_CHECK_EQUAL(solver.dimension(), 2);
+
+  // We add to the system h(q3) = 0
+  // This function should not be removed from the system.
+  Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
+  solver.add(AffineFunctionPtr_t(new AffineFunction (Jh)), 0);
+  BOOST_CHECK_EQUAL(solver.dimension(), 3);
+}
 
 BOOST_AUTO_TEST_CASE(hybrid_solver)
 {

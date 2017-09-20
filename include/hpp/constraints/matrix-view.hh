@@ -24,27 +24,9 @@
 
 namespace Eigen {
 
-  template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols> class MatrixView;
+  template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols> class MatrixBlockView;
 
   namespace internal {
-    template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
-      struct traits< MatrixView <ArgType, _Rows, _Cols, _allRows, _allCols> >
-    {
-      typedef typename ArgType::Index Index;
-      typedef Eigen::Dense StorageKind;
-      typedef Eigen::MatrixXpr XprKind;
-      // typedef typename ArgType::StorageIndex StorageIndex;
-      typedef typename ArgType::Scalar Scalar;
-      enum { 
-        CoeffReadCost = ArgType::CoeffReadCost,
-        Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
-        RowsAtCompileTime = (_allRows ? ArgType::RowsAtCompileTime : _Rows),
-        ColsAtCompileTime = (_allCols ? ArgType::ColsAtCompileTime : _Cols),
-        MaxRowsAtCompileTime = ArgType::MaxRowsAtCompileTime,
-        MaxColsAtCompileTime = ArgType::MaxColsAtCompileTime
-      };
-    };
-
       template <bool row> struct return_first {
         template <typename First, typename Second>
         static inline First& run (First& f, Second&) { return f; }
@@ -58,115 +40,11 @@ namespace Eigen {
         typedef MatrixXd::Index Index;
         empty_struct () {}
         template <typename In_t> empty_struct (In_t) {}
+        template <typename In0_t, typename In1_t> empty_struct (In0_t, In1_t) {}
         static inline Index size() { return 0; }
         inline const Index& operator[](const Index& i) const { return i; }
       };
-  } // namespace internal
 
-  template <int _Rows, int _Cols, bool _allRows, bool _allCols>
-  class MatrixIndexes
-  {
-    public:
-      typedef MatrixXd::Index Index;
-      typedef std::vector<Index> Indexes_t;
-      typedef typename internal::conditional<_allRows, internal::empty_struct, Indexes_t>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, internal::empty_struct, Indexes_t>::type ColIndexes_t;
-
-      template <typename Derived> struct View {
-        typedef MatrixView<Derived, _Rows, _Cols, _allRows, _allCols> type;
-      };
-
-      MatrixIndexes () : m_rows(), m_cols() {}
-
-      MatrixIndexes (const Index& rows, const Index& cols)
-        : m_rows(rows), m_cols(cols)
-      {
-        // for (Index i = 0; i < m_rows.size(); ++i) m_rows[i] = i;
-        // for (Index i = 0; i < m_cols.size(); ++i) m_cols[i] = i;
-      }
-
-      MatrixIndexes (const Index& size)
-        : m_rows(size), m_cols(size)
-      {
-        // for (Index i = 0; i < indexes().size(); ++i) indexes()[i] = i;
-      }
-
-      MatrixIndexes (const Indexes_t& rows, const Indexes_t& cols)
-        : m_rows(rows), m_cols(cols) {}
-
-      /// Valid only when _allRows or _allCols is true
-      MatrixIndexes (const Indexes_t& indexes)
-        : m_rows(indexes), m_cols(indexes)
-      {}
-      
-      template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived>::type view(MatrixBase<Derived>& other) const {
-        return View<Derived>::type (other.derived(), m_rows, m_cols);
-      }
-
-      inline const Indexes_t& indexes() const
-      {
-        EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
-        return internal::return_first<_allRows>::run(m_rows, m_cols);
-      }
-
-      RowIndexes_t m_rows;
-      ColIndexes_t m_cols;
-  };
-
-  template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
-  class MatrixView : public MatrixBase< MatrixView<ArgType, _Rows, _Cols, _allRows, _allCols> >
-  {
-    public:
-      typedef MatrixBase< MatrixView<ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
-      EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixView)
-
-      typedef Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime> PlainObject;
-      // typedef typename internal::ref_selector<MatrixView>::type Nested; 
-      typedef typename internal::ref_selector<ArgType>::type ArgTypeNested;
-      // typedef typename Base::CoeffReturnType CoeffReturnType;
-      // typedef typename Base::Scalar Scalar;
-
-      typedef MatrixIndexes<_Rows, _Cols, _allRows, _allCols> MatrixIndexes_t;
-      typedef typename MatrixIndexes_t::Indexes_t Indexes_t;
-      typedef typename MatrixIndexes_t::RowIndexes_t RowIndexes_t;
-      typedef typename MatrixIndexes_t::ColIndexes_t ColIndexes_t;
-
-      using Base::operator=;
-
-      MatrixView (ArgType& arg, const Indexes_t& rows, const Indexes_t& cols)
-        : m_arg (arg), m_rows(rows), m_cols(cols) {}
-
-      /// Valid only when _allRows or _allCols is true
-      MatrixView (ArgType& arg, const Indexes_t& indexes)
-        : m_arg (arg), m_rows(indexes), m_cols(indexes)
-      {}
-      
-      EIGEN_STRONG_INLINE Index rows() const { if (_allRows) return m_arg.rows(); else return m_rows.size(); }
-      EIGEN_STRONG_INLINE Index cols() const { if (_allCols) return m_arg.cols(); else return m_cols.size(); }
-
-      EIGEN_STRONG_INLINE const Index& argIndex(const Index& index) const {
-        // EIGEN_STATIC_ASSERT_VECTOR_ONLY(PlainObject)
-        if (rows() == 1) return argCol(index);
-        else             return argRow(index);
-      }
-      EIGEN_STRONG_INLINE const Index& argRow(const Index& row) const { if (_allRows) return row; else return m_rows[row]; }
-      EIGEN_STRONG_INLINE const Index& argCol(const Index& col) const { if (_allCols) return col; else return m_cols[col]; }
-
-      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index index) const { return m_arg.coeff(argIndex(index)); };
-      EIGEN_STRONG_INLINE CoeffReturnType coeff(Index row, Index col) const { return m_arg.coeff(argRow(row), argCol(col)); };
-      EIGEN_STRONG_INLINE Scalar& coeffRef(Index index) { return m_arg.coeffRef(argIndex(index)); };
-      EIGEN_STRONG_INLINE Scalar& coeffRef(Index row, const Index& col) { return m_arg.coeffRef(argRow(row), argCol(col)); };
-
-      ArgType& m_arg;
-      // Indexes_t m_rows, m_cols;
-      const RowIndexes_t& m_rows;
-      const ColIndexes_t& m_cols;
-  };
-
-  template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols> class MatrixBlockView;
-
-  namespace internal {
     template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
       struct traits< MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
     {
@@ -200,8 +78,18 @@ namespace Eigen {
         static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
     };
 
-    template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalCols {
-      static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
+    template <typename Other, typename View, bool AllCols = View::AllCols> struct evalCols {
+      static inline void run (Other& dst, const View& src, const typename Other::Index& row)
+      {
+        dst.derived() = src.derived().m_arg.middleRows(row, dst.rows());
+      }
+      static inline void write (const Other& src, View& dst, const typename Other::Index& row)
+      {
+        dst.m_arg.middleRows(row, src.rows()) = src;
+      }
+    };
+    template <typename Other, typename View> struct evalCols <Other, View, false> {
+      static inline void run (Other& dst, const View& src, const typename Other::Index& row)
       {
         std::size_t col = 0;
         for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
@@ -211,80 +99,50 @@ namespace Eigen {
           col += src.m_cols[j].second;
         }
       }
-      static inline void write (const Dst& dst, Src& src, const typename Dst::Index& row)
+      static inline void write (const Other& src, View& dst, const typename Other::Index& row)
       {
         std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          src.m_arg.block(row,        src.m_cols[j].first,
-                          dst.rows(), src.m_cols[j].second)
-            = dst.middleCols(col, src.m_cols[j].second);
-          col += src.m_cols[j].second;
+        for (std::size_t j = 0; j < dst.m_cols.size(); ++j) {
+          dst.m_arg.block(row,        dst.m_cols[j].first,
+              src.rows(), dst.m_cols[j].second)
+            = src.derived().middleCols(col, dst.m_cols[j].second);
+          col += dst.m_cols[j].second;
         }
       }
     };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, true , false> {
-      static inline void run (Dst& dst, const Src& src)
+    template <typename Other, typename View, bool AllRows = View::AllRows> struct evalRows {
+      static inline void run (Other& dst, const View& src)
       {
-        std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          dst.derived().middleCols(col, src.m_cols[j].second) =
-            src.m_arg.middleCols(src.m_cols[j].first, src.m_cols[j].second);
-          col += src.m_cols[j].second;
-        }
+        evalCols<Other, View>::run(dst.derived(), src, 0);
       }
-      static inline void write (Dst& dst, const Src& src)
+      static inline void write (const Other& src, View& dst)
       {
-        std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          src.m_arg.middleCols(src.m_cols[j].first, src.m_cols[j].second)
-            = dst.derived().middleCols(col, src.m_cols[j].second);
-          col += src.m_cols[j].second;
-        }
+        evalCols<Other, View>::write(src, dst, 0);
       }
     };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, false, true > {
-      static inline void run (Dst& dst, const Src& src, const typename Dst::Index& row)
-      {
-        dst.derived() = src.m_arg.middleRows(row, dst.rows());
-      }
-      static inline void write (Dst& dst, Src& src, const typename Dst::Index& row)
-      {
-        src.m_arg.middleRows(row, dst.rows()) = dst;
-      }
-    };
-    template <typename Dst, typename Src> struct evalCols<Dst, Src, true , true > {};
-    template <typename Dst, typename Src, bool _allRows, bool _allCols> struct evalRows {
-      static inline void run (Dst& dst, const Src& src)
-      {
-        evalCols<Dst, Src, _allRows, _allCols>::run(dst.derived(), src);
-      }
-      static inline void write (Dst& dst, Src& src)
-      {
-        evalCols<Dst, Src, _allRows, _allCols>::write(dst, src);
-      }
-    };
-    template <typename Dst, typename Src, bool _allCols> struct evalRows <Dst, Src, false, _allCols> {
-      static inline void run (Dst& dst, const Src& src)
+    template <typename Other, typename View> struct evalRows <Other, View, false> {
+      static inline void run (Other& dst, const View& src)
       {
         std::size_t row = 0;
         for (std::size_t i = 0; i < src.m_rows.size(); ++i) {
-          typename Dst::RowsBlockXpr rows = dst.middleRows(row, src.m_rows[i].second);
-          evalCols<typename Dst::RowsBlockXpr, Src, false, _allCols>::run(rows,
-              src, src.m_rows[i].first);
+          typedef typename Other::RowsBlockXpr Rows_t;
+          Rows_t rows = dst.middleRows(row, src.m_rows[i].second);
+          evalCols<Rows_t, View>::run(rows, src, src.m_rows[i].first);
           row += src.m_rows[i].second;
         }
       }
-      static inline void write (Dst& dst, Src& src)
+      static inline void write (const Other& src, View& dst)
       {
         std::size_t row = 0;
-        for (std::size_t i = 0; i < src.m_rows.size(); ++i) {
-          typename Dst::ConstRowsBlockXpr rows = dst.middleRows(row, src.m_rows[i].second);
-          evalCols<typename Dst::ConstRowsBlockXpr, Src, false, _allCols>::write(rows,
-              src, src.m_rows[i].first);
-          row += src.m_rows[i].second;
+        for (std::size_t i = 0; i < dst.m_rows.size(); ++i) {
+          typedef typename Other::ConstRowsBlockXpr ConstRows_t;
+          ConstRows_t rows = src.middleRows(row, dst.m_rows[i].second);
+          evalCols<ConstRows_t, View>::write(rows, dst, dst.m_rows[i].first);
+          row += dst.m_rows[i].second;
         }
       }
     };
+
     template <bool print> struct print_indexes { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
     template <> struct print_indexes <true> {
       template <typename BlockIndexType>
@@ -329,7 +187,7 @@ namespace Eigen {
   class MatrixBlockIndexes
   {
     public:
-    typedef hpp::constraints::size_type size_type;
+      typedef hpp::constraints::size_type size_type;
       typedef BlockIndex           BlockIndex_t;
       typedef BlockIndex_t::interval_t interval_t;
       typedef BlockIndex_t::vector_t BlockIndexesType;
@@ -347,13 +205,21 @@ namespace Eigen {
       MatrixBlockIndexes (const BlockIndexesType& rows,
                           const BlockIndexesType& cols) :
         m_nbRows(BlockIndex::cardinal(rows)),
-        m_nbCols(BlockIndex::cardinal(rows)), m_rows(rows), m_cols(cols)
+        m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
+      {}
+
+      /// Build a block index made of a single block
+      MatrixBlockIndexes (size_type start, size_type size)
+        : m_nbRows(_allRows ? 0 : size)
+        , m_nbCols(_allCols ? 0 : size)
+        , m_rows(1, BlockIndex_t::interval_t (start, size))
+        , m_cols(1, BlockIndex_t::interval_t (start, size))
       {}
 
       /// \warning idx must be sorted and shrinked
       MatrixBlockIndexes (const BlockIndexesType& idx)
-        : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
-        , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
+        : m_nbRows(_allRows ? 0 : BlockIndex_t::cardinal(idx))
+        , m_nbCols(_allCols ? 0 : BlockIndex_t::cardinal(idx))
         , m_rows(idx), m_cols(idx)
       {}
 
@@ -364,25 +230,29 @@ namespace Eigen {
         , m_rows(BlockIndexesType(1,idx)), m_cols(BlockIndexesType(1,idx))
       {}
 
-      /*
-      MatrixBlockIndexes (const Index& rows, const Index& cols)
-        : m_rows(rows), m_cols(cols)
+      /// Constructor from other MatrixBlockIndexes
+      /// \note This constructor will only be called when
+      /// \code
+      /// MatrixBlockIndexes<true, false> ( MatrixBlockIndexes<false, true> (...));
+      /// MatrixBlockIndexes<false, true> ( MatrixBlockIndexes<true, false> (...));
+      /// \endcode
+      template <bool _otherAllRows, bool _otherAllCols>
+      MatrixBlockIndexes (const MatrixBlockIndexes<_otherAllRows,_otherAllCols>& other)
+        : m_nbRows(other.m_nbCols)
+        , m_nbCols(other.m_nbRows)
+        , m_rows(other.m_cols), m_cols(other.m_rows)
       {
-        // for (Index i = 0; i < m_rows.size(); ++i) m_rows[i] = i;
-        // for (Index i = 0; i < m_cols.size(); ++i) m_cols[i] = i;
+        assert((_allRows != _allCols)
+            && (_otherAllRows == _allCols)
+            && (_otherAllCols == _allRows));
       }
 
-      MatrixBlockIndexes (const Index& size)
-        : m_rows(size), m_cols(size)
-      {
-        // for (Index i = 0; i < indexes().size(); ++i) indexes()[i] = i;
-      }
-
-      /// Valid only when _allRows or _allCols is true
-      MatrixBlockIndexes (const Indexes_t& indexes)
-        : m_rows(indexes), m_cols(indexes)
+      /// Copy constructor
+      MatrixBlockIndexes (const MatrixBlockIndexes<_allRows,_allCols>& other)
+        : m_nbRows(other.m_nbRows)
+        , m_nbCols(other.m_nbCols)
+        , m_rows(other.m_rows), m_cols(other.m_cols)
       {}
-      */
 
       inline void addRow (const size_type& row, const size_type size)
       {
@@ -410,7 +280,7 @@ namespace Eigen {
       EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type lview(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, nbIndexes(), indexes());
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, this->nbIndexes(), this->indexes());
         else
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
       }
@@ -446,11 +316,36 @@ namespace Eigen {
         return internal::return_first<_allRows>::run(m_cols, m_rows);
       }
 
+      inline const RowIndexes_t& rows() const
+      {
+        assert (_allRows);
+        return m_rows;
+      }
+
+      inline const ColIndexes_t& cols() const
+      {
+        assert (_allCols);
+        return m_cols;
+      }
+
       inline const size_type& nbIndexes() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
       }
+
+      inline const size_type& nbRows() const
+      {
+        assert (_allRows);
+        return m_nbRows;
+      }
+
+      inline const size_type& nbCols() const
+      {
+        assert (_allCols);
+        return m_nbCols;
+      }
+
 
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateIndexes() {
@@ -495,6 +390,12 @@ namespace Eigen {
   {
     public:
     typedef hpp::constraints::size_type size_type;
+      enum {
+        Rows = _Rows,
+        Cols = _Cols,
+        AllRows = _allRows,
+        AllCols = _allCols
+      };
       typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
 
@@ -564,7 +465,7 @@ namespace Eigen {
 
       template <typename Dest>
       EIGEN_STRONG_INLINE void evalTo (Dest& dst) const {
-        internal::evalRows<Dest, MatrixBlockView, _allRows, _allCols>::run(dst, *this);
+        internal::evalRows<Dest, MatrixBlockView>::run(dst, *this);
       }
 
       template <typename Dest>
@@ -583,7 +484,7 @@ namespace Eigen {
       template <typename OtherDerived>
       EIGEN_STRONG_INLINE MatrixBlockView& operator= (const EigenBase<OtherDerived>& other) {
         EIGEN_STATIC_ASSERT_LVALUE(ArgType);
-        internal::evalRows<const OtherDerived, MatrixBlockView, _allRows, _allCols>::write(other.derived(), *this);
+        internal::evalRows<const OtherDerived, MatrixBlockView>::write(other.derived(), *this);
         return *this;
       }
 
