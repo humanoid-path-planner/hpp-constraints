@@ -175,7 +175,7 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+      typedef Eigen::MatrixBlocks<false, false> BlockIndexes;
       BlockIndexes::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
@@ -184,7 +184,7 @@ namespace hpp {
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }
-      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 

@@ -59,7 +59,6 @@ namespace hpp {
       public:
         typedef Eigen::RowBlockIndexes RowBlockIndexes;
         typedef Eigen::ColBlockIndexes ColBlockIndexes;
-        // typedef Eigen::MatrixBlockIndexes<false, false> MatrixBlockIndexes;
         typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
         /// This function sets \f{ result = arg1 - arg0 \f}
         /// \note result may be of a different size than arg0 and arg1

@@ -64,9 +64,8 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
 
   // EIGEN_STATIC_ASSERT_LVALUE(MatrixRowView)
 
-  typedef MatrixBlockIndexes<false, true> RowsIndexes;
-  typedef MatrixBlockIndexes<true, false> ColsIndexes;
-  // typedef MatrixBlockIndexes<true, false> Indexes;
+  typedef MatrixBlocks<false, true> RowsIndexes;
+  typedef MatrixBlocks<true, false> ColsIndexes;
 
   MatrixXd m (10, 10);
   for (MatrixXd::Index i = 0; i < m.rows(); ++i)

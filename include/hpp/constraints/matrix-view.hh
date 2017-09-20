@@ -208,7 +208,7 @@ namespace Eigen {
   }; // struct BlockIndex
 
   template <bool _allRows, bool _allCols>
-  class MatrixBlockIndexes
+  class MatrixBlocks
   {
     public:
       typedef hpp::constraints::size_type size_type;
@@ -222,17 +222,17 @@ namespace Eigen {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
       }; // struct View
 
-      MatrixBlockIndexes () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
+      MatrixBlocks () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
 
       /// \warning rows and cols must be sorted
-      MatrixBlockIndexes (const segments_t& rows,
+      MatrixBlocks (const segments_t& rows,
                           const segments_t& cols) :
         m_nbRows(BlockIndex::cardinal(rows)),
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
       {}
 
       /// Build a block index made of a single block
-      MatrixBlockIndexes (size_type start, size_type size)
+      MatrixBlocks (size_type start, size_type size)
         : m_nbRows(_allRows ? 0 : size)
         , m_nbCols(_allCols ? 0 : size)
         , m_rows(1, BlockIndex::segment_t (start, size))
@@ -240,27 +240,27 @@ namespace Eigen {
       {}
 
       /// \warning idx must be sorted and shrinked
-      MatrixBlockIndexes (const segments_t& idx)
+      MatrixBlocks (const segments_t& idx)
         : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
         , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
         , m_rows(idx), m_cols(idx)
       {}
 
       /// \warning idx must be sorted and shrinked
-      MatrixBlockIndexes (const segment_t& idx)
+      MatrixBlocks (const segment_t& idx)
         : m_nbRows(_allRows ? 0 : idx.second)
         , m_nbCols(_allCols ? 0 : idx.second)
         , m_rows(segments_t(1,idx)), m_cols(segments_t(1,idx))
       {}
 
-      /// Constructor from other MatrixBlockIndexes
+      /// Constructor from other MatrixBlocks
       /// \note This constructor will only be called when
       /// \code
-      /// MatrixBlockIndexes<true, false> ( MatrixBlockIndexes<false, true> (...));
-      /// MatrixBlockIndexes<false, true> ( MatrixBlockIndexes<true, false> (...));
+      /// MatrixBlocks<true, false> ( MatrixBlocks<false, true> (...));
+      /// MatrixBlocks<false, true> ( MatrixBlocks<true, false> (...));
       /// \endcode
       template <bool _otherAllRows, bool _otherAllCols>
-      MatrixBlockIndexes (const MatrixBlockIndexes<_otherAllRows,_otherAllCols>& other)
+      MatrixBlocks (const MatrixBlocks<_otherAllRows,_otherAllCols>& other)
         : m_nbRows(other.m_nbCols)
         , m_nbCols(other.m_nbRows)
         , m_rows(other.m_cols), m_cols(other.m_rows)
@@ -271,7 +271,7 @@ namespace Eigen {
       }
 
       /// Copy constructor
-      MatrixBlockIndexes (const MatrixBlockIndexes<_allRows,_allCols>& other)
+      MatrixBlocks (const MatrixBlocks<_allRows,_allCols>& other)
         : m_nbRows(other.m_nbRows)
         , m_nbCols(other.m_nbCols)
         , m_rows(other.m_rows), m_cols(other.m_cols)
@@ -388,10 +388,10 @@ namespace Eigen {
         if (Shrink)   BlockIndex::shrink(b);
         if (Cardinal) idx = BlockIndex::cardinal(b);
       }
-  }; // class MatrixBlockIndexes
+  }; // class MatrixBlocks
 
   template <bool _allRows, bool _allCols>
-  std::ostream& operator<< (std::ostream& os, MatrixBlockIndexes<_allRows, _allCols> mbi)
+  std::ostream& operator<< (std::ostream& os, MatrixBlocks<_allRows, _allCols> mbi)
   {
     if (!_allRows) {
       os << "Rows: ";
@@ -405,8 +405,8 @@ namespace Eigen {
     return os;
   }
 
-  typedef Eigen::MatrixBlockIndexes<false, true> RowBlockIndexes;
-  typedef Eigen::MatrixBlockIndexes<true, false> ColBlockIndexes;
+  typedef Eigen::MatrixBlocks<false, true> RowBlockIndexes;
+  typedef Eigen::MatrixBlocks<true, false> ColBlockIndexes;
 
   template <typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
   class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -429,7 +429,7 @@ namespace Eigen {
       // typedef typename Base::CoeffReturnType CoeffReturnType;
       // typedef typename Base::Scalar Scalar;
 
-      typedef MatrixBlockIndexes<_allRows, _allCols> MatrixIndexes_t;
+      typedef MatrixBlocks<_allRows, _allCols> MatrixIndexes_t;
       typedef typename MatrixIndexes_t::segments_t Indexes_t;
       typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndexes_t;

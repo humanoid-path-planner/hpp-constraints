@@ -75,7 +75,7 @@ namespace hpp {
       if (_explicitActiveParam.nbIndexes() > 0)
         _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
 
-      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+      typedef Eigen::MatrixBlocks<false, false> BlockIndexes;
 
       Eigen::RowBlockIndexes select (reduction_.indexes());
 
@@ -90,7 +90,7 @@ namespace hpp {
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }
-      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 

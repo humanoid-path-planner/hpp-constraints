@@ -341,7 +341,7 @@ namespace hpp {
           ComparisonTypes_t comparison;
           std::vector<std::size_t> inequalityIndexes;
           Eigen::RowBlockIndexes equalityIndexes;
-          Eigen::MatrixBlockIndexes<false,false> activeRowsOfJ;
+          Eigen::MatrixBlocks<false,false> activeRowsOfJ;
         };
 
         /// Allocate datas and update sizes of the problem
