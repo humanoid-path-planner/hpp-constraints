@@ -80,7 +80,7 @@ namespace hpp {
       Eigen::RowBlockIndexes select (reduction_.indexes());
 
       bool_array_t functionActiveParam;
-      BlockIndexes::BlockIndexesType rows;
+      BlockIndexes::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
 

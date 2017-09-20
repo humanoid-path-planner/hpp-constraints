@@ -176,7 +176,7 @@ namespace hpp {
       std::size_t row = 0;
 
       typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
-      BlockIndexes::BlockIndexesType rows;
+      BlockIndexes::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
         if (adp.any()) // If at least one element of adp is true

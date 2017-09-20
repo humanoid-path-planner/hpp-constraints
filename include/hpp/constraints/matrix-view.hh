@@ -213,9 +213,9 @@ namespace Eigen {
     public:
       typedef hpp::constraints::size_type size_type;
       typedef BlockIndex::segment_t segment_t;
-      typedef BlockIndex::segments_t BlockIndexesType;
-      typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexesType>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexesType>::type ColIndexes_t;
+      typedef BlockIndex::segments_t segments_t;
+      typedef typename internal::conditional<_allRows, internal::empty_struct, segments_t>::type RowIndexes_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, segments_t>::type ColIndexes_t;
 
       template <typename Derived, int _Rows, int _Cols> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
@@ -225,8 +225,8 @@ namespace Eigen {
       MatrixBlockIndexes () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
 
       /// \warning rows and cols must be sorted
-      MatrixBlockIndexes (const BlockIndexesType& rows,
-                          const BlockIndexesType& cols) :
+      MatrixBlockIndexes (const segments_t& rows,
+                          const segments_t& cols) :
         m_nbRows(BlockIndex::cardinal(rows)),
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
       {}
@@ -240,7 +240,7 @@ namespace Eigen {
       {}
 
       /// \warning idx must be sorted and shrinked
-      MatrixBlockIndexes (const BlockIndexesType& idx)
+      MatrixBlockIndexes (const segments_t& idx)
         : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
         , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
         , m_rows(idx), m_cols(idx)
@@ -250,7 +250,7 @@ namespace Eigen {
       MatrixBlockIndexes (const segment_t& idx)
         : m_nbRows(_allRows ? 0 : idx.second)
         , m_nbCols(_allCols ? 0 : idx.second)
-        , m_rows(BlockIndexesType(1,idx)), m_cols(BlockIndexesType(1,idx))
+        , m_rows(segments_t(1,idx)), m_cols(segments_t(1,idx))
       {}
 
       /// Constructor from other MatrixBlockIndexes
@@ -333,7 +333,7 @@ namespace Eigen {
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
-      inline const BlockIndexesType& indexes() const
+      inline const segments_t& indexes() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_cols, m_rows);
@@ -383,7 +383,7 @@ namespace Eigen {
 
     private:
       template<bool Sort, bool Shrink, bool Cardinal>
-      static inline void update(BlockIndexesType& b, size_type& idx) {
+      static inline void update(segments_t& b, size_type& idx) {
         if (Sort)     BlockIndex::sort(b);
         if (Shrink)   BlockIndex::shrink(b);
         if (Cardinal) idx = BlockIndex::cardinal(b);
@@ -430,7 +430,7 @@ namespace Eigen {
       // typedef typename Base::Scalar Scalar;
 
       typedef MatrixBlockIndexes<_allRows, _allCols> MatrixIndexes_t;
-      typedef typename MatrixIndexes_t::BlockIndexesType Indexes_t;
+      typedef typename MatrixIndexes_t::segments_t Indexes_t;
       typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndexes_t;
 
