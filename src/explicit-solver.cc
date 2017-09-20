@@ -84,7 +84,7 @@ namespace hpp {
     }
 
     void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::intervals_t& indexes,
+        const Eigen::BlockIndex::segments_t& indexes,
         vectorIn_t arg0,
         vectorIn_t arg1,
         vectorOut_t result)
@@ -95,7 +95,7 @@ namespace hpp {
 
       size_type rowArg = 0, rowDer = 0;
       for (std::size_t i = 0; i < indexes.size(); ++i) {
-        const Eigen::BlockIndex::interval_t& interval = indexes[i];
+        const Eigen::BlockIndex::segment_t& interval = indexes[i];
         size_type j = 0;
         while (j < interval.second) {
           size_type iArg = interval.first + j;
@@ -130,7 +130,7 @@ namespace hpp {
 
     Eigen::ColBlockIndexes ExplicitSolver::activeParameters () const
     {
-      BlockIndex::intervals_t biv;
+      BlockIndex::segments_t biv;
       for (std::size_t i = 0; i < functions_.size (); ++i)
         biv.insert(biv.end(), functions_[i].inArg.indexes().begin(),
                               functions_[i].inArg.indexes().end());
@@ -141,7 +141,7 @@ namespace hpp {
 
     Eigen::ColBlockIndexes ExplicitSolver::activeDerivativeParameters () const
     {
-      BlockIndex::intervals_t biv;
+      BlockIndex::segments_t biv;
       for (std::size_t i = 0; i < functions_.size (); ++i)
         biv.insert(biv.end(), functions_[i].inDer.indexes().begin(),
                               functions_[i].inDer.indexes().end());
@@ -191,8 +191,8 @@ namespace hpp {
     {
       assert (outArg.indexes().size() == 1 && "Only contiguous function output is supported.");
       assert (outDer.indexes().size() == 1 && "Only contiguous function output is supported.");
-      const RowBlockIndexes::interval_t& outIdx = outArg.indexes()[0];
-      const RowBlockIndexes::interval_t& outDerIdx = outDer.indexes()[0];
+      const RowBlockIndexes::segment_t& outIdx = outArg.indexes()[0];
+      const RowBlockIndexes::segment_t& outDerIdx = outDer.indexes()[0];
 
       // Sanity check: is it explicit ?
       for (std::size_t i = 0; i < inArg.indexes().size(); ++i)
@@ -231,12 +231,12 @@ namespace hpp {
       outArgs_.addRow(outIdx.first, outIdx.second);
       outArgs_.updateIndexes<true, true, true>();
       inArgs_ = RowBlockIndexes
-        (BlockIndex::difference (BlockIndex::interval_t(0, argSize_),
+        (BlockIndex::difference (BlockIndex::segment_t(0, argSize_),
                                  outArgs_.indexes()));
       outDers_.addRow(outDerIdx.first, outDerIdx.second);
       outDers_.updateIndexes<true, true, true>();
       inDers_ = ColBlockIndexes
-        (BlockIndex::difference(BlockIndex::interval_t(0, derSize_),
+        (BlockIndex::difference(BlockIndex::segment_t(0, derSize_),
                                 outDers_.indexes()));
 
       return true;

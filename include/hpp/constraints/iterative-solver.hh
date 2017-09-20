@@ -171,7 +171,7 @@ namespace hpp {
         /// Set the velocity variable that must be changed.
         /// The other variables will be left unchanged by the iterative
         /// algorithm.
-        void reduction (const intervals_t intervals)
+        void reduction (const segments_t intervals)
         {
           reduction_ = Reduction_t();
           for (std::size_t i = 0; i < intervals.size(); ++i)

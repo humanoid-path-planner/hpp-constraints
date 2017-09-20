@@ -26,7 +26,7 @@ using namespace Eigen;
 BOOST_AUTO_TEST_CASE(block_index)
 {
   typedef BlockIndex BlockIndex_t;
-  BlockIndex_t::interval_t
+  BlockIndex_t::segment_t
     a ( 0, 1),
     b ( 1, 2),
     c ( 0, 0),
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(block_index)
   BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, d).size(), 0);
   BOOST_CHECK_EQUAL(BlockIndex_t::difference (b, d).size(), 1);
 
-  BlockIndex_t::intervals_t v;
+  BlockIndex_t::segments_t v;
   v.push_back(b);
   v.push_back(a);
   v.push_back(c);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(block_index)
   BlockIndex_t::shrink(v);
   BOOST_CHECK_EQUAL(v.size(), 1);
   BOOST_CHECK_EQUAL(BlockIndex_t::cardinal(v), 3);
-  BOOST_CHECK(v[0] == BlockIndex_t::interval_t (0, 3));
+  BOOST_CHECK(v[0] == BlockIndex_t::segment_t (0, 3));
 }
 
 BOOST_AUTO_TEST_CASE(matrix_block_view)

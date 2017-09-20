@@ -157,31 +157,33 @@ namespace Eigen {
   ///
   /// Used to select blocks in a vector or in a matrix.
   struct BlockIndex {
+    /// Index of vector or matrix
     typedef hpp::constraints::size_type size_type;
-    typedef std::pair<size_type, size_type> interval_t;
-    typedef std::vector<interval_t> intervals_t;
+    /// Interval of indices
+    typedef std::pair<size_type, size_type> segment_t;
+    typedef std::vector<segment_t> segments_t;
 
-    static size_type cardinal (const intervals_t& a);
+    static size_type cardinal (const segments_t& a);
 
     template <typename Derived>
-    static intervals_t fromLogicalExpression
+    static segments_t fromLogicalExpression
     (const Eigen::ArrayBase<Derived>& array);
 
-    static void sort   (intervals_t& a);
+    static void sort   (segments_t& a);
     /// Assumes a is sorted
-    static void shrink (intervals_t& a);
+    static void shrink (segments_t& a);
 
-    static bool overlap (const interval_t& a, const interval_t& b);
+    static bool overlap (const segment_t& a, const segment_t& b);
     /// The sum is the union
-    static intervals_t sum (const interval_t& a, const interval_t& b);
+    static segments_t sum (const segment_t& a, const segment_t& b);
 
-    static intervals_t difference (const interval_t    & a, const interval_t    & b);
+    static segments_t difference (const segment_t    & a, const segment_t    & b);
     /// Assumes a is sorted
-    static intervals_t difference (const intervals_t& a, const interval_t    & b);
+    static segments_t difference (const segments_t& a, const segment_t    & b);
     /// Assumes b is sorted
-    static intervals_t difference (const interval_t    & a, const intervals_t& b);
+    static segments_t difference (const segment_t    & a, const segments_t& b);
     /// Assumes a and b are sorted
-    static intervals_t difference (const intervals_t& a, const intervals_t& b);
+    static segments_t difference (const segments_t& a, const segments_t& b);
   };
 
   template <bool _allRows, bool _allCols>
@@ -190,8 +192,8 @@ namespace Eigen {
     public:
       typedef hpp::constraints::size_type size_type;
       typedef BlockIndex           BlockIndex_t;
-      typedef BlockIndex_t::interval_t interval_t;
-      typedef BlockIndex_t::intervals_t BlockIndexesType;
+      typedef BlockIndex_t::segment_t segment_t;
+      typedef BlockIndex_t::segments_t BlockIndexesType;
       typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexesType>::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexesType>::type ColIndexes_t;
 
@@ -213,8 +215,8 @@ namespace Eigen {
       MatrixBlockIndexes (size_type start, size_type size)
         : m_nbRows(_allRows ? 0 : size)
         , m_nbCols(_allCols ? 0 : size)
-        , m_rows(1, BlockIndex_t::interval_t (start, size))
-        , m_cols(1, BlockIndex_t::interval_t (start, size))
+        , m_rows(1, BlockIndex_t::segment_t (start, size))
+        , m_cols(1, BlockIndex_t::segment_t (start, size))
       {}
 
       /// \warning idx must be sorted and shrinked
@@ -225,7 +227,7 @@ namespace Eigen {
       {}
 
       /// \warning idx must be sorted and shrinked
-      MatrixBlockIndexes (const interval_t& idx)
+      MatrixBlockIndexes (const segment_t& idx)
         : m_nbRows(_allRows ? 0 : idx.second)
         , m_nbCols(_allCols ? 0 : idx.second)
         , m_rows(BlockIndexesType(1,idx)), m_cols(BlockIndexesType(1,idx))
@@ -257,13 +259,13 @@ namespace Eigen {
 
       inline void addRow (const size_type& row, const size_type size)
       {
-        m_rows.push_back(interval_t (row, size));
+        m_rows.push_back(segment_t (row, size));
         m_nbRows += size;
       }
 
       inline void addCol (const size_type& col, const size_type size)
       {
-        m_cols.push_back(interval_t (col, size));
+        m_cols.push_back(segment_t (col, size));
         m_nbCols += size;
       }
 

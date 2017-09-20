@@ -180,7 +180,7 @@ namespace hpp {
       for (std::size_t i = 0; i < fs.size (); ++i) {
         bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
-          rows.push_back (BlockIndexes::interval_t
+          rows.push_back (BlockIndexes::segment_t
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }

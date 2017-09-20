@@ -21,15 +21,15 @@ namespace Eigen {
   namespace internal {
     template <bool lfirst, bool rfirst>
     struct BlockIndexComp {
-      typedef BlockIndex::interval_t interval_t;
-      bool operator() (const interval_t& l, const interval_t& r) const {
+      typedef BlockIndex::segment_t segment_t;
+      bool operator() (const segment_t& l, const segment_t& r) const {
         return ( lfirst ? l.first : l.first + l.second )
           <    ( rfirst ? r.first : r.first + r.second );
       }
     };
     struct BlockIndexCompFull {
-      typedef BlockIndex::interval_t interval_t;
-      bool operator() (const interval_t& l, const interval_t& r) const {
+      typedef BlockIndex::segment_t segment_t;
+      bool operator() (const segment_t& l, const segment_t& r) const {
         return ( l.first  < r.first )
           ||   ( l.first == r.first && l.second < r.second );
       }
@@ -37,12 +37,12 @@ namespace Eigen {
   }
 
   template <typename Derived>
-  typename BlockIndex::intervals_t BlockIndex::fromLogicalExpression
+  typename BlockIndex::segments_t BlockIndex::fromLogicalExpression
   (const Eigen::ArrayBase<Derived>& array)
   {
-    intervals_t res;
+    segments_t res;
     for (std::size_t i = 0; i < array.derived().size(); ++i)
-      if (array.derived()[i]) res.push_back (interval_t(i, 1));
+      if (array.derived()[i]) res.push_back (segment_t(i, 1));
     shrink(res);
     return res;
   }

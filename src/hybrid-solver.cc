@@ -86,7 +86,7 @@ namespace hpp {
 
         bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
-          rows.push_back (BlockIndexes::interval_t
+          rows.push_back (BlockIndexes::segment_t
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }

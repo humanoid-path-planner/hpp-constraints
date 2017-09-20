@@ -17,17 +17,17 @@
 #include <hpp/constraints/matrix-view.hh>
 
 namespace Eigen {
-  void BlockIndex::sort (intervals_t& a)
+  void BlockIndex::sort (segments_t& a)
   {
     std::sort (a.begin(), a.end(), internal::BlockIndexCompFull ());
   }
 
-  void BlockIndex::shrink (intervals_t& a)
+  void BlockIndex::shrink (segments_t& a)
   {
     if (a.size() < 2) return;
     // Find consecutive element which overlap
-    typename intervals_t::iterator e2 = a.begin();
-    typename intervals_t::iterator e1 = e2++;
+    typename segments_t::iterator e2 = a.begin();
+    typename segments_t::iterator e1 = e2++;
     internal::BlockIndexComp<false, true> lend_before_rstart;
     while (e2 != a.end()) {
       if (!lend_before_rstart(*e1, *e2)) {
@@ -40,7 +40,7 @@ namespace Eigen {
     }
   }
 
-  bool BlockIndex::overlap (const interval_t& a, const interval_t& b)
+  bool BlockIndex::overlap (const segment_t& a, const segment_t& b)
   {
     if (a.second == 0) return false;
     if (b.second == 0) return false;
@@ -53,20 +53,20 @@ namespace Eigen {
     return false;
   }
 
-  size_type BlockIndex::cardinal (const intervals_t& a)
+  size_type BlockIndex::cardinal (const segments_t& a)
   {
     size_type c = 0;
-    for (typename intervals_t::const_iterator _a = a.begin(); _a != a.end();
+    for (typename segments_t::const_iterator _a = a.begin(); _a != a.end();
          ++_a) c += _a->second;
     return c;
   }
 
-  BlockIndex::intervals_t BlockIndex::sum (const interval_t& a,
-                                           const interval_t& b)
+  BlockIndex::segments_t BlockIndex::sum (const segment_t& a,
+                                           const segment_t& b)
   {
     if (a.first > b.first) return sum (b, a);
     // a.first <= b.first
-    intervals_t s (1, a);
+    segments_t s (1, a);
     if (a.first + a.second >= b.first)
       s[0].second = std::max (a.second, b.first + b.second - a.first);
     else
@@ -74,64 +74,64 @@ namespace Eigen {
     return s;
   }
 
-  BlockIndex::intervals_t BlockIndex::difference (const interval_t& a,
-                                                  const interval_t& b)
+  BlockIndex::segments_t BlockIndex::difference (const segment_t& a,
+                                                  const segment_t& b)
   {
-    if (a.second == 0) return intervals_t(0);
-    if (b.second == 0) return intervals_t(1, a);
+    if (a.second == 0) return segments_t(0);
+    if (b.second == 0) return segments_t(1, a);
 
     size_type aend = a.first + a.second;
     size_type bend = b.first + b.second;
-    intervals_t diffs;
+    segments_t diffs;
 
     if (a.first < b.first) {
       size_type end = std::min (aend, b.first);
-      diffs.push_back (interval_t(a.first, end - a.first));
+      diffs.push_back (segment_t(a.first, end - a.first));
     }
     if (bend < aend) {
       size_type start = std::max (a.first, bend);
-      diffs.push_back (interval_t(start, aend - start));
+      diffs.push_back (segment_t(start, aend - start));
     }
     return diffs;
   }
 
-  BlockIndex::intervals_t BlockIndex::difference (const intervals_t& a,
-                                                  const interval_t& b)
+  BlockIndex::segments_t BlockIndex::difference (const segments_t& a,
+                                                  const segment_t& b)
   {
-    intervals_t::const_iterator first
+    segments_t::const_iterator first
       (std::upper_bound (a.begin(), a.end(), b,
                          internal::BlockIndexComp<true, false>()));
-    intervals_t::const_iterator last
+    segments_t::const_iterator last
       (std::upper_bound (a.begin(), a.end(), b,
                          internal::BlockIndexComp<false, true>()));
     assert (first == last || last == a.end() || (first != a.end() && first->first + first->second >= last->first));
-    intervals_t ret; ret.reserve(a.size() + 2);
+    segments_t ret; ret.reserve(a.size() + 2);
     ret.insert(ret.end(), a.begin(), first);
-    for (typename intervals_t::const_iterator _a = first; _a != last; ++_a) {
-      intervals_t diff = difference (*_a, b);
+    for (typename segments_t::const_iterator _a = first; _a != last; ++_a) {
+      segments_t diff = difference (*_a, b);
       ret.insert(ret.end(), diff.begin(), diff.end());
     }
     ret.insert(ret.end(), last, a.end());
     return ret;
   }
 
-  BlockIndex::intervals_t BlockIndex::difference (const interval_t& a,
-                                                  const intervals_t& b)
+  BlockIndex::segments_t BlockIndex::difference (const segment_t& a,
+                                                  const segments_t& b)
   {
-    intervals_t diff (1, a);
-    for (typename intervals_t::const_iterator _b = b.begin(); _b != b.end();
+    segments_t diff (1, a);
+    for (typename segments_t::const_iterator _b = b.begin(); _b != b.end();
          ++_b)
       diff = difference (diff, *_b);
     return diff;
   }
 
-  BlockIndex::intervals_t BlockIndex::difference (const intervals_t& a,
-                                                  const intervals_t& b)
+  BlockIndex::segments_t BlockIndex::difference (const segments_t& a,
+                                                  const segments_t& b)
   {
-    intervals_t diff;
-    for (typename intervals_t::const_iterator _a = a.begin(); _a != a.end();
+    segments_t diff;
+    for (typename segments_t::const_iterator _a = a.begin(); _a != a.end();
          ++_a) {
-      intervals_t d = difference(*_a, b);
+      segments_t d = difference(*_a, b);
       diff.insert(diff.end(), d.begin(), d.end());
     }
     return diff;
