@@ -164,28 +164,48 @@ namespace Eigen {
     /// vector of segments
     typedef std::vector<segment_t> segments_t;
 
+    /// Return the number of indices in the vector of segments.
+    /// \param a vector of segments
     static size_type cardinal (const segments_t& a);
 
+    /// Build a vector of segments from an array of Boolean.
+    /// \param array array of Boolean values
+    /// \return the vector of segments corresponding to true values in the
+    ///         input.
     template <typename Derived>
     static segments_t fromLogicalExpression
     (const Eigen::ArrayBase<Derived>& array);
 
+    /// Sort segments in increasing order.
+    /// Compare lower bounds of intervals and lengths if lower bounds are equal.
     static void sort   (segments_t& a);
-    /// Assumes a is sorted
+
+    /// Build a sequence of non overlapping segments.
+    /// \param a a vector of segments
+    /// \note assumes a is sorted
     static void shrink (segments_t& a);
 
+    /// Whether two segments overlap.
     static bool overlap (const segment_t& a, const segment_t& b);
-    /// The sum is the union
+
+    /// Compute the union of tws segments.
     static segments_t sum (const segment_t& a, const segment_t& b);
 
-    static segments_t difference (const segment_t    & a, const segment_t    & b);
-    /// Assumes a is sorted
-    static segments_t difference (const segments_t& a, const segment_t    & b);
-    /// Assumes b is sorted
-    static segments_t difference (const segment_t    & a, const segments_t& b);
-    /// Assumes a and b are sorted
+    /// Compute the set difference between two segments.
+    static segments_t difference (const segment_t& a, const segment_t& b);
+
+    /// Compute the set difference between a vector of segments and a segment.
+    /// \note assumes a is sorted
+    static segments_t difference (const segments_t& a, const segment_t& b);
+
+    /// Compute the set difference between a segment and a vector of segments.
+    /// \note assume b is sorted
+    static segments_t difference (const segment_t& a, const segments_t& b);
+
+    /// Compute the set difference between two vectors of segments.
+    /// \note assume a and b are sorted
     static segments_t difference (const segments_t& a, const segments_t& b);
-  };
+  }; // struct BlockIndex
 
   template <bool _allRows, bool _allCols>
   class MatrixBlockIndexes
