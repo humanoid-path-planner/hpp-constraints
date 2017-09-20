@@ -214,8 +214,8 @@ namespace Eigen {
       typedef hpp::constraints::size_type size_type;
       typedef BlockIndex::segment_t segment_t;
       typedef BlockIndex::segments_t segments_t;
-      typedef typename internal::conditional<_allRows, internal::empty_struct, segments_t>::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, internal::empty_struct, segments_t>::type ColIndexes_t;
+      typedef typename internal::conditional<_allRows, internal::empty_struct, segments_t>::type RowIndices_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, segments_t>::type ColIndices_t;
 
       template <typename Derived, int _Rows, int _Cols> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
@@ -339,13 +339,13 @@ namespace Eigen {
         return internal::return_first<_allRows>::run(m_cols, m_rows);
       }
 
-      inline const RowIndexes_t& rows() const
+      inline const RowIndices_t& rows() const
       {
         assert (_allRows);
         return m_rows;
       }
 
-      inline const ColIndexes_t& cols() const
+      inline const ColIndices_t& cols() const
       {
         assert (_allCols);
         return m_cols;
@@ -378,8 +378,8 @@ namespace Eigen {
       }
 
       size_type m_nbRows, m_nbCols;
-      RowIndexes_t m_rows;
-      ColIndexes_t m_cols;
+      RowIndices_t m_rows;
+      ColIndices_t m_cols;
 
     private:
       template<bool Sort, bool Shrink, bool Cardinal>
@@ -431,14 +431,14 @@ namespace Eigen {
 
       typedef MatrixBlocks<_allRows, _allCols> MatrixIndexes_t;
       typedef typename MatrixIndexes_t::segments_t Indexes_t;
-      typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndexes_t;
-      typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndexes_t;
+      typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndices_t;
+      typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndices_t;
 
       // using Base::operator=;
 
       MatrixBlockView (ArgType& arg, const size_type& nbRows,
-                       const RowIndexes_t rows, const size_type& nbCols,
-                       const ColIndexes_t cols) :
+                       const RowIndices_t rows, const size_type& nbCols,
+                       const ColIndices_t cols) :
         m_arg (arg), m_nbRows(nbRows), m_rows(rows), m_nbCols(nbCols),
         m_cols(cols)
       {
@@ -513,9 +513,9 @@ namespace Eigen {
 
       ArgType& m_arg;
       size_type m_nbRows;
-      RowIndexes_t m_rows;
+      RowIndices_t m_rows;
       size_type m_nbCols;
-      ColIndexes_t m_cols;
+      ColIndices_t m_cols;
   };
 
 } // namespace Eigen
