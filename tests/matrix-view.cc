@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
 
   // EIGEN_STATIC_ASSERT_LVALUE(MatrixRowView)
 
-  typedef MatrixBlocks<false, true> RowsIndexes;
-  typedef MatrixBlocks<true, false> ColsIndexes;
+  typedef MatrixBlocks<false, true> RowsIndices;
+  typedef MatrixBlocks<true, false> ColsIndices;
 
   MatrixXd m (10, 10);
   for (MatrixXd::Index i = 0; i < m.rows(); ++i)
@@ -73,13 +73,13 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
       m(i, j) = MatrixXd::Scalar(m.cols() * i + j);
   std::cout << m << '\n' << std::endl;
 
-  RowsIndexes rows(2,2);
-  // rows contains indexes 2, 3
+  RowsIndices rows(2,2);
+  // rows contains indices 2, 3
   rows.addRow(6, 4);
-  // rows contains indexes 2, 3, 6, 7, 8, 9
+  // rows contains indices 2, 3, 6, 7, 8, 9
 
-  // Make a ColsIndexes from a RowsIndexes
-  ColsIndexes cols (rows);
+  // Make a ColsIndices from a RowsIndices
+  ColsIndices cols (rows);
 
   std::cout << rows << std::endl;
   std::cout << cols << std::endl;
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   res1 = rows.rview(m.leftCols<8>());
   std::cout << res1 << std::endl;
 
-  rows.lview(m) = MatrixXd::Ones(rows.nbIndexes(), m.cols());
-  rows.lview(m.leftCols<4>()) = MatrixXd::Ones(rows.nbIndexes(), 4);
+  rows.lview(m) = MatrixXd::Ones(rows.nbIndices(), m.cols());
+  rows.lview(m.leftCols<4>()) = MatrixXd::Ones(rows.nbIndices(), 4);
 
   rows.lview(m).setZero();
   std::cout << m << std::endl;

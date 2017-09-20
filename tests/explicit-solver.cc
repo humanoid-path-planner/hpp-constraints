@@ -47,28 +47,28 @@ class LockedJoint : public DifferentiableFunction
         idx_ (idx), length_ (length), value_ (value)
     {}
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idx_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
@@ -96,30 +96,30 @@ class TestFunction : public DifferentiableFunction
         idxIn_ (idxIn), idxOut_ (idxOut), length_ (length)
     {}
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow(idxIn_, length_);
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idxOut_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       ret.addCol(idxIn_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idxOut_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
@@ -177,30 +177,30 @@ class ExplicitTransformation : public DifferentiableFunction
           Transform3f::Identity());
     }
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow(in_, inputSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (0, 7);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       ret.addCol(inDer_, inputDerivativeSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (0, 6);
       return ret;
     }
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
 
     BOOST_CHECK(solver.solve(qrand));
-    vector_t error(solver.outDers().nbIndexes());
+    vector_t error(solver.outDers().nbIndices());
     BOOST_CHECK(solver.isSatisfied(qrand, error));
     // std::cout << error.transpose() << std::endl;
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);

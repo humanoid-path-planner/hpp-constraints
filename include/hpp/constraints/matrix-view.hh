@@ -143,8 +143,8 @@ namespace Eigen {
       }
     };
 
-    template <bool print> struct print_indexes { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
-    template <> struct print_indexes <true> {
+    template <bool print> struct print_indices { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
+    template <> struct print_indices <true> {
       template <typename BlockIndexType>
       static void run (std::ostream& os, const BlockIndexType& bi) {
         for (std::size_t i = 0; i < bi.size(); ++i)
@@ -350,7 +350,7 @@ namespace Eigen {
       EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type lview(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, this->nbIndexes(), this->indexes());
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, this->nbIndices(), this->indices());
         else
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
       }
@@ -363,7 +363,7 @@ namespace Eigen {
       EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type lviewTranspose(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, nbIndexes(), indexes());
+          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, nbIndices(), indices());
         else
           return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, m_nbCols, m_cols, m_nbRows, m_rows);
       }
@@ -375,7 +375,7 @@ namespace Eigen {
       template <typename Derived>
       EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type rview(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
-          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndexes(), indexes());
+          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndices(), indices());
         else
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
       }
@@ -387,12 +387,12 @@ namespace Eigen {
       template <typename Derived>
       EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type rviewTranspose(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
-          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndexes(), indexes());
+          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndices(), indices());
         else
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
-      inline const segments_t& indexes() const
+      inline const segments_t& indices() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_cols, m_rows);
@@ -410,7 +410,7 @@ namespace Eigen {
         return m_cols;
       }
 
-      inline const size_type& nbIndexes() const
+      inline const size_type& nbIndices() const
       {
         // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
@@ -430,7 +430,7 @@ namespace Eigen {
 
 
       template<bool Sort, bool Shrink, bool Cardinal>
-      inline void updateIndexes() {
+      inline void updateIndices() {
         update<Sort, Shrink, Cardinal> (
             internal::return_first<_allRows>::run(m_cols  , m_rows  ), 
             internal::return_first<_allRows>::run(m_nbCols, m_nbRows));
@@ -454,18 +454,18 @@ namespace Eigen {
   {
     if (!_allRows) {
       os << "Rows: ";
-      internal::print_indexes<!_allRows>::run (os, mbi.m_rows);
+      internal::print_indices<!_allRows>::run (os, mbi.m_rows);
       if (!_allCols) os << '\n';
     }
     if (!_allCols) {
       os << "Cols: ";
-      internal::print_indexes<!_allCols>::run (os, mbi.m_cols);
+      internal::print_indices<!_allCols>::run (os, mbi.m_cols);
     }
     return os;
   }
 
-  typedef Eigen::MatrixBlocks<false, true> RowBlockIndexes;
-  typedef Eigen::MatrixBlocks<true, false> ColBlockIndexes;
+  typedef Eigen::MatrixBlocks<false, true> RowBlockIndices;
+  typedef Eigen::MatrixBlocks<true, false> ColBlockIndices;
 
   template <typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
   class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -488,10 +488,10 @@ namespace Eigen {
       // typedef typename Base::CoeffReturnType CoeffReturnType;
       // typedef typename Base::Scalar Scalar;
 
-      typedef MatrixBlocks<_allRows, _allCols> MatrixIndexes_t;
-      typedef typename MatrixIndexes_t::segments_t Indexes_t;
-      typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indexes_t& >::type RowIndices_t;
-      typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indexes_t& >::type ColIndices_t;
+      typedef MatrixBlocks<_allRows, _allCols> MatrixIndices_t;
+      typedef typename MatrixIndices_t::segments_t Indices_t;
+      typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indices_t& >::type RowIndices_t;
+      typedef typename internal::conditional<_allCols, const internal::empty_struct, const Indices_t& >::type ColIndices_t;
 
       // using Base::operator=;
 
@@ -504,11 +504,11 @@ namespace Eigen {
       }
 
       /// Valid only when _allRows or _allCols is true
-      MatrixBlockView (ArgType& arg, const size_type& nbIndexes,
-                       const Indexes_t& indexes) :
-        m_arg (arg), m_nbRows(_allRows ? arg.rows() : nbIndexes),
-        m_rows(indexes), m_nbCols(_allCols ? arg.cols() : nbIndexes),
-        m_cols(indexes)
+      MatrixBlockView (ArgType& arg, const size_type& nbIndices,
+                       const Indices_t& indices) :
+        m_arg (arg), m_nbRows(_allRows ? arg.rows() : nbIndices),
+        m_rows(indices), m_nbCols(_allCols ? arg.cols() : nbIndices),
+        m_cols(indices)
       {}
       
       EIGEN_STRONG_INLINE size_type rows() const { return m_nbRows; }

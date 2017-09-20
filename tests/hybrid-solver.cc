@@ -43,28 +43,28 @@ class LockedJoint : public DifferentiableFunction
         idx_ (idx), length_ (length), value_ (value)
     {}
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idx_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
@@ -120,30 +120,30 @@ class ExplicitTransformation : public DifferentiableFunction
           Transform3f::Identity());
     }
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow(in_, inputSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (0, 7);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       ret.addCol(inDer_, inputDerivativeSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (0, 6);
       return ret;
     }
@@ -202,9 +202,9 @@ BOOST_AUTO_TEST_CASE(functions)
   solver.add(AffineFunctionPtr_t(new AffineFunction (Jf)), 0);
 
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
-  Eigen::RowBlockIndexes inArg; inArg.addRow (2,1);
-  Eigen::ColBlockIndexes inDer; inDer.addCol (2,1);
-  Eigen::RowBlockIndexes outArg; outArg.addRow (0,1);
+  Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
+  Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
+  Eigen::RowBlockIndices outArg; outArg.addRow (0,1);
   solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (Jg)),
       inArg, outArg, inDer, outArg);
 

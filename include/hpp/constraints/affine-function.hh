@@ -60,15 +60,15 @@ namespace hpp {
         }
 
         AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
-            Eigen::RowBlockIndexes& argSelection,
-            Eigen::ColBlockIndexes& derSelection,
-            Eigen::ColBlockIndexes& CderSelection,
+            Eigen::RowBlockIndices& argSelection,
+            Eigen::ColBlockIndices& derSelection,
+            Eigen::ColBlockIndices& CderSelection,
             const std::string name = "AffineFunction") :
           DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
                                   (J.rows()), name),
           J_ (J), b_ (b),
           aIdx_ (argSelection), JIdx_ (derSelection), C_JIdx_ (CderSelection),
-          qshort_ (argSelection.nbIndexes())
+          qshort_ (argSelection.nbIndices())
         {
           init();
         }
@@ -98,8 +98,8 @@ namespace hpp {
 
         const matrix_t J_;
         const vector_t b_;
-        const Eigen::RowBlockIndexes aIdx_;
-        const Eigen::ColBlockIndexes JIdx_, C_JIdx_;
+        const Eigen::RowBlockIndices aIdx_;
+        const Eigen::ColBlockIndices JIdx_, C_JIdx_;
         mutable vector_t qshort_;
     }; // class AffineFunction
 

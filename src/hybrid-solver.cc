@@ -70,23 +70,23 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      Eigen::ColBlockIndexes _explicitActiveParam (explicit_.activeParameters ());
+      Eigen::ColBlockIndices _explicitActiveParam (explicit_.activeParameters ());
       bool_array_t explicitActiveParam (bool_array_t::Constant (f.inputSize(), false));
-      if (_explicitActiveParam.nbIndexes() > 0)
+      if (_explicitActiveParam.nbIndices() > 0)
         _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
 
-      typedef Eigen::MatrixBlocks<false, false> BlockIndexes;
+      typedef Eigen::MatrixBlocks<false, false> BlockIndices;
 
-      Eigen::RowBlockIndexes select (reduction_.indexes());
+      Eigen::RowBlockIndices select (reduction_.indices());
 
       bool_array_t functionActiveParam;
-      BlockIndexes::segments_t rows;
+      BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
 
         bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
-          rows.push_back (BlockIndexes::segment_t
+          rows.push_back (BlockIndices::segment_t
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }

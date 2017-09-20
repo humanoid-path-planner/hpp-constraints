@@ -93,7 +93,7 @@ namespace hpp {
           Inferior
         };
 
-        typedef Eigen::ColBlockIndexes Reduction_t;
+        typedef Eigen::ColBlockIndices Reduction_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
         typedef std::vector<ComparisonType> ComparisonTypes_t;
 
@@ -176,7 +176,7 @@ namespace hpp {
           reduction_ = Reduction_t();
           for (std::size_t i = 0; i < intervals.size(); ++i)
             reduction_.addCol(intervals[i].first, intervals[i].second);
-          reduction_.updateIndexes<true, true, true>();
+          reduction_.updateIndices<true, true, true>();
           update ();
         }
 
@@ -339,8 +339,8 @@ namespace hpp {
           mutable size_type maxRank;
 
           ComparisonTypes_t comparison;
-          std::vector<std::size_t> inequalityIndexes;
-          Eigen::RowBlockIndexes equalityIndexes;
+          std::vector<std::size_t> inequalityIndices;
+          Eigen::RowBlockIndices equalityIndices;
           Eigen::MatrixBlocks<false,false> activeRowsOfJ;
         };
 

@@ -30,7 +30,7 @@
 namespace hpp {
   namespace constraints {
     void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::segments_t& indexes,
+        const Eigen::BlockIndex::segments_t& indices,
         vectorIn_t arg0,
         vectorIn_t arg1,
         vectorOut_t result);
@@ -57,8 +57,8 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI ExplicitSolver
     {
       public:
-        typedef Eigen::RowBlockIndexes RowBlockIndexes;
-        typedef Eigen::ColBlockIndexes ColBlockIndexes;
+        typedef Eigen::RowBlockIndices RowBlockIndices;
+        typedef Eigen::ColBlockIndices ColBlockIndices;
         typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
         /// This function sets \f{ result = arg1 - arg0 \f}
         /// \note result may be of a different size than arg0 and arg1
@@ -74,13 +74,13 @@ namespace hpp {
         /// A function can be added iif its outputs do not interfere with the
         /// output of another function.
         bool add (const DifferentiableFunctionPtr_t& f,
-            const RowBlockIndexes& inArg,
-            const RowBlockIndexes& outArg,
-            const ColBlockIndexes& inDer,
-            const RowBlockIndexes& outDer);
+            const RowBlockIndices& inArg,
+            const RowBlockIndices& outArg,
+            const ColBlockIndices& inDer,
+            const RowBlockIndices& outDer);
 
         /// \warning the two functions must have the same input and output
-        /// indexes.
+        /// indices.
         bool replace (const DifferentiableFunctionPtr_t& oldf,
                       const DifferentiableFunctionPtr_t& newd);
 
@@ -114,34 +114,34 @@ namespace hpp {
           return squaredErrorThreshold_;
         }
 
-        /// The set of variable indexes which are not affected by the
+        /// The set of variable indices which are not affected by the
         /// resolution.
-        const RowBlockIndexes& inArgs () const
+        const RowBlockIndices& inArgs () const
         {
           return inArgs_;
         }
 
-        /// The set of derivative variable indexes which are not affected by the
+        /// The set of derivative variable indices which are not affected by the
         /// resolution.
-        const ColBlockIndexes& inDers () const
+        const ColBlockIndices& inDers () const
         {
           return inDers_;
         }
 
         /// Configuration parameters involved in the constraint resolution.
-        ColBlockIndexes activeParameters () const;
+        ColBlockIndices activeParameters () const;
 
         /// Velocity parameters involved in the constraint resolution.
-        ColBlockIndexes activeDerivativeParameters () const;
+        ColBlockIndices activeDerivativeParameters () const;
 
-        /// The set of variable indexes which are computed.
-        const RowBlockIndexes& outArgs () const
+        /// The set of variable indices which are computed.
+        const RowBlockIndices& outArgs () const
         {
           return outArgs_;
         }
 
-        /// The set of derivative variable indexes which are computed.
-        const RowBlockIndexes& outDers () const
+        /// The set of derivative variable indices which are computed.
+        const RowBlockIndices& outDers () const
         {
           return outDers_;
         }
@@ -161,8 +161,8 @@ namespace hpp {
         inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
         {
           return MatrixBlockView(jacobian,
-              outDers_.nbIndexes(), outDers_.indexes(),
-              inDers_.nbIndexes(), inDers_.indexes());
+              outDers_.nbIndices(), outDers_.indices(),
+              inDers_.nbIndices(), inDers_.indices());
         }
 
         /// Set the integration function
@@ -177,7 +177,7 @@ namespace hpp {
           return difference_;
         }
 
-        // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndexes(), freeDers().nbIndexes())
+        // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndices(), freeDers().nbIndices())
         /// \param jacobian must be of dimensions (derSize, derSize) but only a subsegment will be used.
         /// \warning it is assumed solve(arg) has been called before.
         void jacobian(matrixOut_t jacobian, vectorIn_t arg) const;
@@ -192,8 +192,8 @@ namespace hpp {
         const std::size_t argSize_, derSize_;
 
         struct Function {
-          Function (DifferentiableFunctionPtr_t _f, RowBlockIndexes ia,
-                    RowBlockIndexes oa, ColBlockIndexes id, RowBlockIndexes od):
+          Function (DifferentiableFunctionPtr_t _f, RowBlockIndices ia,
+                    RowBlockIndices oa, ColBlockIndices id, RowBlockIndices od):
             f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
             value (f->outputSpace ())
           {
@@ -201,17 +201,17 @@ namespace hpp {
                             _f->inputDerivativeSize());
           }
           DifferentiableFunctionPtr_t f;
-          RowBlockIndexes inArg, outArg;
-          ColBlockIndexes inDer;
-          RowBlockIndexes outDer;
+          RowBlockIndices inArg, outArg;
+          ColBlockIndices inDer;
+          RowBlockIndices outDer;
 
           mutable LiegroupElement value;
           mutable matrix_t jacobian;
         }; // struct Function
 
-        RowBlockIndexes inArgs_;
-        ColBlockIndexes inDers_;
-        RowBlockIndexes outArgs_, outDers_;
+        RowBlockIndices inArgs_;
+        ColBlockIndices inDers_;
+        RowBlockIndices outArgs_, outDers_;
 
         std::vector<Function> functions_;
         std::vector<std::size_t> computationOrder_;

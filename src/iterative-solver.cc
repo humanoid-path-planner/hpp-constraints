@@ -45,11 +45,11 @@ namespace hpp {
       template <bool ComputeJac>
       void applyComparison (
           const HierarchicalIterativeSolver::ComparisonTypes_t comparison,
-          const std::vector<std::size_t>& indexes,
+          const std::vector<std::size_t>& indices,
           vector_t& value, matrix_t& jacobian, const value_type& thr)
       {
-        for (std::size_t i = 0; i < indexes.size(); ++i) {
-          const std::size_t j = indexes[i];
+        for (std::size_t i = 0; i < indices.size(); ++i) {
+          const std::size_t j = indices[i];
           switch (comparison[j]) {
             case HierarchicalIterativeSolver::Superior: compare<true , ComputeJac> (value[j], jacobian.row(j), thr); break;
             case HierarchicalIterativeSolver::Inferior: compare<false, ComputeJac> (value[j], jacobian.row(j), thr); break;
@@ -104,17 +104,17 @@ namespace hpp {
         switch (comp[i]) {
           case Superior:
           case Inferior:
-            d.inequalityIndexes.push_back (d.comparison.size());
+            d.inequalityIndices.push_back (d.comparison.size());
             break;
           case Equality:
-            d.equalityIndexes.addRow(d.comparison.size(), 1);
+            d.equalityIndices.addRow(d.comparison.size(), 1);
             break;
           default:
             break;
         }
         d.comparison.push_back (comp[i]);
       }
-      d.equalityIndexes.updateRows<true, true, true>();
+      d.equalityIndices.updateRows<true, true, true>();
       update();
     }
 
@@ -137,7 +137,7 @@ namespace hpp {
     void HierarchicalIterativeSolver::update()
     {
       // Compute reduced size
-      std::size_t reducedSize = reduction_.nbIndexes();
+      std::size_t reducedSize = reduction_.nbIndices();
 
       dimension_ = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
@@ -175,12 +175,12 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      typedef Eigen::MatrixBlocks<false, false> BlockIndexes;
-      BlockIndexes::segments_t rows;
+      typedef Eigen::MatrixBlocks<false, false> BlockIndices;
+      BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
-          rows.push_back (BlockIndexes::segment_t
+          rows.push_back (BlockIndices::segment_t
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }
@@ -195,8 +195,8 @@ namespace hpp {
         Data& d = datas_[i];
         f.value (d.output, arg);
         // TODO avoid dynamic allocation
-        d.equalityIndexes.lview(d.rightHandSide.vector ()) =
-          d.equalityIndexes.rview(d.output.vector ()).eval();
+        d.equalityIndices.lview(d.rightHandSide.vector ()) =
+          d.equalityIndices.rview(d.output.vector ()).eval();
       }
       return rightHandSide();
     }
@@ -251,9 +251,9 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.equalityIndexes.lview(d.rightHandSide.vector ())
-          = rhs.segment(row, d.equalityIndexes.m_nbRows);
-        row += d.equalityIndexes.m_nbRows;
+        d.equalityIndices.lview(d.rightHandSide.vector ())
+          = rhs.segment(row, d.equalityIndices.m_nbRows);
+        row += d.equalityIndices.m_nbRows;
       }
       assert (row == rhs.size());
     }
@@ -264,9 +264,9 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const Data& d = datas_[i];
-        const size_type nRows = d.equalityIndexes.m_nbRows;
+        const size_type nRows = d.equalityIndices.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        seg = d.equalityIndexes.rview(d.rightHandSide.vector ());
+        seg = d.equalityIndices.rview(d.rightHandSide.vector ());
         row += nRows;
       }
       assert (row == rhs.size());
@@ -277,7 +277,7 @@ namespace hpp {
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i)
-        rhsSize += datas_[i].equalityIndexes.m_nbRows;
+        rhsSize += datas_[i].equalityIndices.m_nbRows;
       return rhsSize;
     }
 
@@ -291,7 +291,7 @@ namespace hpp {
         f.value   (d.output, arg);
         if (ComputeJac) f.jacobian(d.jacobian, arg);
         d.error = d.output - d.rightHandSide;
-        applyComparison<ComputeJac>(d.comparison, d.inequalityIndexes, d.error, d.jacobian, inequalityThreshold_);
+        applyComparison<ComputeJac>(d.comparison, d.inequalityIndices, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
         if (ComputeJac) d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
@@ -342,7 +342,7 @@ namespace hpp {
         d.svd.compute (d.reducedJ);
         HPP_DEBUG_SVDCHECK (d.svd);
         // TODO Eigen::JacobiSVD does a dynamic allocation here.
-        dqSmall_ = d.svd.solve (- Eigen::RowBlockIndexes(d.activeRowsOfJ.m_rows).rview(d.error).eval());
+        dqSmall_ = d.svd.solve (- Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error).eval());
         d.maxRank = std::max(d.maxRank, d.svd.rank());
         if (d.maxRank > 0)
           sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
@@ -359,7 +359,7 @@ namespace hpp {
           /// projector is of size numberDof
           bool first = (i == 0);
           bool last = (i == stacks_.size() - 1);
-          err = - Eigen::RowBlockIndexes(d.activeRowsOfJ.m_rows).rview(d.error).eval();
+          err = - Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error).eval();
           if (first) {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);
@@ -389,7 +389,7 @@ namespace hpp {
 
     void HierarchicalIterativeSolver::expandDqSmall () const
     {
-      Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndexes(), reduction_.indexes()) = dqSmall_;
+      Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
     }
 
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
