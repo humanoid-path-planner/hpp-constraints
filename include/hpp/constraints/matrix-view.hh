@@ -159,8 +159,9 @@ namespace Eigen {
   struct BlockIndex {
     /// Index of vector or matrix
     typedef hpp::constraints::size_type size_type;
-    /// Interval of indices
+    /// Interval of indices [first, first + second - 1]
     typedef std::pair<size_type, size_type> segment_t;
+    /// vector of segments
     typedef std::vector<segment_t> segments_t;
 
     static size_type cardinal (const segments_t& a);
@@ -191,9 +192,8 @@ namespace Eigen {
   {
     public:
       typedef hpp::constraints::size_type size_type;
-      typedef BlockIndex           BlockIndex_t;
-      typedef BlockIndex_t::segment_t segment_t;
-      typedef BlockIndex_t::segments_t BlockIndexesType;
+      typedef BlockIndex::segment_t segment_t;
+      typedef BlockIndex::segments_t BlockIndexesType;
       typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexesType>::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexesType>::type ColIndexes_t;
 
@@ -215,14 +215,14 @@ namespace Eigen {
       MatrixBlockIndexes (size_type start, size_type size)
         : m_nbRows(_allRows ? 0 : size)
         , m_nbCols(_allCols ? 0 : size)
-        , m_rows(1, BlockIndex_t::segment_t (start, size))
-        , m_cols(1, BlockIndex_t::segment_t (start, size))
+        , m_rows(1, BlockIndex::segment_t (start, size))
+        , m_cols(1, BlockIndex::segment_t (start, size))
       {}
 
       /// \warning idx must be sorted and shrinked
       MatrixBlockIndexes (const BlockIndexesType& idx)
-        : m_nbRows(_allRows ? 0 : BlockIndex_t::cardinal(idx))
-        , m_nbCols(_allCols ? 0 : BlockIndex_t::cardinal(idx))
+        : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
+        , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
         , m_rows(idx), m_cols(idx)
       {}
 

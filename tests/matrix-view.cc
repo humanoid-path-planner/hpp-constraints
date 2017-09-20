@@ -25,36 +25,35 @@ using namespace Eigen;
 
 BOOST_AUTO_TEST_CASE(block_index)
 {
-  typedef BlockIndex BlockIndex_t;
-  BlockIndex_t::segment_t
+  BlockIndex::segment_t
     a ( 0, 1),
     b ( 1, 2),
     c ( 0, 0),
     d ( 0, 2);
 
-  BOOST_CHECK(!BlockIndex_t::overlap (a, b));
-  BOOST_CHECK(!BlockIndex_t::overlap (a, c));
-  BOOST_CHECK(!BlockIndex_t::overlap (c, b));
-  BOOST_CHECK( BlockIndex_t::overlap (a, a));
-  BOOST_CHECK( BlockIndex_t::overlap (a, d));
-  BOOST_CHECK( BlockIndex_t::overlap (b, d));
+  BOOST_CHECK(!BlockIndex::overlap (a, b));
+  BOOST_CHECK(!BlockIndex::overlap (a, c));
+  BOOST_CHECK(!BlockIndex::overlap (c, b));
+  BOOST_CHECK( BlockIndex::overlap (a, a));
+  BOOST_CHECK( BlockIndex::overlap (a, d));
+  BOOST_CHECK( BlockIndex::overlap (b, d));
 
-  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, b).size(), 1);
-  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, c).size(), 1);
-  BOOST_CHECK_EQUAL(BlockIndex_t::difference (c, b).size(), 0);
-  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, a).size(), 0);
-  BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, d).size(), 0);
-  BOOST_CHECK_EQUAL(BlockIndex_t::difference (b, d).size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, b).size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, c).size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (c, b).size(), 0);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, a).size(), 0);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, d).size(), 0);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (b, d).size(), 1);
 
-  BlockIndex_t::segments_t v;
+  BlockIndex::segments_t v;
   v.push_back(b);
   v.push_back(a);
   v.push_back(c);
-  BlockIndex_t::sort(v);
-  BlockIndex_t::shrink(v);
+  BlockIndex::sort(v);
+  BlockIndex::shrink(v);
   BOOST_CHECK_EQUAL(v.size(), 1);
-  BOOST_CHECK_EQUAL(BlockIndex_t::cardinal(v), 3);
-  BOOST_CHECK(v[0] == BlockIndex_t::segment_t (0, 3));
+  BOOST_CHECK_EQUAL(BlockIndex::cardinal(v), 3);
+  BOOST_CHECK(v[0] == BlockIndex::segment_t (0, 3));
 }
 
 BOOST_AUTO_TEST_CASE(matrix_block_view)
