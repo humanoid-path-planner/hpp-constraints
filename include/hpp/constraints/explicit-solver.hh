@@ -30,7 +30,7 @@
 namespace hpp {
   namespace constraints {
     void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::vector_t& indexes,
+        const Eigen::BlockIndex::intervals_t& indexes,
         vectorIn_t arg0,
         vectorIn_t arg1,
         vectorOut_t result);

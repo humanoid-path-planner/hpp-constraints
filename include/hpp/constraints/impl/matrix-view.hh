@@ -37,10 +37,10 @@ namespace Eigen {
   }
 
   template <typename Derived>
-  typename BlockIndex::vector_t BlockIndex::fromLogicalExpression
+  typename BlockIndex::intervals_t BlockIndex::fromLogicalExpression
   (const Eigen::ArrayBase<Derived>& array)
   {
-    vector_t res;
+    intervals_t res;
     for (std::size_t i = 0; i < array.derived().size(); ++i)
       if (array.derived()[i]) res.push_back (interval_t(i, 1));
     shrink(res);

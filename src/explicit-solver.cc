@@ -84,7 +84,7 @@ namespace hpp {
     }
 
     void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::vector_t& indexes,
+        const Eigen::BlockIndex::intervals_t& indexes,
         vectorIn_t arg0,
         vectorIn_t arg1,
         vectorOut_t result)
@@ -130,7 +130,7 @@ namespace hpp {
 
     Eigen::ColBlockIndexes ExplicitSolver::activeParameters () const
     {
-      BlockIndex::vector_t biv;
+      BlockIndex::intervals_t biv;
       for (std::size_t i = 0; i < functions_.size (); ++i)
         biv.insert(biv.end(), functions_[i].inArg.indexes().begin(),
                               functions_[i].inArg.indexes().end());
@@ -141,7 +141,7 @@ namespace hpp {
 
     Eigen::ColBlockIndexes ExplicitSolver::activeDerivativeParameters () const
     {
-      BlockIndex::vector_t biv;
+      BlockIndex::intervals_t biv;
       for (std::size_t i = 0; i < functions_.size (); ++i)
         biv.insert(biv.end(), functions_[i].inDer.indexes().begin(),
                               functions_[i].inDer.indexes().end());

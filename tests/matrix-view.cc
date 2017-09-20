@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(block_index)
   BOOST_CHECK_EQUAL(BlockIndex_t::difference (a, d).size(), 0);
   BOOST_CHECK_EQUAL(BlockIndex_t::difference (b, d).size(), 1);
 
-  BlockIndex_t::vector_t v;
+  BlockIndex_t::intervals_t v;
   v.push_back(b);
   v.push_back(a);
   v.push_back(c);

@@ -159,28 +159,29 @@ namespace Eigen {
   struct BlockIndex {
     typedef hpp::constraints::size_type size_type;
     typedef std::pair<size_type, size_type> interval_t;
-    typedef std::vector<interval_t> vector_t;
+    typedef std::vector<interval_t> intervals_t;
 
-    static size_type cardinal (const vector_t& a);
+    static size_type cardinal (const intervals_t& a);
 
     template <typename Derived>
-    static vector_t fromLogicalExpression (const Eigen::ArrayBase<Derived>& array);
+    static intervals_t fromLogicalExpression
+    (const Eigen::ArrayBase<Derived>& array);
 
-    static void sort   (vector_t& a);
+    static void sort   (intervals_t& a);
     /// Assumes a is sorted
-    static void shrink (vector_t& a);
+    static void shrink (intervals_t& a);
 
     static bool overlap (const interval_t& a, const interval_t& b);
     /// The sum is the union
-    static vector_t sum (const interval_t& a, const interval_t& b);
+    static intervals_t sum (const interval_t& a, const interval_t& b);
 
-    static vector_t difference (const interval_t    & a, const interval_t    & b);
+    static intervals_t difference (const interval_t    & a, const interval_t    & b);
     /// Assumes a is sorted
-    static vector_t difference (const vector_t& a, const interval_t    & b);
+    static intervals_t difference (const intervals_t& a, const interval_t    & b);
     /// Assumes b is sorted
-    static vector_t difference (const interval_t    & a, const vector_t& b);
+    static intervals_t difference (const interval_t    & a, const intervals_t& b);
     /// Assumes a and b are sorted
-    static vector_t difference (const vector_t& a, const vector_t& b);
+    static intervals_t difference (const intervals_t& a, const intervals_t& b);
   };
 
   template <bool _allRows, bool _allCols>
@@ -190,7 +191,7 @@ namespace Eigen {
       typedef hpp::constraints::size_type size_type;
       typedef BlockIndex           BlockIndex_t;
       typedef BlockIndex_t::interval_t interval_t;
-      typedef BlockIndex_t::vector_t BlockIndexesType;
+      typedef BlockIndex_t::intervals_t BlockIndexesType;
       typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndexesType>::type RowIndexes_t;
       typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndexesType>::type ColIndexes_t;
 
