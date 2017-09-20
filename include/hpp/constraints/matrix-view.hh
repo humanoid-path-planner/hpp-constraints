@@ -207,16 +207,30 @@ namespace Eigen {
     static segments_t difference (const segments_t& a, const segments_t& b);
   }; // struct BlockIndex
 
+  /// Collection of indices of matrix blocks
+  /// \param _allRows whether the collection is composed of full columns
+  /// \param _allCols whether the collection is composed of full rows
+  ///
+  /// This class enables a user to virtually create a matrix that concatenates
+  /// blocks of a larger matrix.
+  ///
+  /// The smaller matrix is built by methods lview and rview
+  /// \li lview returns a smaller matrix that can be written in,
+  /// \li rview returns a smaller matrix that cannot be written in.
   template <bool _allRows, bool _allCols>
   class MatrixBlocks
   {
     public:
+      /// Index of vector or matrix
       typedef hpp::constraints::size_type size_type;
+      /// Interval of indices [first, first + second - 1]
       typedef BlockIndex::segment_t segment_t;
+      /// vector of segments
       typedef BlockIndex::segments_t segments_t;
       typedef typename internal::conditional<_allRows, internal::empty_struct, segments_t>::type RowIndices_t;
       typedef typename internal::conditional<_allCols, internal::empty_struct, segments_t>::type ColIndices_t;
 
+      /// Smaller matrix composed by concatenation of the blocks
       template <typename Derived, int _Rows, int _Cols> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
