@@ -29,9 +29,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     static void cross (const vector3_t& v, eigen::matrix3_t& m)
     {
       m (0,1) = -v [2]; m (1,0) =  v [2];

@@ -30,8 +30,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-
     /// Constraint on the relative position of the center of mass
     ///
     /// The value of the function is defined as the position of the center

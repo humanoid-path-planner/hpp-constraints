@@ -30,7 +30,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
     /// \addtogroup solvers
     /// \{
     namespace lineSearch {

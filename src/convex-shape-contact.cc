@@ -24,9 +24,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),

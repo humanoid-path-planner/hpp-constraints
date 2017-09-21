@@ -29,8 +29,7 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-
+    /// Square distance between input configuration and reference configuration
     class HPP_CONSTRAINTS_DLLAPI ConfigurationConstraint : public DifferentiableFunction
     {
       public:

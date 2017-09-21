@@ -26,9 +26,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     /// Distance between two sets of objects
     ///
     /// This function maps to a configuration of a robot, the distance

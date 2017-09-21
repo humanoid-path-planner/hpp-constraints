@@ -28,8 +28,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupSpace;
-
     DistanceBetweenBodiesPtr_t DistanceBetweenBodies::create
     (const std::string& name, const DevicePtr_t& robot,
      const JointPtr_t& joint1, const JointPtr_t& joint2)

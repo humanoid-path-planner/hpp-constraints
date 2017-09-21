@@ -30,9 +30,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     template <typename Expression>
     class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction
     {

@@ -25,9 +25,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     ConfigurationConstraintPtr_t ConfigurationConstraint::create (
         const std::string& name, const DevicePtr_t& robot,
         ConfigurationIn_t goal, std::vector <bool> mask)

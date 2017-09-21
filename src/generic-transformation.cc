@@ -29,9 +29,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     namespace {
       typedef JointJacobian_t::ConstNRowsBlockXpr<3>::Type HalfJacobian_t;
       inline HalfJacobian_t omega(const JointJacobian_t& j) { return j.bottomRows<3>(); }

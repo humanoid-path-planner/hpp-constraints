@@ -28,7 +28,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
     /// \addtogroup constraints
     /// \{
     class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {

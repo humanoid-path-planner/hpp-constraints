@@ -51,9 +51,8 @@ namespace Eigen {
       typedef typename ArgType::Index Index;
       typedef Eigen::Dense StorageKind;
       typedef Eigen::MatrixXpr XprKind;
-      // typedef typename ArgType::StorageIndex StorageIndex;
       typedef typename ArgType::Scalar Scalar;
-      enum { 
+      enum {
         CoeffReadCost = ArgType::CoeffReadCost,
         Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
         RowsAtCompileTime = (_allRows ? ArgType::RowsAtCompileTime : _Rows),
@@ -392,36 +391,52 @@ namespace Eigen {
           return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
+      /// Return row or column indices as a vector of segments
+      ///
+      /// \return rows indices if not all rows are selected
+      ///         (see template parameter _allRows),
+      ///         column indices if all rows are selected.
       inline const segments_t& indices() const
       {
-        // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_cols, m_rows);
       }
 
+      /// Return row indices
+      /// \assertion _allRows should be false
       inline const RowIndices_t& rows() const
       {
-        assert (_allRows);
+        assert (!_allRows);
         return m_rows;
       }
 
+      /// Return column indices
+      /// \assertion _allCols should be false
       inline const ColIndices_t& cols() const
       {
-        assert (_allCols);
+        assert (!_allCols);
         return m_cols;
       }
 
+      /// Return number of row or column indices
+      ///
+      /// \return number of rows indices if not all rows are selected
+      ///         (see template parameter _allRows),
+      ///         number of column indices if all rows are selected.
       inline const size_type& nbIndices() const
       {
-        // EIGEN_STATIC_ASSERT(_allRows && _allCols, internal::YOU_TRIED_CALLING_A_VECTOR_METHOD_ON_A_MATRIX)
         return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
       }
 
+      /// Return number of row indices
+      /// \assertion _allRows should be false
       inline const size_type& nbRows() const
       {
         assert (_allRows);
         return m_nbRows;
       }
 
+      /// Return number of column indices
+      /// \assertion _allCols should be false
       inline const size_type& nbCols() const
       {
         assert (_allCols);
@@ -432,7 +447,7 @@ namespace Eigen {
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateIndices() {
         update<Sort, Shrink, Cardinal> (
-            internal::return_first<_allRows>::run(m_cols  , m_rows  ), 
+            internal::return_first<_allRows>::run(m_cols  , m_rows  ),
             internal::return_first<_allRows>::run(m_nbCols, m_nbRows));
       }
 
@@ -482,7 +497,7 @@ namespace Eigen {
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
 
       typedef Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime> PlainObject;
-      // typedef typename internal::ref_selector<MatrixBlockView>::type Nested; 
+      // typedef typename internal::ref_selector<MatrixBlockView>::type Nested;
       typedef _ArgType ArgType;
       typedef typename internal::ref_selector<ArgType>::type ArgTypeNested;
       // typedef typename Base::CoeffReturnType CoeffReturnType;
@@ -510,7 +525,7 @@ namespace Eigen {
         m_rows(indices), m_nbCols(_allCols ? arg.cols() : nbIndices),
         m_cols(indices)
       {}
-      
+
       EIGEN_STRONG_INLINE size_type rows() const { return m_nbRows; }
       EIGEN_STRONG_INLINE size_type cols() const { return m_nbCols; }
 
@@ -535,16 +550,6 @@ namespace Eigen {
         assert(false && "It is not possible to access the coefficients of "
                "MatrixBlockView this way.");
       }
-      /*
-      EIGEN_STRONG_INLINE const Index& argIndex(const Index& index) const {
-        // EIGEN_STATIC_ASSERT_VECTOR_ONLY(PlainObject)
-        if (rows() == 1) return argCol(index);
-        else             return argRow(index);
-      }
-      EIGEN_STRONG_INLINE const Index& argRow(const Index& row) const { if (_allRows) return row; else return m_rows[row]; }
-      EIGEN_STRONG_INLINE const Index& argCol(const Index& col) const { if (_allCols) return col; else return m_cols[col]; }
-      */
-
       template <typename Dest>
       EIGEN_STRONG_INLINE void evalTo (Dest& dst) const {
         internal::evalRows<Dest, MatrixBlockView>::run(dst, *this);
@@ -553,7 +558,6 @@ namespace Eigen {
       template <typename Dest>
       EIGEN_STRONG_INLINE void writeTo (Dest& dst) const {
         dst.resize(rows(), cols());
-        // dst._resize_to_match(*this);
         evalTo(dst.derived());
       }
 
@@ -575,7 +579,7 @@ namespace Eigen {
       RowIndices_t m_rows;
       size_type m_nbCols;
       ColIndices_t m_cols;
-  };
+  }; // MatrixBlockView
 
 } // namespace Eigen
 

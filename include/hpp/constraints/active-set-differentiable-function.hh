@@ -24,8 +24,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-
     class HPP_CONSTRAINTS_DLLAPI ActiveSetDifferentiableFunction :
       public DifferentiableFunction
     {

@@ -43,6 +43,10 @@ namespace hpp {
     typedef pinocchio::ComJacobian_t ComJacobian_t;
     typedef pinocchio::JointJacobian_t JointJacobian_t;
     typedef pinocchio::Transform3f Transform3f;
+    typedef pinocchio::LiegroupElement LiegroupElement;
+    typedef pinocchio::LiegroupSpace LiegroupSpace;
+    typedef pinocchio::LiegroupSpacePtr_t LiegroupSpacePtr_t;
+    typedef pinocchio::LiegroupSpaceConstPtr_t LiegroupSpaceConstPtr_t;
     namespace eigen {
       typedef Eigen::Matrix <value_type, 3, 3> matrix3_t;
       typedef Eigen::Matrix <value_type, 3, 1> vector3_t;

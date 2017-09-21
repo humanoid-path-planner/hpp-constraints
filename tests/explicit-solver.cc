@@ -31,10 +31,6 @@
 #include <hpp/constraints/symbolic-calculus.hh>
 
 using namespace hpp::constraints;
-using hpp::pinocchio::LiegroupElement;
-using hpp::pinocchio::LiegroupSpaceConstPtr_t;
-using hpp::pinocchio::LiegroupSpacePtr_t;
-using hpp::pinocchio::LiegroupSpace;
 
 class LockedJoint : public DifferentiableFunction
 {

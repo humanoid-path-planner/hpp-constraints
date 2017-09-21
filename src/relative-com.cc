@@ -30,9 +30,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpace;
-
     namespace {
       static size_type size (std::vector<bool> mask)
       {

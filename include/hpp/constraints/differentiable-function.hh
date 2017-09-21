@@ -26,11 +26,6 @@
 namespace hpp {
   namespace constraints {
 
-    using hpp::pinocchio::LiegroupElement;
-    using hpp::pinocchio::LiegroupSpaceConstPtr_t;
-    using hpp::pinocchio::LiegroupSpacePtr_t;
-    using hpp::pinocchio::LiegroupSpace;
-
     /// \addtogroup constraints
     /// \{
 
