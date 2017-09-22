@@ -142,6 +142,41 @@ namespace Eigen {
       }
     };
 
+    template <typename ReturnType, typename View, bool AllRows = View::AllRows, bool AllCols = View::AllCols>
+    struct access_block_from_matrix_block_view
+    {
+      typedef typename View::size_type size_type;
+      template <typename Derived>
+      static ReturnType run (const View& v, Derived& d, size_type& k)
+      {
+        size_type i = k / v.m_rows.size();
+        size_type j = k - i * v.m_rows.size();
+        return ReturnType (d,
+            v.m_rows[i].first , v.m_cols[j].first ,
+            v.m_rows[i].second, v.m_cols[j].second);
+      }
+    };
+    template <typename ReturnType, typename View>
+    struct access_block_from_matrix_block_view <ReturnType, View, false, true>
+    {
+      typedef typename View::size_type size_type;
+      template <typename Derived>
+      static ReturnType run (const View& v, Derived& d, size_type& k)
+      {
+        return d.middleRows(v.m_rows[k].first, v.m_rows[k].second);
+      }
+    };
+    template <typename ReturnType, typename View>
+    struct access_block_from_matrix_block_view <ReturnType, View, true, false>
+    {
+      typedef typename View::size_type size_type;
+      template <typename Derived>
+      static ReturnType run (const View& v, Derived& d, size_type& k)
+      {
+        return d.middleCols(v.m_cols[k].first, v.m_cols[k].second);
+      }
+    };
+
     template <bool print> struct print_indices { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
     template <> struct print_indices <true> {
       template <typename BlockIndexType>
@@ -503,6 +538,16 @@ namespace Eigen {
       // typedef typename Base::CoeffReturnType CoeffReturnType;
       // typedef typename Base::Scalar Scalar;
 
+      template <typename Derived>
+      struct block_t {
+        typedef Block<Derived,
+                (AllRows ? Derived::RowsAtCompileTime : Eigen::Dynamic),
+                (AllCols ? Derived::ColsAtCompileTime : Eigen::Dynamic),
+                (AllCols ? (bool)Derived::IsRowMajor
+                 : (AllRows ? (bool)!Derived::IsRowMajor : false)
+                ) > type ;
+      };
+
       typedef MatrixBlocks<_allRows, _allCols> MatrixIndices_t;
       typedef typename MatrixIndices_t::segments_t Indices_t;
       typedef typename internal::conditional<_allRows, const internal::empty_struct, const Indices_t& >::type RowIndices_t;
@@ -572,6 +617,30 @@ namespace Eigen {
         EIGEN_STATIC_ASSERT_LVALUE(ArgType);
         internal::evalRows<const OtherDerived, MatrixBlockView>::write(other.derived(), *this);
         return *this;
+      }
+
+      EIGEN_STRONG_INLINE size_type _blocks() const { return m_rows.size() * m_cols.size(); }
+      EIGEN_STRONG_INLINE typename block_t<ArgType>::type _block(Index k)
+      {
+        return _block (m_arg, k);
+      }
+      EIGEN_STRONG_INLINE const typename block_t<const ArgType>::type _block(Index k) const
+      {
+        return _block (m_arg, k);
+      }
+      template <typename Derived>
+      EIGEN_STRONG_INLINE typename block_t<Derived>::type _block(MatrixBase<Derived>& other, Index k) const
+      {
+        return internal::access_block_from_matrix_block_view<
+          typename block_t< Derived >::type,
+          MatrixBlockView >::run (*this, other.derived(), k);
+      }
+      template <typename Derived>
+      EIGEN_STRONG_INLINE const typename block_t<const Derived>::type _block(const MatrixBase<Derived>& other, Index k) const
+      {
+        return internal::access_block_from_matrix_block_view<
+          const typename block_t<const Derived>::type,
+          MatrixBlockView >::run (*this, other.derived(), k);
       }
 
       ArgType& m_arg;

@@ -14,6 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#define EIGEN_RUNTIME_NO_MALLOC
+
 #define BOOST_TEST_MODULE MATRIX_VIEW
 #include <boost/test/unit_test.hpp>
 
@@ -67,11 +69,10 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   typedef MatrixBlocks<false, true> RowsIndices;
   typedef MatrixBlocks<true, false> ColsIndices;
 
-  MatrixXd m (10, 10);
+  MatrixXd m (10, 11);
   for (MatrixXd::Index i = 0; i < m.rows(); ++i)
     for (MatrixXd::Index j = 0; j < m.cols(); ++j)
       m(i, j) = MatrixXd::Scalar(m.cols() * i + j);
-  std::cout << m << '\n' << std::endl;
 
   RowsIndices rows(2,2);
   // rows contains indices 2, 3
@@ -81,28 +82,49 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   // Make a ColsIndices from a RowsIndices
   ColsIndices cols (rows);
 
-  std::cout << rows << std::endl;
-  std::cout << cols << std::endl;
+
+  // Check that operator<< with ostream compiles.
+  std::ostringstream oss; oss << rows << '\n' << cols;
+  // std::cout << oss.str() << std::endl;
 
   MatrixXd res, res1;
-  rows.lview(m).writeTo(res);
-  std::cout << res << std::endl;
+  rows.lview(m).writeTo(res); // This must resize res.
+  BOOST_CHECK_EQUAL(res.rows(), rows.nbRows());
+  BOOST_CHECK_EQUAL(res.cols(), m.cols());
 
+  BOOST_CHECK_EQUAL(rows.lview(m).eval(), rows.rview(m).eval());
+  BOOST_CHECK_EQUAL(rows.rview(m).eval().leftCols<8>(), rows.rview(m.leftCols<8>()).eval());
+  BOOST_CHECK_EQUAL(rows.rview(m).eval(), cols.rviewTranspose(m).eval());
+
+
+
+
+  res = m;
+  cols.lview(res).setZero();
+  BOOST_CHECK (cols.rview(res).eval().isZero());
+
+  /** CwiseBinaryOp
+   *  - check that dynamic allocation is performed. */
+  res1.resize(rows.nbRows(), m.cols());
+  res = 2 * rows.rview(m).eval();
+
+  Eigen::internal::set_is_malloc_allowed(false);
   res1 = rows.rview(m);
-  std::cout << res1 << std::endl;
+  res1 = res1 + rows.rview(m);
+  BOOST_CHECK_EQUAL (res1, res);
 
-  res1 = rows.rview(m.leftCols<8>());
-  std::cout << res1 << std::endl;
+  res1 = rows.rview(m + m);
+  BOOST_CHECK_EQUAL (res1, res);
+  Eigen::internal::set_is_malloc_allowed(true);
 
-  rows.lview(m) = MatrixXd::Ones(rows.nbIndices(), m.cols());
-  rows.lview(m.leftCols<4>()) = MatrixXd::Ones(rows.nbIndices(), 4);
+  res1.resize(m.rows(), cols.nbCols());
+  res = 2 * cols.rview(m).eval();
+  Eigen::internal::set_is_malloc_allowed(false);
+  res1 = cols.rview(m);
+  res1 = res1 + cols.rview(m);
+  BOOST_CHECK_EQUAL (res1, res);
 
-  rows.lview(m).setZero();
-  std::cout << m << std::endl;
-
-  res = cols.lview(m);
-  std::cout << res << std::endl;
-
-  cols.lview(m).setZero();
-  std::cout << m << std::endl;
+  res1 = cols.rview(m + m);
+  BOOST_CHECK_EQUAL (res1, res);
+  Eigen::internal::set_is_malloc_allowed(true);
 }
