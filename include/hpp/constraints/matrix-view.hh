@@ -653,5 +653,6 @@ namespace Eigen {
 } // namespace Eigen
 
 #include <hpp/constraints/impl/matrix-view.hh>
+#include <hpp/constraints/impl/matrix-view-operation.hh>
 
 #endif // HPP_CONSTRAINTS_MATRIX_VIEW_HH
