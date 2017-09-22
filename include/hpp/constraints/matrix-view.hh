@@ -466,7 +466,7 @@ namespace Eigen {
       /// \assertion _allRows should be false
       inline const size_type& nbRows() const
       {
-        assert (_allRows);
+        assert (!_allRows);
         return m_nbRows;
       }
 
@@ -474,7 +474,7 @@ namespace Eigen {
       /// \assertion _allCols should be false
       inline const size_type& nbCols() const
       {
-        assert (_allCols);
+        assert (!_allCols);
         return m_nbCols;
       }
 
