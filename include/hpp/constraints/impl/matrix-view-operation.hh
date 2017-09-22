@@ -24,109 +24,214 @@ namespace Eigen {
    *  - matrix op view
    *  - view op matrix */
 
-#define HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW \
+#define HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW                      \
   typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols
-#define HPP_EIGEN_MATRIX_BLOCK_VIEW \
+#define HPP_EIGEN_MATRIX_BLOCK_VIEW                                            \
   MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols>
 
-  /** matrix op view */
-  template <typename BinaryOp, typename Lhs, HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW>
-  class CwiseBinaryOpImpl <BinaryOp, Lhs, const HPP_EIGEN_MATRIX_BLOCK_VIEW, Dense>
-    : public internal::dense_xpr_base< CwiseBinaryOp<BinaryOp, Lhs, const HPP_EIGEN_MATRIX_BLOCK_VIEW > >::type
-  {
-      typedef const HPP_EIGEN_MATRIX_BLOCK_VIEW View;
-      typedef CwiseBinaryOp<BinaryOp, Lhs, View > Derived;
-    public:
+#define HPP_EIGEN_SPECIALIZE_CwiseBinaryOpImpl(                                \
+    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE)                                      \
+  template <typename BinaryOp, LHS_TPL, RHS_TPL>                               \
+  class CwiseBinaryOpImpl <BinaryOp, LHS_TYPE, RHS_TYPE, Dense>                \
+    : public internal::dense_xpr_base<                                         \
+      CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE > >::type                     \
+  {                                                                            \
+      typedef LHS_TYPE Lhs_t;                                                  \
+      typedef RHS_TYPE Rhs_t;                                                  \
+      typedef CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE > Derived;            \
+    public:                                                                    \
+                                                                               \
+      typedef typename internal::dense_xpr_base<Derived >::type Base;          \
+      EIGEN_DENSE_PUBLIC_INTERFACE( Derived )                                  \
+                                                                               \
+      template <typename OtherDerived>                                         \
+      void evalTo (MatrixBase<OtherDerived>& other) const;                     \
+  };
 
-      typedef typename internal::dense_xpr_base<Derived >::type Base;
-      EIGEN_DENSE_PUBLIC_INTERFACE( Derived )
+#define HPP_EIGEN_DEFINE_CwiseBinaryOpImpl_evalTo(                             \
+    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE)                                      \
+template <typename BinaryOp, LHS_TPL, RHS_TPL>                                 \
+template <typename OtherDerived>                                               \
+void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
+(MatrixBase<OtherDerived>& other) const
 
-      template <typename OtherDerived>
-      void evalTo (MatrixBase<OtherDerived>& other) const
+#define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(                                  \
+    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE,                                      \
+    need_to_transpose, EVAL_TO_BODY)                                           \
+    template<typename Derived, typename BinaryOp, LHS_TPL, RHS_TPL>            \
+    struct assign_selector<Derived,                                            \
+                           CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE >,       \
+                           false,need_to_transpose> {                          \
+      typedef CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE> CwiseDerived;        \
+      static EIGEN_STRONG_INLINE Derived& run                                  \
+        (Derived& dst, const CwiseDerived& o)                                  \
+      { dst.resize(o.rows(), o.cols()); o.evalTo(dst); return dst; }           \
+      template<typename ActualDerived, typename ActualOtherDerived>            \
+      static EIGEN_STRONG_INLINE Derived& evalTo                               \
+        (ActualDerived& dst, const ActualOtherDerived& other)                  \
+      { EVAL_TO_BODY return dst; }                                             \
+    };
+
+#define HPP_EIGEN_EVAL_TO_BODY_NORMAL other.evalTo(dst);
+#define HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans);
+
+  // --- matrix op view -- //
+#define HPP_EIGEN_LHS_TPL typename Lhs
+#define HPP_EIGEN_LHS_TYPE Lhs
+#define HPP_EIGEN_RHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
+#define HPP_EIGEN_RHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
+
+  HPP_EIGEN_SPECIALIZE_CwiseBinaryOpImpl(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
+  HPP_EIGEN_DEFINE_CwiseBinaryOpImpl_evalTo(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
       {
-        typedef Block<Lhs> BlockLhs;
-        typedef CwiseBinaryOp < BinaryOp, BlockLhs,
-          typename View::template block_t< typename View::ArgType >::type
-            > BlockCwiseBinaryOp;
+        typedef const Block<Lhs_t> BlockLhs;
+        typedef const typename Rhs_t::
+          template block_t< typename Rhs_t::ArgType >::type BlockRhs;
+        typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
-        typedef typename Derived::Index Index;
         const Derived& d = derived();
         Index r = 0, c = 0;
         for(typename Derived::Index k = 0; k < d.rhs()._blocks(); ++k) {
-          typename View::template block_t< typename View::ArgType >::type
-            rhs = d.rhs()._block(k);
+          BlockRhs rhs = d.rhs()._block(k);
           BlockLhs lhs = d.lhs().block(r, c, rhs.rows(), rhs.cols());
           other.derived().block(r, c, rhs.rows(), rhs.cols())
-            = BlockCwiseBinaryOp (lhs, rhs, d.functor());
+            = BlockCwiseBOp (lhs, rhs, d.functor());
           // Iteration over blocks is rowwise.
           c += rhs.cols();
           if (c >= other.cols()) {
+            assert (c == other.cols());
             c = 0;
             r += rhs.rows();
           }
         }
       }
-  };
-
-// #define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(eval_before_assign, need_to_transpose)
-#define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(need_to_transpose) \
-    template<typename Derived, typename BinaryOp, HPP_EIGEN_LHS_TPL, HPP_EIGEN_RHS_TPL> \
-    struct assign_selector<Derived, CwiseBinaryOp<BinaryOp, HPP_EIGEN_LHS_TYPE, HPP_EIGEN_RHS_TYPE >,false,need_to_transpose> { \
-      typedef CwiseBinaryOp<BinaryOp, HPP_EIGEN_LHS_TYPE, HPP_EIGEN_RHS_TYPE> CwiseDerived; \
-      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const CwiseDerived& other) { dst.resize(other.rows(), other.cols()); other.evalTo(dst); return dst; } \
-      template<typename ActualDerived, typename ActualOtherDerived> \
-        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { HPP_EIGEN_EVAL_TO_BODY return dst; } \
-    };
 
   namespace internal {
-#define HPP_EIGEN_EVAL_TO_BODY other.evalTo(dst);
-#define HPP_EIGEN_LHS_TPL typename OtherDerived
-#define HPP_EIGEN_LHS_TYPE OtherDerived
-#define HPP_EIGEN_RHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
-#define HPP_EIGEN_RHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(false)
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
+      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
+      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+  }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
 #undef HPP_EIGEN_RHS_TPL
 #undef HPP_EIGEN_RHS_TYPE
 
-// #define HPP_EIGEN_LHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
-// #define HPP_EIGEN_LHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
-// #define HPP_EIGEN_RHS_TPL typename OtherDerived
-// #define HPP_EIGEN_RHS_TYPE OtherDerived
-    // HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(false)
-// #undef HPP_EIGEN_LHS_TPL
-// #undef HPP_EIGEN_LHS_TYPE
-// #undef HPP_EIGEN_RHS_TPL
-// #undef HPP_EIGEN_RHS_TYPE
+  // --- view op matrix -- //
+#define HPP_EIGEN_LHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
+#define HPP_EIGEN_LHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
+#define HPP_EIGEN_RHS_TPL typename Rhs
+#define HPP_EIGEN_RHS_TYPE Rhs
+  HPP_EIGEN_SPECIALIZE_CwiseBinaryOpImpl(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
+  HPP_EIGEN_DEFINE_CwiseBinaryOpImpl_evalTo(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
+      {
+        typedef const typename Lhs_t::
+          template block_t< typename Lhs_t::ArgType >::type BlockLhs;
+        typedef const Block<Rhs_t> BlockRhs;
+        typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
-#undef HPP_EIGEN_EVAL_TO_BODY
+        const Derived& d = derived();
+        Index r = 0, c = 0;
+        for(typename Derived::Index k = 0; k < d.lhs()._blocks(); ++k) {
+          BlockLhs lhs = d.lhs()._block(k);
+          BlockRhs rhs = d.rhs().block(r, c, lhs.rows(), lhs.cols());
+          other.derived().block(r, c, lhs.rows(), lhs.cols())
+            = BlockCwiseBOp (lhs, rhs, d.functor());
+          // Iteration over blocks is rowwise.
+          c += lhs.cols();
+          if (c >= other.cols()) {
+            assert (c == other.cols());
+            c = 0;
+            r += lhs.rows();
+          }
+        }
+      }
 
-#define HPP_EIGEN_EVAL_TO_BODY Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans);
-#define HPP_EIGEN_LHS_TPL typename OtherDerived
-#define HPP_EIGEN_LHS_TYPE OtherDerived
-#define HPP_EIGEN_RHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
-#define HPP_EIGEN_RHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(true)
+  namespace internal {
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
+      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
+      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+  }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
 #undef HPP_EIGEN_RHS_TPL
 #undef HPP_EIGEN_RHS_TYPE
 
-// #define HPP_EIGEN_LHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
-// #define HPP_EIGEN_LHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
-// #define HPP_EIGEN_RHS_TPL typename OtherDerived
-// #define HPP_EIGEN_RHS_TYPE OtherDerived
-    // HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(true)
-// #undef HPP_EIGEN_LHS_TPL
-// #undef HPP_EIGEN_LHS_TYPE
-// #undef HPP_EIGEN_RHS_TPL
-// #undef HPP_EIGEN_RHS_TYPE
+  // --- view op view -- //
+#define HPP_EIGEN_LHS_TPL HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
+#define HPP_EIGEN_LHS_TYPE const HPP_EIGEN_MATRIX_BLOCK_VIEW
+#define HPP_EIGEN_RHS_TPL typename _ArgType2, int _Rows2, int _Cols2, bool _allRows2, bool _allCols2
+#define HPP_EIGEN_RHS_TYPE const MatrixBlockView<_ArgType2, _Rows2, _Cols2, _allRows2, _allCols2>
 
-#undef HPP_EIGEN_EVAL_TO_BODY
+  HPP_EIGEN_SPECIALIZE_CwiseBinaryOpImpl(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
+  HPP_EIGEN_DEFINE_CwiseBinaryOpImpl_evalTo(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
+      {
+        typedef const typename Lhs_t::
+          template block_t< typename Lhs_t::ArgType >::type BlockLhs;
+        typedef const typename Rhs_t::
+          template block_t< typename Rhs_t::ArgType >::type BlockRhs;
+        typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
-  } // namespace internal
+        const Derived& d = derived();
+        assert (d.lhs()._blocks() == d.rhs()._blocks());
+        Index r = 0, c = 0;
+        for(typename Derived::Index k = 0; k < d.rhs()._blocks(); ++k) {
+          BlockLhs lhs = d.lhs()._block(k);
+          BlockRhs rhs = d.rhs()._block(k);
+          assert (lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+          other.derived().block(r, c, lhs.rows(), lhs.cols())
+            = BlockCwiseBOp (lhs, rhs, d.functor());
+          // Iteration over blocks is rowwise.
+          c += lhs.cols();
+          if (c >= other.cols()) {
+            assert (c == other.cols());
+            c = 0;
+            r += lhs.rows();
+          }
+        }
+      }
 
+  namespace internal {
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
+      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
+      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+  }
+#undef HPP_EIGEN_LHS_TPL
+#undef HPP_EIGEN_LHS_TYPE
+#undef HPP_EIGEN_RHS_TPL
+#undef HPP_EIGEN_RHS_TYPE
+
+#undef HPP_EIGEN_EVAL_TO_BODY_NORMAL
+#undef HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE
+#undef HPP_EIGEN_SPECIALIZE_CwiseBinaryOpImpl
+#undef HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR
+#undef HPP_EIGEN_DEFINE_CwiseBinaryOpImpl_evalTo
 #undef HPP_EIGEN_DECLARE_TEMPLATE_ARGS_MATRIX_BLOCK_VIEW
 #undef HPP_EIGEN_MATRIX_BLOCK_VIEW
 

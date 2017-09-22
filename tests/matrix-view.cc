@@ -58,16 +58,56 @@ BOOST_AUTO_TEST_CASE(block_index)
   BOOST_CHECK(v[0] == BlockIndex::segment_t (0, 3));
 }
 
+template <typename MatrixBlocks_t> void checkMatrixBlocks
+(const MatrixBlocks_t& mb, MatrixXd m)
+{
+  BOOST_CHECK_EQUAL(mb.lview(m).eval(), mb.rview(m).eval());
+  BOOST_CHECK_EQUAL(mb.rview(m).eval(),
+      mb.rviewTranspose(m.transpose()).eval().transpose());
+
+  MatrixXd res(m);
+  res = m;
+  mb.lview(res).setZero();
+  BOOST_CHECK (mb.rview(res).eval().isZero());
+
+  /** CwiseUnaryOp
+   *  TODO
+   */
+
+  /** CwiseBinaryOp
+   *  - check that dynamic allocation is performed.
+   */
+  MatrixXd res1 (mb.rview(m).rows(), mb.rview(m).cols());
+  res = 2 * mb.rview(m).eval();
+
+  Eigen::internal::set_is_malloc_allowed(false);
+  // matrix + view
+  res1 = mb.rview(m);
+  res1 = res1 + mb.rview(m);
+  BOOST_CHECK_EQUAL (res1, res);
+  // view + matrix
+  res1 = mb.rview(m);
+  res1 = mb.rview(m) + res1;
+  BOOST_CHECK_EQUAL (res1, res);
+  // view + view
+  MatrixBlocks_t mb2 (mb);
+  res1 = mb.rview(m) + mb2.rview(m);
+  BOOST_CHECK_EQUAL (res1, res);
+  // view of expression
+  res1 = mb.rview(m + m);
+  BOOST_CHECK_EQUAL (res1, res);
+  Eigen::internal::set_is_malloc_allowed(true);
+
+  /** GeneralProduct
+   *  TODO
+   */
+}
+
 BOOST_AUTO_TEST_CASE(matrix_block_view)
 {
-  // typedef MatrixBlockView<const MatrixXd, Dynamic, Dynamic, false, false> MatrixXdConstView;
-  // typedef MatrixBlockView<MatrixXd, Dynamic, 0, false, true> MatrixRowView;
-  // typedef MatrixBlockView<VectorXd, Dynamic, 0, false, true> VectorView;
-
-  // EIGEN_STATIC_ASSERT_LVALUE(MatrixRowView)
-
   typedef MatrixBlocks<false, true> RowsIndices;
   typedef MatrixBlocks<true, false> ColsIndices;
+  typedef MatrixBlocks<false, false> MatrixBlocks_t;
 
   MatrixXd m (10, 11);
   for (MatrixXd::Index i = 0; i < m.rows(); ++i)
@@ -82,6 +122,7 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   // Make a ColsIndices from a RowsIndices
   ColsIndices cols (rows);
 
+  MatrixBlocks_t blocks (rows.rows(), cols.cols());
 
   // Check that operator<< with ostream compiles.
   std::ostringstream oss; oss << rows << '\n' << cols;
@@ -92,39 +133,9 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   BOOST_CHECK_EQUAL(res.rows(), rows.nbRows());
   BOOST_CHECK_EQUAL(res.cols(), m.cols());
 
-  BOOST_CHECK_EQUAL(rows.lview(m).eval(), rows.rview(m).eval());
   BOOST_CHECK_EQUAL(rows.rview(m).eval().leftCols<8>(), rows.rview(m.leftCols<8>()).eval());
-  BOOST_CHECK_EQUAL(rows.rview(m).eval(), cols.rviewTranspose(m).eval());
 
-
-
-
-  res = m;
-  cols.lview(res).setZero();
-  BOOST_CHECK (cols.rview(res).eval().isZero());
-
-  /** CwiseBinaryOp
-   *  - check that dynamic allocation is performed. */
-  res1.resize(rows.nbRows(), m.cols());
-  res = 2 * rows.rview(m).eval();
-
-  Eigen::internal::set_is_malloc_allowed(false);
-  res1 = rows.rview(m);
-  res1 = res1 + rows.rview(m);
-  BOOST_CHECK_EQUAL (res1, res);
-
-  res1 = rows.rview(m + m);
-  BOOST_CHECK_EQUAL (res1, res);
-  Eigen::internal::set_is_malloc_allowed(true);
-
-  res1.resize(m.rows(), cols.nbCols());
-  res = 2 * cols.rview(m).eval();
-  Eigen::internal::set_is_malloc_allowed(false);
-  res1 = cols.rview(m);
-  res1 = res1 + cols.rview(m);
-  BOOST_CHECK_EQUAL (res1, res);
-
-  res1 = cols.rview(m + m);
-  BOOST_CHECK_EQUAL (res1, res);
-  Eigen::internal::set_is_malloc_allowed(true);
+  checkMatrixBlocks (rows, m);
+  checkMatrixBlocks (cols, m);
+  checkMatrixBlocks (blocks, m);
 }

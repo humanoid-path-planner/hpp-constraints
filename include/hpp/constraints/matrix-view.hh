@@ -41,7 +41,7 @@ namespace Eigen {
         empty_struct () {}
         template <typename In_t> empty_struct (In_t) {}
         template <typename In0_t, typename In1_t> empty_struct (In0_t, In1_t) {}
-        static inline Index size() { return 0; }
+        static inline Index size() { return 1; }
         inline const Index& operator[](const Index& i) const { return i; }
       };
 
