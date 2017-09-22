@@ -23,6 +23,10 @@
 # include <hpp/pinocchio/fwd.hh>
 # include <hpp/constraints/deprecated.hh>
 
+namespace Eigen {
+  struct BlockIndex;
+} // namespace Eigen
+
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
@@ -130,6 +134,9 @@ namespace hpp {
     typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
     typedef boost::shared_ptr<RelativeTransformation>
       RelativeTransformationPtr_t;
+
+    typedef Eigen::BlockIndex BlockIndex;
   } // namespace constraints
 } // namespace hpp
+
 #endif // HPP_CONSTRAINTS_FWD_HH

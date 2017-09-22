@@ -24,6 +24,8 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/liegroup.hh>
 
+#include <hpp/constraints/matrix-view.hh>
+
 namespace se3 {
   using ::hpp::constraints::vectorIn_t;
   using ::hpp::constraints::vectorOut_t;
@@ -72,7 +74,6 @@ namespace se3 {
 
 namespace hpp {
   namespace constraints {
-    typedef Eigen::BlockIndex BlockIndex;
     typedef Eigen::MatrixBlockView<matrixOut_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixOutView_t;
 
     namespace {
