@@ -32,7 +32,7 @@ namespace hpp {
             segments_t intervals)
           : DifferentiableFunction(
               f->inputSize(), f->inputDerivativeSize(),
-              f->outputSize(), f->outputDerivativeSize(),
+              f->outputSpace (),
               "ActiveSet_on_" + f->name ())
           , function_(f)
           , intervals_(intervals)
