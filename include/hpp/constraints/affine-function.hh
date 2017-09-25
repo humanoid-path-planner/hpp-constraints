@@ -78,6 +78,7 @@ namespace hpp {
           qshort_ = aIdx_.rview(argument);
           result.vector ().noalias () = J_ * qshort_;
           result.vector () += b_;
+          result.check ();
         }
 
         void impl_jacobian (matrixOut_t jacobian,
