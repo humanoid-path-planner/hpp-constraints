@@ -95,18 +95,11 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 
         const Derived& d = derived();
         Index r = 0, c = 0;
-        for(typename Derived::Index k = 0; k < d.rhs()._blocks(); ++k) {
-          BlockRhs rhs = d.rhs()._block(k);
-          BlockLhs lhs = d.lhs().block(r, c, rhs.rows(), rhs.cols());
-          other.derived().block(r, c, rhs.rows(), rhs.cols())
+        for(typename Rhs_t::block_iterator block (d.rhs()); block.valid(); ++block) {
+          BlockRhs rhs = d.rhs()._block(block);
+          BlockLhs lhs = d.lhs().block(block.ro(), block.co(), block.rs(), block.cs());
+          other.derived().block(block.ro(), block.co(), block.rs(), block.cs())
             = BlockCwiseBOp (lhs, rhs, d.functor());
-          // Iteration over blocks is rowwise.
-          c += rhs.cols();
-          if (c >= other.cols()) {
-            assert (c == other.cols());
-            c = 0;
-            r += rhs.rows();
-          }
         }
       }
 
@@ -144,18 +137,11 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 
         const Derived& d = derived();
         Index r = 0, c = 0;
-        for(typename Derived::Index k = 0; k < d.lhs()._blocks(); ++k) {
-          BlockLhs lhs = d.lhs()._block(k);
-          BlockRhs rhs = d.rhs().block(r, c, lhs.rows(), lhs.cols());
-          other.derived().block(r, c, lhs.rows(), lhs.cols())
+        for(typename Lhs_t::block_iterator block (d.lhs()); block.valid(); ++block) {
+          BlockLhs lhs = d.lhs()._block(block);
+          BlockRhs rhs = d.rhs().block(block.ro(), block.co(), block.rs(), block.cs());
+          other.derived().block(block.ro(), block.co(), block.rs(), block.cs())
             = BlockCwiseBOp (lhs, rhs, d.functor());
-          // Iteration over blocks is rowwise.
-          c += lhs.cols();
-          if (c >= other.cols()) {
-            assert (c == other.cols());
-            c = 0;
-            r += lhs.rows();
-          }
         }
       }
 
@@ -196,20 +182,18 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
         const Derived& d = derived();
         assert (d.lhs()._blocks() == d.rhs()._blocks());
         Index r = 0, c = 0;
-        for(typename Derived::Index k = 0; k < d.rhs()._blocks(); ++k) {
-          BlockLhs lhs = d.lhs()._block(k);
-          BlockRhs rhs = d.rhs()._block(k);
-          assert (lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
-          other.derived().block(r, c, lhs.rows(), lhs.cols())
+        typename Lhs_t::block_iterator lblock (d.lhs());
+        typename Rhs_t::block_iterator rblock (d.rhs());
+        while (lblock.valid()) {
+          BlockLhs lhs = d.lhs()._block(lblock);
+          BlockRhs rhs = d.rhs()._block(lblock);
+          assert (lblock.rs() == rblock.rs() && lblock.cs() == rblock.cs());
+          assert (lblock.ro() == rblock.ro() && lblock.co() == rblock.co());
+          other.derived().block(rblock.ro(), rblock.co(), rblock.rs(), rblock.cs())
             = BlockCwiseBOp (lhs, rhs, d.functor());
-          // Iteration over blocks is rowwise.
-          c += lhs.cols();
-          if (c >= other.cols()) {
-            assert (c == other.cols());
-            c = 0;
-            r += lhs.rows();
-          }
+          ++lblock; ++rblock;
         }
+        assert (!lblock.valid() && !rblock.valid());
       }
 
   namespace internal {

@@ -44,6 +44,8 @@ namespace Eigen {
         static inline Index size() { return 1; }
         inline const Index& operator[](const Index& i) const { return i; }
       };
+      template <bool If> struct get_if { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T1 run (T1 then, T2 Else) { (void)Else; return then; } };
+      template <> struct get_if<false> { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T2 run (T1 then, T2 Else) { (void)then; return Else; } };
 
     template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
       struct traits< MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -147,13 +149,9 @@ namespace Eigen {
     {
       typedef typename View::size_type size_type;
       template <typename Derived>
-      static ReturnType run (const View& v, Derived& d, size_type& k)
+      static ReturnType run (Derived& d, size_type r, size_type c, size_type rs, size_type cs)
       {
-        size_type i = k / v.m_rows.size();
-        size_type j = k - i * v.m_rows.size();
-        return ReturnType (d,
-            v.m_rows[i].first , v.m_cols[j].first ,
-            v.m_rows[i].second, v.m_cols[j].second);
+        return ReturnType (d, r, c, rs, cs);
       }
     };
     template <typename ReturnType, typename View>
@@ -161,9 +159,9 @@ namespace Eigen {
     {
       typedef typename View::size_type size_type;
       template <typename Derived>
-      static ReturnType run (const View& v, Derived& d, size_type& k)
+      static ReturnType run (Derived& d, size_type r, size_type, size_type rs, size_type)
       {
-        return d.middleRows(v.m_rows[k].first, v.m_rows[k].second);
+        return d.middleRows (r, rs);
       }
     };
     template <typename ReturnType, typename View>
@@ -171,9 +169,9 @@ namespace Eigen {
     {
       typedef typename View::size_type size_type;
       template <typename Derived>
-      static ReturnType run (const View& v, Derived& d, size_type& k)
+      static ReturnType run (Derived& d, size_type, size_type c, size_type, size_type cs)
       {
-        return d.middleCols(v.m_cols[k].first, v.m_cols[k].second);
+        return d.middleCols (c, cs);
       }
     };
 
@@ -528,6 +526,36 @@ namespace Eigen {
         AllRows = _allRows,
         AllCols = _allCols
       };
+      struct block_iterator {
+        const MatrixBlockView& view;
+        size_type  row,  col;
+        internal::variable_if_dynamic<size_type, (_allRows ? 0 : Dynamic) > _ro;
+        internal::variable_if_dynamic<size_type, (_allCols ? 0 : Dynamic) > _co;
+        block_iterator (const MatrixBlockView& v) : view(v), row (0), col (0), _ro(0), _co(0) {}
+        size_type ro() const { return _ro.value(); }
+        size_type co() const { return _co.value(); }
+        size_type ri() const { return internal::get_if<AllRows>::run(std::make_pair(0,view.m_nbRows), view.m_rows[row]).first; }
+        size_type ci() const { return internal::get_if<AllCols>::run(std::make_pair(0,view.m_nbCols), view.m_cols[col]).first; }
+        size_type rs() const { return internal::get_if<AllRows>::run(std::make_pair(0,view.m_nbRows), view.m_rows[row]).second; }
+        size_type cs() const { return internal::get_if<AllCols>::run(std::make_pair(0,view.m_nbCols), view.m_cols[col]).second; }
+        // ++it
+        block_iterator& operator++()
+        {
+          _ro.setValue(_ro.value() + rs());
+          ++row;
+          if (row == (size_type)view.m_rows.size()) {
+            row = 0;
+            _ro.setValue(0);
+            _co.setValue(_co.value() + cs());
+            ++col;
+            // if (col < (size_type)view.m_cols.size()) _co.setValue(0);
+          }
+          return *this;
+        };
+        // it++
+        block_iterator operator++(int) { block_iterator copy(*this); operator++(); return copy; };
+        bool valid () const { return col < (size_type)view.m_cols.size(); }
+      };
       typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
 
@@ -620,27 +648,29 @@ namespace Eigen {
       }
 
       EIGEN_STRONG_INLINE size_type _blocks() const { return m_rows.size() * m_cols.size(); }
-      EIGEN_STRONG_INLINE typename block_t<ArgType>::type _block(Index k)
-      {
-        return _block (m_arg, k);
-      }
-      EIGEN_STRONG_INLINE const typename block_t<const ArgType>::type _block(Index k) const
-      {
-        return _block (m_arg, k);
-      }
-      template <typename Derived>
-      EIGEN_STRONG_INLINE typename block_t<Derived>::type _block(MatrixBase<Derived>& other, Index k) const
+      EIGEN_STRONG_INLINE typename block_t<ArgType>::type _block(const block_iterator& b)
       {
         return internal::access_block_from_matrix_block_view<
-          typename block_t< Derived >::type,
-          MatrixBlockView >::run (*this, other.derived(), k);
+          typename block_t<const ArgType>::type,
+          MatrixBlockView >::run (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
       }
-      template <typename Derived>
-      EIGEN_STRONG_INLINE const typename block_t<const Derived>::type _block(const MatrixBase<Derived>& other, Index k) const
+      EIGEN_STRONG_INLINE const typename block_t<const ArgType>::type _block(const block_iterator& b) const
       {
         return internal::access_block_from_matrix_block_view<
-          const typename block_t<const Derived>::type,
-          MatrixBlockView >::run (*this, other.derived(), k);
+          const typename block_t<const ArgType>::type,
+          MatrixBlockView >::run (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
+      }
+      EIGEN_STRONG_INLINE block_iterator _block_iterator() const { return block_iterator(*this); }
+
+      EIGEN_STRONG_INLINE bool isZero (const RealScalar& prec = NumTraits<Scalar>::dummy_precision()) const
+      {
+        for (block_iterator block (*this); block.valid(); ++block)
+          if (!m_arg.block(
+                block.ri(), block.ci(),
+                block.rs(), block.cs())
+              .isZero(prec))
+            return false;
+        return true;
       }
 
       ArgType& m_arg;
