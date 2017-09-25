@@ -79,67 +79,38 @@ namespace Eigen {
         static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
     };
 
-    template <typename Other, typename View, bool AllCols = View::AllCols> struct evalCols {
-      static inline void run (Other& dst, const View& src, const typename Other::Index& row)
-      {
-        dst.derived() = src.derived().m_arg.middleRows(row, dst.rows());
-      }
-      static inline void write (const Other& src, View& dst, const typename Other::Index& row)
-      {
-        dst.m_arg.middleRows(row, src.rows()) = src;
-      }
-    };
-    template <typename Other, typename View> struct evalCols <Other, View, false> {
-      static inline void run (Other& dst, const View& src, const typename Other::Index& row)
-      {
-        std::size_t col = 0;
-        for (std::size_t j = 0; j < src.m_cols.size(); ++j) {
-          dst.derived().middleCols(col, src.m_cols[j].second) =
-            src.m_arg.block(row,        src.m_cols[j].first,
-                            dst.rows(), src.m_cols[j].second);
-          col += src.m_cols[j].second;
-        }
-      }
-      static inline void write (const Other& src, View& dst, const typename Other::Index& row)
-      {
-        std::size_t col = 0;
-        for (std::size_t j = 0; j < dst.m_cols.size(); ++j) {
-          dst.m_arg.block(row,        dst.m_cols[j].first,
-              src.rows(), dst.m_cols[j].second)
-            = src.derived().middleCols(col, dst.m_cols[j].second);
-          col += dst.m_cols[j].second;
-        }
+    template <typename Src, typename Dst> struct eval_matrix_block_view_to {};
+    template <typename Src, typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+    struct eval_matrix_block_view_to <Src, MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > {
+      // MatrixBlockView <- matrix
+      typedef MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> Dst;
+      static void run (const Src& src, Dst& dst) {
+        for (typename Dst::block_iterator b (dst); b.valid(); ++b)
+          dst._block(b) = src.block(b.ro(), b.co(), b.rs(), b.cs());
       }
     };
-    template <typename Other, typename View, bool AllRows = View::AllRows> struct evalRows {
-      static inline void run (Other& dst, const View& src)
-      {
-        evalCols<Other, View>::run(dst.derived(), src, 0);
-      }
-      static inline void write (const Other& src, View& dst)
-      {
-        evalCols<Other, View>::write(src, dst, 0);
+    template <typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols, typename Dst>
+    struct eval_matrix_block_view_to <MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols>, Dst > {
+      // matrix <- MatrixBlockView
+      typedef MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> Src;
+      static void run (const Src& src, Dst& dst) {
+        for (typename Src::block_iterator b (src); b.valid(); ++b)
+          dst.block(b.ro(), b.co(), b.rs(), b.cs()) = src._block(b);
       }
     };
-    template <typename Other, typename View> struct evalRows <Other, View, false> {
-      static inline void run (Other& dst, const View& src)
-      {
-        std::size_t row = 0;
-        for (std::size_t i = 0; i < src.m_rows.size(); ++i) {
-          typedef typename Other::RowsBlockXpr Rows_t;
-          Rows_t rows = dst.middleRows(row, src.m_rows[i].second);
-          evalCols<Rows_t, View>::run(rows, src, src.m_rows[i].first);
-          row += src.m_rows[i].second;
-        }
-      }
-      static inline void write (const Other& src, View& dst)
-      {
-        std::size_t row = 0;
-        for (std::size_t i = 0; i < dst.m_rows.size(); ++i) {
-          typedef typename Other::ConstRowsBlockXpr ConstRows_t;
-          ConstRows_t rows = src.middleRows(row, dst.m_rows[i].second);
-          evalCols<ConstRows_t, View>::write(rows, dst, dst.m_rows[i].first);
-          row += dst.m_rows[i].second;
+    template <typename _ArgType , int _Rows , int _Cols , bool _allRows , bool _allCols ,
+              typename _ArgType2, int _Rows2, int _Cols2, bool _allRows2, bool _allCols2>
+    struct eval_matrix_block_view_to <
+      MatrixBlockView<_ArgType , _Rows , _Cols , _allRows , _allCols >,
+      MatrixBlockView<_ArgType2, _Rows2, _Cols2, _allRows2, _allCols2> > {
+      // MatrixBlockView <- MatrixBlockView
+      typedef MatrixBlockView<_ArgType , _Rows , _Cols , _allRows , _allCols > Src;
+      typedef MatrixBlockView<_ArgType2, _Rows2, _Cols2, _allRows2, _allCols2> Dst;
+      static void run (const Src& src, Dst& dst) {
+        typename Dst::block_iterator db (dst);
+        for (typename Src::block_iterator sb (src); sb.valid(); ++sb) {
+          dst._block(db) = src._block(sb);
+          ++db;
         }
       }
     };
@@ -657,7 +628,7 @@ namespace Eigen {
       }
       template <typename Dest>
       EIGEN_STRONG_INLINE void evalTo (Dest& dst) const {
-        internal::evalRows<Dest, MatrixBlockView>::run(dst, *this);
+        internal::eval_matrix_block_view_to<MatrixBlockView, Dest>::run (*this, dst);
       }
 
       template <typename Dest>
@@ -675,7 +646,7 @@ namespace Eigen {
       template <typename OtherDerived>
       EIGEN_STRONG_INLINE MatrixBlockView& operator= (const EigenBase<OtherDerived>& other) {
         EIGEN_STATIC_ASSERT_LVALUE(ArgType);
-        internal::evalRows<const OtherDerived, MatrixBlockView>::write(other.derived(), *this);
+        internal::eval_matrix_block_view_to<OtherDerived, MatrixBlockView>::run (other.derived(), *this);
         return *this;
       }
 
@@ -683,14 +654,14 @@ namespace Eigen {
       EIGEN_STRONG_INLINE typename block_t<ArgType>::type _block(const block_iterator& b)
       {
         return internal::access_block_from_matrix_block_view<
-          typename block_t<const ArgType>::type,
-          MatrixBlockView >::run (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
+          typename block_t<ArgType>::type,
+          MatrixBlockView >::template run <ArgType> (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
       }
       EIGEN_STRONG_INLINE const typename block_t<const ArgType>::type _block(const block_iterator& b) const
       {
         return internal::access_block_from_matrix_block_view<
           const typename block_t<const ArgType>::type,
-          MatrixBlockView >::run (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
+          MatrixBlockView >::template run <const ArgType> (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
       }
       EIGEN_STRONG_INLINE block_iterator _block_iterator() const { return block_iterator(*this); }
 

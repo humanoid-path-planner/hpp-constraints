@@ -67,6 +67,9 @@ template <typename MatrixBlocks_t> void checkMatrixBlocks
 
   MatrixXd res(m);
   res = m;
+
+  mb.lview(res) = mb.rview(m);
+
   mb.lview(res).setZero();
   BOOST_CHECK (mb.rview(res).isZero());
   BOOST_CHECK (!mb.rview(m).isZero());
