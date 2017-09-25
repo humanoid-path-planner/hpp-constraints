@@ -557,7 +557,10 @@ namespace Eigen {
         };
         // it++
         block_iterator operator++(int) { block_iterator copy(*this); operator++(); return copy; };
-        bool valid () const { return col < (size_type)view.m_cols.size(); }
+        bool valid () const {
+          return (internal::get_if<AllRows>::run(true, view.m_rows.size()>0))
+            && (col < (size_type)internal::get_if<AllCols>::run(1, view.m_cols.size()));
+        }
       };
       typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;
       EIGEN_GENERIC_PUBLIC_INTERFACE(MatrixBlockView)
