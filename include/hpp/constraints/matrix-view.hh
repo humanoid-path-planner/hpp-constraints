@@ -515,6 +515,32 @@ namespace Eigen {
   typedef Eigen::MatrixBlocks<false, true> RowBlockIndices;
   typedef Eigen::MatrixBlocks<true, false> ColBlockIndices;
 
+  /// A view of an Eigen matrix.
+  ///
+  /// Instances of MatrixBlockView are easily built from a MatrixBlocks object.
+  ///
+  /// As of the date of this documentation, this class does not support all
+  /// operations on matrices.
+  /// See tests/matrix-view.cc for a list of supported features.
+  ///
+  /// Although it is usually not useful to iterate over the blocks, it is
+  /// possible to do it as follows:
+  /// \code
+  /// MatrixBlockView view = ...;
+  /// for (MatrixBlockView::block_iterator block (view); block.valid(); ++block)
+  /// {
+  ///   // Access the current block
+  ///   view._block(block); // Returns an Eigen::Block object.
+  ///   // For the current block
+  ///   block.ri() // row, input
+  ///   block.ci() // col, input
+  ///   block.ro() // row, output
+  ///   block.co() // col, output
+  ///   block.rs() // number of rows
+  ///   block.cs() // number of cols
+  /// }
+  /// \endcode
+  /// \sa MatrixBlocks, MatrixBlockView::block_iterator
   template <typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
   class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
   {
@@ -532,11 +558,17 @@ namespace Eigen {
         internal::variable_if_dynamic<size_type, (_allRows ? 0 : Dynamic) > _ro;
         internal::variable_if_dynamic<size_type, (_allCols ? 0 : Dynamic) > _co;
         block_iterator (const MatrixBlockView& v) : view(v), row (0), col (0), _ro(0), _co(0) {}
+        /// <b>R</b>ow in the <b>O</b>utput matrix
         size_type ro() const { return _ro.value(); }
+        /// <b>C</b>ol in the <b>O</b>utput matrix
         size_type co() const { return _co.value(); }
+        /// <b>R</b>ow in the <b>I</b>nput matrix
         size_type ri() const { return internal::get_if<AllRows>::run(std::make_pair(0,view.m_nbRows), view.m_rows[row]).first; }
+        /// <b>C</b>ol in the <b>I</b>nput matrix
         size_type ci() const { return internal::get_if<AllCols>::run(std::make_pair(0,view.m_nbCols), view.m_cols[col]).first; }
+        /// number of <b>R</b>ow<b>S</b>
         size_type rs() const { return internal::get_if<AllRows>::run(std::make_pair(0,view.m_nbRows), view.m_rows[row]).second; }
+        /// number of <b>C</b>ol<b>S</b>
         size_type cs() const { return internal::get_if<AllCols>::run(std::make_pair(0,view.m_nbCols), view.m_cols[col]).second; }
         // ++it
         block_iterator& operator++()
