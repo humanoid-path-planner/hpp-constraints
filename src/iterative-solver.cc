@@ -359,7 +359,7 @@ namespace hpp {
           /// projector is of size numberDof
           bool first = (i == 0);
           bool last = (i == stacks_.size() - 1);
-          err = - Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error).eval();
+          err = Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(- d.error);
           if (first) {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);
