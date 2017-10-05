@@ -68,11 +68,8 @@ namespace hpp {
       /// The step size is computed using the formula
       /// \f[ const value_type alpha = C - K * std::tanh(a * r + b) \f]
       struct ErrorNormBased {
-        enum { N = 4, M = 8 };
-
-        ErrorNormBased(value_type alphaMin = 0.2,
-            value_type _a = 4 / (std::pow(10, (int)M) - std::pow(10, (int)N)),
-            value_type _b = 2 - 4 / (1 - std::pow (10, (int)(N - M))));
+        ErrorNormBased(value_type alphaMin, value_type _a, value_type _b);
+        ErrorNormBased(value_type alphaMin = 0.2);
 
         template <typename SolverType>
         bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);

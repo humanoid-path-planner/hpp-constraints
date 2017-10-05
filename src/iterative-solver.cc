@@ -71,6 +71,17 @@ namespace hpp {
       ErrorNormBased::ErrorNormBased(value_type alphaMin, value_type _a, value_type _b)
           : C (0.5 + alphaMin / 2), K ((1 - alphaMin) / 2), a (_a), b (_b)
       {}
+
+      ErrorNormBased::ErrorNormBased(value_type alphaMin)
+          : C (0.5 + alphaMin / 2), K ((1 - alphaMin) / 2)
+      {
+        static const value_type delta = 0.02;
+        static const value_type r_half = 1e4;
+
+        a = atanh ( (delta - 1 + C) / K ) / (1 - r_half);
+        b = - r_half * a;
+      }
+
       template bool ErrorNormBased::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
     }
 
