@@ -1,0 +1,42 @@
+\documentclass {article}
+
+\usepackage{amsmath}
+
+\newcommand{\rhalf}{r_{\frac{1}{2}}}
+% \newcommand{\atanh}{\mathrm{atanh}}
+\newcommand{\atanh}{\operatorname{atanh}}
+\title {Gradient descent strategies}
+
+\begin {document}
+\maketitle
+
+\section {Error norm based}
+
+See file \emph{error-norm-based.py} to view a plot of what is implemented.
+The formula is:
+$$
+\alpha (\epsilon) = C - K \tanh{\left(a \left(\frac{\epsilon}{\epsilon_0}\right)^2 + b \right)}
+$$
+
+The coefficient are computed as follows. Let $\alpha_m$ be the minimum value,
+$\delta = 1 - \alpha(\epsilon_0)$ and $\rhalf$ such that $\alpha(\sqrt{\rhalf} * \epsilon_0) = C$.
+By considering only $a > 0$, we have:
+$$ C - K = \alpha_m $$
+$$ C + K = 1        $$
+So
+$$ C = \frac{1+\alpha_m}{2} $$
+$$ K = \frac{1-\alpha_m}{2} $$
+
+Then
+
+$$ \delta = 1 - C + K \tanh (a+b) $$
+$$ \rhalf = - \frac{b}{a} $$
+
+So
+
+$$ a = \frac{ \atanh \left( \frac{\delta - 1 + C}{K} \right)}{ 1 - \rhalf } $$
+$$ b = - \rhalf * a $$
+
+Current implementation (at time of writing) uses $\alpha_m = 0.2$, $\rhalf = 10^2$ and $\delta = 0.02$.
+
+\end {document}
