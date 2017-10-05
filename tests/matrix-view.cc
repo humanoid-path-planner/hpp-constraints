@@ -25,11 +25,17 @@ using namespace Eigen;
 
 BOOST_AUTO_TEST_CASE(block_index)
 {
-  BlockIndex::segment_t
-    a ( 0, 1),
-    b ( 1, 2),
-    c ( 0, 0),
-    d ( 0, 2);
+  typedef BlockIndex::segment_t segment_t;
+  typedef BlockIndex::segments_t segments_t;
+
+  segment_t
+    a ( 0, 1), // [0]
+    b ( 1, 2), // [1,2]
+    c ( 0, 0), // []
+    d ( 0, 2), // [0,1]
+    e ( 4, 3), // [4,6]
+    f ( 9, 2), // [9,10]
+    g (15, 5); // [15, 19]
 
   BOOST_CHECK(!BlockIndex::overlap (a, b));
   BOOST_CHECK(!BlockIndex::overlap (a, c));
@@ -45,7 +51,7 @@ BOOST_AUTO_TEST_CASE(block_index)
   BOOST_CHECK_EQUAL(BlockIndex::difference (a, d).size(), 0);
   BOOST_CHECK_EQUAL(BlockIndex::difference (b, d).size(), 1);
 
-  BlockIndex::segments_t v;
+  segments_t v;
   v.push_back(b);
   v.push_back(a);
   v.push_back(c);
@@ -53,7 +59,144 @@ BOOST_AUTO_TEST_CASE(block_index)
   BlockIndex::shrink(v);
   BOOST_CHECK_EQUAL(v.size(), 1);
   BOOST_CHECK_EQUAL(BlockIndex::cardinal(v), 3);
-  BOOST_CHECK(v[0] == BlockIndex::segment_t (0, 3));
+  BOOST_CHECK(v[0] == segment_t (0, 3));
+
+  segments_t expected_v, expected_w;
+  v.clear ();
+  // v = 0 1 2 3 [4 5 6] 7 8 [9 10] 11 12 13 14 [15 16 17 18 19] 20 ...
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.push_back (segment_t (5,2));
+  expected_v.push_back (f);
+  expected_v.push_back (g);
+  expected_w.push_back (segment_t (4, 1));
+  segments_t w = BlockIndex::split (v, 1);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_v.push_back (segment_t (6,1));
+  expected_v.push_back (f);
+  expected_v.push_back (g);
+  expected_w.clear ();
+  expected_w.push_back (segment_t (4, 2));
+  w = BlockIndex::split (v, 2);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_v.push_back (f);
+  expected_v.push_back (g);
+  expected_w.clear ();
+  expected_w.push_back (e);
+  w = BlockIndex::split (v, 3);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_v.push_back (segment_t (10,1));
+  expected_v.push_back (g);
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (segment_t (9,1));
+  w = BlockIndex::split (v, 4);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_v.push_back (g);
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  w = BlockIndex::split (v, 5);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 1));
+  expected_v.push_back (segment_t (16, 4));
+  w = BlockIndex::split (v, 6);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 2));
+  expected_v.push_back (segment_t (17, 3));
+  w = BlockIndex::split (v, 7);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 3));
+  expected_v.push_back (segment_t (18, 2));
+  w = BlockIndex::split (v, 8);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 4));
+  expected_v.push_back (segment_t (19, 1));
+  w = BlockIndex::split (v, 9);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+  expected_v.clear ();
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (g);
+  w = BlockIndex::split (v, 10);
+  BOOST_CHECK (v == expected_v);
+  BOOST_CHECK (w == expected_w);
 }
 
 BOOST_AUTO_TEST_CASE(matrix_block_view)

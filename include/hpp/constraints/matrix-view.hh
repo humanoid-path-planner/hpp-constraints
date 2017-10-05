@@ -204,6 +204,14 @@ namespace Eigen {
     /// Compute the set difference between two vectors of segments.
     /// \note assume a and b are sorted
     static segments_t difference (const segments_t& a, const segments_t& b);
+
+    /// Split a set of segment into two sets of segments
+    /// \param segments input set of segments,
+    /// \param cardinal cardinal of the first set of segments,
+    /// \return the first set of segments.
+    ///
+    /// The second set is stored in the input set of segments.
+    static segments_t split (segments_t& segments, const size_type& cardinal);
   }; // struct BlockIndex
 
   /// Collection of indices of matrix blocks

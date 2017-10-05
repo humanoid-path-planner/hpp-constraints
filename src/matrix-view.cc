@@ -136,4 +136,29 @@ namespace Eigen {
     }
     return diff;
   }
+
+  BlockIndex::segments_t BlockIndex::split (segments_t& segments,
+                                            const size_type& cardinal)
+  {
+    segments_t result;
+    size_type remaining = cardinal;
+    segments_t::iterator it (segments.begin ());
+    while (it != segments.end ()) {
+      if (it->second > remaining) {
+        result.push_back (segment_t (it->first, remaining));
+        it->first += remaining;
+        it->second -= remaining;
+        return result;
+      } else if (it->second == remaining) {
+        result.push_back (*it);
+        it = segments.erase (it);
+        return result;
+      } else {
+        remaining -= it->second;
+        result.push_back (*it);
+        it = segments.erase (it);
+      }
+    }
+    return result;
+  }
 } // namespace Eigen
