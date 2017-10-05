@@ -246,7 +246,15 @@ namespace Eigen {
                           const segments_t& cols) :
         m_nbRows(BlockIndex::cardinal(rows)),
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
-      {}
+      {
+# ifndef NDEBUG
+        // test that input is sorted
+        segments_t r (rows); BlockIndex::sort (r);
+        assert (r == rows);
+        segments_t c (cols); BlockIndex::sort (c);
+        assert (c == cols);
+#endif
+      }
 
       /// Constructor of single block
       /// \param first indice for row and column
