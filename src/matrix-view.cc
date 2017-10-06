@@ -140,6 +140,8 @@ namespace Eigen {
   BlockIndex::segments_t BlockIndex::split (segments_t& segments,
                                             const size_type& cardinal)
   {
+    assert (BlockIndex::cardinal (segments) >= cardinal);
+    assert (cardinal >= 0);
     segments_t result;
     size_type remaining = cardinal;
     segments_t::iterator it (segments.begin ());
@@ -160,5 +162,51 @@ namespace Eigen {
       }
     }
     return result;
+  }
+
+  BlockIndex::segments_t BlockIndex::extract
+  (const segments_t& segments, size_type start, size_type cardinal)
+  {
+    assert (start >= 0);
+    assert (cardinal >= 0);
+    assert (segments [0].first >= 0);
+    assert (start + cardinal <= BlockIndex::cardinal (segments));
+    segments_t result;
+    size_type remainingToStart = start;
+    size_type startIndex;
+    size_type remainingToEnd;
+    segments_t::const_iterator it (segments.begin ());
+    while (it != segments.end ()) {
+      if (remainingToStart >= 0) {
+        // looking for start
+        if (it->second > remainingToStart) {
+          startIndex = it->first + remainingToStart;
+          if (it->second - remainingToStart >= cardinal) {
+            result.push_back (segment_t (startIndex, cardinal));
+            return result;
+          } else {
+            result.push_back (segment_t (startIndex,
+                                         it->second - remainingToStart));
+            remainingToEnd = cardinal - (it->second - remainingToStart);
+            ++it;
+            remainingToStart = -1;
+          }
+        } else {
+          remainingToStart -= it->second;
+          ++it;
+        }
+      } else {
+        // looking for end
+        if (it->second >= remainingToEnd) {
+          result.push_back (segment_t (it->first, remainingToEnd));
+          return result;
+        } else {
+          result.push_back (segment_t (it->first, it->second));
+          remainingToEnd -= it->second;
+          ++it;
+        }
+      }
+    }
+    assert (false && "Failed to extract segments_t");
   }
 } // namespace Eigen

@@ -212,6 +212,15 @@ namespace Eigen {
     ///
     /// The second set is stored in the input set of segments.
     static segments_t split (segments_t& segments, const size_type& cardinal);
+
+    /// Extract a subset of a set of segments
+    /// \param segments input set of segments
+    /// \param start beginning of extracted set of segments (cardinal of subset
+    ///        left behind in input set of segments)
+    /// \param cardinal cardinal of extracted set of segments,
+    /// \return subset of segments.
+    static segments_t extract (const segments_t& segments, size_type start,
+                               size_type cardinal);
   }; // struct BlockIndex
 
   /// Collection of indices of matrix blocks

@@ -197,6 +197,91 @@ BOOST_AUTO_TEST_CASE(block_index)
   w = BlockIndex::split (v, 10);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
+
+  v.clear ();
+  // v = 0 1 2 3 [4 5 6] 7 8 [9 10] 11 12 13 14 [15 16 17 18 19] 20 ...
+  v.push_back (e);
+  v.push_back (f);
+  v.push_back (g);
+
+  expected_w.clear ();
+  expected_w.push_back (segment_t (4, 1));
+  w = BlockIndex::extract (v, 0, 1);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (segment_t (4, 2));
+  w = BlockIndex::extract (v, 0, 2);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (e);
+  w = BlockIndex::extract (v, 0, 3);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (segment_t (9, 1));
+  w = BlockIndex::extract (v, 0, 4);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  w = BlockIndex::extract (v, 0, 5);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 1));
+  w = BlockIndex::extract (v, 0, 6);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (e);
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 2));
+  w = BlockIndex::extract (v, 0, 7);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (segment_t (5, 2));
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 3));
+  w = BlockIndex::extract (v, 1, 7);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (segment_t (6, 1));
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 4));
+  w = BlockIndex::extract (v, 2, 7);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (f);
+  expected_w.push_back (g);
+  w = BlockIndex::extract (v, 3, 7);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (f);
+  expected_w.push_back (segment_t (15, 4));
+  w = BlockIndex::extract (v, 3, 6);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (segment_t (10, 1));
+  expected_w.push_back (segment_t (15, 4));
+  w = BlockIndex::extract (v, 4, 5);
+  BOOST_CHECK (w == expected_w);
+
+  expected_w.clear ();
+  expected_w.push_back (segment_t (10, 1));
+  expected_w.push_back (segment_t (15, 3));
+  w = BlockIndex::extract (v, 4, 4);
+  BOOST_CHECK (w == expected_w);
 }
 
 BOOST_AUTO_TEST_CASE(matrix_block_view)
