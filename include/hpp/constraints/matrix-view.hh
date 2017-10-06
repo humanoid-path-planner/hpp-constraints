@@ -468,6 +468,13 @@ namespace Eigen {
         return m_nbCols;
       }
 
+      /// Extract a block
+      /// \param i, j, ni, nj upper left corner and lengths of the block
+      /// \return new instance
+      block (size_type i, size_type j, size_type ni, size_type nj) const
+      {
+        return MatrixBlock (rows ().extract (i, ni), cols ().extract (j, nj));
+      }
 
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateIndices() {
