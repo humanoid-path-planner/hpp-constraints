@@ -56,6 +56,33 @@ namespace hpp {
       }
     }
 
+
+    /// Compute jacobian of function log of rotation matrix in SO(3)
+    ///
+    /// Let us consider a matrix
+    /// \f$R=\exp \left[\mathbf{r}\right]_{\times}\in SO(3)\f$.
+    /// This functions computes the Jacobian of the function from
+    /// \f$SO(3)\f$ into \f$\mathbf{R}^3\f$ that maps \f$R\f$ to
+    /// \f$\mathbf{r}\f$. In other words,
+    /// \f{equation*}
+    /// \dot{\mathbf{r}} = J_{log}(R)\ \omega\,\,\,\mbox{with}\,\,\,
+    /// \dot {R} = \left[\omega\right]_{\times} R
+    /// \f}
+    /// \warning Two representations of the angular velocity \f$\omega\f$ are
+    ///          possible:
+    ///          \li \f$\dot{R} = \left[\omega\right]_{\times}R\f$ or
+    ///          \li \f$\dot{R} = R\left[\omega\right]_{\times}\f$.
+    ///
+    ///          The expression below is different with the second
+    ///          representation.
+    /// \param theta angle of rotation \f$R\f$, also \f$\|r\|\f$,
+    /// \param log 3d vector \f$\mathbf{r}\f$,
+    /// \retval Jlog matrix \f$J_{log} (R)\f$.
+    ///
+    /// \f{align*}
+    /// J_{log} (R) &=& \frac{\|\mathbf{r}\|\sin\|\mathbf{r}\|}{2(1-\cos\|\mathbf{r}\|)} I_3 - \frac {1}{2}\left[\mathbf{r}\right]_{\times} + (\frac{1}{\|\mathbf{r}\|^2} - \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|(1-\cos\|\mathbf{r}\|)}) \mathbf{r}\mathbf{r}^T\\
+    ///  &=& I_3 -\frac{1}{2}\left[\mathbf{r}\right]_{\times} +  \left(\frac{2(1-\cos\|\mathbf{r}\|) - \|\mathbf{r}\|\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|^2(1-\cos\|\mathbf{r}\|)}\right)\left[\mathbf{r}\right]_{\times}^2
+    /// \f}
     template <typename Derived>
       void computeJlog (const value_type& theta, const Eigen::MatrixBase<Derived>& log, matrix3_t& Jlog)
     {

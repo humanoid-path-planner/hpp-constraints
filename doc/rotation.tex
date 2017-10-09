@@ -36,7 +36,7 @@ $\rot$.
 \end{itemize}
 According to Rodrigues formula, we have
 \begin{equation}\label{eq:rodrigues}
-R = \exp (\rcross{}) = I + \frac{\sin \normr}{\normr}\rcross{} +
+R = \exp (\rcross{}) = I_3 + \frac{\sin \normr}{\normr}\rcross{} +
 \frac{1 - \cos \normr}{\normr^2}\rcross{}^2
 \end{equation}
 We define
@@ -52,7 +52,7 @@ We define
 \end{eqnarray}
 With this notation, we can write
 \begin{equation}\label{eq:rodrigues2}
-R = I + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rcross{}^2
+R = I_3 + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rcross{}^2
 \end{equation}
 \subsection {Powers of $\rcross{}$}
 
@@ -71,9 +71,9 @@ Let us compute the powers of $\rcross{}$:
 \end{eqnarray}
 Replacing in~(\ref{eq:rodrigues2}), we get
 \begin{eqnarray}
-R &=& I + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rot\rot^T - \alpha_2 (\normr) \normr^2 I_3\\
+R &=& I_3 + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rot\rot^T - \alpha_2 (\normr) \normr^2 I_3\\
 \label{eq:rodrigues3}
-&=&I + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rot\rot^T + (\cos\normr-1) I_3
+&=&I_3 + \alpha_1 (\normr) \rcross{} + \alpha_2 (\normr) \rot\rot^T + (\cos\normr-1) I_3
 \end{eqnarray}
 
 \section {Derivative}
@@ -93,7 +93,7 @@ To make notation lighter, we set $u = \frac{\rot^T\dot{\rot}}{\normr}$. Then
 \begin{eqnarray*}
 \omegacross &=& \dot{R}R^T\\
 &=& \left(u \alphap_1 \rcross{} + u\alphap_2 \rot\rot^T -u \sin\normr I_3 + \alpha_1 \rdotcross + \alpha_2 (\dot{\rot}\rot^T + \rot\dot{\rot}^T)\right)\\
-&&\left(I - \alpha_1 \rcross{} + \alpha_2 \rot\rot^T + (\cos\normr-1) I_3\right)\\
+&&\left(I_3 - \alpha_1 \rcross{} + \alpha_2 \rot\rot^T + (\cos\normr-1) I_3\right)\\
 &=& u \alphap_1 \rcross{} - u \alphap_1\alpha_1 \rcross{}^2 + u \alphap_1\alpha_2 \rcross{}\rot\rot^T + u \alphap_1 (\cos\normr-1) \rcross{}\\
 && +u\alphap_2 \rot\rot^T - u\alpha_1\alphap_2\rot\rot^T\rcross{} + u\alphap_2\alpha_2\normr^2\rot\rot^T + u\alphap_2 (\cos\normr-1) \rot\rot^T\\
 && -u \sin\normr I_3 + u \sin\normr\alpha_1 \rcross{} - u \sin\normr\alpha_2 \rot\rot^T - u \sin\normr(\cos\normr-1) I_3\\
@@ -271,10 +271,57 @@ Hence
 \beta_2 &=& \frac{1}{2\normr^2(1 -\cos\normr)}\left(-2\cos \normr + 2 - \normr\sin\normr\right) = \frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\\
 \end{eqnarray*}
 and finally
-\begin{eqnarray*}
+\begin{eqnarray}
+\label{eq:J-1}
 J &=& I_3 -\frac{1}{2}\rcross{} +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rcross{}^2\\
 %% &=& \frac{\normr\sin\normr}{2(1-\cos\normr)} I_3 - \frac{1}{2}\rcross{} +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rot\rot^T\\
+\label{eq:J-2}
 &=& I_3 -\frac{1}{2}\rcross{} +  \left(\frac{2(1-\cos\normr) - \normr\sin\normr}{2\normr^2(1-\cos\normr)}\right)\rcross{}^2\\
+\end{eqnarray}
+
+\subsection {Jacobian with local representation of angular velocity}
+
+We define $\Omega$ such that $\dot{R} = R \left[\Omega\right]_{\times}$. The relation
+between $\omega$ and $\Omega$ is the following
+$$
+  \omega = R\Omega
+$$
+Thus
+$$
+\dot{\rot} = J (R) \omega = J (R) R \Omega
+$$
+In this section, we compute $J(R)R$ with respect to $\rot$. For that, we
+multiply ({eq:J-1}) by (\ref{eq:rodrigues}):
+\begin {eqnarray*}
+J(R)R &=& (I_3 -\frac{1}{2}\rcross{} +  \left(\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}\right)\rcross{}^2)(I_3 + \frac{\sin \normr}{\normr}\rcross{} +
+\frac{1 - \cos \normr}{\normr^2}\rcross{}^2)\\
+&=& I_3 + \left(-\frac{1}{2} + \frac{\sin \normr}{\normr}\right)\rcross{} \\
+&& + \left(-\frac{\sin \normr}{2\normr}+\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)}+\frac{1 - \cos \normr}{\normr^2}\right)\rcross{}^2\\
+&& + \left(-\frac{1 - \cos \normr}{2\normr^2} + (\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)})\frac{\sin \normr}{\normr}\right)\rcross{}^3\\
+&& + \left((\frac{1}{\normr^2} - \frac{\sin\normr}{2\normr(1-\cos\normr)})\frac{1 - \cos \normr}{\normr^2}\right)\rcross{}^4\\
+&=& I_3 + \frac{2\sin\normr-\normr}{2\normr}\rcross{}\\
+&& + \frac{-\normr\sin\normr(1-\cos\normr)+2(1-\cos\normr)-\normr\sin\normr+2(1-\cos\normr)^2}{2\normr^2(1-\cos\normr)}\rcross{}^2\\
+&&+ \frac{-\normr(1-\cos\normr)^2 + 2(1-\cos\normr)\sin\normr - \normr\sin^2\normr}{2\normr^3(1-\cos\normr)} \rcross{}^3 \\
+&&+ \frac{2(1-\cos\normr)^2-\normr\sin\normr(1-\cos\normr)}{2\normr^4(1-\cos\normr)} \rcross{}^4\\
+&=& I_3 + \frac{2\sin\normr-\normr}{2\normr}\rcross{}\\
+&& + \frac{-2\normr\sin\normr+\normr\sin\normr\cos\normr+4-6\cos\normr+2\cos^2\normr}{2\normr^2(1-\cos\normr)}\rcross{}^2\\
+&&+ \frac{-\normr+2\normr\cos\normr-\normr\cos^2\normr + 2\sin\normr-2\cos\normr\sin\normr - \normr\sin^2\normr}{2\normr^3(1-\cos\normr)} \rcross{}^3 \\
+&&+ \frac{2-4\cos\normr+2\cos^2\normr-\normr\sin\normr+\normr\sin\normr\cos\normr}{2\normr^4(1-\cos\normr)} \rcross{}^4
+\end{eqnarray*}
+Replacing $\rcross{}^3$ and $\rcross{}^4$ by their expressions (\ref{eq:rcross2}-\ref{eq:rcross3}), we get
+\begin {eqnarray*}
+J(R)R &=& I_3 + \frac{2\sin\normr-\normr}{2\normr}\rcross{}\\
+&& + \frac{-2\normr\sin\normr+\normr\sin\normr\cos\normr+4-6\cos\normr+2\cos^2\normr}{2\normr^2(1-\cos\normr)}\rcross{}^2\\
+&&- \frac{-\normr+2\normr\cos\normr-\normr\cos^2\normr + 2\sin\normr-2\cos\normr\sin\normr - \normr\sin^2\normr}{2\normr(1-\cos\normr)} \rcross{} \\
+&&- \frac{2-4\cos\normr+2\cos^2\normr-\normr\sin\normr+\normr\sin\normr\cos\normr}{2\normr^2(1-\cos\normr)} \rcross{}^2\\
+&=& I_3 + \frac{(2\sin\normr-\normr)(1-\cos\normr)}{2\normr(1-\cos\normr)}\rcross{}\\
+&&- \frac{-\normr+2\normr\cos\normr-\normr\cos^2\normr + 2\sin\normr-2\cos\normr\sin\normr - \normr\sin^2\normr}{2\normr(1-\cos\normr)} \rcross{} \\
+&& + \frac{-\normr\sin\normr+2-2\cos\normr}{2\normr^2(1-\cos\normr)}\rcross{}^2\\
+&=& I_3 + \frac{2\sin\normr-\normr - 2\sin\normr\cos\normr+\normr\cos\normr}{2\normr(1-\cos\normr)}\rcross{}\\
+&&- \frac{-\normr+2\normr\cos\normr-\normr\cos^2\normr + 2\sin\normr-2\cos\normr\sin\normr - \normr\sin^2\normr}{2\normr(1-\cos\normr)} \rcross{} \\
+&& + \frac{-\normr\sin\normr+2-2\cos\normr}{2\normr^2(1-\cos\normr)}\rcross{}^2\\
+&=& I_3 + \frac{-\normr\cos\normr + \normr}{2\normr(1-\cos\normr)}\rcross{} + \frac{-\normr\sin\normr+2-2\cos\normr}{2\normr^2(1-\cos\normr)}\rcross{}^2\\
+&=& I_3 + \frac{1}{2}\rcross{} + \frac{2(1-\cos\normr)-\normr\sin\normr}{2\normr^2(1-\cos\normr)}\rcross{}^2
 \end{eqnarray*}
 
 \section{Logarithm}
