@@ -30,6 +30,56 @@ namespace hpp {
   namespace constraints {
 
     namespace {
+      /** Compute jacobian of function log of rotation matrix in SO(3)
+
+          Let us consider a matrix
+          \f$R=\exp \left[\mathbf{r}\right]_{\times}\in SO(3)\f$.
+          This functions computes the Jacobian of the function from
+          \f$SO(3)\f$ into \f$\mathbf{R}^3\f$ that maps \f$R\f$ to
+          \f$\mathbf{r}\f$. In other words,
+          \f{equation*}
+          \dot{\mathbf{r}} = J_{log}(R)\ \omega\,\,\,\mbox{with}\,\,\,
+          \dot {R} = \left[\omega\right]_{\times} R
+          \f}
+          \warning Two representations of the angular velocity \f$\omega\f$ are
+                   possible:
+                   \li \f$\dot{R} = \left[\omega\right]_{\times}R\f$ or
+                   \li \f$\dot{R} = R\left[\omega\right]_{\times}\f$.
+
+                   The expression below assumes the first representation is
+                   used.
+          \param theta angle of rotation \f$R\f$, also \f$\|r\|\f$,
+          \param log 3d vector \f$\mathbf{r}\f$,
+          \retval Jlog matrix \f$J_{log} (R)\f$.
+
+          \f{align*}
+          J_{log} (R) &=& \frac{\|\mathbf{r}\|\sin\|\mathbf{r}\|}{2(1-\cos\|\mathbf{r}\|)} I_3 - \frac {1}{2}\left[\mathbf{r}\right]_{\times} + (\frac{1}{\|\mathbf{r}\|^2} - \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|(1-\cos\|\mathbf{r}\|)}) \mathbf{r}\mathbf{r}^T\\
+           &=& I_3 -\frac{1}{2}\left[\mathbf{r}\right]_{\times} +  \left(\frac{2(1-\cos\|\mathbf{r}\|) - \|\mathbf{r}\|\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|^2(1-\cos\|\mathbf{r}\|)}\right)\left[\mathbf{r}\right]_{\times}^2
+           \f} */
+      template <typename Derived>
+      void computeJlog (const value_type& theta, const Eigen::MatrixBase<Derived>& log, matrix3_t& Jlog)
+      {
+        if (theta < 1e-6)
+          Jlog.setIdentity();
+        else {
+          // Jlog = alpha I
+          const value_type ct = cos(theta), st = sin(theta);
+          const value_type st_1mct = st/(1-ct);
+
+          Jlog.setZero ();
+          Jlog.diagonal().setConstant (theta*st_1mct);
+
+          // Jlog += -r_{\times}/2
+          Jlog(0,1) =  log(2); Jlog(1,0) = -log(2);
+          Jlog(0,2) = -log(1); Jlog(2,0) =  log(1);
+          Jlog(1,2) =  log(0); Jlog(2,1) = -log(0);
+          Jlog /= 2;
+
+          const value_type alpha = 1/(theta*theta) - st_1mct/(2*theta);
+          Jlog.noalias() += alpha * log * log.transpose ();
+        }
+      }
+
       typedef JointJacobian_t::ConstNRowsBlockXpr<3>::Type HalfJacobian_t;
       inline HalfJacobian_t omega(const JointJacobian_t& j) { return j.bottomRows<3>(); }
       inline HalfJacobian_t trans(const JointJacobian_t& j) { return j.topRows<3>(); }
@@ -56,7 +106,7 @@ namespace hpp {
         template <bool rel, bool pos> static inline void log (
             const GenericTransformationData<rel, pos, true>& d)
           {
-            computeLog(d.M.rotation(), d.theta, d.value.template tail<3>());
+            logSO3(d.M.rotation(), d.theta, d.value.template tail<3>());
             hppDnum (info, "theta=" << d.theta);
           }
         template <bool rel, bool pos> static inline void Jlog (

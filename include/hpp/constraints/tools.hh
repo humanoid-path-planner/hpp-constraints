@@ -23,13 +23,19 @@
 
 namespace hpp {
   namespace constraints {
-    template <typename Derived>
-      inline void computeLog (const matrix3_t& Rerror,
-          value_type& theta, Eigen::MatrixBase<Derived> const& result)
+    /// Compute log of rotation matrix as a 3d vector
+    ///
+    /// \param R rotation matrix in SO(3),
+    /// \retval theta angle of rotation,
+    /// \retval result 3d vector \f$\mathbf{r}\f$ such that
+    ///         \f$R=\exp [\mathbf{r}]_{\times}\f$
+    template <typename Derived> inline void logSO3
+    (const matrix3_t& R, value_type& theta,
+     Eigen::MatrixBase<Derived> const& result)
     {
       Eigen::MatrixBase<Derived>& value = const_cast<Eigen::MatrixBase<Derived>&> (result);
       const value_type PI = ::boost::math::constants::pi<value_type>();
-      const value_type tr = Rerror.trace();
+      const value_type tr = R.trace();
       if (tr > 3)       theta = 0; // acos((3-1)/2)
       else if (tr < -1) theta = PI; // acos((-1-1)/2)
       else              theta = acos ((tr - 1)/2);
@@ -37,9 +43,9 @@ namespace hpp {
       // From runs of tests/logarithm.cc: 1e-6 is too small.
       if (theta < PI - 1e-2) {
         const value_type t = ((theta > 1e-6)? theta / sin(theta) : 1) / 2;
-        value(0) = t * (Rerror (2, 1) - Rerror (1, 2));
-        value(1) = t * (Rerror (0, 2) - Rerror (2, 0));
-        value(2) = t * (Rerror (1, 0) - Rerror (0, 1));
+        value(0) = t * (R (2, 1) - R (1, 2));
+        value(1) = t * (R (0, 2) - R (2, 0));
+        value(2) = t * (R (1, 0) - R (0, 1));
       } else {
         // 1e-2: A low value is not required since the computation is
         // using explicit formula. However, the precision of this method
@@ -47,44 +53,45 @@ namespace hpp {
         // method (Nominal case).
         const value_type cphi = cos(theta - PI);
         const value_type beta  = theta*theta / ( 1 + cphi );
-        const value_type tmp0 = (Rerror (0, 0) + cphi) * beta;
-        const value_type tmp1 = (Rerror (1, 1) + cphi) * beta;
-        const value_type tmp2 = (Rerror (2, 2) + cphi) * beta;
-        value(0) = (Rerror (2, 1) > Rerror (1, 2) ? 1 : -1 ) * (tmp0 > 0 ? sqrt(tmp0) : 0);
-        value(1) = (Rerror (0, 2) > Rerror (2, 0) ? 1 : -1 ) * (tmp1 > 0 ? sqrt(tmp1) : 0);
-        value(2) = (Rerror (1, 0) > Rerror (0, 1) ? 1 : -1 ) * (tmp2 > 0 ? sqrt(tmp2) : 0);
+        const value_type tmp0 = (R (0, 0) + cphi) * beta;
+        const value_type tmp1 = (R (1, 1) + cphi) * beta;
+        const value_type tmp2 = (R (2, 2) + cphi) * beta;
+        value(0) = (R (2, 1) > R (1, 2) ? 1 : -1) * (tmp0 > 0 ? sqrt(tmp0) : 0);
+        value(1) = (R (0, 2) > R (2, 0) ? 1 : -1) * (tmp1 > 0 ? sqrt(tmp1) : 0);
+        value(2) = (R (1, 0) > R (0, 1) ? 1 : -1) * (tmp2 > 0 ? sqrt(tmp2) : 0);
       }
     }
 
 
-    /// Compute jacobian of function log of rotation matrix in SO(3)
-    ///
-    /// Let us consider a matrix
-    /// \f$R=\exp \left[\mathbf{r}\right]_{\times}\in SO(3)\f$.
-    /// This functions computes the Jacobian of the function from
-    /// \f$SO(3)\f$ into \f$\mathbf{R}^3\f$ that maps \f$R\f$ to
-    /// \f$\mathbf{r}\f$. In other words,
-    /// \f{equation*}
-    /// \dot{\mathbf{r}} = J_{log}(R)\ \omega\,\,\,\mbox{with}\,\,\,
-    /// \dot {R} = \left[\omega\right]_{\times} R
-    /// \f}
-    /// \warning Two representations of the angular velocity \f$\omega\f$ are
-    ///          possible:
-    ///          \li \f$\dot{R} = \left[\omega\right]_{\times}R\f$ or
-    ///          \li \f$\dot{R} = R\left[\omega\right]_{\times}\f$.
-    ///
-    ///          The expression below is different with the second
-    ///          representation.
-    /// \param theta angle of rotation \f$R\f$, also \f$\|r\|\f$,
-    /// \param log 3d vector \f$\mathbf{r}\f$,
-    /// \retval Jlog matrix \f$J_{log} (R)\f$.
-    ///
-    /// \f{align*}
-    /// J_{log} (R) &=& \frac{\|\mathbf{r}\|\sin\|\mathbf{r}\|}{2(1-\cos\|\mathbf{r}\|)} I_3 - \frac {1}{2}\left[\mathbf{r}\right]_{\times} + (\frac{1}{\|\mathbf{r}\|^2} - \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|(1-\cos\|\mathbf{r}\|)}) \mathbf{r}\mathbf{r}^T\\
-    ///  &=& I_3 -\frac{1}{2}\left[\mathbf{r}\right]_{\times} +  \left(\frac{2(1-\cos\|\mathbf{r}\|) - \|\mathbf{r}\|\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|^2(1-\cos\|\mathbf{r}\|)}\right)\left[\mathbf{r}\right]_{\times}^2
-    /// \f}
+    /** Compute jacobian of function log of rotation matrix in SO(3)
+
+        Let us consider a matrix
+        \f$R=\exp \left[\mathbf{r}\right]_{\times}\in SO(3)\f$.
+        This functions computes the Jacobian of the function from
+        \f$SO(3)\f$ into \f$\mathbf{R}^3\f$ that maps \f$R\f$ to
+        \f$\mathbf{r}\f$. In other words,
+        \f{equation*}
+        \dot{\mathbf{r}} = J_{log}(R)\ \omega\,\,\,\mbox{with}\,\,\,
+        \dot {R} = \left[\omega\right]_{\times} R
+        \f}
+        \warning Two representations of the angular velocity \f$\omega\f$ are
+                 possible:
+                 \li \f$\dot{R} = \left[\omega\right]_{\times}R\f$ or
+                 \li \f$\dot{R} = R\left[\omega\right]_{\times}\f$.
+
+                 The expression below assumes the second representation is used.
+        \param theta angle of rotation \f$R\f$, also \f$\|r\|\f$,
+        \param log 3d vector \f$\mathbf{r}\f$,
+        \retval Jlog matrix \f$J_{log} (R)\f$.
+
+        \f{align*}
+        J_{log} (R) &=& \frac{\|\mathbf{r}\|\sin\|\mathbf{r}\|}{2(1-\cos\|\mathbf{r}\|)} I_3 - \frac {1}{2}\left[\mathbf{r}\right]_{\times} + (\frac{1}{\|\mathbf{r}\|^2} - \frac{\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|(1-\cos\|\mathbf{r}\|)}) \mathbf{r}\mathbf{r}^T\\
+         &=& I_3 +\frac{1}{2}\left[\mathbf{r}\right]_{\times} +  \left(\frac{2(1-\cos\|\mathbf{r}\|) - \|\mathbf{r}\|\sin\|\mathbf{r}\|}{2\|\mathbf{r}\|^2(1-\cos\|\mathbf{r}\|)}\right)\left[\mathbf{r}\right]_{\times}^2
+        \f}
+    */
     template <typename Derived>
-      void computeJlog (const value_type& theta, const Eigen::MatrixBase<Derived>& log, matrix3_t& Jlog)
+      void JlogSO3 (const value_type& theta,
+                    const Eigen::MatrixBase<Derived>& log, matrix3_t& Jlog)
     {
       if (theta < 1e-6)
         Jlog.setIdentity();
@@ -96,10 +103,10 @@ namespace hpp {
         Jlog.setZero ();
         Jlog.diagonal().setConstant (theta*st_1mct);
 
-        // Jlog += -r_{\times}/2
-        Jlog(0,1) =  log(2); Jlog(1,0) = -log(2);
-        Jlog(0,2) = -log(1); Jlog(2,0) =  log(1);
-        Jlog(1,2) =  log(0); Jlog(2,1) = -log(0);
+        // Jlog += r_{\times}/2
+        Jlog(0,1) = -log(2); Jlog(1,0) =  log(2);
+        Jlog(0,2) =  log(1); Jlog(2,0) = -log(1);
+        Jlog(1,2) = -log(0); Jlog(2,1) =  log(0);
         Jlog /= 2;
 
         const value_type alpha = 1/(theta*theta) - st_1mct/(2*theta);
