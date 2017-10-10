@@ -474,9 +474,11 @@ namespace Eigen {
       /// Extract a block
       /// \param i, j, ni, nj upper left corner and lengths of the block
       /// \return new instance
-      block (size_type i, size_type j, size_type ni, size_type nj) const
+      MatrixBlocks <_allRows, _allCols> block
+      (size_type i, size_type j, size_type ni, size_type nj) const
       {
-        return MatrixBlock (rows ().extract (i, ni), cols ().extract (j, nj));
+        return MatrixBlocks (BlockIndex::extract (rows (), i, ni),
+                             BlockIndex::extract (cols (), j, nj));
       }
 
       template<bool Sort, bool Shrink, bool Cardinal>
