@@ -152,6 +152,9 @@ namespace Eigen {
     };
   } // namespace internal
 
+  /// \addtogroup hpp_constraints_tools
+  /// \{
+
   /// List of integer intervals
   ///
   /// Used to select blocks in a vector or in a matrix.
@@ -612,6 +615,8 @@ namespace Eigen {
       size_type m_nbCols;
       ColIndices_t m_cols;
   }; // MatrixBlockView
+
+  ///\}
 
 } // namespace Eigen
 

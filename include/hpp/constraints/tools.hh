@@ -23,6 +23,10 @@
 
 namespace hpp {
   namespace constraints {
+
+    /// \addtogroup hpp_constraints_tools
+    /// \{
+
     /// Compute log of rotation matrix as a 3d vector
     ///
     /// \param R rotation matrix in SO(3),
@@ -113,6 +117,8 @@ namespace hpp {
         Jlog.noalias() += alpha * log * log.transpose ();
       }
     }
+
+    /// \}
 
     template < typename VectorType, typename MatrixType >
     static void computeCrossMatrix (const VectorType& v, MatrixType& m)
