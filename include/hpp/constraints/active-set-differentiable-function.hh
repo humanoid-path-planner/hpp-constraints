@@ -23,15 +23,16 @@
 
 namespace hpp {
   namespace constraints {
+
     class HPP_CONSTRAINTS_DLLAPI ActiveSetDifferentiableFunction :
       public DifferentiableFunction
     {
       public:
         ActiveSetDifferentiableFunction (const DifferentiableFunctionPtr_t& f,
-            intervals_t intervals)
+            segments_t intervals)
           : DifferentiableFunction(
               f->inputSize(), f->inputDerivativeSize(),
-              f->outputSize(), f->outputDerivativeSize(),
+              f->outputSpace (),
               "ActiveSet_on_" + f->name ())
           , function_(f)
           , intervals_(intervals)
@@ -50,10 +51,10 @@ namespace hpp {
         }
 
       protected:
-        typedef std::vector < intervals_t > intervalss_t;
+        typedef std::vector < segments_t > intervalss_t;
 
         /// User implementation of function evaluation
-        virtual void impl_compute (vectorOut_t result,
+        virtual void impl_compute (LiegroupElement& result,
                                    vectorIn_t argument) const
         {
           function_->value(result, argument);
@@ -63,13 +64,13 @@ namespace hpp {
                                     vectorIn_t arg) const
         {
           function_->jacobian(jacobian, arg);
-          for (intervals_t::const_iterator _int = intervals_.begin ();
+          for (segments_t::const_iterator _int = intervals_.begin ();
               _int != intervals_.end (); ++_int)
             jacobian.middleCols (_int->first, _int->second).setZero ();
         }
 
         DifferentiableFunctionPtr_t function_;
-        intervals_t intervals_;
+        segments_t intervals_;
     }; // class ActiveSetDifferentiableFunction
   } // namespace constraints
 } // namespace hpp

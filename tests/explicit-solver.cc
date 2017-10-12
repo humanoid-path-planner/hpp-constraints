@@ -24,6 +24,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/liegroup.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/constraints/generic-transformation.hh>
@@ -38,40 +39,39 @@ class LockedJoint : public DifferentiableFunction
     vector_t value_;
 
     LockedJoint(size_type idx, size_type length, vector_t value)
-      : DifferentiableFunction(0, 0, length, length, "LockedJoint"),
+      : DifferentiableFunction(0, 0, LiegroupSpace::Rn (length), "LockedJoint"),
         idx_ (idx), length_ (length), value_ (value)
     {}
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idx_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
 
-    void impl_compute (vectorOut_t result,
-                       vectorIn_t ) const
+    void impl_compute (LiegroupElement& result, vectorIn_t ) const
     {
-      result = value_;
+      result.vector () = value_;
     }
 
     void impl_jacobian (matrixOut_t,
@@ -87,42 +87,43 @@ class TestFunction : public DifferentiableFunction
     size_type idxIn_, idxOut_, length_;
 
     TestFunction(size_type idxIn, size_type idxOut, size_type length)
-      : DifferentiableFunction(length, length, length, length, "TestFunction"),
+      : DifferentiableFunction(length, length, LiegroupSpace::Rn (length),
+                               "TestFunction"),
         idxIn_ (idxIn), idxOut_ (idxOut), length_ (length)
     {}
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow(idxIn_, length_);
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idxOut_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       ret.addCol(idxIn_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idxOut_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
 
-    void impl_compute (vectorOut_t result,
+    void impl_compute (LiegroupElement& result,
                        vectorIn_t arg) const
     {
-      result = arg;
+      result = LiegroupElement (arg, outputSpace ());
     }
 
     void impl_jacobian (matrixOut_t jacobian,
@@ -158,8 +159,12 @@ class ExplicitTransformation : public DifferentiableFunction
     size_type in_, inDer_;
     RelativeTransformationPtr_t rt_;
 
-    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l, size_type inDer, size_type lDer)
-      : DifferentiableFunction(l, lDer, 7, 6, "ExplicitTransformation"),
+    ExplicitTransformation(JointPtr_t joint, size_type in, size_type l,
+                           size_type inDer, size_type lDer)
+      : DifferentiableFunction(l, lDer,
+                               LiegroupSpacePtr_t (LiegroupSpace::R3 () *
+                                                   LiegroupSpace::SO3 ()),
+                               "ExplicitTransformation"),
         joint_ (joint), in_ (in), inDer_ (inDer)
     {
       rt_ = RelativeTransformation::create("RT", joint_->robot(),
@@ -168,30 +173,30 @@ class ExplicitTransformation : public DifferentiableFunction
           Transform3f::Identity());
     }
 
-    ExplicitSolver::RowBlockIndexes inArg () const
+    ExplicitSolver::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow(in_, inputSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outArg () const
+    ExplicitSolver::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (0, 7);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndexes inDer () const
+    ExplicitSolver::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndexes ret;
+      ExplicitSolver::ColBlockIndices ret;
       ret.addCol(inDer_, inputDerivativeSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndexes outDer () const
+    ExplicitSolver::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndexes ret;
+      ExplicitSolver::RowBlockIndices ret;
       ret.addRow (0, 6);
       return ret;
     }
@@ -205,15 +210,17 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
-    void impl_compute (vectorOut_t result,
+    void impl_compute (LiegroupElement& result,
                        vectorIn_t arg) const
     {
       // forwardKinematics(arg);
-      vector_t value(6);
+      LiegroupElement transform (LiegroupSpace::Rn (6));
       vector_t q = config(arg);
-      rt_->value(value, q);
-      result.head<3>() = value.head<3>();
-      result.tail<4>() = Eigen::Quaternion<value_type>(exponential(value.tail<3>())).coeffs();
+      rt_->value (transform, q);
+      result. vector ().head<3>() = transform. vector ().head<3>();
+      result. vector ().tail<4>() =
+        Eigen::Quaternion<value_type>
+        (exponential(transform. vector ().tail<3>())).coeffs();
 
       // Transform3f tf1 = joint_->robot()->rootJoint()->currentTransformation();
       // Transform3f tf2 = joint_->currentTransformation();
@@ -287,7 +294,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
 
     BOOST_CHECK(solver.solve(qrand));
-    vector_t error(solver.outDers().nbIndexes());
+    vector_t error(solver.outDers().nbIndices());
     BOOST_CHECK(solver.isSatisfied(qrand, error));
     // std::cout << error.transpose() << std::endl;
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);

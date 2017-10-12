@@ -21,9 +21,11 @@
 
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
+# include <hpp/pinocchio/liegroup-element.hh>
 
 namespace hpp {
   namespace constraints {
+
     /// \addtogroup constraints
     /// \{
 
@@ -35,25 +37,17 @@ namespace hpp {
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
-      vector_t operator () (vectorIn_t argument) const
+      LiegroupElement operator () (vectorIn_t argument) const
       {
 	assert (argument.size () == inputSize ());
-        vector_t result (outputSize());
+        LiegroupElement result (outputSpace_);
 	impl_compute (result, argument);
         return result;
-      }
-      /// \deprecated use value(vectorOut_t, vectorIn_t)
-      void operator () (vectorOut_t result,
-			vectorIn_t argument) const
-      {
-	assert (result.size () == outputSize ());
-	assert (argument.size () == inputSize ());
-	impl_compute (result, argument);
       }
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
-      void value (vectorOut_t result,
+      void value (LiegroupElement& result,
                   vectorIn_t argument) const
       {
 	assert (result.size () == outputSize ());
@@ -100,15 +94,23 @@ namespace hpp {
       {
 	return inputDerivativeSize_;
       }
+      /// Get output element
+      ///
+      /// Getting an output element enables users to know the type of Liegroup
+      /// the function output values lie in.
+      LiegroupSpacePtr_t outputSpace () const
+      {
+        return outputSpace_;
+      }
       /// Get dimension of output vector
       size_type  outputSize () const
       {
-	return outputSize_;
+	return outputSpace_->nq ();
       }
       /// Get dimension of output derivative vector
       size_type  outputDerivativeSize () const
       {
-	return outputDerivativeSize_;
+	return outputSpace_->nv ();
       }
       /// \brief Get function name.
       ///
@@ -164,37 +166,23 @@ namespace hpp {
       DifferentiableFunction (size_type sizeInput,
 			      size_type sizeInputDerivative,
 			      size_type sizeOutput,
-			      std::string name = std::string ()) :
-	inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
-	outputSize_ (sizeOutput), outputDerivativeSize_ (sizeOutput),
-        activeParameters_ (bool_array_t::Constant (sizeInput, true)),
-        activeDerivativeParameters_ (bool_array_t::Constant (sizeInputDerivative, true)),
-	name_ (name)
-      {
-      }
+			      std::string name = std::string ());
 
       /// \brief Concrete class constructor should call this constructor.
       ///
       /// \param sizeInput dimension of the function input
       /// \param sizeInputDerivative dimension of the function input derivative,
-      /// \param sizeOutput dimension of the output,
-      /// \param sizeOutputDerivative dimension of the output derivative,
-      /// \param name function's name
+      /// \param outputElement element of the output space of the function.
+      ///        giving an element of the space provides the necessary
+      ///        information about the output space.
+      /// \param name function name
       DifferentiableFunction (size_type sizeInput,
 			      size_type sizeInputDerivative,
-			      size_type sizeOutput,
-			      size_type sizeOutputDerivative,
-			      std::string name = std::string ()) :
-	inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
-	outputSize_ (sizeOutput), outputDerivativeSize_ (sizeOutputDerivative),
-        activeParameters_ (bool_array_t::Constant (sizeInput, true)),
-        activeDerivativeParameters_ (bool_array_t::Constant (sizeInputDerivative, true)),
-	name_ (name), context_ ()
-      {
-      }
+			      const LiegroupSpacePtr_t& outputSpace,
+			      std::string name = std::string ());
 
       /// User implementation of function evaluation
-      virtual void impl_compute (vectorOut_t result,
+      virtual void impl_compute (LiegroupElement& result,
 				 vectorIn_t argument) const = 0;
 
       virtual void impl_jacobian (matrixOut_t jacobian,
@@ -205,9 +193,7 @@ namespace hpp {
       /// Dimension of input derivative
       size_type inputDerivativeSize_;
       /// Dimension of output vector
-      size_type outputSize_;
-      /// Dimension of output derivative vector
-      size_type outputDerivativeSize_;
+      LiegroupSpacePtr_t outputSpace_;
 
       /// Initialized to true by this class. Child class are responsible for
       /// updating it.

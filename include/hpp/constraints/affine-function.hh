@@ -25,6 +25,7 @@
 
 namespace hpp {
   namespace constraints {
+
     /// \addtogroup constraints
     /// \{
 
@@ -36,7 +37,8 @@ namespace hpp {
       public:
         AffineFunction (const matrixIn_t& J,
             const std::string name = "LinearFunction")
-          : DifferentiableFunction (J.cols(), J.cols(), J.rows(), J.rows(), name),
+          : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
+                                    (J.rows()), name),
           J_ (J), b_ (vector_t::Zero(J.rows())),
           aIdx_ (0, J_.cols()), JIdx_ (0, J_.cols()), C_JIdx_ (0,0),
           qshort_ (J.cols())
@@ -46,7 +48,8 @@ namespace hpp {
 
         AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
             const std::string name = "LinearFunction")
-          : DifferentiableFunction (J.cols(), J.cols(), J.rows(), J.rows(), name),
+          : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
+                                    (J.rows()), name),
           J_ (J), b_ (b),
           aIdx_ (0, J_.cols()), JIdx_ (0, J_.cols()), C_JIdx_ (0,0),
           qshort_ (J.cols())
@@ -55,26 +58,27 @@ namespace hpp {
         }
 
         AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
-            Eigen::RowBlockIndexes& argSelection,
-            Eigen::ColBlockIndexes& derSelection,
-            Eigen::ColBlockIndexes& CderSelection,
-            const std::string name = "AffineFunction")
-          : DifferentiableFunction (J.cols(), J.cols(), J.rows(), J.rows(), name),
+            Eigen::RowBlockIndices& argSelection,
+            Eigen::ColBlockIndices& derSelection,
+            Eigen::ColBlockIndices& CderSelection,
+            const std::string name = "AffineFunction") :
+          DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
+                                  (J.rows()), name),
           J_ (J), b_ (b),
           aIdx_ (argSelection), JIdx_ (derSelection), C_JIdx_ (CderSelection),
-          qshort_ (argSelection.nbIndexes())
+          qshort_ (argSelection.nbIndices())
         {
           init();
         }
 
       private:
         /// User implementation of function evaluation
-        void impl_compute (vectorOut_t result,
-            vectorIn_t argument) const
+        void impl_compute (LiegroupElement& result, vectorIn_t argument) const
         {
           qshort_ = aIdx_.rview(argument);
-          result.noalias() = J_ * qshort_;
-          result += b_;
+          result.vector ().noalias () = J_ * qshort_;
+          result.vector () += b_;
+          result.check ();
         }
 
         void impl_jacobian (matrixOut_t jacobian,
@@ -93,8 +97,8 @@ namespace hpp {
 
         const matrix_t J_;
         const vector_t b_;
-        const Eigen::RowBlockIndexes aIdx_;
-        const Eigen::ColBlockIndexes JIdx_, C_JIdx_;
+        const Eigen::RowBlockIndices aIdx_;
+        const Eigen::ColBlockIndices JIdx_, C_JIdx_;
         mutable vector_t qshort_;
     }; // class AffineFunction
 
@@ -104,19 +108,20 @@ namespace hpp {
       : public DifferentiableFunction
     {
         ConstantFunction (const vector_t& constant,
-                          const size_type& sizeIn, 
+                          const size_type& sizeIn,
                           const size_type& sizeInDer,
-                          const std::string name = "ConstantFunction")
-          : DifferentiableFunction (sizeIn, sizeInDer, constant.rows(), constant.rows(), name),
-          c_ (constant)
+                          const std::string name = "ConstantFunction") :
+          DifferentiableFunction (sizeIn, sizeInDer, LiegroupSpace::Rn
+                                  (constant.rows()), name),
+          c_ (constant, LiegroupSpace::Rn (constant.rows()))
         {}
 
         /// User implementation of function evaluation
-        void impl_compute (vectorOut_t r, vectorIn_t) const { r = c_; }
+        void impl_compute (LiegroupElement& r, vectorIn_t) const { r = c_; }
 
         void impl_jacobian (matrixOut_t J, vectorIn_t) const { J.setZero(); }
 
-        const vector_t c_;
+        const LiegroupElement c_;
     }; // class ConstantFunction
 
     /// \}

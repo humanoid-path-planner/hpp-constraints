@@ -28,6 +28,8 @@
 
 namespace hpp {
   namespace constraints {
+
+    /// Square distance between input configuration and reference configuration
     class HPP_CONSTRAINTS_DLLAPI ConfigurationConstraint : public DifferentiableFunction
     {
       public:
@@ -50,8 +52,8 @@ namespace hpp {
         ///
         /// \param argument configuration of the robot,
         /// \retval result error vector
-        virtual void impl_compute (vectorOut_t result,
-            ConfigurationIn_t argument) const throw ();
+        virtual void impl_compute (LiegroupElement& result,
+                                   ConfigurationIn_t argument) const throw ();
 
         virtual void impl_jacobian (matrixOut_t jacobian,
             ConfigurationIn_t arg) const throw ();

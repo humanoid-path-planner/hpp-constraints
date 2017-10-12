@@ -23,6 +23,10 @@
 # include <hpp/pinocchio/fwd.hh>
 # include <hpp/constraints/deprecated.hh>
 
+namespace Eigen {
+  struct BlockIndex;
+} // namespace Eigen
+
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
@@ -43,6 +47,10 @@ namespace hpp {
     typedef pinocchio::ComJacobian_t ComJacobian_t;
     typedef pinocchio::JointJacobian_t JointJacobian_t;
     typedef pinocchio::Transform3f Transform3f;
+    typedef pinocchio::LiegroupElement LiegroupElement;
+    typedef pinocchio::LiegroupSpace LiegroupSpace;
+    typedef pinocchio::LiegroupSpacePtr_t LiegroupSpacePtr_t;
+    typedef pinocchio::LiegroupSpaceConstPtr_t LiegroupSpaceConstPtr_t;
     namespace eigen {
       typedef Eigen::Matrix <value_type, 3, 3> matrix3_t;
       typedef Eigen::Matrix <value_type, 3, 1> vector3_t;
@@ -51,8 +59,8 @@ namespace hpp {
     typedef Eigen::Matrix <value_type, 6, 1> vector6_t;
     typedef Eigen::Array<bool, Eigen::Dynamic, 1> bool_array_t;
 
-    typedef std::pair<size_type, size_type> interval_t;
-    typedef std::vector < interval_t > intervals_t;
+    typedef std::pair<size_type, size_type> segment_t;
+    typedef std::vector < segment_t > segments_t;
 
     HPP_PREDEF_CLASS (DistanceBetweenBodies);
     HPP_PREDEF_CLASS (DistanceBetweenPointsInBodies);
@@ -126,6 +134,9 @@ namespace hpp {
     typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
     typedef boost::shared_ptr<RelativeTransformation>
       RelativeTransformationPtr_t;
+
+    typedef Eigen::BlockIndex BlockIndex;
   } // namespace constraints
 } // namespace hpp
+
 #endif // HPP_CONSTRAINTS_FWD_HH

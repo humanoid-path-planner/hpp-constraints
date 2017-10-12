@@ -29,6 +29,7 @@
 
 namespace hpp {
   namespace constraints {
+
     /// Constraint on the relative position of the center of mass
     ///
     /// The value of the function is defined as the position of the center
@@ -88,8 +89,8 @@ namespace hpp {
         ///
         /// \param argument configuration of the robot,
         /// \retval result error vector
-        virtual void impl_compute (vectorOut_t result,
-            ConfigurationIn_t argument) const throw ();
+        virtual void impl_compute (LiegroupElement& result,
+                                   ConfigurationIn_t argument) const throw ();
 
         virtual void impl_jacobian (matrixOut_t jacobian,
             ConfigurationIn_t arg) const throw ();

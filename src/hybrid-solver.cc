@@ -70,26 +70,27 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      Eigen::ColBlockIndexes _explicitActiveParam (explicit_.activeParameters ());
+      Eigen::ColBlockIndices _explicitActiveParam (explicit_.activeParameters ());
       bool_array_t explicitActiveParam (bool_array_t::Constant (f.inputSize(), false));
-      if (_explicitActiveParam.nbIndexes() > 0)
+      if (_explicitActiveParam.nbIndices() > 0)
         _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
 
-      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
+      typedef Eigen::MatrixBlocks<false, false> BlockIndices;
 
-      Eigen::RowBlockIndexes select (reduction_.indexes());
+      Eigen::RowBlockIndices select (reduction_.indices());
 
       bool_array_t functionActiveParam;
-      BlockIndexes::BlockIndexesType rows;
+      BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
 
         bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
-          rows.push_back (BlockIndexes::BlockIndexType(row, fs[i]->outputDerivativeSize()));
+          rows.push_back (BlockIndices::segment_t
+                          (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }
-      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
@@ -103,7 +104,7 @@ namespace hpp {
 
       dqSmall_ = reduction_.rviewTranspose(darg);
 
-      vector_t tmp = getV1(svd_).adjoint() * dqSmall_;
+      vector_t tmp (getV1(svd_).adjoint() * dqSmall_);
       dqSmall_.noalias() -= getV1(svd_) * tmp;
 
       reduction_.lviewTranspose(result) = dqSmall_;

@@ -61,10 +61,10 @@ namespace hpp {
     DistanceBetweenBodies::DistanceBetweenBodies
     (const std::string& name, const DevicePtr_t& robot,
      const JointPtr_t& joint1, const JointPtr_t& joint2) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
-			      name), robot_ (robot), joint1_ (joint1),
-      joint2_ (joint2),
-      data_ (robot->geomModel())
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                              LiegroupSpace::R1 (), name), robot_ (robot),
+      joint1_ (joint1), joint2_ (joint2), data_ (robot->geomModel()),
+      latestResult_ (outputSpace ())
     {
       ObjectVector_t objs1 (joint1_->linkedBody ()->innerObjects ());
       ObjectVector_t objs2 (joint2_->linkedBody ()->innerObjects ());
@@ -74,9 +74,10 @@ namespace hpp {
     DistanceBetweenBodies::DistanceBetweenBodies
     (const std::string& name, const DevicePtr_t& robot,
      const JointPtr_t& joint, const ObjectVector_t& objects) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
-			      name), robot_ (robot), joint1_ (joint),
-      joint2_ (), data_ (robot->geomModel())
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                              LiegroupSpace::R1 (), name),
+      robot_ (robot), joint1_ (joint), joint2_ (), data_ (robot->geomModel()),
+      latestResult_ (outputSpace ())
     {
       ObjectVector_t objs1 (joint1_->linkedBody ()->innerObjects ());
       initGeomData(objs1.begin(), objs1.end(), objects.begin(), objects.end());
@@ -84,17 +85,18 @@ namespace hpp {
 
     DistanceBetweenBodies::DistanceBetweenBodies
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint, const std::vector<CollisionObjectPtr_t>& objects) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
-			      name), robot_ (robot), joint1_ (joint),
-      joint2_ (), data_ (robot->geomModel())
+     const JointPtr_t& joint, const std::vector<CollisionObjectPtr_t>& objects):
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                              LiegroupSpace::R1 (), name),
+      robot_ (robot), joint1_ (joint), joint2_ (), data_ (robot->geomModel()),
+      latestResult_ (outputSpace ())
     {
       ObjectVector_t objs1 (joint1_->linkedBody ()->innerObjects ());
       initGeomData(objs1.begin(), objs1.end(), objects.begin(), objects.end());
     }
 
     void DistanceBetweenBodies::impl_compute
-    (vectorOut_t result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
     {
       if ((argument.rows () == latestArgument_.rows ()) &&
 	  (argument == latestArgument_)) {
@@ -105,7 +107,7 @@ namespace hpp {
       robot_->computeForwardKinematics ();
       se3::updateGeometryPlacements(robot_->model(), robot_->data(), robot_->geomModel(), data_);
       minIndex_ = se3::computeDistances(robot_->geomModel(), data_);
-      result [0] = data_.distanceResults[minIndex_].min_distance;
+      result.vector () [0] = data_.distanceResults[minIndex_].min_distance;
       latestArgument_ = argument;
       latestResult_ = result;
     }
@@ -113,7 +115,7 @@ namespace hpp {
     void DistanceBetweenBodies::impl_jacobian
     (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
     {
-      vector_t dist; dist.resize (1);
+      LiegroupElement dist (outputSpace ());
       impl_compute (dist, arg);
       const JointJacobian_t& J1 (joint1_->jacobian());
       const Transform3f& M1 (joint1_->currentTransformation());
@@ -130,7 +132,7 @@ namespace hpp {
       jacobian = (
           P1_minus_P2.transpose () * R1 * J1.topRows<3>()
           + P1_minus_P2.transpose () * R1.colwise().cross(P1_minus_t1) * J1.bottomRows<3>()
-          ) / dist[0];
+                  ) / dist.vector () [0];
       if (joint2_) {
         const JointJacobian_t& J2 (joint2_->jacobian());
         const Transform3f& M2 (joint2_->currentTransformation());
@@ -143,7 +145,7 @@ namespace hpp {
 	matrix_t tmp2
 	  (  P1_minus_P2.transpose () * R2 * J2.topRows<3>()
            + P1_minus_P2.transpose () * R2.colwise().cross(P2_minus_t2) * J2.bottomRows<3>());
-	jacobian.noalias() -= tmp2/dist [0];
+	jacobian.noalias() -= tmp2/dist.vector () [0];
       }
     }
 

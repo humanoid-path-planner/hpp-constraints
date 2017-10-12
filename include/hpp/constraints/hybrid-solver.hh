@@ -78,12 +78,12 @@ namespace hpp {
 
         bool isSatisfied (vectorIn_t arg, vectorOut_t error) const
         {
-          assert (error.size() == dimension() + explicit_.outDers().nbIndexes());
+          assert (error.size() == dimension() + explicit_.outDers().nbIndices());
           bool iterative =
             HierarchicalIterativeSolver::isSatisfied (arg);
           residualError(error.head(dimension()));
           bool _explicit =
-            explicit_.isSatisfied (arg, error.tail(explicit_.outDers().nbIndexes()));
+            explicit_.isSatisfied (arg, error.tail(explicit_.outDers().nbIndices()));
           return iterative && _explicit;
         }
 

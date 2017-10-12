@@ -23,6 +23,7 @@
 # include <pinocchio/multibody/geometry.hpp>
 
 # include <hpp/pinocchio/collision-object.hh>
+# include <hpp/pinocchio/liegroup-element.hh>
 
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/differentiable-function.hh>
@@ -108,7 +109,7 @@ namespace hpp {
 			     const JointPtr_t& joint,
 			     const std::vector<CollisionObjectPtr_t>& objects);
 
-      virtual void impl_compute (vectorOut_t result,
+      virtual void impl_compute (LiegroupElement& result,
 				 ConfigurationIn_t argument) const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
@@ -125,7 +126,7 @@ namespace hpp {
       mutable GeometryData data_;
       mutable std::size_t minIndex_;
       mutable Configuration_t latestArgument_;
-      mutable vector_t latestResult_;
+      mutable LiegroupElement latestResult_;
     }; // class DistanceBetweenBodies
   } // namespace constraints
 } // namespace hpp

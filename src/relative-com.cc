@@ -23,11 +23,13 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/center-of-mass-computation.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 #include <hpp/constraints/macros.hh>
 
 namespace hpp {
   namespace constraints {
+
     namespace {
       static size_type size (std::vector<bool> mask)
       {
@@ -78,16 +80,17 @@ namespace hpp {
         std::vector <bool> mask,
         const std::string& name) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
-                               size (mask), name),
-      robot_ (robot), comc_ (comc), joint_ (joint), reference_ (reference), mask_ (mask),
-      nominalCase_ (false), jacobian_ (3, robot->numberDof()-robot->extraConfigSpace().dimension())
+                              LiegroupSpace::Rn (size (mask)), name),
+      robot_ (robot), comc_ (comc), joint_ (joint), reference_ (reference),
+      mask_ (mask), nominalCase_ (false), jacobian_
+      (3, robot->numberDof()-robot->extraConfigSpace().dimension())
     {
       if (mask[0] && mask[1] && mask[2])
         nominalCase_ = true;
       jacobian_.setZero ();
     }
 
-    void RelativeCom::impl_compute (vectorOut_t result,
+    void RelativeCom::impl_compute (LiegroupElement& result,
 				    ConfigurationIn_t argument)
       const throw ()
     {
@@ -100,13 +103,13 @@ namespace hpp {
       const vector3_t& t = M.translation ();
 
       if (nominalCase_)
-        result = R.transpose() * (x - t) - reference_;
+        result.vector () = R.transpose() * (x - t) - reference_;
       else {
         const vector3_t res ( R.transpose() * (x - t) - reference_);
         size_t index = 0;
         for (size_t i = 0; i < 3; ++i)
           if (mask_[i]) {
-            result [index] = res [i];
+            result.vector () [index] = res [i];
             index++;
           }
       }

@@ -19,16 +19,17 @@
 #include <limits>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 namespace hpp {
   namespace constraints {
+
     ConvexShapeContact::ConvexShapeContact
     (const std::string& name, const DevicePtr_t& robot) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 5,
-			      name),
-      robot_ (robot),
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                              LiegroupSpace::Rn (5), name), robot_ (robot),
       relativeTransformation_ (name, robot, std::vector<bool>(6, true)),
-      normalMargin_ (0)
+      normalMargin_ (0), result_ (LiegroupSpace::Rn (6))
     {
       relativeTransformation_.joint1(robot->rootJoint());
       relativeTransformation_.joint2(robot->rootJoint());
@@ -129,23 +130,24 @@ namespace hpp {
       return fds;
     }
 
-    void ConvexShapeContact::impl_compute (vectorOut_t result, ConfigurationIn_t argument) const
+    void ConvexShapeContact::impl_compute (LiegroupElement& result,
+                                           ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
 
       selectConvexShapes ();
-      relativeTransformation_ (result_, argument);
+      relativeTransformation_.value (result_, argument);
       if (isInside_) {
-        result [0] = result_ [0] + normalMargin_;
-        result.segment <2> (1).setZero ();
+        result.vector () [0] = result_.vector () [0] + normalMargin_;
+        result.vector ().segment <2> (1).setZero ();
       } else {
-        result.segment <3> (0) = result_.segment <3> (0);
-        result[0] += normalMargin_;
+        result.vector ().segment <3> (0) = result_.vector ().segment <3> (0);
+        result.vector () [0] += normalMargin_;
       }
       switch (contactType_) {
         case POINT_ON_PLANE:
-          result.segment <2> (3).setZero ();
+          result.vector ().segment <2> (3).setZero ();
           break;
         case LINE_ON_PLANE:
           // FIXME: only one rotation should be constrained in that case but
@@ -155,10 +157,10 @@ namespace hpp {
           // result [3] = 0;
           // result [4] = result_[5];
         case PLANE_ON_PLANE:
-          result.segment<2> (3) = result_.segment<2> (4);
+          result.vector ().segment<2> (3) = result_.vector ().segment<2> (4);
           break;
       }
-      hppDout (info, "result = " << result.transpose ());
+      hppDout (info, "result = " << result);
     }
 
     void ConvexShapeContact::computeInternalJacobian
@@ -280,19 +282,19 @@ namespace hpp {
     }
 
     void ConvexShapeContactComplement::impl_compute
-    (vectorOut_t result, ConfigurationIn_t argument) const
+    (LiegroupElement& result, ConfigurationIn_t argument) const
     {
-      vector5_t tmp;
+      LiegroupElement tmp (LiegroupSpace::Rn (5));
       sibling_->impl_compute (tmp, argument);
-      result [2] = sibling_->result_ [3];
+      result.vector () [2] = sibling_->result_.vector () [3];
       if (sibling_->isInside_) {
-	result [0] = sibling_->result_ [1];
-	result [1] = sibling_->result_ [2];
+	result.vector () [0] = sibling_->result_.vector () [1];
+	result.vector () [1] = sibling_->result_.vector () [2];
       } else {
-	result [0] = 0;
-	result [1] = 0;
+	result.vector () [0] = 0;
+	result.vector () [1] = 0;
       }
-      hppDout (info, "result = " << result.transpose ());
+      hppDout (info, "result = " << result);
     }
 
     void ConvexShapeContactComplement::impl_jacobian

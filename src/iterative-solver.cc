@@ -45,11 +45,11 @@ namespace hpp {
       template <bool ComputeJac>
       void applyComparison (
           const HierarchicalIterativeSolver::ComparisonTypes_t comparison,
-          const std::vector<std::size_t>& indexes,
+          const std::vector<std::size_t>& indices,
           vector_t& value, matrix_t& jacobian, const value_type& thr)
       {
-        for (std::size_t i = 0; i < indexes.size(); ++i) {
-          const std::size_t j = indexes[i];
+        for (std::size_t i = 0; i < indices.size(); ++i) {
+          const std::size_t j = indices[i];
           switch (comparison[j]) {
             case HierarchicalIterativeSolver::Superior: compare<true , ComputeJac> (value[j], jacobian.row(j), thr); break;
             case HierarchicalIterativeSolver::Inferior: compare<false, ComputeJac> (value[j], jacobian.row(j), thr); break;
@@ -115,17 +115,17 @@ namespace hpp {
         switch (comp[i]) {
           case Superior:
           case Inferior:
-            d.inequalityIndexes.push_back (d.comparison.size());
+            d.inequalityIndices.push_back (d.comparison.size());
             break;
           case Equality:
-            d.equalityIndexes.addRow(d.comparison.size(), 1);
+            d.equalityIndices.addRow(d.comparison.size(), 1);
             break;
           default:
             break;
         }
         d.comparison.push_back (comp[i]);
       }
-      d.equalityIndexes.updateRows<true, true, true>();
+      d.equalityIndices.updateRows<true, true, true>();
       update();
     }
 
@@ -148,7 +148,7 @@ namespace hpp {
     void HierarchicalIterativeSolver::update()
     {
       // Compute reduced size
-      std::size_t reducedSize = reduction_.nbIndexes();
+      std::size_t reducedSize = reduction_.nbIndices();
 
       dimension_ = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
@@ -156,9 +156,9 @@ namespace hpp {
 
         const DifferentiableFunctionStack& f = stacks_[i];
         dimension_ += datas_[i].activeRowsOfJ.m_nbRows;
-        datas_[i].value        .resize(f.outputSize());
-        datas_[i].rightHandSide.resize(f.outputSize());
-        datas_[i].rightHandSide.setZero();
+        datas_[i].output = LiegroupElement (f.outputSpace ());
+        datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
+        datas_[i].rightHandSide.setNeutral ();
 
         assert(derSize_ == f.inputDerivativeSize());
         datas_[i].jacobian.resize(f.outputDerivativeSize(), f.inputDerivativeSize());
@@ -186,15 +186,16 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      typedef Eigen::MatrixBlockIndexes<false, false> BlockIndexes;
-      BlockIndexes::BlockIndexesType rows;
+      typedef Eigen::MatrixBlocks<false, false> BlockIndices;
+      BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
-          rows.push_back (BlockIndexes::BlockIndexType(row, fs[i]->outputDerivativeSize()));
+          rows.push_back (BlockIndices::segment_t
+                          (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
       }
-      d.activeRowsOfJ = Eigen::MatrixBlockIndexes<false,false> (rows, reduction_.m_cols);
+      d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
@@ -203,9 +204,10 @@ namespace hpp {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
-        f.value (d.value, arg);
+        f.value (d.output, arg);
         // TODO avoid dynamic allocation
-        d.equalityIndexes.lview(d.rightHandSide) = d.equalityIndexes.rview(d.value).eval();
+        d.equalityIndices.lview(d.rightHandSide.vector ()) =
+          d.equalityIndices.rview(d.output.vector ()).eval();
       }
       return rightHandSide();
     }
@@ -218,10 +220,12 @@ namespace hpp {
         size_type row = 0;
         for (std::size_t j = 0; j < fs.size(); ++j) {
           if (f == fs[j]) {
-            f->value (d.value.segment(row, f->outputSize()), arg);
+            LiegroupElement tmp (f->outputSpace ());
+            f->value (tmp, arg);
+            d.output.vector ().segment(row, f->outputSize()) = tmp.vector ();
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide[row + k] = d.value[row + k];
+                d.rightHandSide.vector () [row + k] = d.output.vector ()[row + k];
               }
             }
             return true;
@@ -242,7 +246,7 @@ namespace hpp {
           if (f == fs[j]) {
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide[row + k] = rhs[row + k];
+                d.rightHandSide.vector () [row + k] = rhs [row + k];
               }
             }
             return true;
@@ -258,9 +262,9 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        d.equalityIndexes.lview(d.rightHandSide)
-          = rhs.segment(row, d.equalityIndexes.m_nbRows);
-        row += d.equalityIndexes.m_nbRows;
+        d.equalityIndices.lview(d.rightHandSide.vector ())
+          = rhs.segment(row, d.equalityIndices.m_nbRows);
+        row += d.equalityIndices.m_nbRows;
       }
       assert (row == rhs.size());
     }
@@ -271,9 +275,9 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const Data& d = datas_[i];
-        const size_type nRows = d.equalityIndexes.m_nbRows;
+        const size_type nRows = d.equalityIndices.m_nbRows;
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        seg = d.equalityIndexes.rview(d.rightHandSide);
+        seg = d.equalityIndices.rview(d.rightHandSide.vector ());
         row += nRows;
       }
       assert (row == rhs.size());
@@ -284,7 +288,7 @@ namespace hpp {
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i)
-        rhsSize += datas_[i].equalityIndexes.m_nbRows;
+        rhsSize += datas_[i].equalityIndices.m_nbRows;
       return rhsSize;
     }
 
@@ -295,10 +299,10 @@ namespace hpp {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
 
-        f.value   (d.value, arg);
+        f.value   (d.output, arg);
         if (ComputeJac) f.jacobian(d.jacobian, arg);
-        d.error = d.value - d.rightHandSide;
-        applyComparison<ComputeJac>(d.comparison, d.inequalityIndexes, d.error, d.jacobian, inequalityThreshold_);
+        d.error = d.output - d.rightHandSide;
+        applyComparison<ComputeJac>(d.comparison, d.inequalityIndices, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
         if (ComputeJac) d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
@@ -313,8 +317,8 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < datas_.size(); ++i) {
         const Data& d = datas_[i];
-        v.segment(row, d.value.rows()) = d.value;
-        row += d.value.rows();
+        v.segment(row, d.output.vector ().rows()) = d.output.vector ();
+        row += d.output.vector ().rows();
       }
     }
 
@@ -349,7 +353,7 @@ namespace hpp {
         d.svd.compute (d.reducedJ);
         HPP_DEBUG_SVDCHECK (d.svd);
         // TODO Eigen::JacobiSVD does a dynamic allocation here.
-        dqSmall_ = d.svd.solve (- Eigen::RowBlockIndexes(d.activeRowsOfJ.m_rows).rview(d.error).eval());
+        dqSmall_ = d.svd.solve (- Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error).eval());
         d.maxRank = std::max(d.maxRank, d.svd.rank());
         if (d.maxRank > 0)
           sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
@@ -366,7 +370,7 @@ namespace hpp {
           /// projector is of size numberDof
           bool first = (i == 0);
           bool last = (i == stacks_.size() - 1);
-          err = - Eigen::RowBlockIndexes(d.activeRowsOfJ.m_rows).rview(d.error).eval();
+          err = Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(- d.error);
           if (first) {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);
@@ -396,7 +400,7 @@ namespace hpp {
 
     void HierarchicalIterativeSolver::expandDqSmall () const
     {
-      Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndexes(), reduction_.indexes()) = dqSmall_;
+      Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
     }
 
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;

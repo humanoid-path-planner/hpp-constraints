@@ -23,6 +23,7 @@ SET (${LIBRARY_NAME}_SOURCES
   distance-between-points-in-bodies.cc
   configuration-constraint.cc
   convex-shape-contact.cc
+  matrix-view.cc
   static-stability.cc
   explicit-solver.cc
   hybrid-solver.cc
@@ -48,7 +49,3 @@ IF (${USE_QPOASES})
 ENDIF (${USE_QPOASES})
 
 INSTALL(TARGETS ${LIBRARY_NAME} DESTINATION lib)
-
-IF(HPP_MODEL_FOUND)
-  ADD_SUBDIRECTORY(_constraints)
-ENDIF(HPP_MODEL_FOUND)

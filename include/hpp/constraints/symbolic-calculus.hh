@@ -1002,7 +1002,7 @@ namespace hpp {
           const std::size_t nbDof = elements_[0][0]->jacobian().cols();
           const std::size_t inSize = this->value_.cols();
           const vector_t piTrhs = svd_.solve (rhs);
-          assert (pi_.rows () == inSize);
+          assert (pi_.rows () == (size_type)inSize);
 
           Jacobian_t cache (this->jacobian_.rows(), nbDof);
           jacobianTimes (piTrhs, cache);

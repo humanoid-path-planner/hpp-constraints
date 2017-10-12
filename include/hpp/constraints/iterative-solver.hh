@@ -29,6 +29,7 @@
 
 namespace hpp {
   namespace constraints {
+
     /// \addtogroup solvers
     /// \{
     namespace lineSearch {
@@ -88,7 +89,7 @@ namespace hpp {
           Inferior
         };
 
-        typedef Eigen::ColBlockIndexes Reduction_t;
+        typedef Eigen::ColBlockIndices Reduction_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
         typedef std::vector<ComparisonType> ComparisonTypes_t;
 
@@ -166,12 +167,12 @@ namespace hpp {
         /// Set the velocity variable that must be changed.
         /// The other variables will be left unchanged by the iterative
         /// algorithm.
-        void reduction (const intervals_t intervals)
+        void reduction (const segments_t intervals)
         {
           reduction_ = Reduction_t();
           for (std::size_t i = 0; i < intervals.size(); ++i)
             reduction_.addCol(intervals[i].first, intervals[i].second);
-          reduction_.updateIndexes<true, true, true>();
+          reduction_.updateIndices<true, true, true>();
           update ();
         }
 
@@ -324,7 +325,8 @@ namespace hpp {
           /// \cond
           EIGEN_MAKE_ALIGNED_OPERATOR_NEW
           /// \endcond
-          vector_t value, rightHandSide, error;
+          LiegroupElement output, rightHandSide;
+          vector_t error;
           matrix_t jacobian, reducedJ;
 
           SVD_t svd;
@@ -333,9 +335,9 @@ namespace hpp {
           mutable size_type maxRank;
 
           ComparisonTypes_t comparison;
-          std::vector<std::size_t> inequalityIndexes;
-          Eigen::RowBlockIndexes equalityIndexes;
-          Eigen::MatrixBlockIndexes<false,false> activeRowsOfJ;
+          std::vector<std::size_t> inequalityIndices;
+          Eigen::RowBlockIndices equalityIndices;
+          Eigen::MatrixBlocks<false,false> activeRowsOfJ;
         };
 
         /// Allocate datas and update sizes of the problem

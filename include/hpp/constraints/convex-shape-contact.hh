@@ -28,6 +28,7 @@
 
 namespace hpp {
   namespace constraints {
+
     /// \addtogroup constraints
     /// \{
 
@@ -146,7 +147,8 @@ namespace hpp {
         std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
 
       private:
-        void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+        void impl_compute (LiegroupElement& result, ConfigurationIn_t argument)
+          const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
         void computeInternalJacobian (ConfigurationIn_t argument) const;
@@ -166,7 +168,7 @@ namespace hpp {
 
         mutable bool isInside_;
         mutable ContactType contactType_;
-        mutable vector6_t result_;
+        mutable LiegroupElement result_;
         mutable matrix_t jacobian_;
     };
 
@@ -209,7 +211,7 @@ namespace hpp {
 
 
     private:
-      void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+      void impl_compute (LiegroupElement& result, ConfigurationIn_t argument) const;
 
       void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument)
 	const;

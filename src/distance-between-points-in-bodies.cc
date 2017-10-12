@@ -62,9 +62,10 @@ namespace hpp {
     (const std::string& name, const DevicePtr_t& robot,
      const JointPtr_t& joint1, const JointPtr_t& joint2,
      const vector3_t& point1, const vector3_t& point2) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
-			      name), robot_ (robot), joint1_ (joint1),
-      joint2_ (joint2), point1_ (point1), point2_ (point2)
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                              LiegroupSpace::R1 (), name), robot_ (robot),
+      joint1_ (joint1), joint2_ (joint2), point1_ (point1), point2_ (point2),
+      latestResult_ (outputSpace ())
     {
       assert (joint1);
       global2_ = point2;
@@ -73,16 +74,17 @@ namespace hpp {
     DistanceBetweenPointsInBodies::DistanceBetweenPointsInBodies
     (const std::string& name, const DevicePtr_t& robot,
      const JointPtr_t& joint1, const vector3_t& point1, const vector3_t& point2)
-      : DifferentiableFunction (robot->configSize (), robot->numberDof (), 1,
-				name), robot_ (robot), joint1_ (joint1),
-	joint2_ (), point1_ (point1), point2_ (point2)
+      : DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                                LiegroupSpace::R1 (), name), robot_ (robot),
+        joint1_ (joint1), joint2_ (), point1_ (point1), point2_ (point2),
+        latestResult_ (outputSpace ())
     {
       assert (joint1);
       global2_ = point2;
     }
 
     void DistanceBetweenPointsInBodies::impl_compute
-    (vectorOut_t result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
     {
       if ((argument.rows () == latestArgument_.rows ()) &&
 	  (argument == latestArgument_)) {
@@ -94,9 +96,9 @@ namespace hpp {
       global1_ = joint1_->currentTransformation ().act (point1_);
       if (joint2_) {
 	global2_ = joint2_->currentTransformation ().act (point2_);
-        result [0] = (global2_ - global1_).norm ();
+        result.vector () [0] = (global2_ - global1_).norm ();
       } else {
-        result [0] = (           global1_).norm ();
+        result.vector () [0] = (           global1_).norm ();
       }
 
       latestArgument_ = argument;
@@ -106,7 +108,7 @@ namespace hpp {
     void DistanceBetweenPointsInBodies::impl_jacobian
     (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
     {
-      vector_t dist; dist.resize (1);
+      LiegroupElement dist (outputSpace ());
       impl_compute (dist, arg);
       const JointJacobian_t& J1 (joint1_->jacobian());
       const Transform3f& M1 (joint1_->currentTransformation());
@@ -139,9 +141,9 @@ namespace hpp {
 	matrix_t tmp2
 	  (P1_minus_P2.transpose () * R2 * J2.topRows (3)
            + P1_minus_P2.transpose () * R2.colwise().cross(P2_minus_t2) * J2.bottomRows (3));
-	jacobian = (tmp1 - tmp2)/dist [0];
+	jacobian = (tmp1 - tmp2)/dist.vector () [0];
       } else {
-	jacobian = tmp1/dist [0];
+	jacobian = tmp1/dist.vector () [0];
       }
     }
 

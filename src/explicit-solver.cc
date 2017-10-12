@@ -24,6 +24,8 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/liegroup.hh>
 
+#include <hpp/constraints/matrix-view.hh>
+
 namespace se3 {
   using ::hpp::constraints::vectorIn_t;
   using ::hpp::constraints::vectorOut_t;
@@ -72,19 +74,18 @@ namespace se3 {
 
 namespace hpp {
   namespace constraints {
-    typedef Eigen::BlockIndex<size_type> BlockIndex;
     typedef Eigen::MatrixBlockView<matrixOut_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixOutView_t;
 
     namespace {
-      void append (const Eigen::RowBlockIndexes& rbi, std::queue<size_type>& q) {
-        for (std::size_t i = 0; i < rbi.indexes().size(); ++i)
-          for (size_type j = 0; j < rbi.indexes()[i].second; ++j)
-            q.push(rbi.indexes()[i].first + j);
+      void append (const Eigen::RowBlockIndices& rbi, std::queue<size_type>& q) {
+        for (std::size_t i = 0; i < rbi.indices().size(); ++i)
+          for (size_type j = 0; j < rbi.indices()[i].second; ++j)
+            q.push(rbi.indices()[i].first + j);
       }
     }
 
     void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex<size_type>::vector_t& indexes,
+        const Eigen::BlockIndex::segments_t& indices,
         vectorIn_t arg0,
         vectorIn_t arg1,
         vectorOut_t result)
@@ -94,8 +95,8 @@ namespace hpp {
       std::size_t iJoint = 1;
 
       size_type rowArg = 0, rowDer = 0;
-      for (std::size_t i = 0; i < indexes.size(); ++i) {
-        const Eigen::BlockIndex<size_type>::type& interval = indexes[i];
+      for (std::size_t i = 0; i < indices.size(); ++i) {
+        const Eigen::BlockIndex::segment_t& interval = indices[i];
         size_type j = 0;
         while (j < interval.second) {
           size_type iArg = interval.first + j;
@@ -128,25 +129,25 @@ namespace hpp {
       }
     }
 
-    Eigen::ColBlockIndexes ExplicitSolver::activeParameters () const
+    Eigen::ColBlockIndices ExplicitSolver::activeParameters () const
     {
-      BlockIndex::vector_t biv;
+      BlockIndex::segments_t biv;
       for (std::size_t i = 0; i < functions_.size (); ++i)
-        biv.insert(biv.end(), functions_[i].inArg.indexes().begin(),
-                              functions_[i].inArg.indexes().end());
-      ColBlockIndexes cbi (biv);
-      cbi.updateIndexes<true, true, true>();
+        biv.insert(biv.end(), functions_[i].inArg.indices().begin(),
+                              functions_[i].inArg.indices().end());
+      ColBlockIndices cbi (biv);
+      cbi.updateIndices<true, true, true>();
       return cbi;
     }
 
-    Eigen::ColBlockIndexes ExplicitSolver::activeDerivativeParameters () const
+    Eigen::ColBlockIndices ExplicitSolver::activeDerivativeParameters () const
     {
-      BlockIndex::vector_t biv;
+      BlockIndex::segments_t biv;
       for (std::size_t i = 0; i < functions_.size (); ++i)
-        biv.insert(biv.end(), functions_[i].inDer.indexes().begin(),
-                              functions_[i].inDer.indexes().end());
-      ColBlockIndexes cbi (biv);
-      cbi.updateIndexes<true, true, true>();
+        biv.insert(biv.end(), functions_[i].inDer.indices().begin(),
+                              functions_[i].inDer.indices().end());
+      ColBlockIndices cbi (biv);
+      cbi.updateIndices<true, true, true>();
       return cbi;
     }
 
@@ -160,7 +161,7 @@ namespace hpp {
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg, vectorOut_t error) const
     {
-      assert(error.size() == outDers_.nbIndexes());
+      assert(error.size() == outDers_.nbIndices());
       arg_ = arg;
       solve (arg_);
       difference_ (arg, arg_, diff_);
@@ -179,24 +180,24 @@ namespace hpp {
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg) const
     {
-      diffSmall_.resize(outDers_.nbIndexes());
+      diffSmall_.resize(outDers_.nbIndices());
       return isSatisfied (arg, diffSmall_);
     }
 
     bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
-        const RowBlockIndexes& inArg,
-        const RowBlockIndexes& outArg,
-        const ColBlockIndexes& inDer,
-        const RowBlockIndexes& outDer)
+        const RowBlockIndices& inArg,
+        const RowBlockIndices& outArg,
+        const ColBlockIndices& inDer,
+        const RowBlockIndices& outDer)
     {
-      assert (outArg.indexes().size() == 1 && "Only contiguous function output is supported.");
-      assert (outDer.indexes().size() == 1 && "Only contiguous function output is supported.");
-      const RowBlockIndexes::BlockIndexType& outIdx = outArg.indexes()[0];
-      const RowBlockIndexes::BlockIndexType& outDerIdx = outDer.indexes()[0];
+      assert (outArg.indices().size() == 1 && "Only contiguous function output is supported.");
+      assert (outDer.indices().size() == 1 && "Only contiguous function output is supported.");
+      const RowBlockIndices::segment_t& outIdx = outArg.indices()[0];
+      const RowBlockIndices::segment_t& outDerIdx = outDer.indices()[0];
 
       // Sanity check: is it explicit ?
-      for (std::size_t i = 0; i < inArg.indexes().size(); ++i)
-        if (BlockIndex::overlap(inArg.indexes()[i], outIdx))
+      for (std::size_t i = 0; i < inArg.indices().size(); ++i)
+        if (BlockIndex::overlap(inArg.indices()[i], outIdx))
           return false;
       // Check that no other function already computes its outputs.
       if ((outArg.rview(argFunction_).eval().array() >= 0).any())
@@ -229,11 +230,15 @@ namespace hpp {
 
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
-      outArgs_.updateIndexes<true, true, true>();
-      inArgs_ = RowBlockIndexes(BlockIndex::difference(BlockIndex::type(0, argSize_), outArgs_.indexes()));
+      outArgs_.updateIndices<true, true, true>();
+      inArgs_ = RowBlockIndices
+        (BlockIndex::difference (BlockIndex::segment_t(0, argSize_),
+                                 outArgs_.indices()));
       outDers_.addRow(outDerIdx.first, outDerIdx.second);
-      outDers_.updateIndexes<true, true, true>();
-      inDers_ = ColBlockIndexes(BlockIndex::difference(BlockIndex::type(0, derSize_), outDers_.indexes()));
+      outDers_.updateIndices<true, true, true>();
+      inDers_ = ColBlockIndices
+        (BlockIndex::difference(BlockIndex::segment_t(0, derSize_),
+                                outDers_.indices()));
 
       return true;
     }
@@ -260,7 +265,7 @@ namespace hpp {
       const Function& f = functions_[iF];
       // Compute this function
       f.f->value(f.value, f.inArg.rview(arg).eval());
-      f.outArg.lview(arg) = f.value;
+      f.outArg.lview(arg) = f.value.vector ();
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
@@ -268,8 +273,8 @@ namespace hpp {
       // TODO this could be done only on the complement of inDers_
       jacobian.setZero();
       MatrixOutView_t (jacobian,
-          inDers_.nbIndexes(), inDers_.indexes(),
-          inDers_.nbIndexes(), inDers_.indexes()).setIdentity();
+          inDers_.nbIndices(), inDers_.indices(),
+          inDers_.nbIndices(), inDers_.indices()).setIdentity();
       // Compute the function jacobians
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
@@ -284,22 +289,22 @@ namespace hpp {
     {
       const Function& f = functions_[iF];
       matrix_t Jg (MatrixOutView_t (J,
-            f.inDer.nbIndexes(), f.inDer.indexes(),
-            inDers_.nbIndexes(), inDers_.indexes()).eval());
+            f.inDer.nbIndices(), f.inDer.indices(),
+            inDers_.nbIndices(), inDers_.indices()).eval());
       MatrixOutView_t (J,
-          f.outDer.nbIndexes(), f.outDer.indexes(),
-          inDers_.nbIndexes(), inDers_.indexes()) = f.jacobian * Jg;
+          f.outDer.nbIndices(), f.outDer.indices(),
+          inDers_.nbIndices(), inDers_.indices()) = f.jacobian * Jg;
     }
 
     void ExplicitSolver::computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed)
     {
       if (computed[iF]) return;
       const Function& f = functions_[iF];
-      for (std::size_t i = 0; i < f.inDer.indexes().size(); ++i) {
-        for (size_type j = 0; j < f.inDer.indexes()[i].second; ++j) {
-          if (derFunction_[f.inDer.indexes()[i].first + j] < 0) continue;
-          assert((std::size_t)derFunction_[f.inDer.indexes()[i].first + j] < functions_.size());
-          computeOrder(derFunction_[f.inDer.indexes()[i].first + j], iOrder, computed);
+      for (std::size_t i = 0; i < f.inDer.indices().size(); ++i) {
+        for (size_type j = 0; j < f.inDer.indices()[i].second; ++j) {
+          if (derFunction_[f.inDer.indices()[i].first + j] < 0) continue;
+          assert((std::size_t)derFunction_[f.inDer.indices()[i].first + j] < functions_.size());
+          computeOrder(derFunction_[f.inDer.indices()[i].first + j], iOrder, computed);
         }
       }
       computationOrder_[iOrder] = iF;

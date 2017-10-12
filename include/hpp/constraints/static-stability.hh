@@ -28,6 +28,7 @@
 
 namespace hpp {
   namespace constraints {
+
     /// \addtogroup constraints
     /// \{
     class HPP_CONSTRAINTS_DLLAPI StaticStability :
@@ -67,7 +68,8 @@ namespace hpp {
         }
 
       private:
-        void impl_compute (vectorOut_t result, ConfigurationIn_t argument) const;
+        void impl_compute (LiegroupElement& result,
+                           ConfigurationIn_t argument) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
 
