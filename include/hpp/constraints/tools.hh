@@ -19,10 +19,21 @@
 
 #include <boost/math/constants/constants.hpp>
 
+#include <pinocchio/spatial/se3.hpp>
+
 #include <hpp/constraints/fwd.hh>
 
 namespace hpp {
   namespace constraints {
+
+    template < typename VectorType, typename MatrixType >
+    static void computeCrossMatrix (const VectorType& v, MatrixType& m)
+    {
+      m.diagonal ().setZero ();
+      m (0,1) = -v [2]; m (1,0) = v [2];
+      m (0,2) = v [1]; m (2,0) = -v [1];
+      m (1,2) = -v [0]; m (2,1) = v [0];
+    }
 
     /// \addtogroup hpp_constraints_tools
     /// \{
@@ -118,16 +129,78 @@ namespace hpp {
       }
     }
 
-    /// \}
-
-    template < typename VectorType, typename MatrixType >
-    static void computeCrossMatrix (const VectorType& v, MatrixType& m)
+    /// Compute log of rigid-body transform
+    ///
+    /// \param M rigid body transform,
+    /// \retval theta angle of rotation,
+    /// \retval result 6d vector \f$(\mathbf{v},\mathbf{r})\f$ such that
+    /// the screw motion of linear velocity (of the origin) $\mathbf{v}$
+    /// expressed in the moving frame and of angular velocity $\mathbf{r}$
+    /// expressed in the moving reaches $M$ in unit time.
+    template <typename Derived> inline void logSE3
+    (const Transform3f& M, Eigen::MatrixBase<Derived>& result)
     {
-      m.diagonal ().setZero ();
-      m (0,1) = -v [2]; m (1,0) = v [2];
-      m (0,2) = v [1]; m (2,0) = -v [1];
-      m (1,2) = -v [0]; m (2,1) = v [0];
+      assert (result.size () == 6);
+      Eigen::MatrixBase<Derived>& value =
+        const_cast<Eigen::MatrixBase<Derived>&> (result);
+      const matrix3_t & R = M.rotation();
+      const vector3_t & p = M.translation();
+      value_type theta;
+      vector3_t r;
+      logSO3 (R, theta, r);
+      value.segment (3, 3) = r;
+      value_type alpha, beta;
+      if (fabs (theta) < 1e-2) {
+        alpha = 1 - theta*theta/12 - theta*theta*theta*theta/720;
+        beta = 1./12 + theta*theta/720;
+      } else {
+        alpha = theta*sin(theta)/(2*(1-cos(theta)));
+        beta = 1/(theta*theta) - sin (theta)/(2*theta*(1-cos(theta)));
+      }
+      matrix3_t rcross; computeCrossMatrix (r, rcross);
+      value.segment (0, 3) = alpha*p - .5*rcross*p + beta*r.dot (p)*r;
     }
+
+    template <typename Derived>
+      void JlogSE3 (const Transform3f& M,
+                    Eigen::MatrixBase<Derived> const& Jlog)
+    {
+      Eigen::MatrixBase<Derived>& value =
+        const_cast<Eigen::MatrixBase<Derived>&> (Jlog);
+      const matrix3_t & R = M.rotation();
+      const vector3_t & p = M.translation();
+      value_type theta;
+      vector3_t r;
+      logSO3 (R, theta, r);
+      matrix3_t Jlog3; JlogSO3 (theta, r, Jlog3);
+      value_type alpha, beta, beta_dot;
+      if (fabs (theta) < 1e-2) {
+        alpha = 1 - theta*theta/12 - theta*theta*theta*theta/720;
+        beta = 1./12 + theta*theta/720;
+        beta_dot = theta / 360;
+      } else {
+        alpha = theta*sin(theta)/(2*(1-cos(theta)));
+        beta = 1/(theta*theta) - sin (theta)/(2*theta*(1-cos(theta)));
+        beta_dot = -2/(theta*theta*theta) + (theta + sin (theta))/
+          (2*theta*theta*(1-cos(theta)));
+      }
+      matrix3_t rcross; computeCrossMatrix (r, rcross);
+      matrix3_t V (alpha * matrix3_t::Identity () - .5*rcross +
+                   beta * r * r.transpose ());
+      value_type rTp (r.dot (p));
+      matrix3_t pcross; computeCrossMatrix (p, pcross);
+      matrix3_t J ((.5*pcross + (beta_dot*rTp/theta)*r*r.transpose ()
+                    - (theta*beta_dot+2*beta)*p*r.transpose ()
+                    + rTp * beta * matrix3_t::Identity ()
+                    + beta * r*p.transpose ()) * Jlog3);
+      value.block (0, 0, 3, 3) = V * R;
+      value.block (0, 3, 3, 3) = J;
+      Eigen::Block<Derived> b (value.block (3, 0, 3, 3));
+      b.setZero ();
+      value.block (3, 3, 3, 3) = Jlog3;
+    }
+
+    /// \}
   } // namespace constraints
 } // namespace hpp
 

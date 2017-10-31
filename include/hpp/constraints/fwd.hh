@@ -38,6 +38,7 @@ namespace hpp {
     typedef pinocchio::JointConstPtr_t JointConstPtr_t;
     typedef pinocchio::vector3_t vector3_t;
     typedef pinocchio::matrix3_t matrix3_t;
+    typedef Eigen::Matrix<value_type, 6, 6> matrix6_t;
     typedef pinocchio::matrix_t matrix_t;
     typedef Eigen::Ref <const matrix_t> matrixIn_t;
     typedef Eigen::Ref <matrix_t> matrixOut_t;
