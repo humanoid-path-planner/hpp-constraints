@@ -112,6 +112,7 @@ BOOST_AUTO_TEST_CASE (Jlog_SO3)
     r0 [1] = lower + (upper - lower) * rand ()/RAND_MAX;
     r0 [2] = lower + (upper - lower) * rand ()/RAND_MAX;
     r0.normalize (); r0 *= 3.14 * rand ()/RAND_MAX;
+    if (i==0) r0.setZero ();
     matrix3_t R0 (exponential (r0));
     vector3_t omega;
     // \dot{R} = R0 [\omega]_{\times}
@@ -134,6 +135,7 @@ BOOST_AUTO_TEST_CASE (Jlog_SE3)
   for (size_type i=0; i<100; ++i) {
     // Generate random rigid body motion
     Transform3f M0; M0.setRandom ();
+    if (i==0) M0.setIdentity ();
     vector6_t log0, log;
     value_type dt (1e-6);
     logSE3 (M0, log0);

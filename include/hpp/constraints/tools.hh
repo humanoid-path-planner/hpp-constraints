@@ -173,24 +173,24 @@ namespace hpp {
       vector3_t r;
       logSO3 (R, theta, r);
       matrix3_t Jlog3; JlogSO3 (theta, r, Jlog3);
-      value_type alpha, beta, beta_dot;
+      value_type alpha, beta, beta_dot_over_theta;
       if (fabs (theta) < 1e-2) {
         alpha = 1 - theta*theta/12 - theta*theta*theta*theta/720;
         beta = 1./12 + theta*theta/720;
-        beta_dot = theta / 360;
+        beta_dot_over_theta = 1. / 360.;
       } else {
         alpha = theta*sin(theta)/(2*(1-cos(theta)));
         beta = 1/(theta*theta) - sin (theta)/(2*theta*(1-cos(theta)));
-        beta_dot = -2/(theta*theta*theta) + (theta + sin (theta))/
-          (2*theta*theta*(1-cos(theta)));
+        beta_dot_over_theta = -2/(theta*theta*theta*theta) +
+          (theta + sin (theta)) / (2*theta*theta*theta*(1-cos(theta)));
       }
       matrix3_t rcross; computeCrossMatrix (r, rcross);
       matrix3_t V (alpha * matrix3_t::Identity () - .5*rcross +
                    beta * r * r.transpose ());
       value_type rTp (r.dot (p));
       matrix3_t pcross; computeCrossMatrix (p, pcross);
-      matrix3_t J ((.5*pcross + (beta_dot*rTp/theta)*r*r.transpose ()
-                    - (theta*beta_dot+2*beta)*p*r.transpose ()
+      matrix3_t J ((.5*pcross + (beta_dot_over_theta*rTp)*r*r.transpose ()
+                    - (theta*theta*beta_dot_over_theta+2*beta)*p*r.transpose ()
                     + rTp * beta * matrix3_t::Identity ()
                     + beta * r*p.transpose ()) * Jlog3);
       value.block (0, 0, 3, 3) = V * R;
