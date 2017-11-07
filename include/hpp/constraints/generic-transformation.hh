@@ -124,18 +124,18 @@ namespace hpp {
      *  \f{equation*}
      *  f (\mathbf{q}) = \left(\begin{array}{c}
      *  \mathbf{translation}\left(T_{1/J_1}^T T_1^T T_2 T_{2/J_2}\right)\\
-     *  \log ((R_1 R_{1/J_1})^T R_2 R_{2/J_2}) \end{array}\right)
+     *  \log \left((R_1 R_{1/J_1})^T R_2 R_{2/J_2}\right) \end{array}\right)
      *  \f}
      *
      *  The Jacobian is given by
      *
      *  \f{equation*}
      *  \left(\begin{array}{c}
-     *  (R_1 R_{1/J_1})^T (\left[R_2 t_{2/J_2} + t_2 - t_1\right]_{\times}
-     *  J_{1\,\omega} - \left[R_2 t_{2/J_2}\right]_{\times} J_{2\,\omega} +
-     *  J_{2\,\mathbf{v}} - J_{1\,\mathbf{v}}) \\
-     *  J_{log}((R_1 R_{1/J_1})^T R_2 R_{2/J_2})(R_1 R_{1/J_1})^T
-     *  (J_{2\,\omega} - J_{1\,\omega})
+     *  (R_1 R_{1/J_1})^T \left(\left[R_2 t_{2/J_2} + t_2 - t_1\right]_{\times}
+     *  R_1 J_{1\,\omega} - \left[R_2 t_{2/J_2}\right]_{\times} R_2 J_{2\,\omega} +
+     *  R_2 J_{2\,\mathbf{v}} - R_1 J_{1\,\mathbf{v}}\right) \\
+     *  J_{log}\left((R_1 R_{1/J_1})^T R_2 R_{2/J_2}\right)(R_1 R_{1/J_1})^T
+     *  (R_2 J_{2\,\omega} - R_1 J_{1\,\omega})
      *  \end{array}\right)
      *  \f}
     */
