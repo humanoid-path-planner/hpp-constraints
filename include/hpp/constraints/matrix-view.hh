@@ -156,6 +156,9 @@ namespace Eigen {
     };
   } // namespace internal
 
+  /// \addtogroup hpp_constraints_tools
+  /// \{
+
   /// List of integer intervals
   ///
   /// Used to select blocks in a vector or in a matrix.
@@ -208,6 +211,23 @@ namespace Eigen {
     /// Compute the set difference between two vectors of segments.
     /// \note assume a and b are sorted
     static segments_t difference (const segments_t& a, const segments_t& b);
+
+    /// Split a set of segment into two sets of segments
+    /// \param segments input set of segments,
+    /// \param cardinal cardinal of the first set of segments,
+    /// \return the first set of segments.
+    ///
+    /// The second set is stored in the input set of segments.
+    static segments_t split (segments_t& segments, const size_type& cardinal);
+
+    /// Extract a subset of a set of segments
+    /// \param segments input set of segments
+    /// \param start beginning of extracted set of segments (cardinal of subset
+    ///        left behind in input set of segments)
+    /// \param cardinal cardinal of extracted set of segments,
+    /// \return subset of segments.
+    static segments_t extract (const segments_t& segments, size_type start,
+                               size_type cardinal);
   }; // struct BlockIndex
 
   /// Collection of indices of matrix blocks
@@ -250,7 +270,15 @@ namespace Eigen {
                           const segments_t& cols) :
         m_nbRows(BlockIndex::cardinal(rows)),
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
-      {}
+      {
+# ifndef NDEBUG
+        // test that input is sorted
+        segments_t r (rows); BlockIndex::sort (r);
+        assert (r == rows);
+        segments_t c (cols); BlockIndex::sort (c);
+        assert (c == cols);
+#endif
+      }
 
       /// Constructor of single block
       /// \param first indice for row and column
@@ -447,6 +475,15 @@ namespace Eigen {
         return m_nbCols;
       }
 
+      /// Extract a block
+      /// \param i, j, ni, nj upper left corner and lengths of the block
+      /// \return new instance
+      MatrixBlocks <_allRows, _allCols> block
+      (size_type i, size_type j, size_type ni, size_type nj) const
+      {
+        return MatrixBlocks (BlockIndex::extract (rows (), i, ni),
+                             BlockIndex::extract (cols (), j, nj));
+      }
 
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateIndices() {
@@ -685,6 +722,8 @@ namespace Eigen {
       size_type m_nbCols;
       ColIndices_t m_cols;
   }; // MatrixBlockView
+
+  ///\}
 
 } // namespace Eigen
 

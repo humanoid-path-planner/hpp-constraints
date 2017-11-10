@@ -17,6 +17,9 @@
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
 
+#include <pinocchio/spatial/explog.hpp>
+#include <pinocchio/spatial/motion.hpp>
+
 #include <hpp/constraints/tools.hh>
 
 using namespace hpp::constraints;
@@ -44,7 +47,7 @@ vector3_t log (const matrix3_t R)
 {
   vector3_t log;
   value_type theta;
-  computeLog(R, theta, log);
+  logSO3(R, theta, log);
   return log;
 }
 
@@ -97,4 +100,55 @@ BOOST_AUTO_TEST_CASE (logarithm) {
 
   BOOST_CHECK(check ((M_PI - 1.001 * dlUB) / sqrt(3) * vector3_t (1, 1,1), eps));
   BOOST_CHECK(check ((M_PI - 0.999 * dlUB) / sqrt(3) * vector3_t (1, 1,1)));
+}
+
+BOOST_AUTO_TEST_CASE (Jlog_SO3)
+{
+  value_type lower (-1), upper (1);
+  for (size_type i=0; i<100; ++i) {
+    // Generate random rotation matrix
+    vector3_t r0;
+    r0 [0] = lower + (upper - lower) * rand ()/RAND_MAX;
+    r0 [1] = lower + (upper - lower) * rand ()/RAND_MAX;
+    r0 [2] = lower + (upper - lower) * rand ()/RAND_MAX;
+    r0.normalize (); r0 *= 3.14 * rand ()/RAND_MAX;
+    if (i==0) r0.setZero ();
+    matrix3_t R0 (exponential (r0));
+    vector3_t omega;
+    // \dot{R} = R0 [\omega]_{\times}
+    // R (dt) = R0 \exp (dt [\omega]_{\times})
+    value_type dt (1e-6);
+    for (size_type i=0; i<3; ++i){
+      omega.setZero ();
+      omega [i] = 1;
+      matrix3_t R (R0 * exponential (dt*omega));
+      value_type theta;
+      vector3_t r; logSO3 (R, theta, r);
+      matrix3_t Jlog; JlogSO3 (theta, r, Jlog);
+      BOOST_CHECK (((r-r0)/dt - Jlog * omega).squaredNorm () < 1e-8);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE (Jlog_SE3)
+{
+  for (size_type i=0; i<100; ++i) {
+    // Generate random rigid body motion
+    Transform3f M0; M0.setRandom ();
+    if (i==0) M0.setIdentity ();
+    vector6_t log0, log;
+    value_type dt (1e-6);
+    logSE3 (M0, log0);
+    matrix6_t Jlog; JlogSE3 (M0, Jlog);
+    for (size_type i=0; i<6; ++i) {
+      vector6_t v; v.setZero ();
+      v [i] = 1;
+      se3::Motion nu (v);
+      Transform3f M (M0 * se3::exp6 (dt * nu));
+      logSE3 (M, log);
+      std::cout << "(log-log0)/dt=" << ((log-log0)/dt).transpose () << std::endl;
+      std::cout << "Jlog * v=     " << (Jlog * v).transpose () << std::endl;
+      BOOST_CHECK (((log-log0)/dt - Jlog * v).squaredNorm () < 1e-8);
+    }
+  }
 }

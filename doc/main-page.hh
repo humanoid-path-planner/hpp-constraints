@@ -17,5 +17,7 @@ namespace hpp {
     ///
     /// \defgroup constraints Constraints
     /// \defgroup solvers Constraint solvers
+    /// \defgroup hpp_constraints_tools Tools
+    /// \ingroup constraints
   } // namespace constraints
 } // namespace hpp

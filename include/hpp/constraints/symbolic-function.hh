@@ -85,7 +85,7 @@ namespace hpp {
           size_t index = 0;
           for (std::size_t i = 0; i < mask_.size (); i++) {
             if (mask_[i])
-              result.vector () [index++] = expr_->value ().vector () [i];
+              result.vector () [index++] = expr_->value () [i];
           }
         }
 
