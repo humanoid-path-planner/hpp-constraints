@@ -56,6 +56,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/impl/hybrid-solver.hh
   include/hpp/constraints/impl/iterative-solver.hh
   include/hpp/constraints/impl/matrix-view.hh
+  include/hpp/constraints/impl/matrix-view-operation.hh
 )
 
 # Activate hpp-util logging if requested
