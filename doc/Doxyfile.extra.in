@@ -1,6 +1,4 @@
 INPUT = @CMAKE_SOURCE_DIR@/include/hpp/constraints \
       @CMAKE_SOURCE_DIR@/doc
 
-TAGFILES = @HPP_PINOCCHIO_DOXYGENDOCDIR@/hpp-pinocchio.doxytag=@HPP_PINOCCHIO_DOXYGENDOCDIR@
-
 GENERATE_TREEVIEW      = NO
