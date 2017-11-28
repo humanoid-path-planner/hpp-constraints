@@ -42,18 +42,18 @@ namespace hpp {
     ///
     /// The solver works on a given set of variables \f$ X = (x_i) \f$.
     /// It contains a set of functions \f$ f_j \f$ that takes as input a subset of \f$ X \f$ and
-    /// outputs values of corresponding to another subset of \f$ X \f$.
-    /// There can be no cycles in the dependencies. Moreover, two functions must have
-    /// non-intersecting output subset.
+    /// outputs values corresponding to another subset of \f$ X \f$.
+    /// There can be no cycles in the dependencies. Moreover, a variable cannot
+    /// be the output of two different functions.
     /// For instance, \f$ (x_0, x_2) = f_0( x_1, x_3 ) \f$ and
     /// \f$ (x_3) = f_1( x_4 ) \f$ is a valid input. It would not be possible to
     /// add \f$ (x_0) = f_2( x_2 ) \f$ because it would introduce a cycle,
     /// or \f$ (x_3) = f_3( x_1 ) \f$ because \f$ x_3 \f$ would be computed by
-    /// two different function.
+    /// two different functions.
     ///
     /// The resolution consists in modyfing the output values of each function,
     /// while respecting the dependendy order. Considering \f$ f_0, f_1 \f$
-    /// above, \f$ f_1 \f$ must be computed before.
+    /// above, \f$ f_1 \f$ must be computed first.
     class HPP_CONSTRAINTS_DLLAPI ExplicitSolver
     {
       public:
