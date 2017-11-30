@@ -109,9 +109,11 @@ namespace Eigen {
       static void run (const Src& src, Dst& dst) {
         typename Dst::block_iterator db (dst);
         for (typename Src::block_iterator sb (src); sb.valid(); ++sb) {
+          assert (db.valid());
           dst._block(db) = src._block(sb);
           ++db;
         }
+        assert (!db.valid());
       }
     };
 
