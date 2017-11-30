@@ -205,9 +205,8 @@ namespace hpp {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
         f.value (d.output, arg);
-        // TODO avoid dynamic allocation
         d.equalityIndices.lview(d.rightHandSide.vector ()) =
-          d.equalityIndices.rview(d.output.vector ()).eval();
+          d.equalityIndices.rview(d.output.vector ());
       }
       return rightHandSide();
     }
@@ -288,7 +287,7 @@ namespace hpp {
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i)
-        rhsSize += datas_[i].equalityIndices.m_nbRows;
+        rhsSize += datas_[i].equalityIndices.nbRows();
       return rhsSize;
     }
 
