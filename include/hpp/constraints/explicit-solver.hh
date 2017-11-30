@@ -43,6 +43,10 @@ namespace hpp {
     /// The solver works on a given set of variables \f$ X = (x_i) \f$.
     /// It contains a set of functions \f$ f_j \f$ that takes as input a subset of \f$ X \f$ and
     /// outputs values corresponding to another subset of \f$ X \f$.
+    /// The equation are then of the following form:
+    /// \f$ X_{output} = f (X_{input}) + rhs \f$ where the addition is the
+    /// addition of the \ref outputSpace() of \f$ f \f$.
+    /// 
     /// There can be no cycles in the dependencies. Moreover, a variable cannot
     /// be the output of two different functions.
     /// For instance, \f$ (x_0, x_2) = f_0( x_1, x_3 ) \f$ and
@@ -78,6 +82,16 @@ namespace hpp {
             const RowBlockIndices& outArg,
             const ColBlockIndices& inDer,
             const RowBlockIndices& outDer);
+
+        /// Returns true if the function was added, false otherwise
+        /// A function can be added iif its outputs do not interfere with the
+        /// output of another function.
+        bool add (const DifferentiableFunctionPtr_t& f,
+            const RowBlockIndices& inArg,
+            const RowBlockIndices& outArg,
+            const ColBlockIndices& inDer,
+            const RowBlockIndices& outDer,
+            const ComparisonTypes_t& comp);
 
         /// \warning the two functions must have the same input and output
         /// indices.
@@ -182,6 +196,33 @@ namespace hpp {
         /// \warning it is assumed solve(arg) has been called before.
         void jacobian(matrixOut_t jacobian, vectorIn_t arg) const;
 
+        /// \name Right hand side accessors
+        /// \{
+
+        /// Compute a right hand side using the input arg.
+        /// This does not set the right hand side.
+        /// To set the right hand side using this function, one must call
+        /// rightHandSide (rightHandSideFromArgument (arg))
+        vector_t rightHandSideFromInput (vectorIn_t arg);
+
+        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg);
+
+        /// Set the level set parameter.
+        /// \param rhs the level set parameter.
+        void rightHandSide (vectorIn_t rhs);
+
+        bool rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs);
+
+        /// Get the level set parameter.
+        /// \return the parameter.
+        vector_t rightHandSide () const;
+
+        /// Get size of the level set parameter.
+        size_type rightHandSideSize () const;
+
+        /// \}
+
+
       private:
         typedef std::vector<bool> Computed_t;
 
@@ -193,17 +234,15 @@ namespace hpp {
 
         struct Function {
           Function (DifferentiableFunctionPtr_t _f, RowBlockIndices ia,
-                    RowBlockIndices oa, ColBlockIndices id, RowBlockIndices od):
-            f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
-            value (f->outputSpace ())
-          {
-            jacobian.resize(_f->outputDerivativeSize(),
-                            _f->inputDerivativeSize());
-          }
+                    RowBlockIndices oa, ColBlockIndices id, RowBlockIndices od,
+                    const ComparisonTypes_t& comp);
           DifferentiableFunctionPtr_t f;
           RowBlockIndices inArg, outArg;
           ColBlockIndices inDer;
           RowBlockIndices outDer;
+          ComparisonTypes_t comparison;
+          RowBlockIndices equalityIndices;
+          vector_t rightHandSide;
 
           mutable LiegroupElement value;
           mutable matrix_t jacobian;

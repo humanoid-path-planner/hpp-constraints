@@ -184,11 +184,46 @@ namespace hpp {
       return isSatisfied (arg, diffSmall_);
     }
 
+    ExplicitSolver::Function::Function (DifferentiableFunctionPtr_t _f,
+        RowBlockIndices ia, RowBlockIndices oa,
+        ColBlockIndices id, RowBlockIndices od,
+        const ComparisonTypes_t& comp) :
+      f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
+      comparison (comp),
+      rightHandSide (vector_t::Zero(f->outputSpace()->nv())),
+      value (f->outputSpace ())
+    {
+      jacobian.resize(_f->outputDerivativeSize(), _f->inputDerivativeSize());
+      for (std::size_t i = 0; i < comp.size(); ++i) {
+        switch (comp[i]) {
+          case Equality:
+            equalityIndices.addRow(i, 1);
+            break;
+          case Superior:
+          case Inferior:
+          default:
+            break;
+        }
+      }
+      equalityIndices.updateRows<true, true, true>();
+    }
+
     bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
         const RowBlockIndices& inArg,
         const RowBlockIndices& outArg,
         const ColBlockIndices& inDer,
         const RowBlockIndices& outDer)
+    {
+      return add (f, inArg, outArg, inDer, outDer,
+          ComparisonTypes_t(f->outputSize(), EqualToZero));
+    }
+
+    bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
+        const RowBlockIndices& inArg,
+        const RowBlockIndices& outArg,
+        const ColBlockIndices& inDer,
+        const RowBlockIndices& outDer,
+        const ComparisonTypes_t& comp)
     {
       assert (outArg.indices().size() == 1 && "Only contiguous function output is supported.");
       assert (outDer.indices().size() == 1 && "Only contiguous function output is supported.");
@@ -199,6 +234,10 @@ namespace hpp {
       for (std::size_t i = 0; i < inArg.indices().size(); ++i)
         if (BlockIndex::overlap(inArg.indices()[i], outIdx))
           return false;
+      // Sanity check: Comparison type must be either EqualToZero or Equality
+      assert (comp.size() == (std::size_t)f->outputSize());
+      for (std::size_t i = 0; i < comp.size(); ++i)
+        if (comp[i] != EqualToZero && comp[i] != Equality) return false;
       // Check that no other function already computes its outputs.
       if ((outArg.rview(argFunction_).eval().array() >= 0).any())
         return false;
@@ -218,7 +257,7 @@ namespace hpp {
       int idx = int(functions_.size());
       outArg.lview(argFunction_).setConstant(idx);
       outDer.lview(derFunction_).setConstant(idx);
-      functions_.push_back (Function(f, inArg, outArg, inDer, outDer));
+      functions_.push_back (Function(f, inArg, outArg, inDer, outDer, comp));
 
       /// Computation order
       std::size_t order = 0;
@@ -265,7 +304,7 @@ namespace hpp {
       const Function& f = functions_[iF];
       // Compute this function
       f.f->value(f.value, f.inArg.rview(arg).eval());
-      f.outArg.lview(arg) = f.value.vector ();
+      f.outArg.lview(arg) = (f.value + f.rightHandSide).vector();
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
@@ -311,5 +350,84 @@ namespace hpp {
       ++iOrder;
       computed[iF] = true;
     }
+
+    vector_t ExplicitSolver::rightHandSideFromInput (vectorIn_t arg)
+    {
+      for (std::size_t i = 0; i < functions_.size (); ++i) {
+        Function& f = functions_[i];
+        f.f->value(f.value, f.inArg.rview(arg).eval());
+        LiegroupElement expected (f.outArg.lview(arg), f.f->outputSpace());
+        vector_t rhs = expected - f.value;
+        f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
+      }
+      return rightHandSide();
+    }
+
+    bool ExplicitSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& df, vectorIn_t arg)
+    {
+      for (std::size_t i = 0; i < functions_.size (); ++i) {
+        Function& f = functions_[i];
+        if (f.f == df) {
+          // Computes f(q1) and q2
+          df->value(f.value, f.inArg.rview(arg).eval());
+          LiegroupElement expected (f.outArg.lview(arg), f.f->outputSpace());
+
+          // Set rhs = q2 - f(q1)
+          vector_t rhs = expected - f.value;
+          f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    bool ExplicitSolver::rightHandSide (const DifferentiableFunctionPtr_t& df, vectorIn_t rhs)
+    {
+      for (std::size_t i = 0; i < functions_.size (); ++i) {
+        Function& f = functions_[i];
+        if (f.f == df) {
+          f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    void ExplicitSolver::rightHandSide (vectorIn_t rhs)
+    {
+      size_type row = 0;
+      for (std::size_t i = 0; i < functions_.size (); ++i) {
+        Function& f = functions_[i];
+
+        f.equalityIndices.lview(f.rightHandSide)
+          = rhs.segment(row, f.equalityIndices.nbRows());
+        row += f.equalityIndices.nbRows();
+      }
+      assert (row == rhs.size());
+    }
+
+    vector_t ExplicitSolver::rightHandSide () const
+    {
+      vector_t rhs(rightHandSideSize());
+      size_type row = 0;
+      for (std::size_t i = 0; i < functions_.size (); ++i) {
+        const Function& f = functions_[i];
+        const size_type nRows = f.equalityIndices.nbRows();
+        vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
+        seg = f.equalityIndices.rview(f.rightHandSide);
+        row += nRows;
+      }
+      assert (row == rhs.size());
+      return rhs;
+    }
+
+    size_type ExplicitSolver::rightHandSideSize () const
+    {
+      size_type rhsSize = 0;
+      for (std::size_t i = 0; i < functions_.size (); ++i)
+        rhsSize += functions_[i].equalityIndices.nbRows();
+      return rhsSize;
+    }
+
   } // namespace constraints
 } // namespace hpp

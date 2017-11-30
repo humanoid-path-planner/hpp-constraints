@@ -82,16 +82,8 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI HierarchicalIterativeSolver
     {
       public:
-        enum ComparisonType {
-          Equality,
-          EqualToZero,
-          Superior,
-          Inferior
-        };
-
         typedef Eigen::ColBlockIndices Reduction_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
-        typedef std::vector<ComparisonType> ComparisonTypes_t;
 
         enum Status {
           ERROR_INCREASED,

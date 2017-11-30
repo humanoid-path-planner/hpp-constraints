@@ -27,19 +27,21 @@
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
+
+#include <hpp/constraints/affine-function.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 
 using namespace hpp::constraints;
 
-class LockedJoint : public DifferentiableFunction
+class LockedJoint : public AffineFunction
 {
   public:
     size_type idx_, length_;
     vector_t value_;
 
     LockedJoint(size_type idx, size_type length, vector_t value)
-      : DifferentiableFunction(0, 0, LiegroupSpace::Rn (length), "LockedJoint"),
+      : AffineFunction(matrix_t(length,0), value, "LockedJoint"),
         idx_ (idx), length_ (length), value_ (value)
     {}
 
@@ -68,27 +70,15 @@ class LockedJoint : public DifferentiableFunction
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
-
-    void impl_compute (LiegroupElement& result, vectorIn_t ) const
-    {
-      result.vector () = value_;
-    }
-
-    void impl_jacobian (matrixOut_t,
-                        vectorIn_t ) const
-    {
-      // jacobian.setIdentity();
-    }
 };
 
-class TestFunction : public DifferentiableFunction
+class TestFunction : public AffineFunction
 {
   public:
     size_type idxIn_, idxOut_, length_;
 
     TestFunction(size_type idxIn, size_type idxOut, size_type length)
-      : DifferentiableFunction(length, length, LiegroupSpace::Rn (length),
-                               "TestFunction"),
+      : AffineFunction(matrix_t::Identity(length,length), "TestFunction"),
         idxIn_ (idxIn), idxOut_ (idxOut), length_ (length)
     {}
 
@@ -118,18 +108,6 @@ class TestFunction : public DifferentiableFunction
       ExplicitSolver::RowBlockIndices ret;
       ret.addRow (idxOut_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
-    }
-
-    void impl_compute (LiegroupElement& result,
-                       vectorIn_t arg) const
-    {
-      result = LiegroupElement (arg, outputSpace ());
-    }
-
-    void impl_jacobian (matrixOut_t jacobian,
-                        vectorIn_t) const
-    {
-      jacobian.setIdentity();
     }
 };
 
@@ -272,13 +250,19 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
-    BOOST_CHECK(!solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()));
+    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)));
+    BOOST_CHECK(!solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)));
+    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer(), ComparisonTypes_t(1, Equality)));
 
     BOOST_CHECK(solver.solve(qrand));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], 0);
+
+    solver.rightHandSide(l1, vector_t::Ones(1));
+    solver.rightHandSide(l2, vector_t::Constant(1,-0.2));
+    BOOST_CHECK(solver.solve(qrand));
+    BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 1);
+    BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], -0.2);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     solver.jacobian(jacobian, q);

@@ -137,6 +137,14 @@ namespace hpp {
       RelativeTransformationPtr_t;
 
     typedef Eigen::BlockIndex BlockIndex;
+
+    enum ComparisonType {
+      Equality,
+      EqualToZero,
+      Superior,
+      Inferior
+    };
+    typedef std::vector<ComparisonType> ComparisonTypes_t;
   } // namespace constraints
 } // namespace hpp
 

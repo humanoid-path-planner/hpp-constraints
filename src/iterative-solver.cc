@@ -44,15 +44,15 @@ namespace hpp {
 
       template <bool ComputeJac>
       void applyComparison (
-          const HierarchicalIterativeSolver::ComparisonTypes_t comparison,
+          const ComparisonTypes_t comparison,
           const std::vector<std::size_t>& indices,
           vector_t& value, matrix_t& jacobian, const value_type& thr)
       {
         for (std::size_t i = 0; i < indices.size(); ++i) {
           const std::size_t j = indices[i];
           switch (comparison[j]) {
-            case HierarchicalIterativeSolver::Superior: compare<true , ComputeJac> (value[j], jacobian.row(j), thr); break;
-            case HierarchicalIterativeSolver::Inferior: compare<false, ComputeJac> (value[j], jacobian.row(j), thr); break;
+            case Superior: compare<true , ComputeJac> (value[j], jacobian.row(j), thr); break;
+            case Inferior: compare<false, ComputeJac> (value[j], jacobian.row(j), thr); break;
             default: break;
           }
         }
