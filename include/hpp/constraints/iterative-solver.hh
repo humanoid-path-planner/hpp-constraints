@@ -271,6 +271,9 @@ namespace hpp {
           }
         }
 
+        /// \name Right hand side accessors
+        /// \{
+
         /// Compute a right hand side using the input arg.
         /// This does not set the right hand side.
         /// To set the right hand side using this function, one must call
@@ -292,9 +295,12 @@ namespace hpp {
         /// Get size of the level set parameter.
         size_type rightHandSideSize () const;
 
+        /// \}
+
         /// \name Access to internal datas
         /// You should know what you do when you call these functions
         /// \{
+
         /// Compute the value of each level, and the jacobian if ComputeJac is true.
         template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
         void getValue (vectorOut_t v) const;
