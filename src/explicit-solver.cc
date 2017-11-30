@@ -161,20 +161,18 @@ namespace hpp {
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg, vectorOut_t error) const
     {
-      assert(error.size() == outDers_.nbIndices());
-      arg_ = arg;
-      solve (arg_);
-      difference_ (arg, arg_, diff_);
-      error = outDers_.rview(diff_);
+      size_type row = 0;
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        const Function& f = functions_[i];
+        // Compute this function
+        f.f->value(f.value, f.inArg.rview(arg).eval());
+        const size_type& nbRows = f.outArg.nbRows();
+        LiegroupElement tmp (f.outArg.lview(arg), f.f->outputSpace());
+        error.segment (row, nbRows) = tmp - (f.value + f.rightHandSide);
+        row += nbRows;
+      }
+      assert (row == error.size());
       hppDout (info, "Squared error norm is " << error.squaredNorm());
-      // TODO: this threshold a very bad way of solving a numerical issue.
-      // in hpp-core, a numerical constraint may have both a explicit and an
-      // implicit formulation.
-      // 1. The implicit formulation never gives an exact solution so we must
-      //    allow a threshold.
-      // 2. The explicit function may give slightly different results so we must
-      //    allow for a greater threshold. Note the factor 10 is very likely
-      //    over-estimated.
       return error.squaredNorm() < squaredErrorThreshold_;
     }
 
