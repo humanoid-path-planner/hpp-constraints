@@ -68,11 +68,19 @@ namespace hpp {
         /// \note result may be of a different size than arg0 and arg1
         typedef boost::function<void (vectorIn_t arg0, vectorIn_t arg1, vectorOut_t result)> Difference_t;
 
+        /// \name Resolution
+        /// \{
+
         bool solve (vectorOut_t arg) const;
 
         bool isSatisfied (vectorIn_t arg) const;
 
         bool isSatisfied (vectorIn_t arg, vectorOut_t error) const;
+        
+        /// \}
+
+        /// \name Construction of the problem
+        /// \{
 
         /// Returns true if the function was added, false otherwise
         /// A function can be added iif its outputs do not interfere with the
@@ -112,6 +120,11 @@ namespace hpp {
           inDers_.addCol(0, derSize);
         }
 
+        /// \}
+
+        /// \name Parameters
+        /// \{
+
         /// Set error threshold
         void errorThreshold (const value_type& threshold)
         {
@@ -127,6 +140,11 @@ namespace hpp {
         {
           return squaredErrorThreshold_;
         }
+
+        /// \}
+
+        /// \name Input and outputs
+        /// \{
 
         /// The set of variable indices which are not affected by the
         /// resolution.
@@ -171,6 +189,8 @@ namespace hpp {
         {
           return derSize_;
         }
+
+        /// \}
 
         inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
         {
