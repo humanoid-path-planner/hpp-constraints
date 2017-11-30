@@ -256,7 +256,7 @@ namespace Eigen {
       typedef typename internal::conditional<_allCols, internal::empty_struct, segments_t>::type ColIndices_t;
 
       /// Smaller matrix composed by concatenation of the blocks
-      template <typename Derived, int _Rows, int _Cols> struct View {
+      template <typename Derived, int _Rows = Derived::RowsAtCompileTime, int _Cols = Derived::ColsAtCompileTime> struct View {
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
         typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
       }; // struct View
@@ -380,12 +380,12 @@ namespace Eigen {
       /// \return writable view of the smaller matrix composed by concatenation
       ///         of blocks.
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type lview(const MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<Derived>::type lview(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, this->nbIndices(), this->indices());
+          return typename View<Derived>::type (o, this->nbIndices(), this->indices());
         else
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
+          return typename View<Derived>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
       /// Writable view of the smaller matrix transposed
@@ -393,12 +393,12 @@ namespace Eigen {
       /// \return writable view of the smaller matrix composed by concatenation
       ///         of blocks and transposed.
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type lviewTranspose(const MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<Derived>::transpose_type lviewTranspose(const MatrixBase<Derived>& other) const {
         Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
         if (_allCols || _allRows)
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, nbIndices(), indices());
+          return typename View<Derived>::transpose_type (o, nbIndices(), indices());
         else
-          return typename View<Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (o, m_nbCols, m_cols, m_nbRows, m_rows);
+          return typename View<Derived>::transpose_type (o, m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
       /// Non-writable view of the smaller matrix
@@ -406,11 +406,11 @@ namespace Eigen {
       /// \return non-writable view of the smaller matrix composed by
       ///         concatenation of blocks.
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type rview(const MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<const Derived>::type rview(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
-          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), nbIndices(), indices());
+          return typename View<const Derived>::type (other.derived(), nbIndices(), indices());
         else
-          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
+          return typename View<const Derived>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
       }
 
       /// Non-writable view of the smaller matrix transposed
@@ -418,11 +418,11 @@ namespace Eigen {
       /// \return non-writable view of the smaller matrix composed by
       ///         concatenation of blocks and transposed.
       template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type rviewTranspose(const MatrixBase<Derived>& other) const {
+      EIGEN_STRONG_INLINE typename View<const Derived>::transpose_type rviewTranspose(const MatrixBase<Derived>& other) const {
         if (_allCols || _allRows)
-          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), nbIndices(), indices());
+          return typename View<const Derived>::transpose_type (other.derived(), nbIndices(), indices());
         else
-          return typename View<const Derived, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
+          return typename View<const Derived>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
       }
 
       /// Return row or column indices as a vector of segments
