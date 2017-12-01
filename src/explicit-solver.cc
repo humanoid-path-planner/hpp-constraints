@@ -166,7 +166,7 @@ namespace hpp {
         const Function& f = functions_[i];
         // Compute this function
         f.f->value(f.value, f.inArg.rview(arg).eval());
-        const size_type& nbRows = f.outArg.nbRows();
+        const size_type& nbRows = f.outDer.nbRows();
         LiegroupElement tmp (f.outArg.lview(arg), f.f->outputSpace());
         error.segment (row, nbRows) = tmp - (f.value + f.rightHandSide);
         row += nbRows;
@@ -213,7 +213,7 @@ namespace hpp {
         const RowBlockIndices& outDer)
     {
       return add (f, inArg, outArg, inDer, outDer,
-          ComparisonTypes_t(f->outputSize(), EqualToZero));
+          ComparisonTypes_t(f->outputDerivativeSize(), EqualToZero));
     }
 
     bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
@@ -233,7 +233,7 @@ namespace hpp {
         if (BlockIndex::overlap(inArg.indices()[i], outIdx))
           return false;
       // Sanity check: Comparison type must be either EqualToZero or Equality
-      assert (comp.size() == (std::size_t)f->outputSize());
+      assert (comp.size() == (std::size_t)f->outputDerivativeSize());
       for (std::size_t i = 0; i < comp.size(); ++i)
         if (comp[i] != EqualToZero && comp[i] != Equality) return false;
       // Check that no other function already computes its outputs.
