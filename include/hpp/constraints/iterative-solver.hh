@@ -277,9 +277,9 @@ namespace hpp {
         /// Compute a right hand side using the input arg.
         vector_t rightHandSideFromInput (vectorIn_t arg);
 
-        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg) const;
+        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg);
 
-        bool rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs) const;
+        bool rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs);
 
         /// Set the level set parameter.
         /// \param rhs the level set parameter.

@@ -199,7 +199,7 @@ namespace hpp {
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
-    vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg) const
+    vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg)
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
@@ -211,7 +211,7 @@ namespace hpp {
       return rightHandSide();
     }
 
-    bool HierarchicalIterativeSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg) const
+    bool HierarchicalIterativeSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg)
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
@@ -235,7 +235,7 @@ namespace hpp {
       return false;
     }
 
-    bool HierarchicalIterativeSolver::rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs) const
+    bool HierarchicalIterativeSolver::rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs)
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
