@@ -220,9 +220,6 @@ namespace hpp {
         /// \{
 
         /// Compute a right hand side using the input arg.
-        /// This does not set the right hand side.
-        /// To set the right hand side using this function, one must call
-        /// rightHandSide (rightHandSideFromArgument (arg))
         vector_t rightHandSideFromInput (vectorIn_t arg);
 
         bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg);
