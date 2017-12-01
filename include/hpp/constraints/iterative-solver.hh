@@ -246,6 +246,13 @@ namespace hpp {
           return dimension_;
         }
 
+        /// Dimension of the problem after removing the rows of the jacobian
+        /// which do not influence the error (only zeros along those lines).
+        const size_type& reducedDimension () const
+        {
+          return reducedDimension_;
+        }
+
         /// Configuration parameters involved in the constraint resolution.
         bool_array_t activeParameters () const;
 
@@ -363,7 +370,7 @@ namespace hpp {
 
         std::vector<DifferentiableFunctionStack> stacks_;
         size_type argSize_, derSize_;
-        size_type dimension_;
+        size_type dimension_, reducedDimension_;
         bool lastIsOptional_;
         Reduction_t reduction_;
         Integration_t integrate_;

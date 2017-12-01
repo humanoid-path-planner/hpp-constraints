@@ -151,11 +151,13 @@ namespace hpp {
       std::size_t reducedSize = reduction_.nbIndices();
 
       dimension_ = 0;
+      reducedDimension_ = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         computeActiveRowsOfJ (i);
 
         const DifferentiableFunctionStack& f = stacks_[i];
-        dimension_ += datas_[i].activeRowsOfJ.m_nbRows;
+        dimension_ += f.outputSize();
+        reducedDimension_ += datas_[i].activeRowsOfJ.m_nbRows;
         datas_[i].output = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide.setNeutral ();
@@ -175,8 +177,8 @@ namespace hpp {
       dq_ = vector_t::Zero(derSize_);
       dqSmall_.resize(reducedSize);
       projector_.resize(reducedSize, reducedSize);
-      reducedJ_.resize(dimension_, reducedSize);
-      svd_ = SVD_t (dimension_, reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      reducedJ_.resize(reducedDimension_, reducedSize);
+      svd_ = SVD_t (reducedDimension_, reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
     }
 
     void HierarchicalIterativeSolver::computeActiveRowsOfJ (std::size_t iStack)

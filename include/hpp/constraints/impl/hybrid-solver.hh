@@ -38,7 +38,7 @@ namespace hpp {
       computeError();
 
       if (squaredNorm_ > .25 * squaredErrorThreshold_
-          && dimension_ == 0) return INFEASIBLE;
+          && reducedDimension_ == 0) return INFEASIBLE;
 
       hppDout (info, "squareNorm = " << squaredNorm_);
 
