@@ -349,6 +349,16 @@ namespace hpp {
       }
     }
 
+    void HierarchicalIterativeSolver::residualError (vectorOut_t error) const
+    {
+      size_type row = 0;
+      for (std::size_t i = 0; i < datas_.size(); ++i) {
+        const Data& d = datas_[i]; 
+        error.segment(row, d.error.size()) = d.error;
+        row += d.error.size();
+      }
+    }
+
     void HierarchicalIterativeSolver::computeDescentDirection () const
     {
       sigma_ = std::numeric_limits<value_type>::max();
