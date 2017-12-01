@@ -118,6 +118,88 @@ namespace hpp {
           return HierarchicalIterativeSolver::errorThreshold();
         }
 
+        /// \name Right hand side accessors
+        /// \{
+
+        /// Compute a right hand side using the input arg.
+        vector_t rightHandSideFromInput (vectorIn_t arg)
+        {
+          const size_type top = parent_t::rightHandSideSize();
+          const size_type bot = explicit_.rightHandSideSize();
+          vector_t rhs (top + bot);
+          rhs.head(top) = parent_t::rightHandSideFromInput (arg);
+          rhs.tail(bot) = explicit_.rightHandSideFromInput (arg);
+          return rhs;
+        }
+
+        /// Set the right hand side for a given constraint.
+        /// \param fImplicit implicit formulation of the constraint. Can be NULL
+        /// \param fExplicit explicit formulation of the constraint. Can be NULL
+        /// \param arg a vector of size argSize_
+        /// \warning At least one of fImplicit and fExplicit must be non-NULL.
+        bool rightHandSideFromInput (
+            const DifferentiableFunctionPtr_t& fImplicit,
+            const DifferentiableFunctionPtr_t& fExplicit,
+            vectorIn_t arg)
+        {
+          assert (fImplicit || fExplicit);
+          if (fExplicit && explicit_.rightHandSideFromInput (fExplicit, arg))
+            return true;
+          if (fImplicit && parent_t::rightHandSideFromInput (fImplicit, arg))
+            return true;
+          return false;
+        }
+
+        /// Set the right hand side for a given constraint.
+        /// \param fImplicit implicit formulation of the constraint. Can be NULL
+        /// \param fExplicit explicit formulation of the constraint. Can be NULL
+        /// \param rhs the desired right hand side
+        /// \warning At least one of fImplicit and fExplicit must be non-NULL.
+        bool rightHandSide (
+            const DifferentiableFunctionPtr_t& fImplicit,
+            const DifferentiableFunctionPtr_t& fExplicit,
+            vectorIn_t rhs)
+        {
+          assert (fImplicit || fExplicit);
+          if (fExplicit && explicit_.rightHandSide (fExplicit, rhs))
+            return true;
+          if (fImplicit && parent_t::rightHandSide (fImplicit, rhs))
+            return true;
+          return false;
+        }
+
+        /// Set the level set parameter.
+        /// \param rhs the level set parameter.
+        void rightHandSide (vectorIn_t rhs)
+        {
+          const size_type top = parent_t::rightHandSideSize();
+          const size_type bot = explicit_.rightHandSideSize();
+          parent_t::rightHandSide (rhs.head(top));
+          explicit_.rightHandSideFromInput (rhs.head(bot));
+        }
+
+        /// Get the level set parameter.
+        /// \return the parameter.
+        vector_t rightHandSide () const
+        {
+          const size_type top = parent_t::rightHandSideSize();
+          const size_type bot = explicit_.rightHandSideSize();
+          vector_t rhs (top + bot);
+          rhs.head(top) = parent_t::rightHandSide ();
+          rhs.tail(bot) = explicit_.rightHandSide ();
+          return rhs;
+        }
+
+        /// Get size of the level set parameter.
+        size_type rightHandSideSize () const
+        {
+          const size_type top = parent_t::rightHandSideSize();
+          const size_type bot = explicit_.rightHandSideSize();
+          return top + bot;
+        }
+
+        /// \}
+
       protected:
         void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
@@ -128,6 +210,8 @@ namespace hpp {
         void computeActiveRowsOfJ (std::size_t iStack);
 
       private:
+        typedef HierarchicalIterativeSolver parent_t;
+
         template <typename LineSearchType>
         Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
 
