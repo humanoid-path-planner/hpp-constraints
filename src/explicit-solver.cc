@@ -161,6 +161,8 @@ namespace hpp {
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg, vectorOut_t error) const
     {
+      value_type squaredNorm = 0;
+
       size_type row = 0;
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
@@ -169,11 +171,13 @@ namespace hpp {
         const size_type& nbRows = f.outDer.nbRows();
         LiegroupElement tmp (f.outArg.lview(arg), f.f->outputSpace());
         error.segment (row, nbRows) = tmp - (f.value + f.rightHandSide);
+        squaredNorm = std::max(squaredNorm,
+            error.segment (row, nbRows).norm ());
         row += nbRows;
       }
       assert (row == error.size());
-      hppDout (info, "Squared error norm is " << error.squaredNorm());
-      return error.squaredNorm() < squaredErrorThreshold_;
+      hppDout (info, "Max squared error norm is " << squaredNorm);
+      return squaredNorm < squaredErrorThreshold_;
     }
 
     bool ExplicitSolver::isSatisfied (vectorIn_t arg) const

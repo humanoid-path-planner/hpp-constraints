@@ -335,8 +335,16 @@ namespace hpp {
     {
       const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
       squaredNorm_ = 0;
-      for (std::size_t i = 0; i < end; ++i)
-        squaredNorm_ += datas_[i].error.squaredNorm();
+      for (std::size_t i = 0; i < end; ++i) {
+        const DifferentiableFunctionStack::Functions_t& fs = stacks_[i].functions();
+        const Data& d = datas_[i];
+        size_type row = 0;
+        for (std::size_t j = 0; j < fs.size(); ++j) {
+          squaredNorm_ = std::max(squaredNorm_,
+            d.error.segment(row, fs[j]->outputSize()).squaredNorm());
+          row += fs[j]->outputSize();
+        }
+      }
     }
 
     void HierarchicalIterativeSolver::computeDescentDirection () const
