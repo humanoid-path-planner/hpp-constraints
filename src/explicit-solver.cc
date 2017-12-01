@@ -172,7 +172,7 @@ namespace hpp {
         LiegroupElement tmp (f.outArg.lview(arg), f.f->outputSpace());
         error.segment (row, nbRows) = tmp - (f.value + f.rightHandSide);
         squaredNorm = std::max(squaredNorm,
-            error.segment (row, nbRows).norm ());
+            error.segment (row, nbRows).squaredNorm ());
         row += nbRows;
       }
       assert (row == error.size());
