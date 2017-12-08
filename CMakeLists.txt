@@ -35,6 +35,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
   include/hpp/constraints/differentiable-function-stack.hh
   include/hpp/constraints/active-set-differentiable-function.hh
+  include/hpp/constraints/affine-function.hh
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh

@@ -102,11 +102,14 @@ namespace hpp {
         mutable vector_t qshort_;
     }; // class AffineFunction
 
+    typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
+
     /// Constant function
     /// \f$ f(q) = C \f$
     struct HPP_CONSTRAINTS_DLLAPI ConstantFunction
       : public DifferentiableFunction
     {
+      public:
         ConstantFunction (const vector_t& constant,
                           const size_type& sizeIn,
                           const size_type& sizeInDer,
@@ -116,6 +119,14 @@ namespace hpp {
           c_ (constant, LiegroupSpace::Rn (constant.rows()))
         {}
 
+        ConstantFunction (const LiegroupElement& element,
+                          const size_type& sizeIn,
+                          const size_type& sizeInDer,
+                          const std::string name = "ConstantFunction") :
+          DifferentiableFunction (sizeIn, sizeInDer, element.space(), name),
+          c_ (element)
+        {}
+
         /// User implementation of function evaluation
         void impl_compute (LiegroupElement& r, vectorIn_t) const { r = c_; }
 
@@ -123,6 +134,8 @@ namespace hpp {
 
         const LiegroupElement c_;
     }; // class ConstantFunction
+
+    typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
     /// \}
   } // namespace constraints
