@@ -108,16 +108,17 @@ namespace hpp {
 
         ExplicitSolver (const std::size_t& argSize, const std::size_t derSize)
           : argSize_ (argSize), derSize_ (derSize)
-          ,  inArgs_ (),  inDers_ ()
-          , outArgs_ (), outDers_ ()
+          ,   inArgs_ (), freeArgs_ ()
+          ,   inDers_ (), freeDers_ ()
+          ,  outArgs_ (),  outDers_ ()
           , argFunction_ (Eigen::VectorXi::Constant(argSize, -1))
           , derFunction_ (Eigen::VectorXi::Constant(derSize, -1))
           , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
           // , Jg (derSize, derSize)
           , arg_ (argSize), diff_(derSize), diffSmall_()
         {
-          inArgs_.addRow(0, argSize);
-          inDers_.addCol(0, derSize);
+          freeArgs_.addRow(0, argSize);
+          freeDers_.addCol(0, derSize);
         }
 
         /// \}
@@ -146,18 +147,32 @@ namespace hpp {
         /// \name Input and outputs
         /// \{
 
-        /// The set of variable indices which are not affected by the
-        /// resolution.
+        /// The set of variable indices which affects the output.
+        /// This is a subset of \ref freeArgs
         const RowBlockIndices& inArgs () const
         {
           return inArgs_;
         }
 
-        /// The set of derivative variable indices which are not affected by the
-        /// resolution.
+        /// The set of derivative variable indices which affects the output.
+        /// This is a subset of \ref freeDers
         const ColBlockIndices& inDers () const
         {
           return inDers_;
+        }
+
+        /// The set of variable indices which are not affected by the
+        /// resolution.
+        const RowBlockIndices& freeArgs () const
+        {
+          return freeArgs_;
+        }
+
+        /// The set of derivative variable indices which are not affected by the
+        /// resolution.
+        const ColBlockIndices& freeDers () const
+        {
+          return freeDers_;
         }
 
         /// Configuration parameters involved in the constraint resolution.
@@ -195,8 +210,8 @@ namespace hpp {
         inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
         {
           return MatrixBlockView(jacobian,
-              outDers_.nbIndices(), outDers_.indices(),
-              inDers_.nbIndices(), inDers_.indices());
+              outDers_.nbIndices() , outDers_.indices(),
+              freeDers_.nbIndices(), freeDers_.indices());
         }
 
         /// Set the integration function
@@ -265,8 +280,8 @@ namespace hpp {
           mutable matrix_t jacobian;
         }; // struct Function
 
-        RowBlockIndices inArgs_;
-        ColBlockIndices inDers_;
+        RowBlockIndices inArgs_, freeArgs_;
+        ColBlockIndices inDers_, freeDers_;
         RowBlockIndices outArgs_, outDers_;
 
         std::vector<Function> functions_;

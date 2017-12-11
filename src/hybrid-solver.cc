@@ -37,7 +37,7 @@ namespace hpp {
 
     void HybridSolver::explicitSolverHasChanged()
     {
-      reduction(explicit_.inDers());
+      reduction(explicit_.freeDers());
     }
 
     void HybridSolver::updateJacobian (vectorIn_t arg) const

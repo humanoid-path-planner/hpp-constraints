@@ -272,14 +272,27 @@ namespace hpp {
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
       outArgs_.updateIndices<true, true, true>();
-      inArgs_ = RowBlockIndices
+      freeArgs_ = RowBlockIndices
         (BlockIndex::difference (BlockIndex::segment_t(0, argSize_),
                                  outArgs_.indices()));
+
+      inArgs_ = RowBlockIndices
+        (BlockIndex::difference (inArgs_.rows(), outIdx));
+      BlockIndex::add (inArgs_.m_rows, inArg.rows());
+      // should be sorted already
+      inArgs_.updateIndices<false, true, true>();
+
       outDers_.addRow(outDerIdx.first, outDerIdx.second);
       outDers_.updateIndices<true, true, true>();
-      inDers_ = ColBlockIndices
+      freeDers_ = ColBlockIndices
         (BlockIndex::difference(BlockIndex::segment_t(0, derSize_),
                                 outDers_.indices()));
+
+      inDers_ = ColBlockIndices
+        (BlockIndex::difference (inDers_.cols(), outDerIdx));
+      BlockIndex::add (inDers_.m_cols, inDer.cols());
+      // should be sorted already
+      inDers_.updateIndices<false, true, true>();
 
       return true;
     }
@@ -314,8 +327,8 @@ namespace hpp {
       // TODO this could be done only on the complement of inDers_
       jacobian.setZero();
       MatrixOutView_t (jacobian,
-          inDers_.nbIndices(), inDers_.indices(),
-          inDers_.nbIndices(), inDers_.indices()).setIdentity();
+          freeDers_.nbIndices(), freeDers_.indices(),
+          freeDers_.nbIndices(), freeDers_.indices()).setIdentity();
       // Compute the function jacobians
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
