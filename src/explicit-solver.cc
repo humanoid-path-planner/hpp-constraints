@@ -232,6 +232,8 @@ namespace hpp {
       const RowBlockIndices::segment_t& outIdx = outArg.indices()[0];
       const RowBlockIndices::segment_t& outDerIdx = outDer.indices()[0];
 
+      // TODO This sanity check should not be necessary
+      // It is done in the while loop below
       // Sanity check: is it explicit ?
       for (std::size_t i = 0; i < inArg.indices().size(); ++i)
         if (BlockIndex::overlap(inArg.indices()[i], outIdx))
@@ -247,10 +249,13 @@ namespace hpp {
       std::queue<size_type> idxArg;
       append(inArg, idxArg);
       while (!idxArg.empty()) {
+        // iArg must be computed before f
         size_type iArg = idxArg.back();
         idxArg.pop();
-        if (argFunction_[iArg] < 0) continue;
+        // iArg is an output of f -> cannot be computed before f
         if (iArg >= outIdx.first && iArg < outIdx.first + outIdx.second) return false;
+        // iArg is not computed by any function
+        if (argFunction_[iArg] < 0) continue;
         const Function& func = functions_[argFunction_[iArg]];
         append(func.inArg, idxArg);
       }

@@ -262,6 +262,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   LockedJointPtr_t l2 (new LockedJoint (ee2->rankInConfiguration(), 1, vector_t::Zero(1)));
   LockedJointPtr_t l3 (new LockedJoint (ee3->rankInConfiguration(), 1, vector_t::Zero(1)));
   TestFunctionPtr_t t1 (new TestFunction (ee1->rankInConfiguration(), ee2->rankInConfiguration(), 1));
+  TestFunctionPtr_t t2 (new TestFunction (ee2->rankInConfiguration(), ee1->rankInConfiguration(), 1));
 
   RowBlockIndices expectedRow;
   ColBlockIndices expectedCol;
@@ -346,6 +347,12 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
     BOOST_CHECK_EQUAL(solver.viewJacobian(jacobian).eval().norm(), 1);
     // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+  }
+
+  {
+    ExplicitSolver solver (device->configSize(), device->numberDof());
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+    BOOST_CHECK(!solver.add(t2, t2->inArg(), t2->outArg(), t2->inDer(), t2->outDer()));
   }
 
   {
