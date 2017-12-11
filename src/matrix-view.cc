@@ -17,6 +17,26 @@
 #include <hpp/constraints/matrix-view.hh>
 
 namespace Eigen {
+  typedef hpp::constraints::size_type size_type;
+
+  namespace internal {
+    template <bool lfirst, bool rfirst>
+    struct BlockIndexComp {
+      typedef BlockIndex::segment_t segment_t;
+      bool operator() (const segment_t& l, const segment_t& r) const {
+        return ( lfirst ? l.first : l.first + l.second )
+          <    ( rfirst ? r.first : r.first + r.second );
+      }
+    };
+    struct BlockIndexCompFull {
+      typedef BlockIndex::segment_t segment_t;
+      bool operator() (const segment_t& l, const segment_t& r) const {
+        return ( l.first  < r.first )
+          ||   ( l.first == r.first && l.second < r.second );
+      }
+    };
+  }
+
   void BlockIndex::sort (segments_t& a)
   {
     std::sort (a.begin(), a.end(), internal::BlockIndexCompFull ());
