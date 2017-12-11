@@ -360,10 +360,11 @@ namespace hpp {
       if (computed[iF]) return;
       const Function& f = functions_[iF];
       for (std::size_t i = 0; i < f.inDer.indices().size(); ++i) {
-        for (size_type j = 0; j < f.inDer.indices()[i].second; ++j) {
-          if (derFunction_[f.inDer.indices()[i].first + j] < 0) continue;
-          assert((std::size_t)derFunction_[f.inDer.indices()[i].first + j] < functions_.size());
-          computeOrder(derFunction_[f.inDer.indices()[i].first + j], iOrder, computed);
+        const BlockIndex::segment_t& segment = f.inDer.indices()[i];
+        for (size_type j = 0; j < segment.second; ++j) {
+          if (derFunction_[segment.first + j] < 0) continue;
+          assert((std::size_t)derFunction_[segment.first + j] < functions_.size());
+          computeOrder(derFunction_[segment.first + j], iOrder, computed);
         }
       }
       computationOrder_[iOrder] = iF;
