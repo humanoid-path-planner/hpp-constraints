@@ -42,6 +42,7 @@ namespace hpp {
 
     void HybridSolver::updateJacobian (vectorIn_t arg) const
     {
+      if (explicit_.inDers().nbCols() == 0) return;
       // Compute Je_
       explicit_.jacobian(JeExpanded_, arg);
       Je_ = explicit_.viewJacobian(JeExpanded_);
