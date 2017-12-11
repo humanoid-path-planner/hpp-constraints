@@ -242,7 +242,7 @@ namespace Eigen {
   /// The smaller matrix is built by methods lview and rview
   /// \li lview returns a smaller matrix that can be written in,
   /// \li rview returns a smaller matrix that cannot be written in.
-  template <bool _allRows, bool _allCols>
+  template <bool _allRows = false, bool _allCols = false>
   class MatrixBlocks
   {
     public:
@@ -551,7 +551,7 @@ namespace Eigen {
   /// }
   /// \endcode
   /// \sa MatrixBlocks, MatrixBlockView::block_iterator
-  template <typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+  template <typename _ArgType, int _Rows = _ArgType::RowsAtCompileTime, int _Cols = _ArgType::ColsAtCompileTime, bool _allRows = false, bool _allCols = false>
   class MatrixBlockView : public MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> >
   {
     public:
