@@ -25,6 +25,16 @@
 
 using namespace Eigen;
 
+// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
+// when they are not equal.
+namespace std {
+  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
+  {
+    internal::print_indices<true>::run (os, b);
+    return os;
+  }
+}
+
 BOOST_AUTO_TEST_CASE(block_index)
 {
   typedef BlockIndex::segment_t segment_t;
@@ -46,12 +56,15 @@ BOOST_AUTO_TEST_CASE(block_index)
   BOOST_CHECK( BlockIndex::overlap (a, d));
   BOOST_CHECK( BlockIndex::overlap (b, d));
 
-  BOOST_CHECK_EQUAL(BlockIndex::difference (a, b).size(), 1);
-  BOOST_CHECK_EQUAL(BlockIndex::difference (a, c).size(), 1);
-  BOOST_CHECK_EQUAL(BlockIndex::difference (c, b).size(), 0);
-  BOOST_CHECK_EQUAL(BlockIndex::difference (a, a).size(), 0);
-  BOOST_CHECK_EQUAL(BlockIndex::difference (a, d).size(), 0);
-  BOOST_CHECK_EQUAL(BlockIndex::difference (b, d).size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, b), segments_t (1, a));
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, c), segments_t (1, a));
+  BOOST_CHECK_EQUAL(BlockIndex::difference (b, d), segments_t (1, segment_t(2,1)));
+  BOOST_CHECK_EQUAL(BlockIndex::difference (c, b), segments_t ());
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, a), segments_t ());
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a, d), segments_t ());
+
+  segments_t a_plus_f = BlockIndex::sum (a, f);
+  BOOST_CHECK_EQUAL(BlockIndex::difference (a_plus_f, b), a_plus_f);
 
   segments_t v, expected_v, expected_w;
   v.push_back(b);
