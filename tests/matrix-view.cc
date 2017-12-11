@@ -53,18 +53,28 @@ BOOST_AUTO_TEST_CASE(block_index)
   BOOST_CHECK_EQUAL(BlockIndex::difference (a, d).size(), 0);
   BOOST_CHECK_EQUAL(BlockIndex::difference (b, d).size(), 1);
 
-  segments_t v;
+  segments_t v, expected_v, expected_w;
   v.push_back(b);
   v.push_back(a);
   v.push_back(c);
+  expected_v.push_back (segment_t(0,3));
   BlockIndex::sort(v);
   BlockIndex::shrink(v);
   BOOST_CHECK_EQUAL(v.size(), 1);
   BOOST_CHECK_EQUAL(BlockIndex::cardinal(v), 3);
-  BOOST_CHECK(v[0] == segment_t (0, 3));
+  BOOST_CHECK (v == expected_v);
 
-  segments_t expected_v, expected_w;
+  v.clear();
+  BlockIndex::add (v, b);
+  BlockIndex::add (v, a);
+  BlockIndex::add (v, c);
+  BlockIndex::shrink(v);
+  BOOST_CHECK_EQUAL(v.size(), 1);
+  BOOST_CHECK_EQUAL(BlockIndex::cardinal(v), 3);
+  BOOST_CHECK (v == expected_v);
+
   v.clear ();
+  expected_v.clear();
   // v = 0 1 2 3 [4 5 6] 7 8 [9 10] 11 12 13 14 [15 16 17 18 19] 20 ...
   v.push_back (e);
   v.push_back (f);

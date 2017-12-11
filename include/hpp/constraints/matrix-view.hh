@@ -199,6 +199,12 @@ namespace Eigen {
     /// Compute the union of tws segments.
     static segments_t sum (const segment_t& a, const segment_t& b);
 
+    /// In place addition of a segment_t to segments_t.
+    static void add (segments_t& a, const segment_t& b);
+
+    /// In place addition of segments_t to segments_t.
+    static void add (segments_t& a, const segments_t& b);
+
     /// Compute the set difference between two segments.
     static segments_t difference (const segment_t& a, const segment_t& b);
 

@@ -74,6 +74,24 @@ namespace Eigen {
     return s;
   }
 
+  void BlockIndex::add (segments_t& a, const segment_t& b)
+  {
+    // Sorted insertion of b into a
+    segments_t::iterator _it = std::upper_bound (a.begin(), a.end(), b,
+        internal::BlockIndexCompFull ());
+    a.insert (_it, b);
+  }
+
+  void BlockIndex::add (segments_t& a, const segments_t& b)
+  {
+    // Sorted insertion of b into a, assuming b is sorted.
+    segments_t::iterator _a = a.begin();
+    for (segments_t::const_iterator _b = b.begin(); _b != b.end(); ++_b) {
+      _a = std::upper_bound (_a, a.end(), *_b, internal::BlockIndexCompFull ());
+      a.insert (_a, *_b);
+    }
+  }
+
   BlockIndex::segments_t BlockIndex::difference (const segment_t& a,
                                                   const segment_t& b)
   {
