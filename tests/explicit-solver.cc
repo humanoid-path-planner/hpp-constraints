@@ -33,6 +33,24 @@
 #include <hpp/constraints/symbolic-calculus.hh>
 
 using namespace hpp::constraints;
+using Eigen::RowBlockIndices;
+using Eigen::ColBlockIndices;
+
+namespace Eigen {
+  namespace internal {
+    bool operator== (const empty_struct&, const empty_struct&) { return true; }
+  }
+
+  template <bool _allRows, bool _allCols>
+  bool operator== (const MatrixBlocks<_allRows,_allCols>& a,
+                   const MatrixBlocks<_allRows,_allCols>& b)
+  {
+    return ( _allRows || a.nbRows() == b.nbRows())
+      &&   ( _allCols || a.nbCols() == b.nbCols())
+      &&   ( _allRows || a.rows()   == b.rows())
+      &&   ( _allCols || a.cols()   == b.cols());
+  }
+}
 
 class LockedJoint : public AffineFunction
 {
@@ -245,6 +263,9 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   LockedJointPtr_t l3 (new LockedJoint (ee3->rankInConfiguration(), 1, vector_t::Zero(1)));
   TestFunctionPtr_t t1 (new TestFunction (ee1->rankInConfiguration(), ee2->rankInConfiguration(), 1));
 
+  RowBlockIndices expectedRow;
+  ColBlockIndices expectedCol;
+
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
@@ -253,6 +274,33 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)));
     BOOST_CHECK(!solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)));
     BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer(), ComparisonTypes_t(1, Equality)));
+
+    expectedRow = RowBlockIndices();
+    expectedRow.addRow (ee1->rankInConfiguration(), 1);
+    expectedRow.addRow (ee2->rankInConfiguration(), 1);
+    expectedRow.updateRows<true,true,true>();
+    BOOST_CHECK_EQUAL (solver.outArgs(), expectedRow);
+
+    expectedRow = RowBlockIndices(BlockIndex::difference (
+          BlockIndex::segment_t(0, solver.argSize()),
+          expectedRow.rows()));
+    BOOST_CHECK_EQUAL (solver.freeArgs(), expectedRow);
+
+    expectedRow = RowBlockIndices();
+    expectedRow.addRow (ee1->rankInVelocity(), 1);
+    expectedRow.addRow (ee2->rankInVelocity(), 1);
+    expectedRow.updateRows<true,true,true>();
+    BOOST_CHECK_EQUAL (solver.outDers(), expectedRow);
+
+    expectedCol = RowBlockIndices(BlockIndex::difference (
+          BlockIndex::segment_t(0, solver.derSize()),
+          expectedRow.rows()));
+    BOOST_CHECK_EQUAL (solver.freeDers(), expectedCol);
+
+    expectedRow = RowBlockIndices();
+    BOOST_CHECK_EQUAL (solver.inArgs(), expectedRow);
+    expectedCol = ColBlockIndices();
+    BOOST_CHECK_EQUAL (solver.inDers(), expectedCol);
 
     BOOST_CHECK(solver.solve(qrand));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
