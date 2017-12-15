@@ -2,7 +2,7 @@
 
 \usepackage{amsmath}
 
-\newcommand{\rhalf}{r_{\frac{1}{2}}}
+\newcommand{\rhalf}{r_{h}}
 % \newcommand{\atanh}{\mathrm{atanh}}
 \newcommand{\atanh}{\operatorname{atanh}}
 \title {Gradient descent strategies}
@@ -19,7 +19,7 @@ $$
 $$
 
 The coefficient are computed as follows. Let $\alpha_m$ be the minimum value,
-$\delta = 1 - \alpha(\epsilon_0)$ and $\rhalf$ such that $\alpha(\sqrt{\rhalf} * \epsilon_0) = C$.
+$\delta = 1 - \alpha(\epsilon_0)$ and $\rhalf$ such that $\alpha(\epsilon_0 \sqrt{\rhalf}) = C$.
 By considering only $a > 0$, we have:
 $$ C - K = \alpha_m $$
 $$ C + K = 1        $$
@@ -37,6 +37,6 @@ So
 $$ a = \frac{ \atanh \left( \frac{\delta - 1 + C}{K} \right)}{ 1 - \rhalf } $$
 $$ b = - \rhalf * a $$
 
-Current implementation (at time of writing) uses $\alpha_m = 0.2$, $\rhalf = 10^2$ and $\delta = 0.02$.
+Current implementation (at time of writing) uses $\alpha_m = 0.2$, $\rhalf = 10^6$ and $\delta = 0.02$.
 
 \end {document}

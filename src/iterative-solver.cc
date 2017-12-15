@@ -76,7 +76,7 @@ namespace hpp {
           : C (0.5 + alphaMin / 2), K ((1 - alphaMin) / 2)
       {
         static const value_type delta = 0.02;
-        static const value_type r_half = 1e4;
+        static const value_type r_half = 1e6;
 
         a = atanh ( (delta - 1 + C) / K ) / (1 - r_half);
         b = - r_half * a;

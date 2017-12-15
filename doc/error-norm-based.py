@@ -15,7 +15,7 @@ K = ( 1 - alphaMin ) / 2
 # M = 8
 # a = 4. / ( 10**M - 10**N )
 # b = 2. - 4. / ( 1 - 10**(N-M) )
-r_half_target = 10**4
+r_half_target = 10**6
 delta_1 = 0.02
 a = atanh ((delta_1 - 1 + C) / K) / (1 - r_half_target)
 b = - r_half_target * a
@@ -31,6 +31,8 @@ fs = enb(rs)
 fig, ax = plt.subplots()
 ax.plot(rs, fs, label="Error norm based alpha")
 ax.set_xscale("log")
+ax.set_xlabel("(E / E_0)^2")
+ax.set_ylabel("alpha")
 ax.set_ylim(0,1)
 # ax.annotate("Alpha_max", xy = (1, alpha_1), xytext=(0.1, alpha_1))
 ax.axhline(alpha_1, ls='-.', color='g', label="Alpha_max")
