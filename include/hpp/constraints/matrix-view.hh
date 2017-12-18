@@ -50,12 +50,13 @@ namespace Eigen {
     template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
       struct traits< MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
     {
-      typedef typename ArgType::Index Index;
-      typedef Eigen::Dense StorageKind;
-      typedef Eigen::MatrixXpr XprKind;
+      // typedef typename ArgType::Index Index;
+      typedef typename traits<ArgType>::StorageKind StorageKind;
+      typedef typename traits<ArgType>::XprKind XprKind;
       typedef typename ArgType::Scalar Scalar;
+      typedef typename ArgType::StorageIndex StorageIndex;
       enum {
-        CoeffReadCost = ArgType::CoeffReadCost,
+        // CoeffReadCost = evaluator<ArgType>::CoeffReadCost,
         Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
         RowsAtCompileTime = (_allRows ? ArgType::RowsAtCompileTime : _Rows),
         ColsAtCompileTime = (_allCols ? ArgType::ColsAtCompileTime : _Cols),
@@ -64,19 +65,17 @@ namespace Eigen {
       };
     };
 
-    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
-    struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,false> {
+    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols, typename Functor, typename Scalar>
+    struct Assignment<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>, Functor, Dense2Dense, Scalar> {
       typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
-      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { other.writeTo(dst); return dst; }
-      template<typename ActualDerived, typename ActualOtherDerived>
-        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { other.evalTo(dst); return dst; }
-    };
-    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
-    struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,true> {
-      typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
-      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { other.writeTo(dst.transpose()); return dst; }
-      template<typename ActualDerived, typename ActualOtherDerived>
-        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
+      static EIGEN_STRONG_INLINE void run(Derived& dst, const OtherDerived& src, const Functor& func) {
+        typedef Block<Derived> BlockDerived;
+        typedef Assignment<BlockDerived, typename OtherDerived::BlockConstXprType, Functor> AssignmentType;
+        for (typename OtherDerived::block_iterator b (src); b.valid(); ++b) {
+          BlockDerived bdst (dst.block(b.ro(), b.co(), b.rs(), b.cs()));
+          AssignmentType::run(bdst, src._block(b), func);
+        }
+      }
     };
 
     template <typename Src, typename Dst> struct eval_matrix_block_view_to {};
@@ -155,6 +154,24 @@ namespace Eigen {
         for (std::size_t i = 0; i < bi.size(); ++i)
           os << "[ " << bi[i].first << ", " << bi[i].second << "], ";
       }
+    };
+
+    template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+    struct unary_evaluator <MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
+    : evaluator_base <MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
+    {
+      typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> XprType;
+
+      enum {
+        CoeffReadCost = evaluator<ArgType>::CoeffReadCost,
+        Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
+        Alignment = 0
+      };
+      EIGEN_DEVICE_FUNC explicit unary_evaluator (const XprType& view)
+        : m_view (view)
+      {}
+
+      const XprType& m_view;
     };
   } // namespace internal
 
@@ -614,6 +631,7 @@ namespace Eigen {
       // typedef typename internal::ref_selector<MatrixBlockView>::type Nested;
       typedef _ArgType ArgType;
       typedef typename internal::ref_selector<ArgType>::type ArgTypeNested;
+      typedef typename internal::remove_all<ArgType>::type NestedExpression;
       // typedef typename Base::CoeffReturnType CoeffReturnType;
       // typedef typename Base::Scalar Scalar;
 
@@ -624,8 +642,10 @@ namespace Eigen {
                 (AllCols ? Derived::ColsAtCompileTime : Eigen::Dynamic),
                 (AllCols ? (bool)Derived::IsRowMajor
                  : (AllRows ? (bool)!Derived::IsRowMajor : false)
-                ) > type ;
+                )> type ;
       };
+      typedef typename block_t<ArgType>::type       BlockXprType;
+      typedef typename block_t<const ArgType>::type BlockConstXprType;
 
       typedef MatrixBlocks<_allRows, _allCols> MatrixIndices_t;
       typedef typename MatrixIndices_t::segments_t Indices_t;
@@ -699,17 +719,15 @@ namespace Eigen {
       }
 
       EIGEN_STRONG_INLINE size_type _blocks() const { return m_rows.size() * m_cols.size(); }
-      EIGEN_STRONG_INLINE typename block_t<ArgType>::type _block(const block_iterator& b)
+      EIGEN_STRONG_INLINE BlockXprType _block(const block_iterator& b)
       {
-        return internal::access_block_from_matrix_block_view<
-          typename block_t<ArgType>::type,
-          MatrixBlockView >::template run <ArgType> (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
+        return internal::access_block_from_matrix_block_view< BlockXprType, MatrixBlockView >
+          ::template run <ArgType> (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
       }
-      EIGEN_STRONG_INLINE const typename block_t<const ArgType>::type _block(const block_iterator& b) const
+      EIGEN_STRONG_INLINE const BlockConstXprType _block(const block_iterator& b) const
       {
-        return internal::access_block_from_matrix_block_view<
-          const typename block_t<const ArgType>::type,
-          MatrixBlockView >::template run <const ArgType> (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
+        return internal::access_block_from_matrix_block_view< const BlockConstXprType, MatrixBlockView >
+          ::template run <const ArgType> (m_arg, b.ri(), b.ci(), b.rs(), b.cs());
       }
       EIGEN_STRONG_INLINE block_iterator _block_iterator() const { return block_iterator(*this); }
 

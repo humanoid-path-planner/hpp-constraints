@@ -56,20 +56,16 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 (MatrixBase<OtherDerived>& other) const
 
 #define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(                                  \
-    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE,                                      \
-    need_to_transpose, EVAL_TO_BODY)                                           \
-    template<typename Derived, typename BinaryOp, LHS_TPL, RHS_TPL>            \
-    struct assign_selector<Derived,                                            \
-                           CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE >,       \
-                           false,need_to_transpose> {                          \
+    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE)                                      \
+    template<typename Derived, typename BinaryOp, LHS_TPL, RHS_TPL,            \
+             typename Functor, typename Scalar>                                \
+    struct Assignment<Derived,                                                 \
+                      CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE >,            \
+                      Functor, Dense2Dense, Scalar> {                          \
       typedef CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE> CwiseDerived;        \
-      static EIGEN_STRONG_INLINE Derived& run                                  \
-        (Derived& dst, const CwiseDerived& o)                                  \
-      { dst.resize(o.rows(), o.cols()); o.evalTo(dst); return dst; }           \
-      template<typename ActualDerived, typename ActualOtherDerived>            \
-      static EIGEN_STRONG_INLINE Derived& evalTo                               \
-        (ActualDerived& dst, const ActualOtherDerived& other)                  \
-      { EVAL_TO_BODY return dst; }                                             \
+      static EIGEN_STRONG_INLINE void run                                      \
+        (Derived& dst, const CwiseDerived& o, const Functor& func)             \
+      { o.evalTo(dst); }                                                       \
     };
 
 #define HPP_EIGEN_EVAL_TO_BODY_NORMAL other.evalTo(dst);
@@ -105,12 +101,7 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
   namespace internal {
     HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
       HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
-      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
   }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
@@ -146,12 +137,7 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
   namespace internal {
     HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
       HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
-      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
   }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
@@ -196,12 +182,7 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
   namespace internal {
     HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
       HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
-      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
   }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
