@@ -169,7 +169,7 @@ namespace hpp {
         // Compute this function
         f.f->value(f.value, f.inArg.rview(arg).eval());
         const size_type& nbRows = f.outDer.nbRows();
-        LiegroupElement tmp (f.outArg.lview(arg), f.f->outputSpace());
+        LiegroupElement tmp (f.outArg.rview(arg), f.f->outputSpace());
         error.segment (row, nbRows) = tmp - (f.value + f.rightHandSide);
         squaredNorm = std::max(squaredNorm,
             error.segment (row, nbRows).squaredNorm ());
@@ -377,7 +377,7 @@ namespace hpp {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
         f.f->value(f.value, f.inArg.rview(arg).eval());
-        LiegroupElement expected (f.outArg.lview(arg), f.f->outputSpace());
+        LiegroupElement expected (f.outArg.rview(arg), f.f->outputSpace());
         vector_t rhs = expected - f.value;
         f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
       }
@@ -391,7 +391,7 @@ namespace hpp {
         if (f.f == df) {
           // Computes f(q1) and q2
           df->value(f.value, f.inArg.rview(arg).eval());
-          LiegroupElement expected (f.outArg.lview(arg), f.f->outputSpace());
+          LiegroupElement expected (f.outArg.rview(arg), f.f->outputSpace());
 
           // Set rhs = q2 - f(q1)
           vector_t rhs = expected - f.value;
