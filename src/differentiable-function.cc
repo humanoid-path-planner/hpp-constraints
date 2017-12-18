@@ -28,6 +28,7 @@ namespace hpp {
     namespace {
       typedef std::vector<se3::JointIndex> JointIndexVector;
 
+      /*
       JointIndexVector fromVelocityRank (const se3::Model& model)
       {
         JointIndexVector ret (model.nv, 0);
@@ -37,6 +38,7 @@ namespace hpp {
         }
         return ret;
       }
+      */
 
       struct FiniteDiffRobotOp
       {
