@@ -94,7 +94,6 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
         typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
         const Derived& d = derived();
-        Index r = 0, c = 0;
         for(typename Rhs_t::block_iterator block (d.rhs()); block.valid(); ++block) {
           BlockRhs rhs = d.rhs()._block(block);
           BlockLhs lhs = d.lhs().block(block.ro(), block.co(), block.rs(), block.cs());
@@ -136,7 +135,6 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
         typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
         const Derived& d = derived();
-        Index r = 0, c = 0;
         for(typename Lhs_t::block_iterator block (d.lhs()); block.valid(); ++block) {
           BlockLhs lhs = d.lhs()._block(block);
           BlockRhs rhs = d.rhs().block(block.ro(), block.co(), block.rs(), block.cs());
@@ -181,7 +179,6 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 
         const Derived& d = derived();
         assert (d.lhs()._blocks() == d.rhs()._blocks());
-        Index r = 0, c = 0;
         typename Lhs_t::block_iterator lblock (d.lhs());
         typename Rhs_t::block_iterator rblock (d.rhs());
         while (lblock.valid()) {
