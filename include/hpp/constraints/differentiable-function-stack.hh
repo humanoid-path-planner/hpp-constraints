@@ -88,6 +88,8 @@ namespace hpp {
 
         /// \}
 
+        std::ostream& print (std::ostream& os) const;
+
         /// Constructor
         ///
         /// \param name the name of the constraints,
