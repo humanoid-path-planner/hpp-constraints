@@ -20,6 +20,9 @@
 
 #include <pinocchio/multibody/model.hpp>
 
+#include <hpp/util/indent.hh>
+
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 
@@ -330,13 +333,14 @@ namespace hpp {
       os << (IsRelative ? "Relative" : "") <<
             (IsPosition ? (IsOrientation ? "Transformation" : "Position")
                    : "Orientation") << ": " << name()
-       << "\n\tJoint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
-       << "\n\tFrame in joint 1" << frame1InJoint1()
-       << "\n\tJoint2: "         << joint2()->name()
-       << "\n\tFrame in joint 2" << frame2InJoint2()
-       << "\n\tmask: ";
+       << incindent
+       << iendl << "Joint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
+       << iendl << "Frame in joint 1" << incindent << iendl; pinocchio::display(os, frame1InJoint1()) << decindent
+       << iendl << "Joint2: "         << joint2()->name()
+       << iendl << "Frame in joint 2" << incindent << iendl; pinocchio::display(os, frame2InJoint2()) << decindent
+       << iendl << "mask: ";
       for (size_type i=0; i<ValueSize; ++i) os << mask_ [i] << ", ";
-      return os;
+      return os << decindent;
     }
 
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
