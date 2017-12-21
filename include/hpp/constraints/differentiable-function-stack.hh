@@ -98,7 +98,7 @@ namespace hpp {
         {}
 
         DifferentiableFunctionStack ()
-          : DifferentiableFunction (0, 0, 0, "DifferentiableFunctionStack")
+          : DifferentiableFunction (0, 0, 0, "Stack")
         {}
 
       protected:

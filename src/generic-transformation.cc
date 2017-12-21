@@ -514,9 +514,9 @@ namespace hpp {
             << maxError << " > " << /* HESSIAN_MAXIMUM_COEF << " * " << */ std::sqrt(eps)
             );
         hppDnum (error,
-            "Jacobian is \n" << jacobian <<
-            "\nFinite diff is \n" << Jfd <<
-            "\nDifference is \n" << (jacobian - Jfd));
+            "Jacobian is" << iendl << jacobian << iendl
+            "Finite diff is" << iendl << Jfd << iendl
+            "Difference is" << iendl << (jacobian - Jfd));
       }
 #endif
     }

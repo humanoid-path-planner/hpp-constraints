@@ -23,11 +23,8 @@ namespace hpp {
     std::ostream& DifferentiableFunctionStack::print (std::ostream& os) const
     {
       DifferentiableFunction::print (os) << incindent;
-      for (Functions_t::const_iterator _f = functions_.begin();
-          _f != functions_.end(); ++_f) {
-        const DifferentiableFunction& f = **_f;
-        os << iendl << f;
-      }
+      for (std::size_t i = 0; i < functions_.size(); ++i)
+        os << iendl << i << ": " << *functions_[i];
       return os << decindent;
     }
   } // namespace constraints
