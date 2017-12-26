@@ -99,12 +99,18 @@ namespace Eigen {
     // Sorted insertion of b into a
     segments_t::iterator _it = std::upper_bound (a.begin(), a.end(), b,
         internal::BlockIndexCompFull ());
+    // if a is empty, make sure _it is equal to a.end ()
+    assert (_it == a.end () || !a.empty ());
     a.insert (_it, b);
   }
 
   void BlockIndex::add (segments_t& a, const segments_t& b)
   {
     // Sorted insertion of b into a, assuming b is sorted.
+    if (a.empty ()) {
+      a = b;
+      return;
+    }
     segments_t::iterator _a = a.begin();
     for (segments_t::const_iterator _b = b.begin(); _b != b.end(); ++_b) {
       _a = std::upper_bound (_a, a.end(), *_b, internal::BlockIndexCompFull ());
