@@ -108,7 +108,8 @@ namespace Eigen {
     segments_t::iterator _a = a.begin();
     for (segments_t::const_iterator _b = b.begin(); _b != b.end(); ++_b) {
       _a = std::upper_bound (_a, a.end(), *_b, internal::BlockIndexCompFull ());
-      a.insert (_a, *_b);
+      _a = a.insert (_a, *_b);
+      ++_a;
     }
   }
 
