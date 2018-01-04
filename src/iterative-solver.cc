@@ -430,9 +430,15 @@ namespace hpp {
       const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
       for (std::size_t i = 0; i < stacks_.size(); ++i) {
         const DifferentiableFunctionStack& fs = stacks_[i];
+        const Data& d = datas_[i];
         os << "Level";
         if (lastIsOptional_ && i == end) os << '*';
         os << ' ' << i << ": " << fs << iendl;
+        // if (d.equalityIndices.nbIndices() > 0)
+          os << "Equality idx: " << d.equalityIndices << iendl;
+        // if (d.inequalityIndices.nbIndices() > 0)
+          // os << "Inequality idx: " << d.equalityIndices << iendl;
+        os << "Rhs: " << d.rightHandSide;
       }
       return os;
     }
