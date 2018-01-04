@@ -140,10 +140,11 @@ namespace Eigen {
     segments_t::const_iterator first
       (std::upper_bound (a.begin(), a.end(), b,
                          internal::BlockIndexComp<true, false>()));
+    assert (first == a.end() || b.first <= first->first + first->second);
     segments_t::const_iterator last
       (std::upper_bound (a.begin(), a.end(), b,
                          internal::BlockIndexComp<false, true>()));
-    assert (first == last || last == a.end() || (first != a.end() && first->first + first->second >= last->first));
+    assert (last  == a.end() || b.first + b.second <= last->first);
     segments_t ret; ret.reserve(a.size() + 2);
     ret.insert(ret.end(), a.begin(), first);
     for (typename segments_t::const_iterator _a = first; _a != last; ++_a) {
