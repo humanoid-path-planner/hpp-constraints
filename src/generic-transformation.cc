@@ -331,7 +331,7 @@ namespace hpp {
       GenericTransformation<_Options>::print (std::ostream& os) const
     {
       os << (IsRelative ? "Relative" : "") <<
-            (IsPosition ? (IsOrientation ? "Transformation" : "Position")
+            (ComputePosition ? (ComputeOrientation ? "Transformation" : "Position")
                    : "Orientation") << ": " << name()
        << incindent
        << iendl << "Joint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
