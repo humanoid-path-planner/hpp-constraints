@@ -231,7 +231,7 @@ namespace hpp {
             }
             return true;
           }
-          row += fs[i]->outputSize();
+          row += fs[j]->outputSize();
         }
       }
       return false;
@@ -247,12 +247,12 @@ namespace hpp {
           if (f == fs[j]) {
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide.vector () [row + k] = rhs [row + k];
+                d.rightHandSide.vector () [row + k] = rhs [k];
               }
             }
             return true;
           }
-          row += fs[i]->outputSize();
+          row += fs[j]->outputSize();
         }
       }
       return false;
