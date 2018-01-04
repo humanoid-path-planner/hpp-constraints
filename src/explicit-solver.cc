@@ -18,6 +18,8 @@
 
 #include <queue>
 
+#include <hpp/util/indent.hh>
+
 #include <pinocchio/multibody/joint/joint.hpp>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
@@ -450,5 +452,18 @@ namespace hpp {
       return rhsSize;
     }
 
+    std::ostream& ExplicitSolver::print (std::ostream& os) const
+    {
+      os << "ExplicitSolver, " << functions_.size() << " functions." << incendl
+        << "Free args: " << freeArgs_ << iendl
+        << inArgs_ << " -> " << outArgs_ << iendl
+        << "Functions" << incendl;
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        const Function& f = functions_[computationOrder_[i]];
+        os << i << ": "
+          << f.inArg << " -> " << f.outArg << incendl << *f.f << decendl;
+      }
+      return os << decindent << decindent;
+    }
   } // namespace constraints
 } // namespace hpp

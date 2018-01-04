@@ -324,6 +324,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     solver.difference (boost::bind(hpp::pinocchio::difference<hpp::pinocchio::LieGroupTpl>, device, _1, _2, _3));
     BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+    solver.print(std::cout);
 
     BOOST_CHECK(solver.solve(qrand));
     vector_t error(solver.outDers().nbIndices());

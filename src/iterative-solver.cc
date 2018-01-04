@@ -422,6 +422,21 @@ namespace hpp {
       Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
     }
 
+    std::ostream& HierarchicalIterativeSolver::print (std::ostream& os) const
+    {
+      os << "HierarchicalIterativeSolver, " << stacks_.size() << " level." << iendl
+        << "dimension " << dimension() << iendl
+        << "reduced dimension " << reducedDimension() << incendl;
+      const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
+      for (std::size_t i = 0; i < stacks_.size(); ++i) {
+        const DifferentiableFunctionStack& fs = stacks_[i];
+        os << "Level";
+        if (lastIsOptional_ && i == end) os << '*';
+        os << ' ' << i << ": " << fs << iendl;
+      }
+      return os;
+    }
+
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;

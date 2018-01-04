@@ -200,6 +200,8 @@ namespace hpp {
 
         /// \}
 
+        virtual std::ostream& print (std::ostream& os) const;
+
       protected:
         void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {

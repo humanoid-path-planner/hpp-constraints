@@ -119,6 +119,13 @@ namespace hpp {
       reduction_.lviewTranspose(result) = dqSmall_;
     }
 
+    std::ostream& HybridSolver::print (std::ostream& os) const
+    {
+      os << "HybridSolver" << incendl;
+      HierarchicalIterativeSolver::print (os) << iendl;
+      explicit_.print (os) << decindent;
+    }
+
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
