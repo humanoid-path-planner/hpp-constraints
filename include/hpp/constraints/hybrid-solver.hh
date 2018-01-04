@@ -223,6 +223,11 @@ namespace hpp {
         friend struct lineSearch::Backtracking;
     }; // class HybridSolver
     /// \}
+
+    inline std::ostream& operator<< (std::ostream& os, const HybridSolver& hs)
+    {
+      return hs.print(os);
+    }
   } // namespace constraints
 } // namespace hpp
 
