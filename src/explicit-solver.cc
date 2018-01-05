@@ -23,6 +23,7 @@
 #include <pinocchio/multibody/joint/joint.hpp>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
+#include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/liegroup.hh>
 
@@ -457,11 +458,12 @@ namespace hpp {
       os << "ExplicitSolver, " << functions_.size() << " functions." << incendl
         << "Free args: " << freeArgs_ << iendl
         << inArgs_ << " -> " << outArgs_ << iendl
-        << "Functions" << incendl;
+        << "Functions" << incindent;
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[computationOrder_[i]];
-        os << i << ": "
-          << f.inArg << " -> " << f.outArg << incendl << *f.f << decendl;
+        os << iendl << i << ": " << f.inArg << " -> " << f.outArg
+          << incendl << *f.f
+          << decendl << "Rhs: " << pinocchio::condensed(f.rightHandSide);
       }
       return os << decindent << decindent;
     }
