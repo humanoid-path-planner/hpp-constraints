@@ -241,6 +241,37 @@ typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<TestFunction> TestFunctionPtr_t;
 typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
+BOOST_AUTO_TEST_CASE(order)
+{
+  Eigen::Matrix<value_type,1,1> M; M(0,0) = 1;
+
+  // dof     :  0 -> 1 -> 2 -> 3
+  // function:    f1   f2   f3
+  AffineFunctionPtr_t f1 (new AffineFunction (M));
+  AffineFunctionPtr_t f2 (new AffineFunction (M));
+  AffineFunctionPtr_t f3 (new AffineFunction (M));
+  segment_t s1 (0, 1), s2 (1, 1), s3 (2, 1), s4 (3, 1);
+
+  {
+    ExplicitSolver solver (4, 4);
+    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
+    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
+    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
+  }
+  {
+    ExplicitSolver solver (4, 4);
+    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
+    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
+    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
+  }
+  {
+    ExplicitSolver solver (4, 4);
+    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
+    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
+    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
+  }
+}
+
 BOOST_AUTO_TEST_CASE(locked_joints)
 {
   DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
@@ -324,6 +355,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     solver.difference (boost::bind(hpp::pinocchio::difference<hpp::pinocchio::LieGroupTpl>, device, _1, _2, _3));
     BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+    solver.print(std::cout);
 
     BOOST_CHECK(solver.solve(qrand));
     vector_t error(solver.outDers().nbIndices());

@@ -200,6 +200,8 @@ namespace hpp {
 
         /// \}
 
+        virtual std::ostream& print (std::ostream& os) const;
+
       protected:
         void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
@@ -221,6 +223,11 @@ namespace hpp {
         friend struct lineSearch::Backtracking;
     }; // class HybridSolver
     /// \}
+
+    inline std::ostream& operator<< (std::ostream& os, const HybridSolver& hs)
+    {
+      return hs.print(os);
+    }
   } // namespace constraints
 } // namespace hpp
 

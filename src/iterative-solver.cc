@@ -21,6 +21,8 @@
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
 
+#include <hpp/pinocchio/util.hh>
+
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
 
@@ -231,7 +233,7 @@ namespace hpp {
             }
             return true;
           }
-          row += fs[i]->outputSize();
+          row += fs[j]->outputSize();
         }
       }
       return false;
@@ -247,12 +249,12 @@ namespace hpp {
           if (f == fs[j]) {
             for (size_type k = 0; k < f->outputSize(); ++k) {
               if (d.comparison[row + k] == Equality) {
-                d.rightHandSide.vector () [row + k] = rhs [row + k];
+                d.rightHandSide.vector () [row + k] = rhs [k];
               }
             }
             return true;
           }
-          row += fs[i]->outputSize();
+          row += fs[j]->outputSize();
         }
       }
       return false;
@@ -420,6 +422,33 @@ namespace hpp {
     void HierarchicalIterativeSolver::expandDqSmall () const
     {
       Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
+    }
+
+    std::ostream& HierarchicalIterativeSolver::print (std::ostream& os) const
+    {
+      os << "HierarchicalIterativeSolver, " << stacks_.size() << " level." << iendl
+        << "dimension " << dimension() << iendl
+        << "reduced dimension " << reducedDimension() << incendl;
+      const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
+      for (std::size_t i = 0; i < stacks_.size(); ++i) {
+        const DifferentiableFunctionStack::Functions_t& fs = stacks_[i].functions();
+        const Data& d = datas_[i];
+        os << "Level";
+        if (lastIsOptional_ && i == end) os << '*';
+        os << ' ' << i << ": Stack of " << fs.size() << " functions" << incindent;
+        size_type row = 0;
+        for (std::size_t j = 0; j < fs.size(); ++j) {
+          const DifferentiableFunctionPtr_t& f = fs[j];
+          os << iendl << j << ": ["
+            << row << ", " << f->outputSize() << "],"
+            << *f
+            << iendl << "Rhs: " << pinocchio::condensed(d.rightHandSide.vector().segment(row, fs[j]->outputSize()));
+          row += f->outputSize();
+        }
+        os << decendl;
+        os << "Equality idx: " << d.equalityIndices;
+      }
+      return os << decindent;
     }
 
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;

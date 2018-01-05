@@ -18,13 +18,17 @@
 #include <hpp/constraints/impl/hybrid-solver.hh>
 #include <hpp/constraints/impl/iterative-solver.hh>
 
+#include <hpp/pinocchio/util.hh>
+
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
 
-Eigen::IOFormat IPythonFormat (Eigen::FullPrecision, 0, ", ", ",\n", "[", "]", "numpy.array([\n", "])\n");
-
 namespace hpp {
   namespace constraints {
+    using pinocchio::setpyformat;
+    using pinocchio::unsetpyformat;
+    using pinocchio::pretty_print;
+
     namespace lineSearch {
       template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
@@ -47,12 +51,15 @@ namespace hpp {
       explicit_.jacobian(JeExpanded_, arg);
       Je_ = explicit_.viewJacobian(JeExpanded_);
 
-      hppDnum (info, "Jacobian of explicit system is \n" << Je_.format(IPythonFormat));
+      hppDnum (info, "Jacobian of explicit system is" << iendl <<
+          setpyformat << pretty_print(Je_));
 
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
-        hppDnum (info, "Jacobian of stack " << i << " before update: \n" << d.reducedJ.format(IPythonFormat));
-        hppDnum (info, "Jacobian of explicit variable of stack " << i << ": \n" << explicit_.outDers().rviewTranspose(d.jacobian).eval().format(IPythonFormat));
+        hppDnum (info, "Jacobian of stack " << i << " before update:" << iendl
+            << pretty_print(d.reducedJ) << iendl
+            << "Jacobian of explicit variable of stack " << i << ":" << iendl
+            << pretty_print(explicit_.outDers().rviewTranspose(d.jacobian).eval()));
         d.reducedJ.noalias() +=
           Eigen::MatrixBlockView<matrix_t> (d.jacobian,
               d.activeRowsOfJ.m_nbRows,
@@ -60,7 +67,8 @@ namespace hpp {
               explicit_.outDers().m_nbRows,
               explicit_.outDers().m_rows).eval()
           * Je_;
-        hppDnum (info, "Jacobian of stack " << i << " after update: \n" << d.reducedJ.format(IPythonFormat));
+        hppDnum (info, "Jacobian of stack " << i << " after update:" << iendl
+            << pretty_print(d.reducedJ) << unsetpyformat);
       }
     }
 
@@ -109,6 +117,13 @@ namespace hpp {
       dqSmall_.noalias() -= getV1(svd_) * tmp;
 
       reduction_.lviewTranspose(result) = dqSmall_;
+    }
+
+    std::ostream& HybridSolver::print (std::ostream& os) const
+    {
+      os << "HybridSolver" << incendl;
+      HierarchicalIterativeSolver::print (os) << iendl;
+      explicit_.print (os) << decindent;
     }
 
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;

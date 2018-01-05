@@ -254,6 +254,7 @@ namespace hpp {
 
         /// \}
 
+        std::ostream& print (std::ostream& os) const;
 
       private:
         typedef std::vector<bool> Computed_t;

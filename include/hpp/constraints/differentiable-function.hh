@@ -121,12 +121,7 @@ namespace hpp {
       }
 
       /// Display object in a stream
-      virtual std::ostream& print (std::ostream& o) const
-      {
-	o << "Differentiable function:" << std::endl;
-	o << name ();
-	return o;
-      }
+      virtual std::ostream& print (std::ostream& o) const;
 
       std::string context () const {
         return context_;

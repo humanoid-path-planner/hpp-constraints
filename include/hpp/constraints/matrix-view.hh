@@ -20,6 +20,7 @@
 #include <Eigen/Core>
 #include <vector>
 #include <iostream>
+#include <hpp/util/indent.hh>
 #include <hpp/constraints/fwd.hh>
 
 namespace Eigen {
@@ -519,7 +520,7 @@ namespace Eigen {
     if (!_allRows) {
       os << "Rows: ";
       internal::print_indices<!_allRows>::run (os, mbi.m_rows);
-      if (!_allCols) os << '\n';
+      if (!_allCols) os << hpp::iendl;
     }
     if (!_allCols) {
       os << "Cols: ";
