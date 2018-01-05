@@ -312,6 +312,8 @@ namespace hpp {
         }
         /// \}
 
+        virtual std::ostream& print (std::ostream& os) const;
+
       protected:
         typedef Eigen::JacobiSVD <matrix_t> SVD_t;
 

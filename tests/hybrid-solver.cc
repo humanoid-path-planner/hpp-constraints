@@ -271,6 +271,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
 
   BOOST_CHECK(solver.explicitSolver().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()));
   solver.explicitSolverHasChanged();
+  solver.print(std::cout);
 
   // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), HybridSolver::SUCCESS);
 

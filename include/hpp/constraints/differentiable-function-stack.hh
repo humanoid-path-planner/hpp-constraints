@@ -88,6 +88,8 @@ namespace hpp {
 
         /// \}
 
+        std::ostream& print (std::ostream& os) const;
+
         /// Constructor
         ///
         /// \param name the name of the constraints,
@@ -96,7 +98,7 @@ namespace hpp {
         {}
 
         DifferentiableFunctionStack ()
-          : DifferentiableFunction (0, 0, 0, "DifferentiableFunctionStack")
+          : DifferentiableFunction (0, 0, 0, "Stack")
         {}
 
       protected:

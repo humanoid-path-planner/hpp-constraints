@@ -20,6 +20,9 @@
 
 #include <pinocchio/multibody/model.hpp>
 
+#include <hpp/util/indent.hh>
+
+#include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 
@@ -328,15 +331,16 @@ namespace hpp {
       GenericTransformation<_Options>::print (std::ostream& os) const
     {
       os << (IsRelative ? "Relative" : "") <<
-            (IsPosition ? (IsOrientation ? "Transformation" : "Position")
+            (ComputePosition ? (ComputeOrientation ? "Transformation" : "Position")
                    : "Orientation") << ": " << name()
-       << "\n\tJoint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
-       << "\n\tFrame in joint 1" << frame1InJoint1()
-       << "\n\tJoint2: "         << joint2()->name()
-       << "\n\tFrame in joint 2" << frame2InJoint2()
-       << "\n\tmask: ";
+       << incindent
+       << iendl << "Joint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
+       << iendl << "Frame in joint 1" << incindent << iendl; pinocchio::display(os, frame1InJoint1()) << decindent
+       << iendl << "Joint2: "         << joint2()->name()
+       << iendl << "Frame in joint 2" << incindent << iendl; pinocchio::display(os, frame2InJoint2()) << decindent
+       << iendl << "mask: ";
       for (size_type i=0; i<ValueSize; ++i) os << mask_ [i] << ", ";
-      return os;
+      return os << decindent;
     }
 
     template <int _Options> typename GenericTransformation<_Options>::Ptr_t
@@ -510,9 +514,9 @@ namespace hpp {
             << maxError << " > " << /* HESSIAN_MAXIMUM_COEF << " * " << */ std::sqrt(eps)
             );
         hppDnum (error,
-            "Jacobian is \n" << jacobian <<
-            "\nFinite diff is \n" << Jfd <<
-            "\nDifference is \n" << (jacobian - Jfd));
+            "Jacobian is" << iendl << jacobian << iendl
+            "Finite diff is" << iendl << Jfd << iendl
+            "Difference is" << iendl << (jacobian - Jfd));
       }
 #endif
     }

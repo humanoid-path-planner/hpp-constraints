@@ -233,5 +233,9 @@ namespace hpp {
     {
     }
 
+    std::ostream& DifferentiableFunction::print (std::ostream& o) const
+    {
+      return o << "Differentiable function: " << name ();
+    }
   } // namespace constraints
 } // namespace hpp
