@@ -16,6 +16,7 @@
 
 #define BOOST_TEST_MODULE EXPLICIT_SOLVER
 #include <boost/test/unit_test.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <hpp/constraints/explicit-solver.hh>
 
@@ -32,9 +33,22 @@
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 
+using boost::assign::list_of;
+
 using namespace hpp::constraints;
 using Eigen::RowBlockIndices;
 using Eigen::ColBlockIndices;
+using Eigen::BlockIndex;
+
+// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
+// when they are not equal.
+namespace std {
+  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
+  {
+    Eigen::internal::print_indices<true>::run (os, b);
+    return os;
+  }
+}
 
 namespace Eigen {
   namespace internal {
@@ -241,35 +255,52 @@ typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<TestFunction> TestFunctionPtr_t;
 typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
+template <int N>
+void order_test (const AffineFunctionPtr_t f[N], const segment_t s[N+1],
+    const std::vector<int> forder,
+    const segments_t& inArgs,
+    const segments_t& outArgs)
+{
+  ExplicitSolver solver (4, 4);
+  for (int i = 0; i < N; ++i) {
+    int fo = forder[i],
+    si = forder[i], so = forder[i] + 1;
+    BOOST_CHECK( solver.add(f[fo], s[si], s[so], s[si], s[so]));
+  }
+  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+}
+
 BOOST_AUTO_TEST_CASE(order)
 {
   Eigen::Matrix<value_type,1,1> M; M(0,0) = 1;
 
   // dof     :  0 -> 1 -> 2 -> 3
-  // function:    f1   f2   f3
-  AffineFunctionPtr_t f1 (new AffineFunction (M));
-  AffineFunctionPtr_t f2 (new AffineFunction (M));
-  AffineFunctionPtr_t f3 (new AffineFunction (M));
-  segment_t s1 (0, 1), s2 (1, 1), s3 (2, 1), s4 (3, 1);
+  // function:    f0   f1   f2
+  AffineFunctionPtr_t f[] = {
+    AffineFunctionPtr_t (new AffineFunction (M)),
+    AffineFunctionPtr_t (new AffineFunction (M)),
+    AffineFunctionPtr_t (new AffineFunction (M))
+  };
+  segment_t s[] = { segment_t (0, 1), segment_t (1, 1), segment_t (2, 1), segment_t (3, 1) };
+  segments_t inArgs = list_of(s[0]),
+             outArgs = list_of(s[1])(s[2])(s[3]);
+  BlockIndex::shrink (outArgs);
 
-  {
-    ExplicitSolver solver (4, 4);
-    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
-    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
-    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
-  }
-  {
-    ExplicitSolver solver (4, 4);
-    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
-    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
-    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
-  }
-  {
-    ExplicitSolver solver (4, 4);
-    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
-    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
-    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
-  }
+  std::vector<int> order(3);
+
+  order = list_of(0)(1)(2);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(0)(2)(1);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(1)(0)(2);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(1)(2)(0);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(2)(0)(1);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(2)(1)(0);
+  order_test<3> (f, s, order, inArgs, outArgs);
 }
 
 BOOST_AUTO_TEST_CASE(locked_joints)
