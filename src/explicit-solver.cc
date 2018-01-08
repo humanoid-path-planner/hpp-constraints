@@ -284,9 +284,9 @@ namespace hpp {
         (BlockIndex::difference (BlockIndex::segment_t(0, argSize_),
                                  outArgs_.indices()));
 
-      inArgs_ = RowBlockIndices
-        (BlockIndex::difference (inArgs_.rows(), outIdx));
       BlockIndex::add (inArgs_.m_rows, inArg.rows());
+      inArgs_ = RowBlockIndices
+        (BlockIndex::difference (inArgs_.rows(), outArgs_.rows()));
       // should be sorted already
       inArgs_.updateIndices<false, true, true>();
 
@@ -296,9 +296,9 @@ namespace hpp {
         (BlockIndex::difference(BlockIndex::segment_t(0, derSize_),
                                 outDers_.indices()));
 
-      inDers_ = ColBlockIndices
-        (BlockIndex::difference (inDers_.cols(), outDerIdx));
       BlockIndex::add (inDers_.m_cols, inDer.cols());
+      inDers_ = ColBlockIndices
+        (BlockIndex::difference (inDers_.cols(), outDers_.rows()));
       // should be sorted already
       inDers_.updateIndices<false, true, true>();
 
