@@ -457,7 +457,8 @@ namespace hpp {
     {
       os << "ExplicitSolver, " << functions_.size() << " functions." << incendl
         << "Free args: " << freeArgs_ << iendl
-        << inArgs_ << " -> " << outArgs_ << iendl
+        << "Params: " << inArgs_ << " -> " << outArgs_ << iendl
+        << "Dofs: "   << inDers_ << " -> " << outDers_ << iendl
         << "Functions" << incindent;
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[computationOrder_[i]];
