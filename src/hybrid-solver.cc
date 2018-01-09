@@ -124,6 +124,7 @@ namespace hpp {
       os << "HybridSolver" << incendl;
       HierarchicalIterativeSolver::print (os) << iendl;
       explicit_.print (os) << decindent;
+      return os;
     }
 
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
