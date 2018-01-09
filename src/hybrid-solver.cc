@@ -79,22 +79,27 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      Eigen::ColBlockIndices _explicitActiveParam (explicit_.activeParameters ());
-      bool_array_t explicitActiveParam (bool_array_t::Constant (f.inputSize(), false));
-      if (_explicitActiveParam.nbIndices() > 0)
-        _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
+      /// ADP: Active Derivative Param
+      Eigen::MatrixXi explicitIOdep = explicit_.inOutDofDependencies();
+      assert ((explicitIOdep.array() >= 0).all());
 
       typedef Eigen::MatrixBlocks<false, false> BlockIndices;
 
-      Eigen::RowBlockIndices select (reduction_.indices());
-
-      bool_array_t functionActiveParam;
+      bool_array_t adpF, adpC;
       BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
-        functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
+        bool active;
 
-        bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
-        if (adp.any()) // If at least one element of adp is true
+        // Test on the variable left free by the explicit solver.
+        adpF = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval().array();
+        active = adpF.any();
+        if (!active && explicitIOdep.size() > 0) {
+          // Test on the variable constrained by the explicit solver.
+          adpC = explicit_.outDers().rview(fs[i]->activeDerivativeParameters().matrix()).eval().array();
+          adpF = (explicitIOdep.transpose() * adpC.cast<int>().matrix()).array().cast<bool>();
+          active = adpF.any();
+        }
+        if (active) // If at least one element of adp is true
           rows.push_back (BlockIndices::segment_t
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
