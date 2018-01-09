@@ -269,14 +269,6 @@ namespace hpp {
       outDer.lview(derFunction_).setConstant(idx);
       functions_.push_back (Function(f, inArg, outArg, inDer, outDer, comp));
 
-      /// Computation order
-      std::size_t order = 0;
-      computationOrder_.resize(functions_.size());
-      Computed_t computed(functions_.size(), false);
-      for(std::size_t i = 0; i < functions_.size(); ++i)
-        computeOrder(i, order, computed);
-      assert(order == functions_.size());
-
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
       outArgs_.updateIndices<true, true, true>();
@@ -302,6 +294,14 @@ namespace hpp {
       // should be sorted already
       inDers_.updateIndices<false, true, true>();
 
+      /// Computation order
+      std::size_t order = 0;
+      computationOrder_.resize(functions_.size());
+      inOutDependencies_ = Eigen::MatrixXi::Zero(functions_.size(), derSize_);
+      Computed_t computed(functions_.size(), false);
+      for(std::size_t i = 0; i < functions_.size(); ++i)
+        computeOrder(i, order, computed);
+      assert(order == functions_.size());
       return true;
     }
 
@@ -365,9 +365,13 @@ namespace hpp {
       for (std::size_t i = 0; i < f.inDer.indices().size(); ++i) {
         const BlockIndex::segment_t& segment = f.inDer.indices()[i];
         for (size_type j = 0; j < segment.second; ++j) {
-          if (derFunction_[segment.first + j] < 0) continue;
-          assert((std::size_t)derFunction_[segment.first + j] < functions_.size());
-          computeOrder(derFunction_[segment.first + j], iOrder, computed);
+          if (derFunction_[segment.first + j] < 0) {
+            inOutDependencies_(iF, segment.first + j) += 1;
+          } else {
+            assert((std::size_t)derFunction_[segment.first + j] < functions_.size());
+            computeOrder(derFunction_[segment.first + j], iOrder, computed);
+            inOutDependencies_.row(iF) += inOutDependencies_.row(derFunction_[segment.first + j]);
+          }
         }
       }
       computationOrder_[iOrder] = iF;
@@ -467,6 +471,18 @@ namespace hpp {
           << decendl << "Rhs: " << pinocchio::condensed(f.rightHandSide);
       }
       return os << decindent << decindent;
+    }
+
+    Eigen::MatrixXi ExplicitSolver::inOutDofDependencies () const
+    {
+      Eigen::MatrixXi iod (derSize(), inDers_.nbCols());
+      Eigen::RowVectorXi tmp (inDers_.nbCols());
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        const Function& f = functions_[i];
+        tmp = inDers_.rview (inOutDependencies_.row(i));
+        f.outArg.lview(iod) = tmp.replicate (f.outArg.nbRows(),1);
+      }
+      return outDers_.rview(iod);
     }
   } // namespace constraints
 } // namespace hpp

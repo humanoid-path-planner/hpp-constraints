@@ -181,6 +181,19 @@ namespace hpp {
         /// Velocity parameters involved in the constraint resolution.
         ColBlockIndices activeDerivativeParameters () const;
 
+        /// Returns a matrix of integer whose:
+        /// - rows correspond to functions
+        /// - cols correspond to DoF
+        /// - values correspond to the dependency degree of a function wrt to
+        ///   a DoF
+        const Eigen::MatrixXi& inOutDependencies () const
+        {
+          return inOutDependencies_;
+        }
+
+        /// Same as \ref inOutDependencies except that cols correpond to DoFs.
+        Eigen::MatrixXi inOutDofDependencies () const;
+
         /// The set of variable indices which are computed.
         const RowBlockIndices& outArgs () const
         {
@@ -284,6 +297,8 @@ namespace hpp {
         RowBlockIndices inArgs_, freeArgs_;
         ColBlockIndices inDers_, freeDers_;
         RowBlockIndices outArgs_, outDers_;
+
+        Eigen::MatrixXi inOutDependencies_;
 
         std::vector<Function> functions_;
         std::vector<std::size_t> computationOrder_;
