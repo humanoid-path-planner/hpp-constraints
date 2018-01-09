@@ -29,12 +29,6 @@
 
 namespace hpp {
   namespace constraints {
-    void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::segments_t& indices,
-        vectorIn_t arg0,
-        vectorIn_t arg1,
-        vectorOut_t result);
-
     /// \addtogroup solvers
     /// \{
 
@@ -64,9 +58,6 @@ namespace hpp {
         typedef Eigen::RowBlockIndices RowBlockIndices;
         typedef Eigen::ColBlockIndices ColBlockIndices;
         typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
-        /// This function sets \f{ result = arg1 - arg0 \f}
-        /// \note result may be of a different size than arg0 and arg1
-        typedef boost::function<void (vectorIn_t arg0, vectorIn_t arg1, vectorOut_t result)> Difference_t;
 
         /// \name Resolution
         /// \{
@@ -227,18 +218,6 @@ namespace hpp {
               freeDers_.nbIndices(), freeDers_.indices());
         }
 
-        /// Set the integration function
-        void difference (const Difference_t& difference)
-        {
-          difference_ = difference;
-        }
-
-        /// Get the integration function
-        const Difference_t& difference () const
-        {
-          return difference_;
-        }
-
         // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndices(), freeDers().nbIndices())
         /// \param jacobian must be of dimensions (derSize, derSize) but only a subsegment will be used.
         /// \warning it is assumed solve(arg) has been called before.
@@ -305,7 +284,6 @@ namespace hpp {
         /// For dof i, dofFunction_[i] is the index of the function that computes it.
         /// -1 means it is the output of no function.
         Eigen::VectorXi argFunction_, derFunction_;
-        Difference_t difference_;
         value_type squaredErrorThreshold_;
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;
