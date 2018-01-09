@@ -476,11 +476,12 @@ namespace hpp {
     Eigen::MatrixXi ExplicitSolver::inOutDofDependencies () const
     {
       Eigen::MatrixXi iod (derSize(), inDers_.nbCols());
+      if (inDers_.nbCols() == 0) return iod;
       Eigen::RowVectorXi tmp (inDers_.nbCols());
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
         tmp = inDers_.rview (inOutDependencies_.row(i));
-        f.outArg.lview(iod) = tmp.replicate (f.outArg.nbRows(),1);
+        f.outDer.lview(iod).rowwise() = tmp;
       }
       return outDers_.rview(iod);
     }
