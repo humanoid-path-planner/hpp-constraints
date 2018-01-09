@@ -246,9 +246,9 @@ namespace Eigen {
   /// This class enables a user to virtually create a matrix that concatenates
   /// blocks of a larger matrix.
   ///
-  /// The smaller matrix is built by methods lview and rview
-  /// \li lview returns a smaller matrix that can be written in,
-  /// \li rview returns a smaller matrix that cannot be written in.
+  /// The smaller matrix is built by methods \ref lview and \ref rview
+  /// \li \ref lview returns a smaller matrix that can be written in,
+  /// \li \ref rview returns a smaller matrix that cannot be written in.
   template <bool _allRows = false, bool _allCols = false>
   class MatrixBlocks
   {
