@@ -63,11 +63,15 @@ void test ()
     projectorOnSpanOfInv   <SVD> (svd, PSinv); 
 
     Eigen::internal::set_is_malloc_allowed(true);
-    
+
+// This removes a false warning about the conversion sequence used to find the
+// proper operator* between matrix_t
+#pragma GCC diagnostic ignored "-Wconversion"
     matrix_t Ir = M * Mpinv;
     matrix_t Ic = Mpinv * M;
     matrix_t _M = M * Ic;
     matrix_t _Mpinv = Mpinv * Ir;
+#pragma GCC diagnostic pop
     BOOST_CHECK_MESSAGE (_M.isApprox (M), "M = M * M+ * M failed");
     BOOST_CHECK_MESSAGE (_Mpinv.isApprox (Mpinv), "M+ = M+ * M * M+ failed");
     BOOST_CHECK_MESSAGE (Ir.adjoint ().isApprox (Ir), "(M * M+)* = M * M+ failed");

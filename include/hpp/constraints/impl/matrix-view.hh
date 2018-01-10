@@ -20,7 +20,7 @@ namespace Eigen {
   (const Eigen::ArrayBase<Derived>& array)
   {
     segments_t res;
-    for (std::size_t i = 0; i < array.derived().size(); ++i)
+    for (size_type i = 0; i < array.derived().size(); ++i)
       if (array.derived()[i]) res.push_back (segment_t(i, 1));
     shrink(res);
     return res;

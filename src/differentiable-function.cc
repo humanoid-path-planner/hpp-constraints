@@ -28,21 +28,10 @@ namespace hpp {
     namespace {
       typedef std::vector<se3::JointIndex> JointIndexVector;
 
-      JointIndexVector fromVelocityRank (const se3::Model& model)
-      {
-        JointIndexVector ret (model.nv, 0);
-        for (se3::JointIndex j = 1; j < model.joints.size(); ++j) {
-          const std::size_t i = model.joints[j].idx_v();
-          for (std::size_t k = 0; k < (std::size_t)model.joints[j].nv(); ++k) ret[i+k] = j;
-        }
-        return ret;
-      }
-
       struct FiniteDiffRobotOp
       {
         FiniteDiffRobotOp (const DevicePtr_t& r, const value_type& epsilon)
           : robot(r), model(robot->model()), 
-          // velocityRankToJointIndex (fromVelocityRank(model)),
           increments(se3::finiteDifferenceIncrement(model)),
           epsilon(epsilon),
           v(robot->numberDof())
@@ -54,10 +43,6 @@ namespace hpp {
           value_type r;
           if (i < increments.size()) {
             return increments[i];
-          // if ((std::size_t)i < velocityRankToJointIndex.size()) {
-            // const se3::JointModel& joint
-              // (model.joints[velocityRankToJointIndex[i]]);
-            // r = x.segment(joint.idx_q(), joint.nq()).norm();
           } else {
             r = std::abs(x[i]);
           }
