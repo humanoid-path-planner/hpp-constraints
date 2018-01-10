@@ -88,7 +88,7 @@ IF (USE_QPOASES)
 ENDIF ()
 
 SETUP_PROJECT()
-SET(Eigen_REQUIRED "eigen3 >= 3.2.92")
+SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
 SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")
 ADD_REQUIRED_DEPENDENCY("hpp-statistics")
