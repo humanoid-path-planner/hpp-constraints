@@ -166,11 +166,11 @@ namespace hpp {
           return freeDers_;
         }
 
-        /// Configuration parameters involved in the constraint resolution.
-        ColBlockIndices activeParameters () const;
+        /// Same as \ref inArgs
+        const ColBlockIndices& activeParameters () const;
 
-        /// Velocity parameters involved in the constraint resolution.
-        ColBlockIndices activeDerivativeParameters () const;
+        /// Same as \ref inDers
+        const ColBlockIndices& activeDerivativeParameters () const;
 
         /// Returns a matrix of integer whose:
         /// - rows correspond to functions

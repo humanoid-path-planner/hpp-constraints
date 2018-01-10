@@ -39,26 +39,14 @@ namespace hpp {
       }
     }
 
-    Eigen::ColBlockIndices ExplicitSolver::activeParameters () const
+    const Eigen::ColBlockIndices& ExplicitSolver::activeParameters () const
     {
-      BlockIndex::segments_t biv;
-      for (std::size_t i = 0; i < functions_.size (); ++i)
-        biv.insert(biv.end(), functions_[i].inArg.indices().begin(),
-                              functions_[i].inArg.indices().end());
-      ColBlockIndices cbi (biv);
-      cbi.updateIndices<true, true, true>();
-      return cbi;
+      return inArgs_;
     }
 
-    Eigen::ColBlockIndices ExplicitSolver::activeDerivativeParameters () const
+    const Eigen::ColBlockIndices& ExplicitSolver::activeDerivativeParameters () const
     {
-      BlockIndex::segments_t biv;
-      for (std::size_t i = 0; i < functions_.size (); ++i)
-        biv.insert(biv.end(), functions_[i].inDer.indices().begin(),
-                              functions_[i].inDer.indices().end());
-      ColBlockIndices cbi (biv);
-      cbi.updateIndices<true, true, true>();
-      return cbi;
+      return inDers_;
     }
 
     bool ExplicitSolver::solve (vectorOut_t arg) const
