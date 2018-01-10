@@ -20,9 +20,22 @@ namespace Eigen {
   (const Eigen::ArrayBase<Derived>& array)
   {
     segments_t res;
-    for (std::size_t i = 0; i < array.derived().size(); ++i)
+    for (size_type i = 0; i < array.derived().size(); ++i)
       if (array.derived()[i]) res.push_back (segment_t(i, 1));
     shrink(res);
     return res;
   }
 } // namespace Eigen
+
+#include <hpp/pinocchio/util.hh>
+
+namespace hpp {
+  template <int Option> struct prettyPrint <Eigen::BlockIndex::segments_t, Option>
+  {
+    static std::ostream& run (std::ostream& os, const constraints::segments_t& segs)
+    {
+      Eigen::internal::print_indices::run (os, segs);
+      return os;
+    }
+  };
+} // namespace hpp

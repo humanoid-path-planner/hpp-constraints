@@ -16,6 +16,7 @@
 
 #define BOOST_TEST_MODULE EXPLICIT_SOLVER
 #include <boost/test/unit_test.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <hpp/constraints/explicit-solver.hh>
 
@@ -32,9 +33,22 @@
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 
+using boost::assign::list_of;
+
 using namespace hpp::constraints;
 using Eigen::RowBlockIndices;
 using Eigen::ColBlockIndices;
+using Eigen::BlockIndex;
+
+// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
+// when they are not equal.
+namespace std {
+  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
+  {
+    Eigen::internal::print_indices::run (os, b);
+    return os;
+  }
+}
 
 namespace Eigen {
   namespace internal {
@@ -241,35 +255,168 @@ typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<TestFunction> TestFunctionPtr_t;
 typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
+template <int N>
+void order_test (const AffineFunctionPtr_t f[N], const segment_t s[N+1],
+    const std::vector<int> forder,
+    const segments_t& inArgs,
+    const segments_t& outArgs)
+{
+  ExplicitSolver solver (4, 4);
+  for (int i = 0; i < N; ++i) {
+    int fo = forder[i],
+    si = forder[i], so = forder[i] + 1;
+    BOOST_CHECK( solver.add(f[fo], s[si], s[so], s[si], s[so]));
+  }
+  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+}
+
 BOOST_AUTO_TEST_CASE(order)
 {
   Eigen::Matrix<value_type,1,1> M; M(0,0) = 1;
 
   // dof     :  0 -> 1 -> 2 -> 3
-  // function:    f1   f2   f3
-  AffineFunctionPtr_t f1 (new AffineFunction (M));
-  AffineFunctionPtr_t f2 (new AffineFunction (M));
-  AffineFunctionPtr_t f3 (new AffineFunction (M));
-  segment_t s1 (0, 1), s2 (1, 1), s3 (2, 1), s4 (3, 1);
+  // function:    f0   f1   f2
+  AffineFunctionPtr_t f[] = {
+    AffineFunctionPtr_t (new AffineFunction (M)),
+    AffineFunctionPtr_t (new AffineFunction (M)),
+    AffineFunctionPtr_t (new AffineFunction (M))
+  };
+  segment_t s[] = { segment_t (0, 1), segment_t (1, 1), segment_t (2, 1), segment_t (3, 1) };
+  segments_t inArgs = list_of(s[0]),
+             outArgs = list_of(s[1])(s[2])(s[3]);
+  BlockIndex::shrink (outArgs);
 
-  {
-    ExplicitSolver solver (4, 4);
-    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
-    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
-    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
-  }
-  {
-    ExplicitSolver solver (4, 4);
-    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
-    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
-    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
-  }
-  {
-    ExplicitSolver solver (4, 4);
-    BOOST_CHECK( solver.add(f3, s3, s4, s3, s4));
-    BOOST_CHECK( solver.add(f2, s2, s3, s2, s3));
-    BOOST_CHECK( solver.add(f1, s1, s2, s1, s2));
-  }
+  std::vector<int> order(3);
+
+  order = list_of(0)(1)(2);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(0)(2)(1);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(1)(0)(2);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(1)(2)(0);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(2)(0)(1);
+  order_test<3> (f, s, order, inArgs, outArgs);
+  order = list_of(2)(1)(0);
+  order_test<3> (f, s, order, inArgs, outArgs);
+}
+
+BOOST_AUTO_TEST_CASE(jacobian1)
+{
+  matrix_t J[] = {
+      (matrix_t(1,1) << 1).finished()
+    , (matrix_t(1,1) << 2).finished()
+    , (matrix_t(1,1) << 3).finished()
+  };
+
+  // dof     :  0 -> 1 -> 2 -> 3
+  // function:    f0   f1   f2
+  AffineFunctionPtr_t f[] = {
+    AffineFunctionPtr_t (new AffineFunction (J[0])),
+    AffineFunctionPtr_t (new AffineFunction (J[1])),
+    AffineFunctionPtr_t (new AffineFunction (J[2]))
+  };
+  segment_t s[] = { segment_t (0, 1), segment_t (1, 1), segment_t (2, 1), segment_t (3, 1) };
+
+  ExplicitSolver solver (4, 4);
+  for (int i = 0; i < 3; ++i)
+    solver.add(f[i], s[i], s[i+1], s[i], s[i+1]);
+
+  vector_t x(4); x << 1,2,3,4;
+  vector_t xres = x;
+  BOOST_CHECK (solver.solve(xres));
+
+  // Check the solution
+  BOOST_CHECK_EQUAL (xres[0], x[0]);
+  for (int i = 0; i < 3; ++i)
+    BOOST_CHECK_EQUAL (xres.segment<1>(i+1), (*f[i])(xres.segment<1>(i)).vector());
+
+  // Check the jacobian
+  // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
+  matrix_t expjac (matrix_t::Zero(solver.derSize(), solver.derSize()));
+  expjac.col(0) << 1, J[0], J[1] * J[0], J[2] * J[1] * J[0];
+  matrix_t jacobian (solver.derSize(), solver.derSize());
+  solver.jacobian (jacobian, xres);
+  BOOST_CHECK_EQUAL (jacobian, expjac);
+}
+
+BOOST_AUTO_TEST_CASE(jacobian2)
+{
+  matrix_t J[] = {
+      (matrix_t(1,2) << 3.2, -0.3).finished()
+    , (matrix_t(1,1) << 4.1).finished()
+    , (matrix_t(1,2) << -0.3, 1.2).finished()
+  };
+
+  /* dof     :  1,2 -> 0 \
+   * function:      f0    --> 4
+   *            1   -> 3 / f2
+   *                f1
+   */
+  AffineFunctionPtr_t f[] = {
+      AffineFunctionPtr_t (new AffineFunction (J[0]))
+    , AffineFunctionPtr_t (new AffineFunction (J[1]))
+    , AffineFunctionPtr_t (new AffineFunction (J[2]))
+  };
+  std::vector<segments_t> s(6);
+  s[0] = (list_of(segment_t (1, 2)));
+  s[1] = (list_of(segment_t (0, 1)));
+  s[2] = (list_of(segment_t (3, 1)));
+  s[3] = (list_of(segment_t (4, 1)));
+  s[4] = (list_of(segment_t (0, 1))(segment_t (3, 1)));
+  s[5] = (list_of(segment_t (1, 1)));
+
+  ExplicitSolver solver (5, 5);
+  solver.add(f[0], s[0], s[1], s[0], s[1]);
+  solver.add(f[2], s[4], s[3], s[4], s[3]);
+  solver.add(f[1], s[5], s[2], s[5], s[2]);
+
+  Eigen::MatrixXi inOutDependencies (3, 5);
+  inOutDependencies << 0, 1, 1, 0, 0,
+                       0, 2, 1, 0, 0,
+                       0, 1, 0, 0, 0;
+  BOOST_CHECK_EQUAL (solver.inOutDependencies(), inOutDependencies);
+  inOutDependencies.resize (3, 2);
+  inOutDependencies << 1, 1,
+                       1, 0,
+                       2, 1;
+  BOOST_CHECK_EQUAL (solver.inOutDofDependencies(), inOutDependencies);
+
+  segments_t inArgs = s[0],
+             outArgs = list_of(s[1][0])(s[2][0])(s[3][0]);
+  BlockIndex::shrink (outArgs);
+
+  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+
+  vector_t x(5); x << 1,2,3,4,5;
+  vector_t xres = x;
+  BOOST_CHECK (solver.solve(xres));
+
+  // Check the solution
+  BOOST_CHECK_EQUAL (xres.segment<2>(1), x.segment<2>(1));
+  BOOST_CHECK_EQUAL (xres.segment<1>(0), (*f[0])(xres.segment<2>(1)).vector());
+  BOOST_CHECK_EQUAL (xres.segment<1>(3), (*f[1])(xres.segment<1>(1)).vector());
+  BOOST_CHECK_EQUAL (xres.segment<1>(4), (*f[2])(RowBlockIndices(s[4]).rview(xres).eval()).vector());
+
+  // Check the jacobian
+  // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
+  matrix_t expjac (matrix_t::Zero(solver.derSize(), solver.derSize()));
+  expjac.block<5, 2>(0,1) <<
+    J[0](0,0), J[0](0,1),
+    1, 0,
+    0, 1,
+    J[1](0,0), 0,
+    J[2](0,0) * J[0](0,0) + J[2](0,1) * J[1](0,0), J[2](0,0) * J[0](0,1);
+  matrix_t jacobian (solver.derSize(), solver.derSize());
+  solver.jacobian (jacobian, xres);
+  BOOST_CHECK_EQUAL (jacobian, expjac);
+
+  matrix_t smallJ = solver.viewJacobian(jacobian);
+  BOOST_CHECK_EQUAL (solver.outArgs().rview(xres).eval(),
+      smallJ * solver.inArgs().rview(xres).eval());
 }
 
 BOOST_AUTO_TEST_CASE(locked_joints)
@@ -352,10 +499,8 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    solver.difference (boost::bind(hpp::pinocchio::difference<hpp::pinocchio::LieGroupTpl>, device, _1, _2, _3));
     BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
     BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
-    solver.print(std::cout);
 
     BOOST_CHECK(solver.solve(qrand));
     vector_t error(solver.outDers().nbIndices());

@@ -29,12 +29,6 @@
 
 namespace hpp {
   namespace constraints {
-    void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::segments_t& indices,
-        vectorIn_t arg0,
-        vectorIn_t arg1,
-        vectorOut_t result);
-
     /// \addtogroup solvers
     /// \{
 
@@ -64,9 +58,6 @@ namespace hpp {
         typedef Eigen::RowBlockIndices RowBlockIndices;
         typedef Eigen::ColBlockIndices ColBlockIndices;
         typedef Eigen::MatrixBlockView<matrix_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixBlockView;
-        /// This function sets \f{ result = arg1 - arg0 \f}
-        /// \note result may be of a different size than arg0 and arg1
-        typedef boost::function<void (vectorIn_t arg0, vectorIn_t arg1, vectorOut_t result)> Difference_t;
 
         /// \name Resolution
         /// \{
@@ -175,11 +166,29 @@ namespace hpp {
           return freeDers_;
         }
 
-        /// Configuration parameters involved in the constraint resolution.
+        /// Same as \ref inArgs
         ColBlockIndices activeParameters () const;
 
-        /// Velocity parameters involved in the constraint resolution.
-        ColBlockIndices activeDerivativeParameters () const;
+        /// Same as \ref inDers
+        const ColBlockIndices& activeDerivativeParameters () const;
+
+        /// Returns a matrix of integer whose:
+        /// - rows correspond to functions
+        /// - cols correspond to DoF
+        /// - values correspond to the dependency degree of a function wrt to
+        ///   a DoF
+        const Eigen::MatrixXi& inOutDependencies () const
+        {
+          return inOutDependencies_;
+        }
+
+        /// Same as \ref inOutDependencies except that cols correpond to DoFs.
+        Eigen::MatrixXi inOutDofDependencies () const;
+
+        const Eigen::VectorXi& derFunction () const
+        {
+          return derFunction_;
+        }
 
         /// The set of variable indices which are computed.
         const RowBlockIndices& outArgs () const
@@ -212,18 +221,6 @@ namespace hpp {
           return MatrixBlockView(jacobian,
               outDers_.nbIndices() , outDers_.indices(),
               freeDers_.nbIndices(), freeDers_.indices());
-        }
-
-        /// Set the integration function
-        void difference (const Difference_t& difference)
-        {
-          difference_ = difference;
-        }
-
-        /// Get the integration function
-        const Difference_t& difference () const
-        {
-          return difference_;
         }
 
         // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndices(), freeDers().nbIndices())
@@ -285,12 +282,13 @@ namespace hpp {
         ColBlockIndices inDers_, freeDers_;
         RowBlockIndices outArgs_, outDers_;
 
+        Eigen::MatrixXi inOutDependencies_;
+
         std::vector<Function> functions_;
         std::vector<std::size_t> computationOrder_;
         /// For dof i, dofFunction_[i] is the index of the function that computes it.
         /// -1 means it is the output of no function.
         Eigen::VectorXi argFunction_, derFunction_;
-        Difference_t difference_;
         value_type squaredErrorThreshold_;
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;

@@ -148,8 +148,8 @@ namespace Eigen {
       }
     };
 
-    template <bool print> struct print_indices { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
-    template <> struct print_indices <true> {
+    struct dont_print_indices { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
+    struct print_indices {
       template <typename BlockIndexType>
       static void run (std::ostream& os, const BlockIndexType& bi) {
         for (std::size_t i = 0; i < bi.size(); ++i)
@@ -263,9 +263,9 @@ namespace Eigen {
   /// This class enables a user to virtually create a matrix that concatenates
   /// blocks of a larger matrix.
   ///
-  /// The smaller matrix is built by methods lview and rview
-  /// \li lview returns a smaller matrix that can be written in,
-  /// \li rview returns a smaller matrix that cannot be written in.
+  /// The smaller matrix is built by methods \ref lview and \ref rview
+  /// \li \ref lview returns a smaller matrix that can be written in,
+  /// \li \ref rview returns a smaller matrix that cannot be written in.
   template <bool _allRows = false, bool _allCols = false>
   class MatrixBlocks
   {
@@ -534,14 +534,16 @@ namespace Eigen {
   template <bool _allRows, bool _allCols>
   std::ostream& operator<< (std::ostream& os, MatrixBlocks<_allRows, _allCols> mbi)
   {
+    typedef typename internal::conditional<_allRows, internal::dont_print_indices, internal::print_indices>::type row_printer;
+    typedef typename internal::conditional<_allCols, internal::dont_print_indices, internal::print_indices>::type col_printer;
     if (!_allRows) {
       os << "Rows: ";
-      internal::print_indices<!_allRows>::run (os, mbi.m_rows);
+      row_printer::run (os, mbi.m_rows);
       if (!_allCols) os << hpp::iendl;
     }
     if (!_allCols) {
       os << "Cols: ";
-      internal::print_indices<!_allCols>::run (os, mbi.m_cols);
+      col_printer::run (os, mbi.m_cols);
     }
     return os;
   }

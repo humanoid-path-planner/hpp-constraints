@@ -16,6 +16,7 @@
 
 #define BOOST_TEST_MODULE HYBRID_SOLVER
 #include <boost/test/unit_test.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <hpp/constraints/hybrid-solver.hh>
 
@@ -31,6 +32,16 @@
 #include <hpp/pinocchio/liegroup-element.hh>
 
 using namespace hpp::constraints;
+using boost::assign::list_of;
+
+// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
+// when they are not equal.
+namespace std {
+  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
+  {
+    return os << hpp::pretty_print (b);
+  }
+}
 
 class LockedJoint : public DifferentiableFunction
 {
@@ -191,20 +202,60 @@ class ExplicitTransformation : public DifferentiableFunction
 typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
-BOOST_AUTO_TEST_CASE(functions)
+BOOST_AUTO_TEST_CASE(functions1)
+{
+  HybridSolver solver(3, 3);
+
+  /// System:
+  /// f (q1, q2) = 0
+  /// h (    q2) = 0
+  ///         q1 = g(q3)
+  ///         q2 = C
+
+  // f
+  solver.add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Identity(2,3))), 0);
+  // q1 = g(q3)
+  Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
+  Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
+  Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
+  Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
+  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Ones(1,1))),
+      segment_t (2,1), segment_t(0,1),
+      segment_t (2,1), segment_t(0,1));
+  // q2 = C
+  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (matrix_t(1,0), vector_t::Zero(1))),
+      segment_t (), segment_t(1,1),
+      segment_t (), segment_t(1,1));
+
+  solver.explicitSolverHasChanged();
+  BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+
+  // h
+  matrix_t h (1,3); h << 0, 1, 0;
+  solver.add(AffineFunctionPtr_t(new AffineFunction (h)), 0);
+  BOOST_CHECK_EQUAL(solver.       dimension(), 3);
+  BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+
+  segments_t impDof = list_of(segment_t(2,1));
+  BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
+}
+
+BOOST_AUTO_TEST_CASE(functions2)
 {
   HybridSolver solver(3, 3);
 
   /// System:
   /// f (q1, q3) = 0
   /// q2 = g(q3)
-  Eigen::Matrix<value_type, 2, 3> Jf; Jf << 1, 0, 0, 0, 0, 1;
+  Eigen::Matrix<value_type, 2, 3> Jf;
+  Jf << 1, 0, 0,
+        0, 0, 1;
   solver.add(AffineFunctionPtr_t(new AffineFunction (Jf)), 0);
 
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
   Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
-  Eigen::RowBlockIndices outArg; outArg.addRow (0,1);
+  Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
   solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (Jg)),
       inArg, outArg, inDer, outArg);
 
@@ -212,10 +263,27 @@ BOOST_AUTO_TEST_CASE(functions)
   BOOST_CHECK_EQUAL(solver.dimension(), 2);
 
   // We add to the system h(q3) = 0
+  /// f (q1, q3) = 0
+  /// h (    q3) = 0
+  /// q2 = g(q3)
   // This function should not be removed from the system.
   Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
   solver.add(AffineFunctionPtr_t(new AffineFunction (Jh)), 0);
   BOOST_CHECK_EQUAL(solver.dimension(), 3);
+
+  // We add to the system q3 = C
+  // Function h should be removed, f should not.
+  vector_t C (1); C(0) = 0;
+  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (matrix_t (1, 0), C)),
+      segments_t(), segment_t (2, 1),
+      segments_t(), segment_t (2, 1));
+  solver.explicitSolverHasChanged();
+
+  BOOST_CHECK_EQUAL(solver.       dimension(), 3);
+  BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+
+  segments_t impDof = list_of(segment_t(0,1));
+  BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
 }
 
 BOOST_AUTO_TEST_CASE(hybrid_solver)

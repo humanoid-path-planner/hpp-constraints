@@ -25,10 +25,6 @@
 
 namespace hpp {
   namespace constraints {
-    using pinocchio::setpyformat;
-    using pinocchio::unsetpyformat;
-    using pinocchio::pretty_print;
-
     namespace lineSearch {
       template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
@@ -42,6 +38,25 @@ namespace hpp {
     void HybridSolver::explicitSolverHasChanged()
     {
       reduction(explicit_.freeDers());
+    }
+
+    segments_t HybridSolver::implicitDof () const
+    {
+      const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();
+      const Eigen::VectorXi& derF = explicit_.derFunction();
+      bool_array_t adp (activeDerivativeParameters());
+      Eigen::VectorXi out (Eigen::VectorXi::Zero(adp.size()));
+
+      for (size_type i = 0; i < adp.size(); ++i) {
+        if (adp(i)) {
+         if (derF[i] >= 0) {
+           out += ioDep.row(derF[i]);
+           out(i) = 0;
+         } else
+           out(i) += 1;
+        }
+      }
+      return BlockIndex::fromLogicalExpression(out.array().cast<bool>());
     }
 
     void HybridSolver::updateJacobian (vectorIn_t arg) const
@@ -79,22 +94,27 @@ namespace hpp {
       const DifferentiableFunctionStack::Functions_t& fs = f.functions();
       std::size_t row = 0;
 
-      Eigen::ColBlockIndices _explicitActiveParam (explicit_.activeParameters ());
-      bool_array_t explicitActiveParam (bool_array_t::Constant (f.inputSize(), false));
-      if (_explicitActiveParam.nbIndices() > 0)
-        _explicitActiveParam.lviewTranspose(explicitActiveParam.matrix()).setConstant(true);
+      /// ADP: Active Derivative Param
+      Eigen::MatrixXi explicitIOdep = explicit_.inOutDofDependencies();
+      assert ((explicitIOdep.array() >= 0).all());
 
       typedef Eigen::MatrixBlocks<false, false> BlockIndices;
 
-      Eigen::RowBlockIndices select (reduction_.indices());
-
-      bool_array_t functionActiveParam;
+      bool_array_t adpF, adpC;
       BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
-        functionActiveParam = fs[i]->activeParameters() || explicitActiveParam;
+        bool active;
 
-        bool_array_t adp = select.rview(functionActiveParam.matrix()).eval();
-        if (adp.any()) // If at least one element of adp is true
+        // Test on the variable left free by the explicit solver.
+        adpF = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval().array();
+        active = adpF.any();
+        if (!active && explicitIOdep.size() > 0) {
+          // Test on the variable constrained by the explicit solver.
+          adpC = explicit_.outDers().rview(fs[i]->activeDerivativeParameters().matrix()).eval().array();
+          adpF = (explicitIOdep.transpose() * adpC.cast<int>().matrix()).array().cast<bool>();
+          active = adpF.any();
+        }
+        if (active) // If at least one element of adp is true
           rows.push_back (BlockIndices::segment_t
                           (row, fs[i]->outputDerivativeSize()));
         row += fs[i]->outputDerivativeSize();
@@ -124,6 +144,7 @@ namespace hpp {
       os << "HybridSolver" << incendl;
       HierarchicalIterativeSolver::print (os) << iendl;
       explicit_.print (os) << decindent;
+      return os;
     }
 
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;

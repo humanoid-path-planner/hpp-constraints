@@ -33,7 +33,7 @@ using boost::assign::list_of;
 namespace std {
   std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
   {
-    internal::print_indices<true>::run (os, b);
+    internal::print_indices::run (os, b);
     return os;
   }
 }

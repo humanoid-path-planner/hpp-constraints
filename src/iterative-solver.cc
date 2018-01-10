@@ -428,7 +428,8 @@ namespace hpp {
     {
       os << "HierarchicalIterativeSolver, " << stacks_.size() << " level." << iendl
         << "dimension " << dimension() << iendl
-        << "reduced dimension " << reducedDimension() << incendl;
+        << "reduced dimension " << reducedDimension() << iendl
+        << "reduction: " << reduction_ << incendl;
       const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
       for (std::size_t i = 0; i < stacks_.size(); ++i) {
         const DifferentiableFunctionStack::Functions_t& fs = stacks_[i].functions();
@@ -442,11 +443,12 @@ namespace hpp {
           os << iendl << j << ": ["
             << row << ", " << f->outputSize() << "],"
             << *f
-            << iendl << "Rhs: " << pinocchio::condensed(d.rightHandSide.vector().segment(row, fs[j]->outputSize()));
+            << iendl << "Rhs: " << condensed(d.rightHandSide.vector().segment(row, fs[j]->outputSize()));
           row += f->outputSize();
         }
         os << decendl;
         os << "Equality idx: " << d.equalityIndices;
+        os << iendl << "Active rows: " << d.activeRowsOfJ;
       }
       return os << decindent;
     }

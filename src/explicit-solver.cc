@@ -20,59 +20,11 @@
 
 #include <hpp/util/indent.hh>
 
-#include <pinocchio/multibody/joint/joint.hpp>
-#include <pinocchio/algorithm/joint-configuration.hpp>
-
 #include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/liegroup.hh>
 
 #include <hpp/constraints/matrix-view.hh>
-
-namespace se3 {
-  using ::hpp::constraints::vectorIn_t;
-  using ::hpp::constraints::vectorOut_t;
-  using ::hpp::constraints::size_type;
-
-  struct DifferenceStep : public fusion::JointModelVisitor<DifferenceStep >
-  {
-    typedef boost::fusion::vector<vectorIn_t,
-                                  vectorIn_t,
-                                  size_type&,
-                                  vectorOut_t,
-                                  size_type& > ArgsType;
-
-    JOINT_MODEL_VISITOR_INIT(DifferenceStep);
-
-    template<typename JointModel>
-    static void algo(const JointModelBase<JointModel>& jmodel,
-                    vectorIn_t  q0,
-                    vectorIn_t  q1,
-                    size_type& rowArg,
-                    vectorOut_t result,
-                    size_type& rowDer)
-    {
-      ::hpp::pinocchio::LieGroupTpl::template operation<JointModel>::type ::difference (
-          q0.segment(rowArg, jmodel.nq()),
-          q1.segment(rowArg, jmodel.nq()),
-          result.segment(rowDer, jmodel.nv()));
-      rowArg += jmodel.nq();
-      rowDer += jmodel.nv();
-    }
-  };
-
-  template<>
-  void DifferenceStep::algo (const JointModelBase<JointModelComposite>& jmodel,
-                    vectorIn_t  q0,
-                    vectorIn_t  q1,
-                    size_type& rowArg,
-                    vectorOut_t result,
-                    size_type& rowDer)
-  {
-    ::se3::details::Dispatch< DifferenceStep >::run(jmodel.derived(),
-        ArgsType(q0, q1, rowArg, result, rowDer));
-  }
-}
 
 
 namespace hpp {
@@ -87,71 +39,14 @@ namespace hpp {
       }
     }
 
-    void difference (const DevicePtr_t& robot,
-        const Eigen::BlockIndex::segments_t& indices,
-        vectorIn_t arg0,
-        vectorIn_t arg1,
-        vectorOut_t result)
-    {
-      typedef typename se3::DifferenceStep DiffStep;
-      const se3::Model& model = robot->model();
-      std::size_t iJoint = 1;
-
-      size_type rowArg = 0, rowDer = 0;
-      for (std::size_t i = 0; i < indices.size(); ++i) {
-        const Eigen::BlockIndex::segment_t& interval = indices[i];
-        size_type j = 0;
-        while (j < interval.second) {
-          size_type iArg = interval.first + j;
-
-          if (iArg >= model.nq) { // Extra dofs, assume vector space
-            // TODO this could be optimized for cases where there are many
-            // extra dofs.
-            result[rowDer] = arg1[rowArg] - arg0[rowArg];
-            ++rowArg;
-            ++rowDer;
-            continue;
-          }
-          while (model.joints[iJoint].idx_q() != iArg) {
-            ++iJoint;
-            if (iJoint >= model.joints.size()) throw std::runtime_error("Joint index out of bounds");
-          }
-
-          const se3::JointModel& jmodel = model.joints[iJoint];
-
-          assert (jmodel.idx_q() >= interval.first);
-          assert (jmodel.nq()    <= interval.second);
-
-          // Compute difference
-          DiffStep::ArgsType args (arg0, arg1, rowArg, result, rowDer);
-          DiffStep::run(model.joints[iJoint], args);
-
-          ++iJoint;
-          j += jmodel.nq();
-        }
-      }
-    }
-
     Eigen::ColBlockIndices ExplicitSolver::activeParameters () const
     {
-      BlockIndex::segments_t biv;
-      for (std::size_t i = 0; i < functions_.size (); ++i)
-        biv.insert(biv.end(), functions_[i].inArg.indices().begin(),
-                              functions_[i].inArg.indices().end());
-      ColBlockIndices cbi (biv);
-      cbi.updateIndices<true, true, true>();
-      return cbi;
+      return inArgs_;
     }
 
-    Eigen::ColBlockIndices ExplicitSolver::activeDerivativeParameters () const
+    const Eigen::ColBlockIndices& ExplicitSolver::activeDerivativeParameters () const
     {
-      BlockIndex::segments_t biv;
-      for (std::size_t i = 0; i < functions_.size (); ++i)
-        biv.insert(biv.end(), functions_[i].inDer.indices().begin(),
-                              functions_[i].inDer.indices().end());
-      ColBlockIndices cbi (biv);
-      cbi.updateIndices<true, true, true>();
-      return cbi;
+      return inDers_;
     }
 
     bool ExplicitSolver::solve (vectorOut_t arg) const
@@ -269,14 +164,6 @@ namespace hpp {
       outDer.lview(derFunction_).setConstant(idx);
       functions_.push_back (Function(f, inArg, outArg, inDer, outDer, comp));
 
-      /// Computation order
-      std::size_t order = 0;
-      computationOrder_.resize(functions_.size());
-      Computed_t computed(functions_.size(), false);
-      for(std::size_t i = 0; i < functions_.size(); ++i)
-        computeOrder(i, order, computed);
-      assert(order == functions_.size());
-
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
       outArgs_.updateIndices<true, true, true>();
@@ -284,9 +171,9 @@ namespace hpp {
         (BlockIndex::difference (BlockIndex::segment_t(0, argSize_),
                                  outArgs_.indices()));
 
-      inArgs_ = RowBlockIndices
-        (BlockIndex::difference (inArgs_.rows(), outIdx));
       BlockIndex::add (inArgs_.m_rows, inArg.rows());
+      inArgs_ = RowBlockIndices
+        (BlockIndex::difference (inArgs_.rows(), outArgs_.rows()));
       // should be sorted already
       inArgs_.updateIndices<false, true, true>();
 
@@ -296,12 +183,20 @@ namespace hpp {
         (BlockIndex::difference(BlockIndex::segment_t(0, derSize_),
                                 outDers_.indices()));
 
-      inDers_ = ColBlockIndices
-        (BlockIndex::difference (inDers_.cols(), outDerIdx));
       BlockIndex::add (inDers_.m_cols, inDer.cols());
+      inDers_ = ColBlockIndices
+        (BlockIndex::difference (inDers_.cols(), outDers_.rows()));
       // should be sorted already
       inDers_.updateIndices<false, true, true>();
 
+      /// Computation order
+      std::size_t order = 0;
+      computationOrder_.resize(functions_.size());
+      inOutDependencies_ = Eigen::MatrixXi::Zero(functions_.size(), derSize_);
+      Computed_t computed(functions_.size(), false);
+      for(std::size_t i = 0; i < functions_.size(); ++i)
+        computeOrder(i, order, computed);
+      assert(order == functions_.size());
       return true;
     }
 
@@ -365,9 +260,13 @@ namespace hpp {
       for (std::size_t i = 0; i < f.inDer.indices().size(); ++i) {
         const BlockIndex::segment_t& segment = f.inDer.indices()[i];
         for (size_type j = 0; j < segment.second; ++j) {
-          if (derFunction_[segment.first + j] < 0) continue;
-          assert((std::size_t)derFunction_[segment.first + j] < functions_.size());
-          computeOrder(derFunction_[segment.first + j], iOrder, computed);
+          if (derFunction_[segment.first + j] < 0) {
+            inOutDependencies_(iF, segment.first + j) += 1;
+          } else {
+            assert((std::size_t)derFunction_[segment.first + j] < functions_.size());
+            computeOrder(derFunction_[segment.first + j], iOrder, computed);
+            inOutDependencies_.row(iF) += inOutDependencies_.row(derFunction_[segment.first + j]);
+          }
         }
       }
       computationOrder_[iOrder] = iF;
@@ -457,15 +356,29 @@ namespace hpp {
     {
       os << "ExplicitSolver, " << functions_.size() << " functions." << incendl
         << "Free args: " << freeArgs_ << iendl
-        << inArgs_ << " -> " << outArgs_ << iendl
+        << "Params: " << inArgs_ << " -> " << outArgs_ << iendl
+        << "Dofs: "   << inDers_ << " -> " << outDers_ << iendl
         << "Functions" << incindent;
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[computationOrder_[i]];
         os << iendl << i << ": " << f.inArg << " -> " << f.outArg
           << incendl << *f.f
-          << decendl << "Rhs: " << pinocchio::condensed(f.rightHandSide);
+          << decendl << "Rhs: " << condensed(f.rightHandSide);
       }
       return os << decindent << decindent;
+    }
+
+    Eigen::MatrixXi ExplicitSolver::inOutDofDependencies () const
+    {
+      Eigen::MatrixXi iod (derSize(), inDers_.nbCols());
+      if (inDers_.nbCols() == 0) return iod;
+      Eigen::RowVectorXi tmp (inDers_.nbCols());
+      for(std::size_t i = 0; i < functions_.size(); ++i) {
+        const Function& f = functions_[i];
+        tmp = inDers_.rview (inOutDependencies_.row(i));
+        f.outDer.lview(iod).rowwise() = tmp;
+      }
+      return outDers_.rview(iod);
     }
   } // namespace constraints
 } // namespace hpp
