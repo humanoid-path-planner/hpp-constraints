@@ -39,7 +39,7 @@ namespace hpp {
       }
     }
 
-    const Eigen::ColBlockIndices& ExplicitSolver::activeParameters () const
+    Eigen::ColBlockIndices ExplicitSolver::activeParameters () const
     {
       return inArgs_;
     }

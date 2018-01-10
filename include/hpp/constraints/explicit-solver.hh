@@ -167,7 +167,7 @@ namespace hpp {
         }
 
         /// Same as \ref inArgs
-        const ColBlockIndices& activeParameters () const;
+        ColBlockIndices activeParameters () const;
 
         /// Same as \ref inDers
         const ColBlockIndices& activeDerivativeParameters () const;
