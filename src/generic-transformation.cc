@@ -28,6 +28,7 @@
 
 #include <hpp/constraints/tools.hh>
 #include <hpp/constraints/macros.hh>
+#include <hpp/constraints/matrix-view.hh>
 
 namespace hpp {
   namespace constraints {
@@ -333,12 +334,13 @@ namespace hpp {
       os << (IsRelative ? "Relative" : "") <<
             (ComputePosition ? (ComputeOrientation ? "Transformation" : "Position")
                    : "Orientation") << ": " << name()
-       << incindent
-       << iendl << "Joint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
-       << iendl << "Frame in joint 1" << incindent << iendl; pinocchio::display(os, frame1InJoint1()) << decindent
-       << iendl << "Joint2: "         << joint2()->name()
-       << iendl << "Frame in joint 2" << incindent << iendl; pinocchio::display(os, frame2InJoint2()) << decindent
-       << iendl << "mask: ";
+        << ", active dof: "
+        << pretty_print (BlockIndex::fromLogicalExpression (activeParameters_)) << incindent
+        << iendl << "Joint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
+        << iendl << "Frame in joint 1" << incindent << iendl; pinocchio::display(os, frame1InJoint1()) << decindent
+        << iendl << "Joint2: "         << joint2()->name()
+        << iendl << "Frame in joint 2" << incindent << iendl; pinocchio::display(os, frame2InJoint2()) << decindent
+        << iendl << "mask: ";
       for (size_type i=0; i<ValueSize; ++i) os << mask_ [i] << ", ";
       return os << decindent;
     }
