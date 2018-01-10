@@ -443,7 +443,7 @@ namespace hpp {
           os << iendl << j << ": ["
             << row << ", " << f->outputSize() << "],"
             << *f
-            << iendl << "Rhs: " << pinocchio::condensed(d.rightHandSide.vector().segment(row, fs[j]->outputSize()));
+            << iendl << "Rhs: " << condensed(d.rightHandSide.vector().segment(row, fs[j]->outputSize()));
           row += f->outputSize();
         }
         os << decendl;

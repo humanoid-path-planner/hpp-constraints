@@ -26,3 +26,16 @@ namespace Eigen {
     return res;
   }
 } // namespace Eigen
+
+#include <hpp/pinocchio/util.hh>
+
+namespace hpp {
+  template <int Option> struct prettyPrint <Eigen::BlockIndex::segments_t, Option>
+  {
+    static std::ostream& run (std::ostream& os, const constraints::segments_t& segs)
+    {
+      Eigen::internal::print_indices::run (os, segs);
+      return os;
+    }
+  };
+} // namespace hpp

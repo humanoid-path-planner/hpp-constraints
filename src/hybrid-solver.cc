@@ -25,10 +25,6 @@
 
 namespace hpp {
   namespace constraints {
-    using pinocchio::setpyformat;
-    using pinocchio::unsetpyformat;
-    using pinocchio::pretty_print;
-
     namespace lineSearch {
       template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
