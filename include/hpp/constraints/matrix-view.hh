@@ -23,6 +23,8 @@
 #include <hpp/util/indent.hh>
 #include <hpp/constraints/fwd.hh>
 
+# define HPP_EIGEN_USE_EVALUATOR EIGEN_VERSION_AT_LEAST(3,2,92)
+
 namespace Eigen {
 
   template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols> class MatrixBlockView;
@@ -51,13 +53,18 @@ namespace Eigen {
     template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
       struct traits< MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
     {
-      // typedef typename ArgType::Index Index;
+# if HPP_EIGEN_USE_EVALUATOR
+      typedef typename ArgType::StorageIndex StorageIndex;
+# else // HPP_EIGEN_USE_EVALUATOR
+      typedef typename ArgType::Index Index;
+# endif // HPP_EIGEN_USE_EVALUATOR
       typedef typename traits<ArgType>::StorageKind StorageKind;
       typedef typename traits<ArgType>::XprKind XprKind;
       typedef typename ArgType::Scalar Scalar;
-      typedef typename ArgType::StorageIndex StorageIndex;
       enum {
-        // CoeffReadCost = evaluator<ArgType>::CoeffReadCost,
+# if !HPP_EIGEN_USE_EVALUATOR
+        CoeffReadCost = ArgType::CoeffReadCost,
+# endif // !HPP_EIGEN_USE_EVALUATOR
         Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
         RowsAtCompileTime = (_allRows ? ArgType::RowsAtCompileTime : _Rows),
         ColsAtCompileTime = (_allCols ? ArgType::ColsAtCompileTime : _Cols),
@@ -66,6 +73,7 @@ namespace Eigen {
       };
     };
 
+# if HPP_EIGEN_USE_EVALUATOR
     template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols, typename Functor, typename Scalar>
     struct Assignment<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>, Functor, Dense2Dense, Scalar> {
       typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
@@ -78,6 +86,22 @@ namespace Eigen {
         }
       }
     };
+# else // HPP_EIGEN_USE_EVALUATOR
+    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+    struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,false> {
+      typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
+      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { other.writeTo(dst); return dst; }
+      template<typename ActualDerived, typename ActualOtherDerived>
+        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { other.evalTo(dst); return dst; }
+    };
+    template<typename Derived, typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
+    struct assign_selector<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>,false,true> {
+      typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
+      static EIGEN_STRONG_INLINE Derived& run(Derived& dst, const OtherDerived& other) { other.writeTo(dst.transpose()); return dst; }
+      template<typename ActualDerived, typename ActualOtherDerived>
+        static EIGEN_STRONG_INLINE Derived& evalTo(ActualDerived& dst, const ActualOtherDerived& other) { Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans); return dst; }
+    };
+# endif // HPP_EIGEN_USE_EVALUATOR
 
     template <typename Src, typename Dst> struct eval_matrix_block_view_to {};
     template <typename Src, typename _ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
@@ -157,6 +181,7 @@ namespace Eigen {
       }
     };
 
+# if HPP_EIGEN_USE_EVALUATOR
     template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
     struct unary_evaluator <MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
     : evaluator_base <MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -174,6 +199,7 @@ namespace Eigen {
 
       const XprType& m_view;
     };
+# endif // HPP_EIGEN_USE_EVALUATOR
   } // namespace internal
 
   /// \addtogroup hpp_constraints_tools
@@ -758,5 +784,7 @@ namespace Eigen {
 
 #include <hpp/constraints/impl/matrix-view.hh>
 #include <hpp/constraints/impl/matrix-view-operation.hh>
+
+# undef HPP_EIGEN_USE_EVALUATOR
 
 #endif // HPP_CONSTRAINTS_MATRIX_VIEW_HH
