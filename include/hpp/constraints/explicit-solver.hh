@@ -185,6 +185,11 @@ namespace hpp {
         /// Same as \ref inOutDependencies except that cols correpond to DoFs.
         Eigen::MatrixXi inOutDofDependencies () const;
 
+        const Eigen::VectorXi& derFunction () const
+        {
+          return derFunction_;
+        }
+
         /// The set of variable indices which are computed.
         const RowBlockIndices& outArgs () const
         {
