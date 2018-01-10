@@ -16,6 +16,7 @@
 
 #define BOOST_TEST_MODULE HYBRID_SOLVER
 #include <boost/test/unit_test.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <hpp/constraints/hybrid-solver.hh>
 
@@ -31,6 +32,16 @@
 #include <hpp/pinocchio/liegroup-element.hh>
 
 using namespace hpp::constraints;
+using boost::assign::list_of;
+
+// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
+// when they are not equal.
+namespace std {
+  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
+  {
+    return os << hpp::pretty_print (b);
+  }
+}
 
 class LockedJoint : public DifferentiableFunction
 {
@@ -224,6 +235,9 @@ BOOST_AUTO_TEST_CASE(functions1)
   solver.add(AffineFunctionPtr_t(new AffineFunction (h)), 0);
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+
+  segments_t impDof = list_of(segment_t(2,1));
+  BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
 }
 
 BOOST_AUTO_TEST_CASE(functions2)
@@ -267,6 +281,9 @@ BOOST_AUTO_TEST_CASE(functions2)
 
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+
+  segments_t impDof = list_of(segment_t(0,1));
+  BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
 }
 
 BOOST_AUTO_TEST_CASE(hybrid_solver)
