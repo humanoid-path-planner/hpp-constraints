@@ -254,5 +254,6 @@ namespace Eigen {
       }
     }
     assert (false && "Failed to extract segments_t");
+    return segments_t();
   }
 } // namespace Eigen
