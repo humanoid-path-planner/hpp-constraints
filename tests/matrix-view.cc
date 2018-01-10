@@ -245,11 +245,13 @@ template <typename MatrixBlocks_t> void checkMatrixBlocks
 
   /** Conversion to Ref
    */
+# if EIGEN_VERSION_AT_LEAST(3,2,92)
   Ref<const MatrixXd> ref (mb.rview(m));
   BOOST_CHECK_EQUAL (ref, mb.rview(m).eval());
   // It is not possible to have a Ref on a MatrixBlockView because
   // Eigen::Ref is based on Eigen::Map.
   // Ref<MatrixXd> ref (mb.lview(m));
+# endif // EIGEN_VERSION_AT_LEAST(3,2,92)
 
   /** CwiseUnaryOp
    *  TODO
