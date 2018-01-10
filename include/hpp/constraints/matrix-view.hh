@@ -149,8 +149,8 @@ namespace Eigen {
       }
     };
 
-    template <bool print> struct print_indices { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
-    template <> struct print_indices <true> {
+    struct dont_print_indices { template <typename BlockIndexType> static void run (std::ostream&, const BlockIndexType&) {} };
+    struct print_indices {
       template <typename BlockIndexType>
       static void run (std::ostream& os, const BlockIndexType& bi) {
         for (std::size_t i = 0; i < bi.size(); ++i)
@@ -517,14 +517,16 @@ namespace Eigen {
   template <bool _allRows, bool _allCols>
   std::ostream& operator<< (std::ostream& os, MatrixBlocks<_allRows, _allCols> mbi)
   {
+    typedef typename internal::conditional<_allRows, internal::dont_print_indices, internal::print_indices>::type row_printer;
+    typedef typename internal::conditional<_allCols, internal::dont_print_indices, internal::print_indices>::type col_printer;
     if (!_allRows) {
       os << "Rows: ";
-      internal::print_indices<!_allRows>::run (os, mbi.m_rows);
+      row_printer::run (os, mbi.m_rows);
       if (!_allCols) os << hpp::iendl;
     }
     if (!_allCols) {
       os << "Cols: ";
-      internal::print_indices<!_allCols>::run (os, mbi.m_cols);
+      col_printer::run (os, mbi.m_cols);
     }
     return os;
   }

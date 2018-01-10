@@ -45,7 +45,7 @@ using Eigen::BlockIndex;
 namespace std {
   std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
   {
-    Eigen::internal::print_indices<true>::run (os, b);
+    Eigen::internal::print_indices::run (os, b);
     return os;
   }
 }
