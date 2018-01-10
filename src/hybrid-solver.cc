@@ -44,6 +44,25 @@ namespace hpp {
       reduction(explicit_.freeDers());
     }
 
+    segments_t HybridSolver::implicitDof () const
+    {
+      const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();
+      const Eigen::VectorXi& derF = explicit_.derFunction();
+      bool_array_t adp (activeDerivativeParameters());
+      Eigen::VectorXi out (Eigen::VectorXi::Zero(adp.size()));
+
+      for (size_type i = 0; i < adp.size(); ++i) {
+        if (adp(i)) {
+         if (derF[i] >= 0) {
+           out += ioDep.row(derF[i]);
+           out(i) = 0;
+         } else
+           out(i) += 1;
+        }
+      }
+      return BlockIndex::fromLogicalExpression(out.array().cast<bool>());
+    }
+
     void HybridSolver::updateJacobian (vectorIn_t arg) const
     {
       if (explicit_.inDers().nbCols() == 0) return;

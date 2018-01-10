@@ -118,6 +118,10 @@ namespace hpp {
           return HierarchicalIterativeSolver::errorThreshold();
         }
 
+        /// Returns the indices in the input vector which are solved implicitely.
+        /// The other dof which are modified are solved explicitely.
+        segments_t implicitDof () const;
+
         /// \name Right hand side accessors
         /// \{
 
