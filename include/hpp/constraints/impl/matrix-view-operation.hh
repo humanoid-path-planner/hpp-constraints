@@ -55,7 +55,24 @@ template <typename OtherDerived>                                               \
 void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 (MatrixBase<OtherDerived>& other) const
 
+# if HPP_EIGEN_USE_EVALUATOR
+
 #define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(                                  \
+    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE)                                      \
+    template<typename Derived, typename BinaryOp, LHS_TPL, RHS_TPL,            \
+             typename Functor, typename Scalar>                                \
+    struct Assignment<Derived,                                                 \
+                      CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE >,            \
+                      Functor, Dense2Dense, Scalar> {                          \
+      typedef CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE> CwiseDerived;        \
+      static EIGEN_STRONG_INLINE void run                                      \
+        (Derived& dst, const CwiseDerived& o, const Functor& func)             \
+      { o.evalTo(dst); }                                                       \
+    };
+
+# else // HPP_EIGEN_USE_EVALUATOR
+
+#define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR_IMPL(                             \
     LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE,                                      \
     need_to_transpose, EVAL_TO_BODY)                                           \
     template<typename Derived, typename BinaryOp, LHS_TPL, RHS_TPL>            \
@@ -74,6 +91,19 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 
 #define HPP_EIGEN_EVAL_TO_BODY_NORMAL other.evalTo(dst);
 #define HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE Transpose<ActualDerived> dstTrans(dst); other.evalTo(dstTrans);
+
+#define HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(                                  \
+    LHS_TPL, LHS_TYPE, RHS_TPL, RHS_TYPE)                                      \
+  HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR_IMPL(                                   \
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,                                   \
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,                                   \
+      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)                                    \
+    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR_IMPL(                                 \
+      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,                                   \
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,                                   \
+      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+
+# endif // HPP_EIGEN_USE_EVALUATOR
 
   // --- matrix op view -- //
 #define HPP_EIGEN_LHS_TPL typename Lhs
@@ -94,7 +124,6 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
         typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
         const Derived& d = derived();
-        Index r = 0, c = 0;
         for(typename Rhs_t::block_iterator block (d.rhs()); block.valid(); ++block) {
           BlockRhs rhs = d.rhs()._block(block);
           BlockLhs lhs = d.lhs().block(block.ro(), block.co(), block.rs(), block.cs());
@@ -106,12 +135,7 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
   namespace internal {
     HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
       HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
-      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
   }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
@@ -136,7 +160,6 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
         typedef CwiseBinaryOp < BinaryOp, BlockLhs, BlockRhs > BlockCwiseBOp;
 
         const Derived& d = derived();
-        Index r = 0, c = 0;
         for(typename Lhs_t::block_iterator block (d.lhs()); block.valid(); ++block) {
           BlockLhs lhs = d.lhs()._block(block);
           BlockRhs rhs = d.rhs().block(block.ro(), block.co(), block.rs(), block.cs());
@@ -148,12 +171,7 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
   namespace internal {
     HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
       HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
-      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
   }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
@@ -181,7 +199,6 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
 
         const Derived& d = derived();
         assert (d.lhs()._blocks() == d.rhs()._blocks());
-        Index r = 0, c = 0;
         typename Lhs_t::block_iterator lblock (d.lhs());
         typename Rhs_t::block_iterator rblock (d.rhs());
         while (lblock.valid()) {
@@ -199,20 +216,19 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
   namespace internal {
     HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
       HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      false, HPP_EIGEN_EVAL_TO_BODY_NORMAL)
-    HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR(
-      HPP_EIGEN_LHS_TPL, HPP_EIGEN_LHS_TYPE,
-      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE,
-      true, HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE)
+      HPP_EIGEN_RHS_TPL, HPP_EIGEN_RHS_TYPE)
   }
 #undef HPP_EIGEN_LHS_TPL
 #undef HPP_EIGEN_LHS_TYPE
 #undef HPP_EIGEN_RHS_TPL
 #undef HPP_EIGEN_RHS_TYPE
 
-#undef HPP_EIGEN_EVAL_TO_BODY_NORMAL
-#undef HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE
+# if !HPP_EIGEN_USE_EVALUATOR
+#  undef HPP_EIGEN_EVAL_TO_BODY_NORMAL
+#  undef HPP_EIGEN_EVAL_TO_BODY_TRANSPOSE
+#  undef HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR_IMPL
+# endif // !HPP_EIGEN_USE_EVALUATOR
+
 #undef HPP_EIGEN_SPECIALIZE_CwiseBinaryOpImpl
 #undef HPP_EIGEN_SPECIALIZE_ASSIGN_SELECTOR
 #undef HPP_EIGEN_DEFINE_CwiseBinaryOpImpl_evalTo

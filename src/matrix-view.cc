@@ -254,6 +254,7 @@ namespace Eigen {
       }
     }
     assert (false && "Failed to extract segments_t");
+    // Avoid compilation warning
     return segments_t();
   }
 } // namespace Eigen
