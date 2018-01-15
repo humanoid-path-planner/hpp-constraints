@@ -1,0 +1,83 @@
+\documentclass {article}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\begin{document}
+
+\subsection{Function order}
+
+Let $(f_j)_{j\in [1,N]}$ be a set of functions.
+The input of each $f_j$ is a subset $X^i_j$ of $X = (x_i)$.
+The output of each $f_j$ is a subset $X^o_j$ of $X = (x_i)$.
+
+$f_j$ is \textbf{ordered} if and only if
+$$ \forall (j,k) \in [1,N]^2, j < k \Rightarrow X^o_k \cap X^i_j = \emptyset $$
+
+\subsection{Ordering}
+
+\begin{algorithm}
+  \caption{\texttt{Ordering}}
+  \begin{algorithmic}
+    \STATE $ computed \gets \left[False\right]^N $
+    \STATE $ order \gets 1 $
+    \FORALL{$i \in \left[ 1, N \right]$}
+      \STATE $ order \gets \texttt{ComputeOrder}(i, order, computed)$
+    \ENDFOR
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{\texttt{ComputeOrder}}
+  \begin{algorithmic}
+    \REQUIRE $ i \in [1,N] $
+    \REQUIRE $ order \in [1,N] $
+    \REQUIRE $ computed \in \left\{True,False\right\}^N $
+    \IF{$computed[i]$}
+      \RETURN $order$
+    \ENDIF
+    \FORALL{$i \in \texttt{InputConfigurationIndices}(f_i)$}
+      \FORALL{$j \in \left[ 1, i-1 \right] \cup \left[ i+1,N \right]$}
+        \IF{$i \in \texttt{OutputConfigurationIndices}(f_j)$}
+          \STATE $ order \gets \texttt{ComputeOrder}(j, order, computed)$
+        \ENDIF
+      \ENDFOR
+      \STATE $ orderedFunctions[order] \gets f_i $
+    \ENDFOR
+    \STATE $computed[i] \gets True$
+    \RETURN $order + 1$
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Evaluation}
+
+\begin{algorithm}
+  \caption{Evaluation}
+  \begin{algorithmic}
+    \REQUIRE $ functions $ are ordered
+    \FORALL{function $f$ in $functions$}
+      \STATE $ out^q_f \gets \texttt{OutputConfigurationIndices}(f)$
+      \STATE $ in^q_f  \gets \texttt{InputConfigurationIndices}(f)$
+      \STATE $ q_{out^q_f} \gets f (q_{in^q_f}) $
+    \ENDFOR
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Jacobian}
+
+\begin{algorithm}
+  \caption{Jacobian}
+  \begin{algorithmic}
+    \REQUIRE $ J \in \mathcal{M}_{n_v \times n_v} $
+    \REQUIRE $ functions $ are ordered
+    \STATE $ J \gets 0 $
+    \STATE $ J_{free^v,free^v} \gets \texttt{Identity} $
+    \STATE $ in^v  \gets \texttt{InputVelocityIndices} $
+    \FORALL{function $f$ in $functions$}
+      \STATE $ out^v_f \gets \texttt{OutputVelocityIndices}(f)$
+      \STATE $ in^v_f  \gets \texttt{InputVelocityIndices}(f)$
+      \STATE $ J_{out^v_f,in^v} \gets \texttt{Jacobian}(f) \times J_{in^v_f,in^v} $
+    \ENDFOR
+  \end{algorithmic}
+\end{algorithm}
+
+\end{document}
