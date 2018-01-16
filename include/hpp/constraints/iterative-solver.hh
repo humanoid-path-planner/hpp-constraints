@@ -33,14 +33,14 @@ namespace hpp {
     /// \addtogroup solvers
     /// \{
     namespace lineSearch {
-      /// No line search. Use alpha = 1
+      /// No line search. Use \f$\alpha \gets 1\f$
       struct Constant {
         template <typename SolverType>
         bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
       };
 
-      /// Implements the backtracking line search algorithm
-      /// See https://en.wikipedia.org/wiki/Backtracking_line_search
+      /// Implements the backtracking line search algorithm.
+      /// See https://en.wikipedia.org/wiki/Backtracking_line_search.
       struct Backtracking {
         Backtracking ();
 
@@ -55,7 +55,7 @@ namespace hpp {
       };
 
       /// The step size is computed using the recursion:
-      /// \f[ alpha <- alpha - K * (alphaMax - alpha) \f]
+      /// \f$ \alpha \gets \alpha - K \times (\alpha_{max} - \alpha) \f$
       struct FixedSequence {
         FixedSequence();
 
@@ -67,7 +67,7 @@ namespace hpp {
       };
 
       /// The step size is computed using the formula
-      /// \f[ const value_type alpha = C - K * std::tanh(a * r + b) \f]
+      /// \f$ \alpha \gets C - K \times \text{tanh}(a r + b) \f$
       struct ErrorNormBased {
         ErrorNormBased(value_type alphaMin, value_type _a, value_type _b);
         ErrorNormBased(value_type alphaMin = 0.2);
