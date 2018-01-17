@@ -197,9 +197,9 @@ namespace hpp {
      size_type sizeOutput, std::string name) :
       inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
       outputSpace_ (LiegroupSpace::Rn (sizeOutput)),
-      activeParameters_ (bool_array_t::Constant (sizeInput, true)),
+      activeParameters_ (ArrayXb::Constant (sizeInput, true)),
       activeDerivativeParameters_
-      (bool_array_t::Constant (sizeInputDerivative, true)),
+      (ArrayXb::Constant (sizeInputDerivative, true)),
       name_ (name)
       {
       }
@@ -209,9 +209,9 @@ namespace hpp {
      const LiegroupSpacePtr_t& outputSpace, std::string name) :
       inputSize_ (sizeInput), inputDerivativeSize_ (sizeInputDerivative),
       outputSpace_ (outputSpace), activeParameters_
-      (bool_array_t::Constant (sizeInput, true)),
+      (ArrayXb::Constant (sizeInput, true)),
       activeDerivativeParameters_
-      (bool_array_t::Constant (sizeInputDerivative, true)),
+      (ArrayXb::Constant (sizeInputDerivative, true)),
       name_ (name), context_ ()
     {
     }

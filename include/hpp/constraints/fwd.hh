@@ -58,7 +58,8 @@ namespace hpp {
     } // namespace eigen
     typedef Eigen::Matrix <value_type, 5, 1> vector5_t;
     typedef Eigen::Matrix <value_type, 6, 1> vector6_t;
-    typedef Eigen::Array<bool, Eigen::Dynamic, 1> bool_array_t;
+    typedef pinocchio::ArrayXb ArrayXb;
+    typedef ArrayXb bool_array_t;
 
     typedef std::pair<size_type, size_type> segment_t;
     typedef std::vector < segment_t > segments_t;

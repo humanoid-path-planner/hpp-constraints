@@ -254,10 +254,10 @@ namespace hpp {
         }
 
         /// Configuration parameters involved in the constraint resolution.
-        bool_array_t activeParameters () const;
+        ArrayXb activeParameters () const;
 
         /// Velocity parameters involved in the constraint resolution.
-        bool_array_t activeDerivativeParameters () const;
+        ArrayXb activeDerivativeParameters () const;
 
         /// \}
 

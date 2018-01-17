@@ -131,17 +131,17 @@ namespace hpp {
       update();
     }
 
-    bool_array_t HierarchicalIterativeSolver::activeParameters () const
+    ArrayXb HierarchicalIterativeSolver::activeParameters () const
     {
-      bool_array_t ap (bool_array_t::Constant(argSize_, false));
+      ArrayXb ap (ArrayXb::Constant(argSize_, false));
       for (std::size_t i = 0; i < stacks_.size (); ++i)
         ap = ap || stacks_[i].activeParameters();
       return ap;
     }
 
-    bool_array_t HierarchicalIterativeSolver::activeDerivativeParameters () const
+    ArrayXb HierarchicalIterativeSolver::activeDerivativeParameters () const
     {
-      bool_array_t ap (bool_array_t::Constant(derSize_, false));
+      ArrayXb ap (ArrayXb::Constant(derSize_, false));
       for (std::size_t i = 0; i < stacks_.size (); ++i)
         ap = ap || stacks_[i].activeDerivativeParameters();
       return ap;
@@ -193,7 +193,7 @@ namespace hpp {
       typedef Eigen::MatrixBlocks<false, false> BlockIndices;
       BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
-        bool_array_t adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
+        ArrayXb adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
           rows.push_back (BlockIndices::segment_t
                           (row, fs[i]->outputDerivativeSize()));

@@ -44,7 +44,7 @@ namespace hpp {
     {
       const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();
       const Eigen::VectorXi& derF = explicit_.derFunction();
-      bool_array_t adp (activeDerivativeParameters());
+      ArrayXb adp (activeDerivativeParameters());
       Eigen::VectorXi out (Eigen::VectorXi::Zero(adp.size()));
 
       for (size_type i = 0; i < adp.size(); ++i) {
@@ -100,7 +100,7 @@ namespace hpp {
 
       typedef Eigen::MatrixBlocks<false, false> BlockIndices;
 
-      bool_array_t adpF, adpC;
+      ArrayXb adpF, adpC;
       BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
         bool active;

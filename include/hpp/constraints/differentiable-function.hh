@@ -68,14 +68,14 @@ namespace hpp {
 
       /// Returns a vector of booleans that indicates whether the corresponding
       /// configuration parameter influences this constraints.
-      const bool_array_t& activeParameters () const
+      const ArrayXb& activeParameters () const
       {
         return activeParameters_;
       }
 
       /// Returns a vector of booleans that indicates whether the corresponding
       /// velocity parameter influences this constraints.
-      const bool_array_t& activeDerivativeParameters () const
+      const ArrayXb& activeDerivativeParameters () const
       {
         return activeDerivativeParameters_;
       }
@@ -193,11 +193,11 @@ namespace hpp {
       /// Initialized to true by this class. Child class are responsible for
       /// updating it.
       /// \sa activeParameters
-      bool_array_t activeParameters_;
+      ArrayXb activeParameters_;
       /// Initialized to true by this class. Child class are responsible for
       /// updating it.
       /// \sa activeDerivativeParameters
-      bool_array_t activeDerivativeParameters_;
+      ArrayXb activeDerivativeParameters_;
 
     private:
       std::string name_;
