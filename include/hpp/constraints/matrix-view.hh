@@ -389,6 +389,20 @@ namespace Eigen {
         , m_rows(other.m_rows), m_cols(other.m_cols)
       {}
 
+      /// Clear rows
+      inline void clearRows ()
+      {
+        m_rows.clear();
+        m_nbRows = 0;
+      }
+
+      /// Clear cols
+      inline void clearCols ()
+      {
+        m_cols.clear();
+        m_nbCols = 0;
+      }
+
       /// Add consecutive rows
       /// \param row first row to add
       /// \param size number of rows to add
