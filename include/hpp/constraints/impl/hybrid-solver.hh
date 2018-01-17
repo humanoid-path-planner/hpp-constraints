@@ -27,6 +27,8 @@ namespace hpp {
       hppDout (info, "before projection: " << arg.transpose ());
       assert (!arg.hasNaN());
 
+      resetSaturation();
+
       explicit_.solve(arg);
 
       size_type errorDecreased = 3, iter = 0;

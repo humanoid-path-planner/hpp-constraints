@@ -95,6 +95,10 @@ namespace hpp {
         /// It should be robust to cases where from and result points to the
         /// same vector in memory (aliasing)
         typedef boost::function<void (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)> Integration_t;
+        /// This function saturates  velocity during unit time, from argument.
+        /// It should be robust to cases where from and result points to the
+        /// same vector in memory (aliasing)
+        typedef boost::function<bool (vectorOut_t result, ArrayXb& saturation)> Saturation_t;
 
         HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize);
 
@@ -120,6 +124,18 @@ namespace hpp {
         const Integration_t& integration () const
         {
           return integrate_;
+        }
+
+        /// Set the saturation function
+        void saturation (const Saturation_t& saturate)
+        {
+          saturate_ = saturate;
+        }
+
+        /// Get the saturation function
+        const Saturation_t& saturation () const
+        {
+          return saturate_;
         }
 
         /// \}
@@ -354,9 +370,23 @@ namespace hpp {
         /// \warning computeValue<true> must have been called first.
         void computeDescentDirection () const;
         void expandDqSmall () const;
+        void resetSaturation () const
+        {
+          saturation_.setConstant(false);
+          reducedSaturation_.clearCols();
+        }
+        void saturate (vectorOut_t arg) const
+        {
+          if (saturate_ && saturate_ (arg, tmpSat_)) {
+            saturation_.array() = saturation_.array() || tmpSat_;
+            tmpSat_.matrix().head(reduction_.nbCols()) = reduction_.rviewTranspose (saturation_);
+            reducedSaturation_ = BlockIndex::fromLogicalExpression (tmpSat_);
+          }
+        }
         void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
           integrate_ (from, velocity, result);
+          saturate (result);
         }
 
         value_type squaredErrorThreshold_, inequalityThreshold_;
@@ -368,11 +398,15 @@ namespace hpp {
         bool lastIsOptional_;
         Reduction_t reduction_;
         Integration_t integrate_;
+        Saturation_t saturate_;
         /// The smallest non-zero singular value
         mutable value_type sigma_;
 
         mutable vector_t dq_, dqSmall_;
         mutable matrix_t projector_, reducedJ_;
+        mutable ArrayXb tmpSat_;
+        mutable Eigen::Matrix<bool, Eigen::Dynamic, 1> saturation_;
+        mutable Eigen::ColBlockIndices reducedSaturation_;
         mutable value_type squaredNorm_;
         mutable std::vector<Data> datas_;
         mutable SVD_t svd_;

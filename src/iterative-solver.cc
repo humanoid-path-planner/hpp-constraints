@@ -94,6 +94,8 @@ namespace hpp {
       dimension_ (0),
       lastIsOptional_ (false),
       reduction_ (),
+      tmpSat_ (derSize),
+      saturation_ (derSize),
       datas_(),
       statistics_ ("HierarchicalIterativeSolver")
     {
@@ -308,7 +310,10 @@ namespace hpp {
         applyComparison<ComputeJac>(d.comparison, d.inequalityIndices, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
-        if (ComputeJac) d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
+        if (ComputeJac) {
+          d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
+          reducedSaturation_.lview(d.reducedJ).setZero();
+        }
       }
     }
 
