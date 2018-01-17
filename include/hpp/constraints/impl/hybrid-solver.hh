@@ -37,6 +37,14 @@ namespace hpp {
       computeValue<true> (arg);
       computeError();
 
+      bool errorWasBelowThr = (squaredNorm_ < squaredErrorThreshold_);
+      vector_t initArg;
+      if (errorWasBelowThr) {
+        initArg = arg;
+        iter = std::max (maxIterations_,size_type(1)) - 1;
+        previousSquaredNorm = squaredNorm_;
+      }
+
       if (squaredNorm_ > .25 * squaredErrorThreshold_
           && reducedDimension_ == 0) return INFEASIBLE;
 
@@ -61,6 +69,13 @@ namespace hpp {
 	previousSquaredNorm = squaredNorm_;
 	++iter;
 
+      }
+
+      if (errorWasBelowThr) {
+        if (squaredNorm_ > previousSquaredNorm) {
+          arg = initArg;
+        }
+        return SUCCESS;
       }
 
       hppDout (info, "number of iterations: " << iter);
