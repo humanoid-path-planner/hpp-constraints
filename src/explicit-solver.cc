@@ -363,7 +363,8 @@ namespace hpp {
         const Function& f = functions_[computationOrder_[i]];
         os << iendl << i << ": " << f.inArg << " -> " << f.outArg
           << incendl << *f.f
-          << decendl << "Rhs: " << condensed(f.rightHandSide);
+          << decendl << "Rhs: " << condensed(f.rightHandSide)
+          << iendl   << "Equality: " << f.equalityIndices;
       }
       return os << decindent << decindent;
     }
