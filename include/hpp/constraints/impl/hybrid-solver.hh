@@ -81,6 +81,7 @@ namespace hpp {
       }
 
       hppDout (info, "number of iterations: " << iter);
+      hppDout (info, "saturation: " << reducedSaturation_);
       if (squaredNorm_ > squaredErrorThreshold_) {
 	hppDout (info, "Projection failed.");
         return (!errorDecreased) ? ERROR_INCREASED : MAX_ITERATION_REACHED;
