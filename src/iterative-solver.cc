@@ -438,7 +438,14 @@ namespace hpp {
     void HierarchicalIterativeSolver::saturate (vectorOut_t arg) const
     {
       if (saturate_ && saturate_ (arg, tmpSat_)) {
-        saturation_.array() = saturation_.array() || tmpSat_;
+        // This method never de-saturates a saturated DoF. This is not good
+        // because the first iterations may do very large steps which could
+        // saturate lots of DoFs.
+        // saturation_.array() = saturation_.array() || tmpSat_;
+
+        // This method always reset the saturation. A DoF saturated at
+        // iteration i will not be saturated at iteration i+1.
+        saturation_.array() = tmpSat_;
         tmpSat_.matrix().head(reduction_.nbCols()) = reduction_.rviewTranspose (saturation_);
         reducedSaturation_ = BlockIndex::fromLogicalExpression (tmpSat_.head(reduction_.nbCols()));
       }
