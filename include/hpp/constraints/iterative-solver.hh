@@ -372,19 +372,8 @@ namespace hpp {
         /// \warning computeValue<true> must have been called first.
         void computeDescentDirection () const;
         void expandDqSmall () const;
-        void resetSaturation () const
-        {
-          saturation_.setConstant(false);
-          reducedSaturation_.clearCols();
-        }
-        void saturate (vectorOut_t arg) const
-        {
-          if (saturate_ && saturate_ (arg, tmpSat_)) {
-            saturation_.array() = saturation_.array() || tmpSat_;
-            tmpSat_.matrix().head(reduction_.nbCols()) = reduction_.rviewTranspose (saturation_);
-            reducedSaturation_ = BlockIndex::fromLogicalExpression (tmpSat_);
-          }
-        }
+        void resetSaturation () const;
+        void saturate (vectorOut_t arg) const;
         void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
           integrate_ (from, velocity, result);
