@@ -25,7 +25,7 @@ namespace hpp {
       template <typename SolverType>
       inline bool Constant::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
       {
-        solver.integration() (arg, darg, arg);
+        solver.integrate (arg, darg, arg);
         return true;
       }
 
@@ -66,7 +66,7 @@ namespace hpp {
         }
 
         u *= smallAlpha;
-        solver.integration() (arg, darg, arg);
+        solver.integrate (arg, darg, arg);
         return false;
       }
 
@@ -89,7 +89,7 @@ namespace hpp {
       {
         darg *= alpha;
         alpha = alphaMax - K * (alphaMax - alpha);
-        solver.integration() (arg, darg, arg);
+        solver.integrate (arg, darg, arg);
         return true;
       }
 

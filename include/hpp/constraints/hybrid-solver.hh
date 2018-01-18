@@ -208,13 +208,13 @@ namespace hpp {
 
         virtual std::ostream& print (std::ostream& os) const;
 
-      protected:
         void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
           HierarchicalIterativeSolver::integrate(from, velocity, result);
           explicit_.solve (result);
         }
 
+      protected:
         void computeActiveRowsOfJ (std::size_t iStack);
 
       private:
@@ -225,8 +225,6 @@ namespace hpp {
 
         ExplicitSolver explicit_;
         mutable matrix_t Je_, JeExpanded_;
-
-        friend struct lineSearch::Backtracking;
     }; // class HybridSolver
     /// \}
 

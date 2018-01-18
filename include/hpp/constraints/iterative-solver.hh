@@ -328,6 +328,13 @@ namespace hpp {
         {
           return dq_;
         }
+
+        virtual void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
+        {
+          integrate_ (from, velocity, result);
+          saturate (result);
+        }
+
         /// \}
 
         virtual std::ostream& print (std::ostream& os) const;
@@ -374,11 +381,7 @@ namespace hpp {
         void expandDqSmall () const;
         void resetSaturation () const;
         void saturate (vectorOut_t arg) const;
-        void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
-        {
-          integrate_ (from, velocity, result);
-          saturate (result);
-        }
+
 
         value_type squaredErrorThreshold_, inequalityThreshold_;
         size_type maxIterations_;
