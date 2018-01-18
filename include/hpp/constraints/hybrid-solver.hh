@@ -38,6 +38,8 @@ namespace hpp {
           JeExpanded_ (derSize, derSize)
         {}
 
+        virtual ~HybridSolver () {}
+
         ExplicitSolver& explicitSolver()
         {
           return explicit_;

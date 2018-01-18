@@ -102,6 +102,8 @@ namespace hpp {
 
         HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize);
 
+        virtual ~HierarchicalIterativeSolver () {}
+
         /// \name Problem definition
         /// \{
 
