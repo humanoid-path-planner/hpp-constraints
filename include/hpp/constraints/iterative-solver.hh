@@ -329,6 +329,8 @@ namespace hpp {
           return dq_;
         }
 
+        void resetSaturation () const;
+
         virtual void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
           integrate_ (from, velocity, result);
@@ -379,7 +381,6 @@ namespace hpp {
         /// \warning computeValue<true> must have been called first.
         void computeDescentDirection () const;
         void expandDqSmall () const;
-        void resetSaturation () const;
         void saturate (vectorOut_t arg) const;
 
 
