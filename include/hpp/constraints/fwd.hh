@@ -146,6 +146,10 @@ namespace hpp {
       Inferior
     };
     typedef std::vector<ComparisonType> ComparisonTypes_t;
+
+    class ExplicitSolver;
+    class HierarchicalIterativeSolver;
+    class HybridSolver;
   } // namespace constraints
 } // namespace hpp
 
