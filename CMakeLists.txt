@@ -22,6 +22,7 @@ SET(DOXYGEN_USE_MATHJAX YES)
 INCLUDE(cmake/base.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/eigen.cmake)
+INCLUDE(cmake/test.cmake)
 
 SET(PROJECT_NAME hpp-constraints)
 SET(PROJECT_DESCRIPTION
