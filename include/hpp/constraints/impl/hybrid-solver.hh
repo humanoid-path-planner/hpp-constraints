@@ -24,7 +24,6 @@ namespace hpp {
         vectorOut_t arg,
         LineSearchType lineSearch) const
     {
-      hppDout (info, "before projection: " << arg.transpose ());
       assert (!arg.hasNaN());
 
       resetSaturation();
@@ -34,6 +33,7 @@ namespace hpp {
       size_type errorDecreased = 3, iter = 0;
       value_type previousSquaredNorm =
 	std::numeric_limits<value_type>::infinity();
+      value_type initSquaredNorm;
 
       // Fill value and Jacobian
       computeValue<true> (arg);
@@ -44,13 +44,11 @@ namespace hpp {
       if (errorWasBelowThr) {
         initArg = arg;
         iter = std::max (maxIterations_,size_type(1)) - 1;
-        previousSquaredNorm = squaredNorm_;
+        initSquaredNorm = squaredNorm_;
       }
 
       if (squaredNorm_ > .25 * squaredErrorThreshold_
           && reducedDimension_ == 0) return INFEASIBLE;
-
-      hppDout (info, "squareNorm = " << squaredNorm_);
 
       while (squaredNorm_ > .25 * squaredErrorThreshold_ && errorDecreased &&
 	     iter < maxIterations_) {
@@ -65,7 +63,6 @@ namespace hpp {
 	computeValue<true> (arg);
         computeError ();
 
-	hppDout (info, "squareNorm = " << squaredNorm_);
 	--errorDecreased;
 	if (squaredNorm_ < previousSquaredNorm) errorDecreased = 3;
 	previousSquaredNorm = squaredNorm_;
@@ -74,19 +71,15 @@ namespace hpp {
       }
 
       if (errorWasBelowThr) {
-        if (squaredNorm_ > previousSquaredNorm) {
+        if (squaredNorm_ > initSquaredNorm) {
           arg = initArg;
         }
         return SUCCESS;
       }
 
-      hppDout (info, "number of iterations: " << iter);
-      hppDout (info, "saturation: " << reducedSaturation_);
       if (squaredNorm_ > squaredErrorThreshold_) {
-	hppDout (info, "Projection failed.");
         return (!errorDecreased) ? ERROR_INCREASED : MAX_ITERATION_REACHED;
       }
-      hppDout (info, "After projection: " << arg.transpose ());
       assert (!arg.hasNaN());
       return SUCCESS;
     }
