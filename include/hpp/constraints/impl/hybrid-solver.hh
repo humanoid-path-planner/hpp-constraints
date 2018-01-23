@@ -43,7 +43,7 @@ namespace hpp {
       vector_t initArg;
       if (errorWasBelowThr) {
         initArg = arg;
-        iter = std::max (maxIterations_,size_type(1)) - 1;
+        iter = std::max (maxIterations_,size_type(2)) - 2;
         initSquaredNorm = squaredNorm_;
       }
 
