@@ -112,8 +112,6 @@ namespace hpp {
       hppDout (info, "before projection: " << arg.transpose ());
       assert (!arg.hasNaN());
 
-      resetSaturation();
-
       size_type errorDecreased = 3, iter = 0;
       value_type previousSquaredNorm =
 	std::numeric_limits<value_type>::infinity();

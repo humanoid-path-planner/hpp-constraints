@@ -95,10 +95,13 @@ namespace hpp {
         /// It should be robust to cases where from and result points to the
         /// same vector in memory (aliasing)
         typedef boost::function<void (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)> Integration_t;
-        /// This function saturates  velocity during unit time, from argument.
-        /// It should be robust to cases where from and result points to the
-        /// same vector in memory (aliasing)
-        typedef boost::function<bool (vectorOut_t result, ArrayXb& saturation)> Saturation_t;
+        /// This function checks what DoF are saturated.
+        /// For each DoF, saturation is set to
+        /// \li -1 if the lower bound is reached.
+        /// \li  1 if the upper bound is reached.
+        /// \li  0 otherwise
+        /// saturates  velocity during unit time, from argument.
+        typedef boost::function<bool (vectorIn_t result, Eigen::VectorXi& saturation)> Saturation_t;
 
         HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize);
 
@@ -329,12 +332,9 @@ namespace hpp {
           return dq_;
         }
 
-        void resetSaturation () const;
-
         virtual void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
         {
           integrate_ (from, velocity, result);
-          saturate (result);
         }
 
         /// \}
@@ -399,9 +399,8 @@ namespace hpp {
 
         mutable vector_t dq_, dqSmall_;
         mutable matrix_t projector_, reducedJ_;
+        mutable Eigen::VectorXi saturation_, reducedSaturation_;
         mutable ArrayXb tmpSat_;
-        mutable Eigen::Matrix<bool, Eigen::Dynamic, 1> saturation_;
-        mutable Eigen::ColBlockIndices reducedSaturation_;
         mutable value_type squaredNorm_;
         mutable std::vector<Data> datas_;
         mutable SVD_t svd_;

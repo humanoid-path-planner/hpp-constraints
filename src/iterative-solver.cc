@@ -94,7 +94,6 @@ namespace hpp {
       dimension_ (0),
       lastIsOptional_ (false),
       reduction_ (),
-      tmpSat_ (derSize),
       saturation_ (derSize),
       datas_(),
       statistics_ ("HierarchicalIterativeSolver")
@@ -300,6 +299,13 @@ namespace hpp {
     template <bool ComputeJac>
     void HierarchicalIterativeSolver::computeValue (vectorIn_t arg) const
     {
+      bool applySaturate;
+      if (ComputeJac) {
+        applySaturate = saturate_ (arg, saturation_);
+        if (applySaturate)
+          reducedSaturation_ = reduction_.rviewTranspose (saturation_);
+      }
+
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
@@ -312,7 +318,11 @@ namespace hpp {
         // Copy columns that are not reduced
         if (ComputeJac) {
           d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
-          reducedSaturation_.lview(d.reducedJ).setZero();
+          if (applySaturate) {
+            tmpSat_ = (reducedSaturation_.cast<value_type>().cwiseProduct (d.reducedJ.transpose() * d.error).array() > 0);
+            for (size_type j = 0; j < tmpSat_.size(); ++j)
+              if (tmpSat_[j]) d.reducedJ.col(j).setZero();
+          }
         }
       }
     }
@@ -427,28 +437,6 @@ namespace hpp {
     void HierarchicalIterativeSolver::expandDqSmall () const
     {
       Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
-    }
-
-    void HierarchicalIterativeSolver::resetSaturation () const
-    {
-      saturation_.setConstant(false);
-      reducedSaturation_.clearCols();
-    }
-
-    void HierarchicalIterativeSolver::saturate (vectorOut_t arg) const
-    {
-      if (saturate_ && saturate_ (arg, tmpSat_)) {
-        // This method never de-saturates a saturated DoF. This is not good
-        // because the first iterations may do very large steps which could
-        // saturate lots of DoFs.
-        // saturation_.array() = saturation_.array() || tmpSat_;
-
-        // This method always reset the saturation. A DoF saturated at
-        // iteration i will not be saturated at iteration i+1.
-        saturation_.array() = tmpSat_;
-        tmpSat_.matrix().head(reduction_.nbCols()) = reduction_.rviewTranspose (saturation_);
-        reducedSaturation_ = BlockIndex::fromLogicalExpression (tmpSat_.head(reduction_.nbCols()));
-      }
     }
 
     std::ostream& HierarchicalIterativeSolver::print (std::ostream& os) const

@@ -26,8 +26,6 @@ namespace hpp {
     {
       assert (!arg.hasNaN());
 
-      resetSaturation();
-
       explicit_.solve(arg);
 
       size_type errorDecreased = 3, iter = 0;
