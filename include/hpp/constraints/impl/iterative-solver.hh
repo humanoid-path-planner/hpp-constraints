@@ -126,6 +126,7 @@ namespace hpp {
       while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
 	     iter < maxIterations_) {
 
+        computeSaturation(arg);
         computeDescentDirection ();
         lineSearch (*this, arg, dq_);
 

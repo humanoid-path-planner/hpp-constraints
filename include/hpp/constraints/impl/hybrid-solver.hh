@@ -53,6 +53,7 @@ namespace hpp {
 
         // Update the jacobian using the jacobian of the explicit system.
         updateJacobian(arg);
+        computeSaturation(arg);
 
         computeDescentDirection ();
         lineSearch (*this, arg, dq_);

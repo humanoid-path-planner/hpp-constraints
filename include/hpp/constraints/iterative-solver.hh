@@ -320,6 +320,7 @@ namespace hpp {
 
         /// Compute the value of each level, and the jacobian if ComputeJac is true.
         template <bool ComputeJac> void computeValue (vectorIn_t arg) const;
+        void computeSaturation (vectorIn_t arg) const;
         void getValue (vectorOut_t v) const;
         void getReducedJacobian (matrixOut_t J) const;
         /// If lastIsOptional() is true, then the last level is ignored.

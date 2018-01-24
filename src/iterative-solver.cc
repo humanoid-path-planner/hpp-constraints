@@ -299,13 +299,6 @@ namespace hpp {
     template <bool ComputeJac>
     void HierarchicalIterativeSolver::computeValue (vectorIn_t arg) const
     {
-      bool applySaturate;
-      if (ComputeJac) {
-        applySaturate = saturate_ (arg, saturation_);
-        if (applySaturate)
-          reducedSaturation_ = reduction_.rviewTranspose (saturation_);
-      }
-
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
         Data& d = datas_[i];
@@ -316,19 +309,36 @@ namespace hpp {
         applyComparison<ComputeJac>(d.comparison, d.inequalityIndices, d.error, d.jacobian, inequalityThreshold_);
 
         // Copy columns that are not reduced
-        if (ComputeJac) {
-          d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
-          if (applySaturate) {
-            tmpSat_ = (reducedSaturation_.cast<value_type>().cwiseProduct (d.reducedJ.transpose() * d.error).array() > 0);
-            for (size_type j = 0; j < tmpSat_.size(); ++j)
-              if (tmpSat_[j]) d.reducedJ.col(j).setZero();
-          }
-        }
+        if (ComputeJac) d.reducedJ = d.activeRowsOfJ.rview (d.jacobian);
       }
     }
 
     template void HierarchicalIterativeSolver::computeValue<false>(vectorIn_t arg) const;
     template void HierarchicalIterativeSolver::computeValue<true >(vectorIn_t arg) const;
+
+    void HierarchicalIterativeSolver::computeSaturation (vectorIn_t arg) const
+    {
+      bool applySaturate;
+      applySaturate = saturate_ (arg, saturation_);
+      if (!applySaturate) return;
+
+      reducedSaturation_ = reduction_.rviewTranspose (saturation_);
+      assert (
+          (    reducedSaturation_.array() == -1
+               || reducedSaturation_.array() ==  0
+               || reducedSaturation_.array() ==  1
+          ).all() );
+
+      for (std::size_t i = 0; i < stacks_.size (); ++i) {
+        Data& d = datas_[i];
+
+        vector_t error = Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error);
+        tmpSat_ = (reducedSaturation_.cast<value_type>().cwiseProduct (d.reducedJ.transpose() * error).array() < 0);
+        for (size_type j = 0; j < tmpSat_.size(); ++j)
+          if (tmpSat_[j])
+            d.reducedJ.col(j).setZero();
+      }
+    }
 
     void HierarchicalIterativeSolver::getValue (vectorOut_t v) const
     {
