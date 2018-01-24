@@ -348,6 +348,7 @@ namespace hpp {
         v.segment(row, d.output.vector ().rows()) = d.output.vector ();
         row += d.output.vector ().rows();
       }
+      assert (v.rows() == row);
     }
 
     void HierarchicalIterativeSolver::getReducedJacobian (matrixOut_t J) const
@@ -358,6 +359,7 @@ namespace hpp {
         J.middleRows(row, d.reducedJ.rows()) = d.reducedJ;
         row += d.reducedJ.rows();
       }
+      assert (J.rows() == row);
     }
 
     void HierarchicalIterativeSolver::computeError () const
