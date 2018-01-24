@@ -31,7 +31,7 @@ namespace hpp {
       size_type errorDecreased = 3, iter = 0;
       value_type previousSquaredNorm =
 	std::numeric_limits<value_type>::infinity();
-      value_type initSquaredNorm;
+      value_type initSquaredNorm = 0;
 
       // Fill value and Jacobian
       computeValue<true> (arg);
