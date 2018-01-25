@@ -17,6 +17,35 @@
 #ifndef TEST_UTIL_HH
 # define TEST_UTIL_HH
 
+#define EIGEN_VECTOR_IS_APPROX(Va, Vb)                                         \
+  BOOST_CHECK_MESSAGE((Va).isApprox(Vb, test_precision),                       \
+      "check " #Va ".isApprox(" #Vb ") failed "                                \
+      "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]")
+
+#define EIGEN_VECTOR_IS_NOT_APPROX(Va, Vb)                                     \
+  BOOST_CHECK_MESSAGE(!Va.isApprox(Vb, test_precision),                        \
+      "check !" #Va ".isApprox(" #Vb ") failed "                               \
+      "[\n" << (Va).transpose() << "\n==\n" << (Vb).transpose() << "\n]")
+
+#define EIGEN_IS_APPROX(matrixA, matrixB)                                      \
+  BOOST_CHECK_MESSAGE(matrixA.isApprox(matrixB, test_precision),               \
+      "check " #matrixA ".isApprox(" #matrixB ") failed "                      \
+      "[\n" << matrixA << "\n!=\n" << matrixB << "\n]")
+
+#define EIGEN_IS_NOT_APPROX(matrixA, matrixB)                                  \
+  BOOST_CHECK_MESSAGE(!matrixA.isApprox(matrixB, test_precision),              \
+      "check !" #matrixA ".isApprox(" #matrixB ") failed "                     \
+      "[\n" << matrixA << "\n==\n" << matrixB << "\n]")
+
+#define SOLVER_CHECK_SOLVE(expr,expected)                                      \
+  {                                                                            \
+    HierarchicalIterativeSolver::Status __status = expr;                       \
+    BOOST_CHECK_MESSAGE(__status == HierarchicalIterativeSolver::expected,     \
+        "check " #expr " == " #expected " failed ["                            \
+        << __status << " != " << HierarchicalIterativeSolver::expected << "]");\
+  }
+
+
 #include <pinocchio/multibody/model.hpp>
 
 #include <hpp/pinocchio/device.hh>
@@ -67,6 +96,29 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
       ret = true;
     } else
       sat[iv] =  0;
+  }
+  return ret;
+}
+template <int Lower, int Upper>
+void simpleIntegration (hpp::constraints::vectorIn_t from, hpp::constraints::vectorIn_t velocity, hpp::constraints::vectorOut_t result)
+{
+  result = (from + velocity).cwiseMin(Upper).cwiseMax(Lower);
+}
+template <int Lower, int Upper>
+bool simpleSaturation (hpp::constraints::vectorIn_t x, Eigen::VectorXi& sat)
+{
+  bool ret = false;
+  for (hpp::constraints::size_type i = 0; i < x.size(); ++i) {
+    if (x[i] <= Lower) {
+      sat[i] = -1;
+      ret = true;
+    }
+    else if (x[i] >= Upper) {
+      sat[i] =  1;
+      ret = true;
+    } else {
+      sat[i] = 0;
+    }
   }
   return ret;
 }

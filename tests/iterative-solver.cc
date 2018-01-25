@@ -32,44 +32,11 @@
 #include <../tests/util.hh>
 
 using namespace hpp::constraints;
-value_type test_precision = 1e-6;
-
-#define EIGEN_IS_APPROX(matrixA, matrixB)                                      \
-  BOOST_CHECK_MESSAGE(matrixA.isApprox(matrixB, test_precision),               \
-      "check " #matrixA ".isApprox(" #matrixB ") failed "                      \
-      "[" << matrixA.transpose() << " != " << matrixB.transpose() << "]")
-
-#define EIGEN_IS_NOT_APPROX(matrixA, matrixB)                                  \
-  BOOST_CHECK_MESSAGE(!matrixA.isApprox(matrixB, test_precision),              \
-      "check !" #matrixA ".isApprox(" #matrixB ") failed "                     \
-      "[" << matrixA.transpose() << " != " << matrixB.transpose() << "]")
+const value_type test_precision = 1e-6;
 
 #define VECTOR2(x0, x1) ((hpp::constraints::vector_t (2) << x0, x1).finished())
 
 using Eigen::VectorXi;
-
-void addition (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)
-{
-  // result = from + velocity;
-  result = (from + velocity).cwiseMin(1).cwiseMax(-1);
-}
-bool saturation (vectorIn_t x, VectorXi& sat)
-{
-  bool ret = false;
-  for (size_type i = 0; i < x.size(); ++i) {
-    if (x[i] <= 0) {
-      sat[i] = -1;
-      ret = true;
-    }
-    else if (x[i] >= 1) {
-      sat[i] =  1;
-      ret = true;
-    } else {
-      sat[i] = 0;
-    }
-  }
-  return ret;
-}
 
 template <typename LineSearch = lineSearch::Constant>
 struct test_quadratic
@@ -88,8 +55,8 @@ struct test_quadratic
 
     solver.maxIterations(20);
     solver.errorThreshold(test_precision);
-    solver.integration(addition);
-    solver.saturation(saturation);
+    solver.integration(simpleIntegration<0,1>);
+    solver.saturation(simpleSaturation<0,1>);
 
     solver.add(f, 0);
     BOOST_CHECK(solver.numberStacks() == 1);
@@ -136,18 +103,18 @@ BOOST_AUTO_TEST_CASE(quadratic)
   A << 0.75, 0, 0, 0.75;
   test_quadratic<lineSearch::FixedSequence> test4 (A);
   // This is not exact because the solver does not saturate.
-  EIGEN_IS_APPROX (test4.success (1, 0.1), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
-  EIGEN_IS_APPROX (test4.success (0.1, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
+  EIGEN_VECTOR_IS_APPROX (test4.success (1, 0.1), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
+  EIGEN_VECTOR_IS_APPROX (test4.success (0.1, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
   // There is an overshoot. To overcome this, the Hessian of the function should be obtained.
-  EIGEN_IS_NOT_APPROX (test4.success (1, 0.001), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
-  EIGEN_IS_NOT_APPROX (test4.success (0.001, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
+  EIGEN_VECTOR_IS_NOT_APPROX (test4.success (1, 0.001), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
+  EIGEN_VECTOR_IS_NOT_APPROX (test4.success (0.001, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
 
   // Ellipsoid: computations are approximative
   A << 0.5, 0, 0, 2;
   test_quadratic<lineSearch::FixedSequence> test1 (A);
   BOOST_CHECK_EQUAL (test1.success (1, 0.5), VECTOR2(1.,0.5)); // Slide on the border x = 1
-  EIGEN_IS_APPROX (test1.success (1, 0.1), VECTOR2(1.,0.5)); // Slide on the border x = 1
-  EIGEN_IS_APPROX (test1.success (0, 1), VECTOR2(0.,1/sqrt(2)));
+  EIGEN_VECTOR_IS_APPROX (test1.success (1, 0.1), VECTOR2(1.,0.5)); // Slide on the border x = 1
+  EIGEN_VECTOR_IS_APPROX (test1.success (0, 1), VECTOR2(0.,1/sqrt(2)));
 }
 
 BOOST_AUTO_TEST_CASE(one_layer)

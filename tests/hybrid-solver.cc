@@ -36,6 +36,246 @@
 using namespace hpp::constraints;
 using boost::assign::list_of;
 
+matrix_t randomPositiveDefiniteMatrix (int N)
+{
+  matrix_t A (matrix_t::Random(N,N));
+  BOOST_REQUIRE ( (A.array() <  1).all() );
+  BOOST_REQUIRE ( (A.array() > -1).all() );
+
+  A = (A + A) / 2;
+  A += N * matrix_t::Identity (N, N);
+  A /= N;
+  return A;
+}
+
+const value_type test_precision = 1e-5;
+
+//             x       y       z
+template <int N1, int N2, int N3>
+void test_quadratic ()
+{
+  const int N = N1 + N2 + N3;
+
+  // (x y z) A (x y z)
+  matrix_t A (randomPositiveDefiniteMatrix(N));
+  Quadratic::Ptr_t quad (new Quadratic (A));
+
+  // y = B * z
+  matrix_t B (matrix_t::Random (N2, N3));
+  const int Ninf = std::min(N2,N3);
+  B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
+  segment_t in (N1 + N2, N3), out (N1, N2);
+  AffineFunctionPtr_t expl (new AffineFunction (B));
+
+  // Make solver
+  HybridSolver solver (N, N);
+  solver.maxIterations(20);
+  solver.errorThreshold(test_precision);
+  solver.integration(simpleIntegration<-1,1>);
+  solver.saturation(simpleSaturation<-1,1>);
+
+  solver.add (quad, 0);
+  solver.explicitSolver().add (expl, in, out, in, out);
+  solver.explicitSolverHasChanged();
+
+  matrix_t M (N, N1 + N3);
+  M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N3),
+       matrix_t::Zero    (N2,N1), B,
+       matrix_t::Zero    (N3,N1), matrix_t::Identity(N3,N3);
+  matrix_t Ar (M.transpose() * A * M);
+
+  BOOST_CHECK_EQUAL (Ar.fullPivLu().rank(), N1 + N3);
+
+  vector_t x (N);
+
+  x.setZero();
+  BOOST_CHECK (solver.isSatisfied(x));
+
+  x.setRandom();
+  SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Backtracking>(x), SUCCESS);
+  // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
+  EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.tail<N3>());
+  BOOST_CHECK_SMALL (value_type(x.transpose() * A * x), test_precision);
+
+  matrix_t expectedJ (1, N1 + N3), J(1, N1 + N3);
+
+  x.setRandom();
+  solver.explicitSolver().solve(x);
+  expectedJ = 2 * solver.explicitSolver().freeArgs().rview(x).eval().transpose() * Ar;
+
+  solver.computeValue<true> (x);
+  solver.updateJacobian(x);
+  solver.getReducedJacobian(J);
+
+  EIGEN_IS_APPROX (expectedJ, J);
+}
+
+//             w       x       y       z
+template <int N1, int N2, int N4, int N3>
+void test_quadratic2 ()
+{
+  const int N = N1 + N2 + N3 + N4;
+
+  // (w x y z) A (w x y z)
+  matrix_t A (randomPositiveDefiniteMatrix(N));
+  Quadratic::Ptr_t quad (new Quadratic (A));
+
+  // x = B * y
+  matrix_t B (matrix_t::Random (N2, N3));
+  const int Ninf = std::min(N2,N3);
+  B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
+  segment_t in1 (N1 + N2, N3), out1 (N1, N2);
+  AffineFunctionPtr_t expl1 (new AffineFunction (B));
+
+  // y = C * z
+  matrix_t C (matrix_t::Random (N3, N4));
+  const int Ninf2 = std::min(N3,N4);
+  C.topLeftCorner (Ninf2, Ninf2) = randomPositiveDefiniteMatrix(Ninf2);
+  segment_t in2 (N1 + N2 + N3, N4), out2 (N1 + N2, N3);
+  AffineFunctionPtr_t expl2 (new AffineFunction (C));
+
+  // Make solver
+  HybridSolver solver (N, N);
+  solver.maxIterations(20);
+  solver.errorThreshold(test_precision);
+  solver.integration(simpleIntegration<-1,1>);
+  solver.saturation(simpleSaturation<-1,1>);
+
+  solver.add (quad, 0);
+  solver.explicitSolver().add (expl1, in1, out1, in1, out1);
+  solver.explicitSolver().add (expl2, in2, out2, in2, out2);
+  solver.explicitSolverHasChanged();
+
+  matrix_t M (N, N1 + N4);
+  M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
+       matrix_t::Zero    (N2,N1), B * C,
+       matrix_t::Zero    (N3,N1), C,
+       matrix_t::Zero    (N4,N1), matrix_t::Identity(N4,N4);
+  matrix_t Ar (M.transpose() * A * M);
+
+  BOOST_CHECK_EQUAL (Ar.fullPivLu().rank(), N1 + N4);
+
+  vector_t x (N);
+
+  x.setZero();
+  BOOST_CHECK (solver.isSatisfied(x));
+
+  x.setRandom();
+  SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Backtracking>(x), SUCCESS);
+  // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
+  // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
+  EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.segment<N3>(N1+N2));
+  EIGEN_VECTOR_IS_APPROX (x.segment<N3>(N1+N2), C * x.segment<N4>(N1+N2+N3));
+  BOOST_CHECK_SMALL (value_type(x.transpose() * A * x), test_precision);
+
+  matrix_t expectedJ (1, N1 + N4), J(1, N1 + N4);
+
+  x.setRandom();
+  solver.explicitSolver().solve(x);
+  expectedJ = 2 * solver.explicitSolver().freeArgs().rview(x).eval().transpose() * Ar;
+
+  solver.computeValue<true> (x);
+  solver.updateJacobian(x);
+  solver.getReducedJacobian(J);
+
+  EIGEN_IS_APPROX (expectedJ, J);
+}
+
+//             w       x       y       z
+template <int N1, int N2, int N4, int N3>
+void test_quadratic3 ()
+{
+  const int N = N1 + N2 + N3 + N4;
+
+  // x = B * (y z)
+  matrix_t B (matrix_t::Random (N2, N3 + N4));
+  const int Ninf = std::min(N2,N3+N4);
+  B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
+  segment_t in1 (N1 + N2, N3 + N4), out1 (N1, N2);
+  AffineFunctionPtr_t expl1 (new AffineFunction (B));
+
+  // y = C * z
+  matrix_t C (matrix_t::Random (N3, N4));
+  const int Ninf2 = std::min(N3,N4);
+  C.topLeftCorner (Ninf2, Ninf2) = randomPositiveDefiniteMatrix(Ninf2);
+  segment_t in2 (N1 + N2 + N3, N4), out2 (N1 + N2, N3);
+  AffineFunctionPtr_t expl2 (new AffineFunction (C));
+
+  // z[0] = d
+  vector_t d (vector_t::Random (1));
+  segments_t in3; segment_t out3 (N1 + N2 + N3, 1);
+  ConstantFunctionPtr_t expl3 (new ConstantFunction (d, 0, 0));
+
+  // (w x y z) A (w x y z)
+  matrix_t A (randomPositiveDefiniteMatrix(N));
+  Quadratic::Ptr_t quad (new Quadratic (A, -d[0]));
+
+  // Make solver
+  HybridSolver solver (N, N);
+  solver.maxIterations(20);
+  solver.errorThreshold(test_precision);
+  solver.integration(simpleIntegration<-1,1>);
+  solver.saturation(simpleSaturation<-1,1>);
+
+  solver.add (quad, 0);
+  solver.explicitSolver().add (expl1, in1, out1, in1, out1);
+  solver.explicitSolver().add (expl2, in2, out2, in2, out2);
+  solver.explicitSolver().add (expl3, in3, out3, in3, out3);
+  solver.explicitSolverHasChanged();
+
+  matrix_t M (N, N1 + N4);
+  M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
+       matrix_t::Zero    (N2,N1), B.leftCols(N3) * C + B.rightCols(N4),
+       matrix_t::Zero    (N3,N1), C,
+       matrix_t::Zero    (N4,N1), matrix_t::Identity(N4,N4);
+  matrix_t P (N1 + N4, N1 + N4 - 1);
+  P << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4-1),
+       matrix_t::Zero    ( 1,N1+N4-1),
+       matrix_t::Zero    (N4-1,N1), matrix_t::Identity(N4-1,N4-1);
+  vector_t Xr_0 (vector_t::Zero(N1+N4));
+  Xr_0[N1] = d[0];
+
+  matrix_t Ar (M.transpose() * A * M);
+
+  BOOST_CHECK_EQUAL (Ar.fullPivLu().rank(), N1 + N4);
+
+  vector_t x (N);
+
+  x.setRandom();
+  SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Backtracking>(x), SUCCESS);
+  // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
+  // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
+  EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.segment<N3+N4>(N1+N2));
+  EIGEN_VECTOR_IS_APPROX (x.segment<N3>(N1+N2), C * x.segment<N4>(N1+N2+N3));
+  BOOST_CHECK_SMALL (value_type(x.transpose() * A * x - d[0]), test_precision);
+
+  matrix_t expectedJ (1, N1 + N4 - 1), J(1, N1 + N4 - 1);
+
+  x.setRandom();
+  solver.explicitSolver().solve(x);
+  expectedJ = 2 *
+    (P * solver.explicitSolver().freeArgs().rview(x).eval() + Xr_0).transpose()
+    * Ar * P;
+
+  solver.computeValue<true> (x);
+  solver.updateJacobian(x);
+  solver.getReducedJacobian(J);
+
+  EIGEN_IS_APPROX (expectedJ, J);
+}
+
+BOOST_AUTO_TEST_CASE(quadratic)
+{
+  test_quadratic<3, 3, 3> ();
+  test_quadratic<5, 3, 4> ();
+
+  test_quadratic2<3, 3, 3, 3> ();
+  test_quadratic2<3, 4, 2, 6> ();
+
+  test_quadratic3<3, 3, 3, 3> ();
+  test_quadratic3<1, 4, 2, 6> ();
+}
+
 class LockedJoint : public DifferentiableFunction
 {
   public:
