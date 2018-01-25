@@ -25,18 +25,10 @@
 
 #include <hpp/constraints/matrix-view.hh>
 
+#include <../tests/util.hh>
+
 using namespace Eigen;
 using boost::assign::list_of;
-
-// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
-// when they are not equal.
-namespace std {
-  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
-  {
-    internal::print_indices::run (os, b);
-    return os;
-  }
-}
 
 BOOST_AUTO_TEST_CASE(block_index)
 {

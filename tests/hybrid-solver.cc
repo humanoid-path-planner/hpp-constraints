@@ -36,15 +36,6 @@
 using namespace hpp::constraints;
 using boost::assign::list_of;
 
-// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
-// when they are not equal.
-namespace std {
-  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
-  {
-    return os << hpp::pretty_print (b);
-  }
-}
-
 class LockedJoint : public DifferentiableFunction
 {
   public:

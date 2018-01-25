@@ -33,22 +33,14 @@
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 
+#include <../tests/util.hh>
+
 using boost::assign::list_of;
 
 using namespace hpp::constraints;
 using Eigen::RowBlockIndices;
 using Eigen::ColBlockIndices;
 using Eigen::BlockIndex;
-
-// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
-// when they are not equal.
-namespace std {
-  std::ostream& operator<< (std::ostream& os, BlockIndex::segments_t b)
-  {
-    Eigen::internal::print_indices::run (os, b);
-    return os;
-  }
-}
 
 namespace Eigen {
   namespace internal {

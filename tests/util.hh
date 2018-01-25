@@ -21,6 +21,8 @@
 #include <hpp/pinocchio/extra-config-space.hh>
 #include <hpp/pinocchio/joint.hh>
 
+#include <hpp/constraints/fwd.hh>
+
 bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
     hpp::pinocchio::vectorIn_t q,
     Eigen::VectorXi& sat)
@@ -64,6 +66,15 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
       sat[iv] =  0;
   }
   return ret;
+}
+
+// This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t
+// when they are not equal.
+namespace std {
+  std::ostream& operator<< (std::ostream& os, hpp::constraints::BlockIndex::segments_t b)
+  {
+    return os << hpp::pretty_print (b);
+  }
 }
 
 #endif // TEST_UTIL_HH
