@@ -44,31 +44,9 @@ value_type test_precision = 1e-6;
       "check !" #matrixA ".isApprox(" #matrixB ") failed "                     \
       "[" << matrixA.transpose() << " != " << matrixB.transpose() << "]")
 
-typedef Eigen::Matrix<value_type, 2, 2> Matrix2;
-typedef Eigen::Matrix<value_type, 2, 1> Vector2;
+#define VECTOR2(x0, x1) ((hpp::constraints::vector_t (2) << x0, x1).finished())
+
 using Eigen::VectorXi;
-
-class Quadratic2D : public DifferentiableFunction
-{
-  public:
-    typedef boost::shared_ptr<Quadratic2D> Ptr_t;
-
-    Quadratic2D (const Matrix2& _A, const value_type& _c)
-      : DifferentiableFunction (2, 2, 1, "Quadratic2D"), A (_A), c(_c) {}
-
-    void impl_compute (LiegroupElement& y, vectorIn_t x) const
-    {
-      y.vector()[0] = x.transpose() * A * x - c;
-    }
-
-    void impl_jacobian (matrixOut_t J, vectorIn_t x) const
-    {
-      J = 2 * x.transpose() * A;
-    }
-
-    Matrix2 A;
-    value_type c;
-};
 
 void addition (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)
 {
@@ -99,14 +77,14 @@ struct test_quadratic
   HierarchicalIterativeSolver solver;
   LineSearch ls;
 
-  test_quadratic (const Matrix2& A) : solver(2, 2)
+  test_quadratic (const matrix_t& A) : solver(2, 2)
   {
     // Find (x, y)
     // s.t. a * x^2 + b * y^2 - 1 = 0
     //      0 <= x <= 1
     //      0 <= y <= 1
     BOOST_TEST_MESSAGE(A);
-    Quadratic2D::Ptr_t f (new Quadratic2D (A, 1));
+    Quadratic::Ptr_t f (new Quadratic (A, -1));
 
     solver.maxIterations(20);
     solver.errorThreshold(test_precision);
@@ -117,16 +95,16 @@ struct test_quadratic
     BOOST_CHECK(solver.numberStacks() == 1);
   }
 
-  Vector2 success (value_type x0, value_type x1)
+  vector_t success (value_type x0, value_type x1)
   {
-    Vector2 x(x0,x1);
+    vector_t x (VECTOR2(x0,x1));
     BOOST_CHECK_EQUAL(solver.solve(x, ls), HierarchicalIterativeSolver::SUCCESS);
     return x;
   }
 
-  Vector2 failure (value_type x0, value_type x1)
+  vector_t failure (value_type x0, value_type x1)
   {
-    Vector2 x(x0,x1);
+    vector_t x (VECTOR2(x0,x1));
     BOOST_CHECK_PREDICATE (std::not_equal_to<HierarchicalIterativeSolver::Status>(), (solver.solve(x, ls))(HierarchicalIterativeSolver::SUCCESS));
     return x;
   }
@@ -134,11 +112,11 @@ struct test_quadratic
 
 BOOST_AUTO_TEST_CASE(quadratic)
 {
-  Matrix2 A;
+  matrix_t A(2,2);
 
   A << 1, 0, 0, 1;
   test_quadratic<> test (A);
-  BOOST_CHECK_EQUAL (test.failure(0,0), Vector2::Zero());
+  BOOST_CHECK_EQUAL (test.failure(0,0), VECTOR2(0,0));
   test.success(0.1,0);
   test.success(0,0.1);
   test.success(0.5, 0.5);
@@ -152,24 +130,24 @@ BOOST_AUTO_TEST_CASE(quadratic)
   A << 0.5, 0, 0, 0.5;
   test = test_quadratic<> (A);
   // This is exact because of the saturation
-  BOOST_CHECK_EQUAL (test.success (1, 0.001), Vector2(1,1)); // Slide on the border x = 1
-  BOOST_CHECK_EQUAL (test.success (0.001, 1), Vector2(1,1)); // Slide on the border y = 1
+  BOOST_CHECK_EQUAL (test.success (1, 0.001), VECTOR2(1,1)); // Slide on the border x = 1
+  BOOST_CHECK_EQUAL (test.success (0.001, 1), VECTOR2(1,1)); // Slide on the border y = 1
 
   A << 0.75, 0, 0, 0.75;
   test_quadratic<lineSearch::FixedSequence> test4 (A);
   // This is not exact because the solver does not saturate.
-  EIGEN_IS_APPROX (test4.success (1, 0.1), Vector2(1,1/sqrt(3))); // Slide on the border x = 1
-  EIGEN_IS_APPROX (test4.success (0.1, 1), Vector2(1/sqrt(3),1)); // Slide on the border y = 1
+  EIGEN_IS_APPROX (test4.success (1, 0.1), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
+  EIGEN_IS_APPROX (test4.success (0.1, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
   // There is an overshoot. To overcome this, the Hessian of the function should be obtained.
-  EIGEN_IS_NOT_APPROX (test4.success (1, 0.001), Vector2(1,1/sqrt(3))); // Slide on the border x = 1
-  EIGEN_IS_NOT_APPROX (test4.success (0.001, 1), Vector2(1/sqrt(3),1)); // Slide on the border y = 1
+  EIGEN_IS_NOT_APPROX (test4.success (1, 0.001), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
+  EIGEN_IS_NOT_APPROX (test4.success (0.001, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
 
   // Ellipsoid: computations are approximative
   A << 0.5, 0, 0, 2;
   test_quadratic<lineSearch::FixedSequence> test1 (A);
-  BOOST_CHECK_EQUAL (test1.success (1, 0.5), Vector2(1,0.5)); // Slide on the border x = 1
-  EIGEN_IS_APPROX (test1.success (1, 0.1), Vector2(1,0.5)); // Slide on the border x = 1
-  EIGEN_IS_APPROX (test1.success (0, 1), Vector2(0,1/sqrt(2)));
+  BOOST_CHECK_EQUAL (test1.success (1, 0.5), VECTOR2(1.,0.5)); // Slide on the border x = 1
+  EIGEN_IS_APPROX (test1.success (1, 0.1), VECTOR2(1.,0.5)); // Slide on the border x = 1
+  EIGEN_IS_APPROX (test1.success (0, 1), VECTOR2(0.,1/sqrt(2)));
 }
 
 BOOST_AUTO_TEST_CASE(one_layer)

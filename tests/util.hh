@@ -17,11 +17,14 @@
 #ifndef TEST_UTIL_HH
 # define TEST_UTIL_HH
 
+#include <pinocchio/multibody/model.hpp>
+
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/extra-config-space.hh>
 #include <hpp/pinocchio/joint.hh>
 
 #include <hpp/constraints/fwd.hh>
+#include <hpp/constraints/differentiable-function.hh>
 
 bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
     hpp::pinocchio::vectorIn_t q,
@@ -76,5 +79,52 @@ namespace std {
     return os << hpp::pretty_print (b);
   }
 }
+
+class Quadratic : public hpp::constraints::DifferentiableFunction
+{
+  public:
+    typedef boost::shared_ptr<Quadratic> Ptr_t;
+    typedef hpp::constraints::DifferentiableFunction DifferentiableFunction;
+    typedef hpp::constraints::matrix_t matrix_t;
+    typedef hpp::constraints::matrixOut_t matrixOut_t;
+    typedef hpp::constraints::vector_t vector_t;
+    typedef hpp::constraints::vectorIn_t vectorIn_t;
+    typedef hpp::constraints::LiegroupElement LiegroupElement;
+    typedef hpp::constraints::value_type value_type;
+
+    Quadratic (const matrix_t& _A, const vector_t& _b, const value_type& _c)
+      : hpp::constraints::DifferentiableFunction (_A.cols(), _A.cols(), 1, "Quadratic"),
+      A (_A), b (_b), c(_c)
+    {
+      check();
+    }
+
+    Quadratic (const matrix_t& _A, const value_type& _c = 0)
+      : hpp::constraints::DifferentiableFunction (_A.cols(), _A.cols(), 1, "Quadratic"),
+      A (_A), b (vector_t::Zero(_A.rows())), c(_c)
+    {
+      check();
+    }
+
+    void check () const
+    {
+      BOOST_REQUIRE (A.rows() == A.cols());
+      BOOST_REQUIRE (A.rows() == b.rows());
+    }
+
+    void impl_compute (LiegroupElement& y, vectorIn_t x) const
+    {
+      y.vector()[0] = x.transpose() * A * x + b.dot(x) + c;
+    }
+
+    void impl_jacobian (matrixOut_t J, vectorIn_t x) const
+    {
+      J.noalias() = 2 * x.transpose() * A + b.transpose();
+    }
+
+    matrix_t A;
+    vector_t b;
+    value_type c;
+};
 
 #endif // TEST_UTIL_HH
