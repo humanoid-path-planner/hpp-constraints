@@ -147,6 +147,7 @@ namespace hpp {
       return os;
     }
 
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
     template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;

@@ -480,6 +480,7 @@ namespace hpp {
       return os << decindent;
     }
 
+    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
     template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
