@@ -412,18 +412,18 @@ namespace Eigen {
           return typename View<const MatrixType>::transpose_type (other.derived(), nbCols(), cols(), nbRows(), rows());
       }
 
-      MatrixBlocksRef<AllCols, AllRows> transpose()
+      MatrixBlocksRef<AllCols, AllRows> transpose() const
       {
         return MatrixBlocksRef<AllCols, AllRows> (nbCols(), cols(), nbRows(), rows());
       }
 
-      MatrixBlocksRef<AllRows, true> keepRows()
+      MatrixBlocksRef<AllRows, true> keepRows() const
       {
         assert (!AllRows);
         return MatrixBlocksRef<AllRows, true> (nbRows(), rows());
       }
 
-      MatrixBlocksRef<true, AllCols> keepCols()
+      MatrixBlocksRef<true, AllCols> keepCols() const
       {
         assert (!AllCols);
         return MatrixBlocksRef<true, AllCols> (nbCols(), cols());
