@@ -74,7 +74,7 @@ namespace hpp {
         hppDnum (info, "Jacobian of stack " << i << " before update:" << iendl
             << pretty_print(d.reducedJ) << iendl
             << "Jacobian of explicit variable of stack " << i << ":" << iendl
-            << pretty_print(explicit_.outDers().rviewTranspose(d.jacobian).eval()));
+            << pretty_print(explicit_.outDers().transpose().rview(d.jacobian).eval()));
         d.reducedJ.noalias() +=
           Eigen::MatrixBlockView<matrix_t> (d.jacobian,
               d.activeRowsOfJ.m_nbRows,
@@ -106,7 +106,7 @@ namespace hpp {
         bool active;
 
         // Test on the variable left free by the explicit solver.
-        adpF = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval().array();
+        adpF = reduction_.transpose().rview(fs[i]->activeDerivativeParameters().matrix()).eval().array();
         active = adpF.any();
         if (!active && explicitIOdep.size() > 0) {
           // Test on the variable constrained by the explicit solver.
@@ -131,12 +131,12 @@ namespace hpp {
 
       svd_.compute (reducedJ_);
 
-      dqSmall_ = reduction_.rviewTranspose(darg);
+      dqSmall_ = reduction_.transpose().rview(darg);
 
       vector_t tmp (getV1(svd_).adjoint() * dqSmall_);
       dqSmall_.noalias() -= getV1(svd_) * tmp;
 
-      reduction_.lviewTranspose(result) = dqSmall_;
+      reduction_.transpose().lview(result) = dqSmall_;
     }
 
     std::ostream& HybridSolver::print (std::ostream& os) const

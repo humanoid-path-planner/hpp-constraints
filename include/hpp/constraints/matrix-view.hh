@@ -375,19 +375,6 @@ namespace Eigen {
           return typename View<MatrixType>::type (o, nbRows(), rows(), nbCols(), cols());
       }
 
-      /// Writable view of the smaller matrix transposed
-      /// \param other matrix to whick block are extracted
-      /// \return writable view of the smaller matrix composed by concatenation
-      ///         of blocks and transposed.
-      template <typename MatrixType>
-      EIGEN_STRONG_INLINE typename View<MatrixType>::transpose_type lviewTranspose(const MatrixBase<MatrixType>& other) const {
-        MatrixType& o = const_cast<MatrixBase<MatrixType>&>(other).derived();
-        if (Derived::OneDimension)
-          return typename View<MatrixType>::transpose_type (o, nbIndices(), indices());
-        else
-          return typename View<MatrixType>::transpose_type (o, nbCols(), cols(), nbRows(), rows());
-      }
-
       /// Non-writable view of the smaller matrix
       /// \param other matrix to whick block are extracted
       /// \return non-writable view of the smaller matrix composed by
@@ -398,18 +385,6 @@ namespace Eigen {
           return typename View<const MatrixType>::type (other.derived(), nbIndices(), indices());
         else
           return typename View<const MatrixType>::type (other.derived(), nbRows(), rows(), nbCols(), cols());
-      }
-
-      /// Non-writable view of the smaller matrix transposed
-      /// \param other matrix to whick block are extracted
-      /// \return non-writable view of the smaller matrix composed by
-      ///         concatenation of blocks and transposed.
-      template <typename MatrixType>
-      EIGEN_STRONG_INLINE typename View<const MatrixType>::transpose_type rviewTranspose(const MatrixBase<MatrixType>& other) const {
-        if (Derived::OneDimension)
-          return typename View<const MatrixType>::transpose_type (other.derived(), nbIndices(), indices());
-        else
-          return typename View<const MatrixType>::transpose_type (other.derived(), nbCols(), cols(), nbRows(), rows());
       }
 
       MatrixBlocksRef<AllCols, AllRows> transpose() const

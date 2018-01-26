@@ -226,7 +226,7 @@ template <typename MatrixBlocks_t> void checkMatrixBlocks
 
   BOOST_CHECK_EQUAL(mb.lview(m).eval(), mb.rview(m).eval());
   BOOST_CHECK_EQUAL(mb.rview(m).eval(),
-      mb.rviewTranspose(m.transpose()).eval().transpose());
+      mb.transpose().rview(m.transpose()).eval().transpose());
 
   MatrixXd res(m);
   res = m;

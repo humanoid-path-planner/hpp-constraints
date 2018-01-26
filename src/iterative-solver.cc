@@ -194,7 +194,7 @@ namespace hpp {
       typedef Eigen::MatrixBlocks<false, false> BlockIndices;
       BlockIndices::segments_t rows;
       for (std::size_t i = 0; i < fs.size (); ++i) {
-        ArrayXb adp = reduction_.rviewTranspose(fs[i]->activeDerivativeParameters().matrix()).eval();
+        ArrayXb adp = reduction_.transpose().rview(fs[i]->activeDerivativeParameters().matrix()).eval();
         if (adp.any()) // If at least one element of adp is true
           rows.push_back (BlockIndices::segment_t
                           (row, fs[i]->outputDerivativeSize()));
@@ -322,7 +322,7 @@ namespace hpp {
       applySaturate = saturate_ (arg, saturation_);
       if (!applySaturate) return;
 
-      reducedSaturation_ = reduction_.rviewTranspose (saturation_);
+      reducedSaturation_ = reduction_.transpose().rview (saturation_);
       assert (
           (    reducedSaturation_.array() == -1
                || reducedSaturation_.array() ==  0
