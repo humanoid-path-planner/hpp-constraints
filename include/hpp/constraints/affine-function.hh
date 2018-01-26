@@ -21,7 +21,6 @@
 # include <hpp/constraints/config.hh>
 
 # include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/matrix-view.hh>
 
 namespace hpp {
   namespace constraints {
@@ -39,9 +38,7 @@ namespace hpp {
             const std::string name = "LinearFunction")
           : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
                                     (J.rows()), name),
-          J_ (J), b_ (vector_t::Zero(J.rows())),
-          aIdx_ (0, J_.cols()), JIdx_ (0, J_.cols()), C_JIdx_ (0,0),
-          qshort_ (J.cols())
+          J_ (J), b_ (vector_t::Zero(J.rows()))
         {
           init();
         }
@@ -50,42 +47,21 @@ namespace hpp {
             const std::string name = "LinearFunction")
           : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
                                     (J.rows()), name),
-          J_ (J), b_ (b),
-          aIdx_ (0, J_.cols()), JIdx_ (0, J_.cols()), C_JIdx_ (0,0),
-          qshort_ (J.cols())
-        {
-          init();
-        }
-
-        AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
-            Eigen::RowBlockIndices& argSelection,
-            Eigen::ColBlockIndices& derSelection,
-            Eigen::ColBlockIndices& CderSelection,
-            const std::string name = "AffineFunction") :
-          DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
-                                  (J.rows()), name),
-          J_ (J), b_ (b),
-          aIdx_ (argSelection), JIdx_ (derSelection), C_JIdx_ (CderSelection),
-          qshort_ (argSelection.nbIndices())
+          J_ (J), b_ (b)
         {
           init();
         }
 
       private:
         /// User implementation of function evaluation
-        void impl_compute (LiegroupElement& result, vectorIn_t argument) const
+        void impl_compute (LiegroupElement& y, vectorIn_t x) const
         {
-          qshort_ = aIdx_.rview(argument);
-          result.vector ().noalias () = J_ * qshort_;
-          result.vector () += b_;
-          result.check ();
+          y.vector ().noalias() = J_ * x + b_;
         }
 
-        void impl_jacobian (matrixOut_t jacobian,
-            vectorIn_t) const
+        void impl_jacobian (matrixOut_t jacobian, vectorIn_t) const
         {
-          JIdx_  .lview(jacobian) = J_;
-          C_JIdx_.lview(jacobian).setZero();
+          jacobian = J_;
         }
 
         void init ()
@@ -97,12 +73,7 @@ namespace hpp {
 
         const matrix_t J_;
         const vector_t b_;
-        const Eigen::RowBlockIndices aIdx_;
-        const Eigen::ColBlockIndices JIdx_, C_JIdx_;
-        mutable vector_t qshort_;
     }; // class AffineFunction
-
-    typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
 
     /// Constant function
     /// \f$ f(q) = C \f$
@@ -134,8 +105,6 @@ namespace hpp {
 
         const LiegroupElement c_;
     }; // class ConstantFunction
-
-    typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
     /// \}
   } // namespace constraints
