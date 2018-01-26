@@ -160,7 +160,7 @@ namespace hpp {
 
         const DifferentiableFunctionStack& f = stacks_[i];
         dimension_ += f.outputSize();
-        reducedDimension_ += datas_[i].activeRowsOfJ.m_nbRows;
+        reducedDimension_ += datas_[i].activeRowsOfJ.nbRows();
         datas_[i].output = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
         datas_[i].rightHandSide.setNeutral ();
@@ -168,7 +168,7 @@ namespace hpp {
         assert(derSize_ == f.inputDerivativeSize());
         datas_[i].jacobian.resize(f.outputDerivativeSize(), f.inputDerivativeSize());
         datas_[i].jacobian.setZero();
-        datas_[i].reducedJ.resize(datas_[i].activeRowsOfJ.m_nbRows, reducedSize);
+        datas_[i].reducedJ.resize(datas_[i].activeRowsOfJ.nbRows(), reducedSize);
 
         datas_[i].svd = SVD_t (f.outputDerivativeSize(), reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
         datas_[i].svd.setThreshold (SVD_THRESHOLD);
@@ -332,7 +332,7 @@ namespace hpp {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
 
-        vector_t error = Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error);
+        vector_t error = d.activeRowsOfJ.keepRows().rview(d.error);
         tmpSat_ = (reducedSaturation_.cast<value_type>().cwiseProduct (d.reducedJ.transpose() * error).array() < 0);
         for (size_type j = 0; j < tmpSat_.size(); ++j)
           if (tmpSat_[j])
@@ -396,18 +396,19 @@ namespace hpp {
         dq_.setZero();
         return;
       }
+      vector_t err;
       if (stacks_.size() == 1) { // one level only
         Data& d = datas_[0];
         d.svd.compute (d.reducedJ);
         HPP_DEBUG_SVDCHECK (d.svd);
         // TODO Eigen::JacobiSVD does a dynamic allocation here.
-        dqSmall_ = d.svd.solve (- Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(d.error).eval());
+        err = d.activeRowsOfJ.keepRows().rview(- d.error);
+        dqSmall_ = d.svd.solve (err);
         d.maxRank = std::max(d.maxRank, d.svd.rank());
         if (d.maxRank > 0)
           sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
       } else {
         projector_.setIdentity();
-        vector_t err;
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           const DifferentiableFunctionStack& f = stacks_[i];
           Data& d = datas_[i];
@@ -418,7 +419,7 @@ namespace hpp {
           /// projector is of size numberDof
           bool first = (i == 0);
           bool last = (i == stacks_.size() - 1);
-          err = Eigen::RowBlockIndices(d.activeRowsOfJ.m_rows).rview(- d.error);
+          err = d.activeRowsOfJ.keepRows().rview(- d.error);
           if (first) {
             // dq should be zero and projector should be identity
             d.svd.compute (d.reducedJ);

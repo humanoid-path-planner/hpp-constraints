@@ -222,6 +222,8 @@ BOOST_AUTO_TEST_CASE(block_index)
 template <typename MatrixBlocks_t> void checkMatrixBlocks
 (const MatrixBlocks_t& mb, MatrixXd m)
 {
+  BOOST_TEST_MESSAGE("Current matrix block: " << mb);
+
   BOOST_CHECK_EQUAL(mb.lview(m).eval(), mb.rview(m).eval());
   BOOST_CHECK_EQUAL(mb.rview(m).eval(),
       mb.rviewTranspose(m.transpose()).eval().transpose());
@@ -291,11 +293,14 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
 
   RowsIndices rows(2,2);
   // rows contains indices 2, 3
-  rows.addRow(6, 4);
-  // rows contains indices 2, 3, 6, 7, 8, 9
 
   // Make a ColsIndices from a RowsIndices
   ColsIndices cols (rows);
+
+  rows.addRow(6, 4);
+  // rows contains indices 2, 3, 6, 7, 8, 9
+  cols.addCol(5, 2);
+  // cols contains indices 2, 3, 5, 6
 
   MatrixBlocks_t blocks (rows.rows(), cols.cols());
 
@@ -313,4 +318,10 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   checkMatrixBlocks (rows, m);
   checkMatrixBlocks (cols, m);
   checkMatrixBlocks (blocks, m);
+
+  checkMatrixBlocks (rows.transpose(), m);
+  checkMatrixBlocks (cols.transpose(), m);
+  checkMatrixBlocks (blocks.transpose(), m);
+  checkMatrixBlocks (blocks.keepRows(), m);
+  checkMatrixBlocks (blocks.keepCols(), m);
 }
