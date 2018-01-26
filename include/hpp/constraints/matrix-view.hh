@@ -27,7 +27,103 @@
 
 namespace Eigen {
 
+  /// \addtogroup hpp_constraints_tools
+  /// \{
+
+  /// List of integer intervals
+  ///
+  /// Used to select blocks in a vector or in a matrix.
+  struct BlockIndex {
+    /// Index of vector or matrix
+    typedef hpp::constraints::size_type size_type;
+    /// Interval of indices [first, first + second - 1]
+    typedef std::pair<size_type, size_type> segment_t;
+    /// vector of segments
+    typedef std::vector<segment_t> segments_t;
+
+    /// Return the number of indices in the vector of segments.
+    /// \param a vector of segments
+    static size_type cardinal (const segments_t& a);
+
+    /// Build a vector of segments from an array of Boolean.
+    /// \param array array of Boolean values
+    /// \return the vector of segments corresponding to true values in the
+    ///         input.
+    template <typename Derived>
+    static segments_t fromLogicalExpression
+    (const Eigen::ArrayBase<Derived>& array);
+
+    /// Sort segments in increasing order.
+    /// Compare lower bounds of intervals and lengths if lower bounds are equal.
+    static void sort   (segments_t& a);
+
+    /// Build a sequence of non overlapping segments.
+    /// \param a a vector of segments
+    /// \note assumes a is sorted
+    static void shrink (segments_t& a);
+
+    /// Whether two segments overlap.
+    static bool overlap (const segment_t& a, const segment_t& b);
+
+    /// Compute the union of tws segments.
+    static segments_t sum (const segment_t& a, const segment_t& b);
+
+    /// In place addition of a segment_t to segments_t.
+    static void add (segments_t& a, const segment_t& b);
+
+    /// In place addition of segments_t to segments_t.
+    static void add (segments_t& a, const segments_t& b);
+
+    /// Compute the set difference between two segments.
+    static segments_t difference (const segment_t& a, const segment_t& b);
+
+    /// Compute the set difference between a vector of segments and a segment.
+    /// \note assumes a is sorted
+    static segments_t difference (const segments_t& a, const segment_t& b);
+
+    /// Compute the set difference between a segment and a vector of segments.
+    /// \note assume b is sorted
+    static segments_t difference (const segment_t& a, const segments_t& b);
+
+    /// Compute the set difference between two vectors of segments.
+    /// \note assume a and b are sorted
+    static segments_t difference (const segments_t& a, const segments_t& b);
+
+    /// Split a set of segment into two sets of segments
+    /// \param segments input set of segments,
+    /// \param cardinal cardinal of the first set of segments,
+    /// \return the first set of segments.
+    ///
+    /// The second set is stored in the input set of segments.
+    static segments_t split (segments_t& segments, const size_type& cardinal);
+
+    /// Extract a subset of a set of segments
+    /// \param segments input set of segments
+    /// \param start beginning of extracted set of segments (cardinal of subset
+    ///        left behind in input set of segments)
+    /// \param cardinal cardinal of extracted set of segments,
+    /// \return subset of segments.
+    static segments_t extract (const segments_t& segments, size_type start,
+                               size_type cardinal);
+  }; // struct BlockIndex
+
   template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols> class MatrixBlockView;
+
+  /// Collection of indices of matrix blocks
+  /// \param _allRows whether the collection is composed of full columns
+  /// \param _allCols whether the collection is composed of full rows
+  ///
+  /// This class enables a user to virtually create a matrix that concatenates
+  /// blocks of a larger matrix.
+  ///
+  /// The smaller matrix is built by methods \ref lview and \ref rview
+  /// \li \ref lview returns a smaller matrix that can be written in,
+  /// \li \ref rview returns a smaller matrix that cannot be written in.
+  template <bool _allRows = false, bool _allCols = false> class MatrixBlocks;
+
+  /// \}
+
+  template <bool _allRows = false, bool _allCols = false> class MatrixBlocksRef;
 
   namespace internal {
       template <bool row> struct return_first {
@@ -49,6 +145,28 @@ namespace Eigen {
       };
       template <bool If> struct get_if { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T1 run (T1 then, T2 Else) { (void)Else; return then; } };
       template <> struct get_if<false> { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T2 run (T1 then, T2 Else) { (void)then; return Else; } };
+
+    template <bool _allRows, bool _allCols>
+      struct traits< MatrixBlocks <_allRows, _allCols> >
+    {
+      enum {
+        AllRows = _allRows,
+        AllCols = _allCols
+      };
+      typedef typename internal::conditional<_allRows, internal::empty_struct, BlockIndex::segments_t>::type RowIndices_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, BlockIndex::segments_t>::type ColIndices_t;
+    };
+
+    template <bool _allRows, bool _allCols>
+      struct traits< MatrixBlocksRef <_allRows, _allCols> >
+    {
+      enum {
+        AllRows = _allRows,
+        AllCols = _allCols
+      };
+      typedef typename internal::conditional<_allRows, internal::empty_struct, const BlockIndex::segments_t&>::type RowIndices_t;
+      typedef typename internal::conditional<_allCols, internal::empty_struct, const BlockIndex::segments_t&>::type ColIndices_t;
+    };
 
     template <typename ArgType, int _Rows, int _Cols, bool _allRows, bool _allCols>
       struct traits< MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> >
@@ -202,114 +320,183 @@ namespace Eigen {
 # endif // HPP_EIGEN_USE_EVALUATOR
   } // namespace internal
 
+#define EIGEN_MATRIX_BLOCKS_PUBLIC_INTERFACE(Derived) \
+      enum { \
+        AllRows = _allRows, \
+        AllCols = _allCols \
+      }; \
+      typedef MatrixBlocksBase<Derived> Base; \
+      typedef typename Base::size_type    size_type; \
+      typedef typename Base::segments_t   segments_t; \
+      typedef typename Base::segment_t    segment_t; \
+      typedef typename Base::RowIndices_t RowIndices_t; \
+      typedef typename Base::ColIndices_t ColIndices_t;
+
   /// \addtogroup hpp_constraints_tools
   /// \{
 
-  /// List of integer intervals
-  ///
-  /// Used to select blocks in a vector or in a matrix.
-  struct BlockIndex {
-    /// Index of vector or matrix
-    typedef hpp::constraints::size_type size_type;
-    /// Interval of indices [first, first + second - 1]
-    typedef std::pair<size_type, size_type> segment_t;
-    /// vector of segments
-    typedef std::vector<segment_t> segments_t;
-
-    /// Return the number of indices in the vector of segments.
-    /// \param a vector of segments
-    static size_type cardinal (const segments_t& a);
-
-    /// Build a vector of segments from an array of Boolean.
-    /// \param array array of Boolean values
-    /// \return the vector of segments corresponding to true values in the
-    ///         input.
-    template <typename Derived>
-    static segments_t fromLogicalExpression
-    (const Eigen::ArrayBase<Derived>& array);
-
-    /// Sort segments in increasing order.
-    /// Compare lower bounds of intervals and lengths if lower bounds are equal.
-    static void sort   (segments_t& a);
-
-    /// Build a sequence of non overlapping segments.
-    /// \param a a vector of segments
-    /// \note assumes a is sorted
-    static void shrink (segments_t& a);
-
-    /// Whether two segments overlap.
-    static bool overlap (const segment_t& a, const segment_t& b);
-
-    /// Compute the union of tws segments.
-    static segments_t sum (const segment_t& a, const segment_t& b);
-
-    /// In place addition of a segment_t to segments_t.
-    static void add (segments_t& a, const segment_t& b);
-
-    /// In place addition of segments_t to segments_t.
-    static void add (segments_t& a, const segments_t& b);
-
-    /// Compute the set difference between two segments.
-    static segments_t difference (const segment_t& a, const segment_t& b);
-
-    /// Compute the set difference between a vector of segments and a segment.
-    /// \note assumes a is sorted
-    static segments_t difference (const segments_t& a, const segment_t& b);
-
-    /// Compute the set difference between a segment and a vector of segments.
-    /// \note assume b is sorted
-    static segments_t difference (const segment_t& a, const segments_t& b);
-
-    /// Compute the set difference between two vectors of segments.
-    /// \note assume a and b are sorted
-    static segments_t difference (const segments_t& a, const segments_t& b);
-
-    /// Split a set of segment into two sets of segments
-    /// \param segments input set of segments,
-    /// \param cardinal cardinal of the first set of segments,
-    /// \return the first set of segments.
-    ///
-    /// The second set is stored in the input set of segments.
-    static segments_t split (segments_t& segments, const size_type& cardinal);
-
-    /// Extract a subset of a set of segments
-    /// \param segments input set of segments
-    /// \param start beginning of extracted set of segments (cardinal of subset
-    ///        left behind in input set of segments)
-    /// \param cardinal cardinal of extracted set of segments,
-    /// \return subset of segments.
-    static segments_t extract (const segments_t& segments, size_type start,
-                               size_type cardinal);
-  }; // struct BlockIndex
-
-  /// Collection of indices of matrix blocks
-  /// \param _allRows whether the collection is composed of full columns
-  /// \param _allCols whether the collection is composed of full rows
-  ///
-  /// This class enables a user to virtually create a matrix that concatenates
-  /// blocks of a larger matrix.
-  ///
-  /// The smaller matrix is built by methods \ref lview and \ref rview
-  /// \li \ref lview returns a smaller matrix that can be written in,
-  /// \li \ref rview returns a smaller matrix that cannot be written in.
-  template <bool _allRows = false, bool _allCols = false>
-  class MatrixBlocks
+  template <typename Derived>
+  class MatrixBlocksBase
   {
     public:
+      enum {
+        AllRows = internal::traits<Derived>::AllRows,
+        AllCols = internal::traits<Derived>::AllCols,
+        OneDimension = bool(AllRows) || bool(AllCols)
+      };
       /// Index of vector or matrix
       typedef hpp::constraints::size_type size_type;
       /// Interval of indices [first, first + second - 1]
       typedef BlockIndex::segment_t segment_t;
       /// vector of segments
       typedef BlockIndex::segments_t segments_t;
-      typedef typename internal::conditional<_allRows, internal::empty_struct, segments_t>::type RowIndices_t;
-      typedef typename internal::conditional<_allCols, internal::empty_struct, segments_t>::type ColIndices_t;
+      typedef typename internal::traits<Derived>::RowIndices_t RowIndices_t;
+      typedef typename internal::traits<Derived>::ColIndices_t ColIndices_t;
 
       /// Smaller matrix composed by concatenation of the blocks
-      template <typename Derived, int _Rows = Derived::RowsAtCompileTime, int _Cols = Derived::ColsAtCompileTime> struct View {
-        typedef MatrixBlockView<Derived, _Rows, _Cols, _allRows, _allCols> type;
-        typedef MatrixBlockView<Derived, _Rows, _Cols, _allCols, _allRows> transpose_type;
+      template <typename MatrixType, int _Rows = MatrixType::RowsAtCompileTime, int _Cols = MatrixType::ColsAtCompileTime> struct View {
+        typedef MatrixBlockView<MatrixType, _Rows, _Cols, AllRows, AllCols> type;
+        typedef MatrixBlockView<MatrixType, _Rows, _Cols, AllCols, AllRows> transpose_type;
       }; // struct View
+
+      Derived const& derived () const { return static_cast<Derived const&> (*this); }
+      Derived      & derived ()       { return static_cast<Derived      &> (*this); }
+
+      /// Writable view of the smaller matrix
+      /// \param other matrix to whick block are extracted
+      /// \return writable view of the smaller matrix composed by concatenation
+      ///         of blocks.
+      template <typename MatrixType>
+      EIGEN_STRONG_INLINE typename View<MatrixType>::type lview(const MatrixBase<MatrixType>& other) const {
+        MatrixType& o = const_cast<MatrixBase<MatrixType>&>(other).derived();
+        if (Derived::OneDimension)
+          return typename View<MatrixType>::type (o, nbIndices(), indices());
+        else
+          return typename View<MatrixType>::type (o, nbRows(), rows(), nbCols(), cols());
+      }
+
+      /// Writable view of the smaller matrix transposed
+      /// \param other matrix to whick block are extracted
+      /// \return writable view of the smaller matrix composed by concatenation
+      ///         of blocks and transposed.
+      template <typename MatrixType>
+      EIGEN_STRONG_INLINE typename View<MatrixType>::transpose_type lviewTranspose(const MatrixBase<MatrixType>& other) const {
+        MatrixType& o = const_cast<MatrixBase<MatrixType>&>(other).derived();
+        if (Derived::OneDimension)
+          return typename View<MatrixType>::transpose_type (o, nbIndices(), indices());
+        else
+          return typename View<MatrixType>::transpose_type (o, nbCols(), cols(), nbRows(), rows());
+      }
+
+      /// Non-writable view of the smaller matrix
+      /// \param other matrix to whick block are extracted
+      /// \return non-writable view of the smaller matrix composed by
+      ///         concatenation of blocks.
+      template <typename MatrixType>
+      EIGEN_STRONG_INLINE typename View<const MatrixType>::type rview(const MatrixBase<MatrixType>& other) const {
+        if (Derived::OneDimension)
+          return typename View<const MatrixType>::type (other.derived(), nbIndices(), indices());
+        else
+          return typename View<const MatrixType>::type (other.derived(), nbRows(), rows(), nbCols(), cols());
+      }
+
+      /// Non-writable view of the smaller matrix transposed
+      /// \param other matrix to whick block are extracted
+      /// \return non-writable view of the smaller matrix composed by
+      ///         concatenation of blocks and transposed.
+      template <typename MatrixType>
+      EIGEN_STRONG_INLINE typename View<const MatrixType>::transpose_type rviewTranspose(const MatrixBase<MatrixType>& other) const {
+        if (Derived::OneDimension)
+          return typename View<const MatrixType>::transpose_type (other.derived(), nbIndices(), indices());
+        else
+          return typename View<const MatrixType>::transpose_type (other.derived(), nbCols(), cols(), nbRows(), rows());
+      }
+
+      MatrixBlocksRef<AllCols, AllRows> transpose()
+      {
+        return MatrixBlocksRef<AllCols, AllRows> (nbCols(), cols(), nbRows(), rows());
+      }
+
+      MatrixBlocksRef<AllRows, true> keepRows()
+      {
+        assert (!AllRows);
+        return MatrixBlocksRef<AllRows, true> (nbRows(), rows());
+      }
+
+      MatrixBlocksRef<true, AllCols> keepCols()
+      {
+        assert (!AllCols);
+        return MatrixBlocksRef<true, AllCols> (nbCols(), cols());
+      }
+
+      /// Return row or column indices as a vector of segments
+      ///
+      /// \return rows indices if not all rows are selected
+      ///         (see template parameter _allRows),
+      ///         column indices if all rows are selected.
+      inline const segments_t& indices() const
+      {
+        return internal::return_first<AllRows>::run(cols(), rows());
+      }
+
+      /// Return row indices
+      /// \assertion _allRows should be false
+      inline const RowIndices_t& rows() const
+      {
+        return derived().rows();
+      }
+
+      /// Return column indices
+      /// \assertion _allCols should be false
+      inline const ColIndices_t& cols() const
+      {
+        return derived().cols();
+      }
+
+      /// Return number of row or column indices
+      ///
+      /// \return number of rows indices if not all rows are selected
+      ///         (see template parameter _allRows),
+      ///         number of column indices if all rows are selected.
+      inline const size_type& nbIndices() const
+      {
+        return internal::return_first<AllRows>::run(nbCols(), nbRows());
+      }
+
+      /// Return number of row indices
+      /// \assertion _allRows should be false
+      inline const size_type& nbRows() const
+      {
+        return derived().nbRows();
+      }
+
+      /// Return number of column indices
+      /// \assertion _allCols should be false
+      inline const size_type& nbCols() const
+      {
+        return derived().nbCols();
+      }
+
+      /// Extract a block
+      /// \param i, j, ni, nj upper left corner and lengths of the block
+      /// \return new instance
+      MatrixBlocks <AllRows, AllCols> block
+      (size_type i, size_type j, size_type ni, size_type nj) const
+      {
+        return MatrixBlocks <AllRows, AllCols> (BlockIndex::extract (rows (), i, ni),
+                                                BlockIndex::extract (cols (), j, nj));
+      }
+
+    protected:
+      /// Empty constructor
+      MatrixBlocksBase () {}
+  }; // class MatrixBlocks
+
+  template <bool _allRows, bool _allCols>
+  class MatrixBlocks : public MatrixBlocksBase < MatrixBlocks <_allRows, _allCols> >
+  {
+    public:
+      EIGEN_MATRIX_BLOCKS_PUBLIC_INTERFACE(MatrixBlocks)
 
       /// Empty constructor
       MatrixBlocks () : m_nbRows(0), m_nbCols(0), m_rows(), m_cols() {}
@@ -366,10 +553,12 @@ namespace Eigen {
       {}
 
       /// Constructor from other MatrixBlocks
-      /// \note This constructor will only be called when
+      /// \deprecated Use MatrixBlocksBase::transpose,
+      ///             MatrixBlocksBase::keepRows, MatrixBlocksBase::keepCols
+      ///             instead
       /// \code
-      /// MatrixBlocks<true, false> ( MatrixBlocks<false, true> (...));
-      /// MatrixBlocks<false, true> ( MatrixBlocks<true, false> (...));
+      /// MatrixBlocks<false, true> M1;
+      /// MatrixBlocks<true, false> ( M1.transpose() );
       /// \endcode
       template <bool _otherAllRows, bool _otherAllCols>
       MatrixBlocks (const MatrixBlocks<_otherAllRows,_otherAllCols>& other)
@@ -383,11 +572,16 @@ namespace Eigen {
       }
 
       /// Copy constructor
-      MatrixBlocks (const MatrixBlocks<_allRows,_allCols>& other)
-        : m_nbRows(other.m_nbRows)
-        , m_nbCols(other.m_nbCols)
-        , m_rows(other.m_rows), m_cols(other.m_cols)
-      {}
+      template <typename MBDerived>
+      MatrixBlocks (const MatrixBlocksBase<MBDerived>& other)
+        : m_nbRows(other.nbRows())
+        , m_nbCols(other.nbCols())
+        , m_rows(other.rows()), m_cols(other.cols())
+      {
+        EIGEN_STATIC_ASSERT(
+            (AllRows == MBDerived::AllRows) && (AllCols == MBDerived::AllCols),
+            YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
+      }
 
       /// Clear rows
       inline void clearRows ()
@@ -439,71 +633,10 @@ namespace Eigen {
         update<Sort, Shrink, Cardinal> (m_cols, m_nbCols);
       }
 
-      /// Writable view of the smaller matrix
-      /// \param other matrix to whick block are extracted
-      /// \return writable view of the smaller matrix composed by concatenation
-      ///         of blocks.
-      template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived>::type lview(const MatrixBase<Derived>& other) const {
-        Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
-        if (_allCols || _allRows)
-          return typename View<Derived>::type (o, this->nbIndices(), this->indices());
-        else
-          return typename View<Derived>::type (o, m_nbRows, m_rows, m_nbCols, m_cols);
-      }
-
-      /// Writable view of the smaller matrix transposed
-      /// \param other matrix to whick block are extracted
-      /// \return writable view of the smaller matrix composed by concatenation
-      ///         of blocks and transposed.
-      template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<Derived>::transpose_type lviewTranspose(const MatrixBase<Derived>& other) const {
-        Derived& o = const_cast<MatrixBase<Derived>&>(other).derived();
-        if (_allCols || _allRows)
-          return typename View<Derived>::transpose_type (o, nbIndices(), indices());
-        else
-          return typename View<Derived>::transpose_type (o, m_nbCols, m_cols, m_nbRows, m_rows);
-      }
-
-      /// Non-writable view of the smaller matrix
-      /// \param other matrix to whick block are extracted
-      /// \return non-writable view of the smaller matrix composed by
-      ///         concatenation of blocks.
-      template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<const Derived>::type rview(const MatrixBase<Derived>& other) const {
-        if (_allCols || _allRows)
-          return typename View<const Derived>::type (other.derived(), nbIndices(), indices());
-        else
-          return typename View<const Derived>::type (other.derived(), m_nbRows, m_rows, m_nbCols, m_cols);
-      }
-
-      /// Non-writable view of the smaller matrix transposed
-      /// \param other matrix to whick block are extracted
-      /// \return non-writable view of the smaller matrix composed by
-      ///         concatenation of blocks and transposed.
-      template <typename Derived>
-      EIGEN_STRONG_INLINE typename View<const Derived>::transpose_type rviewTranspose(const MatrixBase<Derived>& other) const {
-        if (_allCols || _allRows)
-          return typename View<const Derived>::transpose_type (other.derived(), nbIndices(), indices());
-        else
-          return typename View<const Derived>::transpose_type (other.derived(), m_nbCols, m_cols, m_nbRows, m_rows);
-      }
-
-      /// Return row or column indices as a vector of segments
-      ///
-      /// \return rows indices if not all rows are selected
-      ///         (see template parameter _allRows),
-      ///         column indices if all rows are selected.
-      inline const segments_t& indices() const
-      {
-        return internal::return_first<_allRows>::run(m_cols, m_rows);
-      }
-
       /// Return row indices
       /// \assertion _allRows should be false
       inline const RowIndices_t& rows() const
       {
-        assert (!_allRows);
         return m_rows;
       }
 
@@ -511,25 +644,13 @@ namespace Eigen {
       /// \assertion _allCols should be false
       inline const ColIndices_t& cols() const
       {
-        assert (!_allCols);
         return m_cols;
-      }
-
-      /// Return number of row or column indices
-      ///
-      /// \return number of rows indices if not all rows are selected
-      ///         (see template parameter _allRows),
-      ///         number of column indices if all rows are selected.
-      inline const size_type& nbIndices() const
-      {
-        return internal::return_first<_allRows>::run(m_nbCols, m_nbRows);
       }
 
       /// Return number of row indices
       /// \assertion _allRows should be false
       inline const size_type& nbRows() const
       {
-        assert (!_allRows);
         return m_nbRows;
       }
 
@@ -537,18 +658,7 @@ namespace Eigen {
       /// \assertion _allCols should be false
       inline const size_type& nbCols() const
       {
-        assert (!_allCols);
         return m_nbCols;
-      }
-
-      /// Extract a block
-      /// \param i, j, ni, nj upper left corner and lengths of the block
-      /// \return new instance
-      MatrixBlocks <_allRows, _allCols> block
-      (size_type i, size_type j, size_type ni, size_type nj) const
-      {
-        return MatrixBlocks (BlockIndex::extract (rows (), i, ni),
-                             BlockIndex::extract (cols (), j, nj));
       }
 
       template<bool Sort, bool Shrink, bool Cardinal>
@@ -571,19 +681,111 @@ namespace Eigen {
       }
   }; // class MatrixBlocks
 
+  /// \cond
   template <bool _allRows, bool _allCols>
-  std::ostream& operator<< (std::ostream& os, MatrixBlocks<_allRows, _allCols> mbi)
+  class MatrixBlocksRef : public MatrixBlocksBase < MatrixBlocksRef <_allRows, _allCols> >
   {
-    typedef typename internal::conditional<_allRows, internal::dont_print_indices, internal::print_indices>::type row_printer;
-    typedef typename internal::conditional<_allCols, internal::dont_print_indices, internal::print_indices>::type col_printer;
-    if (!_allRows) {
+    public:
+      EIGEN_MATRIX_BLOCKS_PUBLIC_INTERFACE(MatrixBlocksRef)
+
+      /// Constructor by vectors of segments
+      /// \param rows set of row indices,
+      /// \param cols set of column indices,
+      /// \warning rows and cols must be sorted
+      MatrixBlocksRef (const segments_t& rows,
+                       const segments_t& cols) :
+        m_nbRows(BlockIndex::cardinal(rows)),
+        m_nbCols(BlockIndex::cardinal(cols)),
+        m_rows(rows), m_cols(cols)
+      {
+# ifndef NDEBUG
+        // test that input is sorted
+        segments_t r (rows); BlockIndex::sort (r);
+        assert (r == rows);
+        segments_t c (cols); BlockIndex::sort (c);
+        assert (c == cols);
+#endif
+      }
+
+      /// Constructor by vectors of segments
+      /// \param rows set of row indices,
+      /// \param cols set of column indices,
+      /// \warning rows and cols must be sorted
+      MatrixBlocksRef (const size_type& nbRows, const RowIndices_t& rows,
+                       const size_type& nbCols, const ColIndices_t& cols) :
+        m_nbRows(nbRows), m_nbCols(nbCols),
+        m_rows  (rows  ), m_cols  (cols  )
+      {}
+
+      /// Constructor by a collection of indices
+      /// \param idx collections of indices (for rows and columns)
+      /// \warning idx must be sorted and shrinked
+      /// \note if all rows or all columns are selected (template parameter)
+      ///       the block will contain all rows, respectively all columns.
+      MatrixBlocksRef (const segments_t& idx)
+        : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
+        , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
+        , m_rows(idx), m_cols(idx)
+      {}
+
+      /// Constructor by a collection of indices
+      /// \param idx collections of indices (for rows and columns)
+      /// \warning idx must be sorted and shrinked
+      /// \note if all rows or all columns are selected (template parameter)
+      ///       the block will contain all rows, respectively all columns.
+      MatrixBlocksRef (const size_type& nidx, const segments_t& idx)
+        : m_nbRows(_allRows ? 0 : nidx)
+        , m_nbCols(_allCols ? 0 : nidx)
+        , m_rows(idx), m_cols(idx)
+      {}
+
+      /// Return row indices
+      /// \assertion _allRows should be false
+      inline const RowIndices_t& rows() const
+      {
+        return m_rows;
+      }
+
+      /// Return column indices
+      /// \assertion _allCols should be false
+      inline const ColIndices_t& cols() const
+      {
+        return m_cols;
+      }
+
+      /// Return number of row indices
+      /// \assertion _allRows should be false
+      inline const size_type& nbRows() const
+      {
+        return m_nbRows;
+      }
+
+      /// Return number of column indices
+      /// \assertion _allCols should be false
+      inline const size_type& nbCols() const
+      {
+        return m_nbCols;
+      }
+
+      const size_type m_nbRows, m_nbCols;
+      RowIndices_t m_rows;
+      ColIndices_t m_cols;
+  }; // class MatrixBlocksRef
+  /// \endcond
+
+  template <typename Derived>
+  std::ostream& operator<< (std::ostream& os, const MatrixBlocksBase<Derived>& mbi)
+  {
+    typedef typename internal::conditional<Derived::AllRows, internal::dont_print_indices, internal::print_indices>::type row_printer;
+    typedef typename internal::conditional<Derived::AllCols, internal::dont_print_indices, internal::print_indices>::type col_printer;
+    if (!Derived::AllRows) {
       os << "Rows: ";
-      row_printer::run (os, mbi.m_rows);
-      if (!_allCols) os << hpp::iendl;
+      row_printer::run (os, mbi.rows());
+      if (!Derived::AllCols) os << hpp::iendl;
     }
-    if (!_allCols) {
+    if (!Derived::AllCols) {
       os << "Cols: ";
-      col_printer::run (os, mbi.m_cols);
+      col_printer::run (os, mbi.cols());
     }
     return os;
   }
