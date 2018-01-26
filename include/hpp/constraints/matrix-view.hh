@@ -356,7 +356,6 @@ namespace Eigen {
       /// Smaller matrix composed by concatenation of the blocks
       template <typename MatrixType, int _Rows = MatrixType::RowsAtCompileTime, int _Cols = MatrixType::ColsAtCompileTime> struct View {
         typedef MatrixBlockView<MatrixType, _Rows, _Cols, AllRows, AllCols> type;
-        typedef MatrixBlockView<MatrixType, _Rows, _Cols, AllCols, AllRows> transpose_type;
       }; // struct View
 
       Derived const& derived () const { return static_cast<Derived const&> (*this); }
