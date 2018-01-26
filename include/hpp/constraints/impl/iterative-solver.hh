@@ -79,7 +79,7 @@ namespace hpp {
           const size_type nrows = d.reducedJ.rows();
           if (df.size() < nrows) df.resize(nrows);
           df.head(nrows).noalias() = d.reducedJ * solver.dqSmall_;
-          slope += df.head(nrows).dot(d.error);
+          slope += df.head(nrows).dot(d.activeRowsOfJ.keepRows().rview(d.error).eval());
         }
         return slope;
       }
