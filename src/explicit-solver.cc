@@ -41,7 +41,7 @@ namespace hpp {
 
     Eigen::ColBlockIndices ExplicitSolver::activeParameters () const
     {
-      return inArgs_;
+      return inArgs_.transpose();
     }
 
     const Eigen::ColBlockIndices& ExplicitSolver::activeDerivativeParameters () const

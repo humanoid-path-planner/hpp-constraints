@@ -464,6 +464,9 @@ namespace Eigen {
     protected:
       /// Empty constructor
       MatrixBlocksBase () {}
+
+      /// Copy constructor
+      MatrixBlocksBase (const MatrixBlocksBase&) {}
   }; // class MatrixBlocks
 
   template <bool _allRows, bool _allCols>
@@ -526,25 +529,6 @@ namespace Eigen {
         , m_rows(segments_t(1,idx)), m_cols(segments_t(1,idx))
       {}
 
-      /// Constructor from other MatrixBlocks
-      /// \deprecated Use MatrixBlocksBase::transpose,
-      ///             MatrixBlocksBase::keepRows, MatrixBlocksBase::keepCols
-      ///             instead
-      /// \code
-      /// MatrixBlocks<false, true> M1;
-      /// MatrixBlocks<true, false> ( M1.transpose() );
-      /// \endcode
-      template <bool _otherAllRows, bool _otherAllCols>
-      MatrixBlocks (const MatrixBlocks<_otherAllRows,_otherAllCols>& other)
-        : m_nbRows(other.m_nbCols)
-        , m_nbCols(other.m_nbRows)
-        , m_rows(other.m_cols), m_cols(other.m_rows)
-      {
-        assert((_allRows != _allCols)
-            && (_otherAllRows == _allCols)
-            && (_otherAllCols == _allRows));
-      }
-
       /// Copy constructor
       template <typename MBDerived>
       MatrixBlocks (const MatrixBlocksBase<MBDerived>& other)
@@ -553,7 +537,7 @@ namespace Eigen {
         , m_rows(other.rows()), m_cols(other.cols())
       {
         EIGEN_STATIC_ASSERT(
-            (AllRows == MBDerived::AllRows) && (AllCols == MBDerived::AllCols),
+            (bool(AllRows) == bool(MBDerived::AllRows)) && (bool(AllCols) == bool(MBDerived::AllCols)),
             YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
       }
 
@@ -666,41 +650,22 @@ namespace Eigen {
       /// \param rows set of row indices,
       /// \param cols set of column indices,
       /// \warning rows and cols must be sorted
-      MatrixBlocksRef (const segments_t& rows,
-                       const segments_t& cols) :
-        m_nbRows(BlockIndex::cardinal(rows)),
-        m_nbCols(BlockIndex::cardinal(cols)),
-        m_rows(rows), m_cols(cols)
-      {
-# ifndef NDEBUG
-        // test that input is sorted
-        segments_t r (rows); BlockIndex::sort (r);
-        assert (r == rows);
-        segments_t c (cols); BlockIndex::sort (c);
-        assert (c == cols);
-#endif
-      }
-
-      /// Constructor by vectors of segments
-      /// \param rows set of row indices,
-      /// \param cols set of column indices,
-      /// \warning rows and cols must be sorted
       MatrixBlocksRef (const size_type& nbRows, const RowIndices_t& rows,
                        const size_type& nbCols, const ColIndices_t& cols) :
         m_nbRows(nbRows), m_nbCols(nbCols),
         m_rows  (rows  ), m_cols  (cols  )
       {}
 
-      /// Constructor by a collection of indices
-      /// \param idx collections of indices (for rows and columns)
-      /// \warning idx must be sorted and shrinked
-      /// \note if all rows or all columns are selected (template parameter)
-      ///       the block will contain all rows, respectively all columns.
-      MatrixBlocksRef (const segments_t& idx)
-        : m_nbRows(_allRows ? 0 : BlockIndex::cardinal(idx))
-        , m_nbCols(_allCols ? 0 : BlockIndex::cardinal(idx))
-        , m_rows(idx), m_cols(idx)
-      {}
+      /// Constructor by two (row or col) MatrixBlocks
+      template <typename Derived1, typename Derived2>
+      MatrixBlocksRef (const MatrixBlocksBase<Derived1>& rows,
+                       const MatrixBlocksBase<Derived2>& cols) :
+        m_nbRows(rows.nbIndices()), m_nbCols(cols.nbIndices()),
+        m_rows  (rows.  indices()), m_cols  (cols.  indices())
+      {
+        EIGEN_STATIC_ASSERT( bool(Derived1::OneDimension) && bool (Derived2::OneDimension),
+            YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
+      }
 
       /// Constructor by a collection of indices
       /// \param idx collections of indices (for rows and columns)
@@ -711,6 +676,15 @@ namespace Eigen {
         : m_nbRows(_allRows ? 0 : nidx)
         , m_nbCols(_allCols ? 0 : nidx)
         , m_rows(idx), m_cols(idx)
+      {}
+
+      /// Copy constructor
+      MatrixBlocksRef (const MatrixBlocksRef& other)
+        : Base (other)
+        , m_nbRows(other.nbRows())
+        , m_nbCols(other.nbCols())
+        , m_rows(other.rows())
+        , m_cols(other.cols())
       {}
 
       /// Return row indices

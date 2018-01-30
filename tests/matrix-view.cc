@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(matrix_block_view)
   // rows contains indices 2, 3
 
   // Make a ColsIndices from a RowsIndices
-  ColsIndices cols (rows);
+  ColsIndices cols (rows.transpose());
 
   rows.addRow(6, 4);
   // rows contains indices 2, 3, 6, 7, 8, 9

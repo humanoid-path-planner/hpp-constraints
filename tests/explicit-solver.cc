@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     expectedRow.updateRows<true,true,true>();
     BOOST_CHECK_EQUAL (solver.outDers(), expectedRow);
 
-    expectedCol = RowBlockIndices(BlockIndex::difference (
+    expectedCol = ColBlockIndices(BlockIndex::difference (
           BlockIndex::segment_t(0, solver.derSize()),
           expectedRow.rows()));
     BOOST_CHECK_EQUAL (solver.freeDers(), expectedCol);
