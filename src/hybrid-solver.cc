@@ -76,11 +76,8 @@ namespace hpp {
             << "Jacobian of explicit variable of stack " << i << ":" << iendl
             << pretty_print(explicit_.outDers().transpose().rview(d.jacobian).eval()));
         d.reducedJ.noalias() +=
-          Eigen::MatrixBlockView<matrix_t> (d.jacobian,
-              d.activeRowsOfJ.m_nbRows,
-              d.activeRowsOfJ.m_rows,
-              explicit_.outDers().m_nbRows,
-              explicit_.outDers().m_rows).eval()
+          Eigen::MatrixBlocksRef<> (d.activeRowsOfJ.keepRows(), explicit_.outDers())
+          .rview(d.jacobian).eval()
           * Je_;
         hppDnum (info, "Jacobian of stack " << i << " after update:" << iendl
             << pretty_print(d.reducedJ) << unsetpyformat);
