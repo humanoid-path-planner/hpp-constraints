@@ -65,10 +65,12 @@ namespace hpp {
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
         // Compute this function
-        f.f->value(f.value, f.inArg.rview(arg).eval());
+        f.qin = f.inArg.rview(arg);
+        f.f->value(f.value, f.qin);
+        f.value += f.rightHandSide;
         const size_type& nbRows = f.outDer.nbRows();
-        LiegroupElement tmp (f.outArg.rview(arg), f.f->outputSpace());
-        error.segment (row, nbRows) = tmp - (f.value + f.rightHandSide);
+        f.expected.vector() = f.outArg.rview(arg);
+        error.segment (row, nbRows) = f.expected - f.value;
         squaredNorm = std::max(squaredNorm,
             error.segment (row, nbRows).squaredNorm ());
         row += nbRows;
@@ -91,7 +93,7 @@ namespace hpp {
       f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
       comparison (comp),
       rightHandSide (vector_t::Zero(f->outputSpace()->nv())),
-      value (f->outputSpace ())
+      value (f->outputSpace ()), expected (f->outputSpace ())
     {
       jacobian.resize(_f->outputDerivativeSize(), _f->inputDerivativeSize());
       for (std::size_t i = 0; i < comp.size(); ++i) {
@@ -221,8 +223,10 @@ namespace hpp {
     {
       const Function& f = functions_[iF];
       // Compute this function
-      f.f->value(f.value, f.inArg.rview(arg).eval());
-      f.outArg.lview(arg) = (f.value + f.rightHandSide).vector();
+      f.qin = f.inArg.rview(arg);
+      f.f->value(f.value, f.qin);
+      f.value += f.rightHandSide;
+      f.outArg.lview(arg) = f.value.vector();
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
@@ -234,7 +238,8 @@ namespace hpp {
       // Compute the function jacobians
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
-        f.f->jacobian(f.jacobian, f.inArg.rview(arg).eval());
+        f.qin = f.inArg.rview(arg);
+        f.f->jacobian(f.jacobian, f.qin);
       }
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         computeJacobian(computationOrder_[i], jacobian);
@@ -273,9 +278,10 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
-        f.f->value(f.value, f.inArg.rview(arg).eval());
-        LiegroupElement expected (f.outArg.rview(arg), f.f->outputSpace());
-        vector_t rhs = expected - f.value;
+        f.qin = f.inArg.rview(arg);
+        f.f->value(f.value, f.qin);
+        f.expected.vector() = f.outArg.rview(arg);
+        vector_t rhs = f.expected - f.value;
         f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
       }
       return rightHandSide();
@@ -287,11 +293,12 @@ namespace hpp {
         Function& f = functions_[i];
         if (f.f == df) {
           // Computes f(q1) and q2
-          df->value(f.value, f.inArg.rview(arg).eval());
-          LiegroupElement expected (f.outArg.rview(arg), f.f->outputSpace());
+          f.qin = f.inArg.rview(arg);
+          df->value(f.value, f.qin);
+          f.expected.vector() = f.outArg.rview(arg);
 
           // Set rhs = q2 - f(q1)
-          vector_t rhs = expected - f.value;
+          vector_t rhs = f.expected - f.value;
           f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
           return true;
         }

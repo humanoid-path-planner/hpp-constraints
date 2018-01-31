@@ -274,7 +274,8 @@ namespace hpp {
           RowBlockIndices equalityIndices;
           vector_t rightHandSide;
 
-          mutable LiegroupElement value;
+          mutable vector_t qin;
+          mutable LiegroupElement value, expected;
           mutable matrix_t jacobian;
         }; // struct Function
 
