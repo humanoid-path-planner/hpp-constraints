@@ -37,9 +37,13 @@ namespace hpp {
     /// The solver works on a given set of variables \f$ X = (x_i) \f$.
     /// It contains a set of functions \f$ f_j \f$ that takes as input a subset of \f$ X \f$ and
     /// outputs values corresponding to another subset of \f$ X \f$.
-    /// The equation are then of the following form:
+    /// The equations are then of the following form:
     /// \f$ X_{output} = f (X_{input}) + rhs \f$ where the addition is the
     /// addition of the \ref outputSpace() of \f$ f \f$.
+    ///
+    /// Eventually, a invertible function \f$ g \f$ (of known inverse \f$ g^{-1} \f$)
+    /// can be specified. The equation then becomes:
+    /// \f$ g(X_{output}) = f (X_{input}) + rhs \f$
     /// 
     /// There can be no cycles in the dependencies. Moreover, a variable cannot
     /// be the output of two different functions.
