@@ -29,7 +29,7 @@
 
 namespace hpp {
   namespace constraints {
-    typedef Eigen::MatrixBlockView<matrixOut_t, Eigen::Dynamic, Eigen::Dynamic, false, false> MatrixOutView_t;
+    typedef Eigen::MatrixBlocksRef<false, false> MatrixBlocksRef;
 
     namespace {
       void append (const Eigen::RowBlockIndices& rbi, std::queue<size_type>& q) {
@@ -229,9 +229,8 @@ namespace hpp {
     {
       // TODO this could be done only on the complement of inDers_
       jacobian.setZero();
-      MatrixOutView_t (jacobian,
-          freeDers_.nbIndices(), freeDers_.indices(),
-          freeDers_.nbIndices(), freeDers_.indices()).setIdentity();
+      MatrixBlocksRef (freeDers_, freeDers_)
+        .lview (jacobian).setIdentity();
       // Compute the function jacobians
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
@@ -245,12 +244,8 @@ namespace hpp {
     void ExplicitSolver::computeJacobian(const std::size_t& iF, matrixOut_t J) const
     {
       const Function& f = functions_[iF];
-      matrix_t Jg (MatrixOutView_t (J,
-            f.inDer.nbIndices(), f.inDer.indices(),
-            inDers_.nbIndices(), inDers_.indices()).eval());
-      MatrixOutView_t (J,
-          f.outDer.nbIndices(), f.outDer.indices(),
-          inDers_.nbIndices(), inDers_.indices()) = f.jacobian * Jg;
+      matrix_t Jg (MatrixBlocksRef (f.inDer, inDers_).rview(J));
+      MatrixBlocksRef (f.outDer, inDers_).lview (J) = f.jacobian * Jg;
     }
 
     void ExplicitSolver::computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed)
