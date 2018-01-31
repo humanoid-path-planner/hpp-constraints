@@ -92,6 +92,11 @@ namespace hpp {
             const RowBlockIndices& outDer,
             const ComparisonTypes_t& comp);
 
+        /// Set \f$g\f$  and \f$g^{-1}\f$ functions
+        bool setG (const DifferentiableFunctionPtr_t& f,
+                   const DifferentiableFunctionPtr_t& g,
+                   const DifferentiableFunctionPtr_t& ginv);
+
         /// \warning the two functions must have the same input and output
         /// indices.
         bool replace (const DifferentiableFunctionPtr_t& oldf,

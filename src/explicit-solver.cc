@@ -115,9 +115,14 @@ namespace hpp {
     void ExplicitSolver::Function::setG (const DifferentiableFunctionPtr_t& _g,
                                          const DifferentiableFunctionPtr_t& _ginv)
     {
+      assert ( (!_g && !_ginv) // No function g and ginv
+          || ( _g && _ginv
+            && * f->outputSpace() == *_g->outputSpace()
+            && *_g->outputSpace() == *_ginv->outputSpace())
+          // Functions specified and the output spaces are all the same.
+          );
       g = _g;
       ginv = _ginv;
-      assert (bool(g) == bool(ginv));
       size_type n = (g ? g->outputSpace()->nv() : 0);
       jGinv.resize (n,n);
     }
@@ -212,6 +217,20 @@ namespace hpp {
         computeOrder(i, order, computed);
       assert(order == functions_.size());
       return true;
+    }
+
+    bool ExplicitSolver::setG (const DifferentiableFunctionPtr_t& df,
+        const DifferentiableFunctionPtr_t& g,
+        const DifferentiableFunctionPtr_t& ginv)
+    {
+      for (std::size_t i = 0; i < functions_.size (); ++i) {
+        Function& f = functions_[i];
+        if (f.f == df) {
+          f.setG (g, ginv);
+          return true;
+        }
+      }
+      return false;
     }
 
     bool ExplicitSolver::replace (
