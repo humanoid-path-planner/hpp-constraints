@@ -69,7 +69,9 @@ namespace hpp {
         f.f->value(f.value, f.qin);
         f.value += f.rightHandSide;
         const size_type& nbRows = f.outDer.nbRows();
-        f.expected.vector() = f.outArg.rview(arg);
+        f.qout = f.outArg.rview(arg);
+        if (f.g) f.g->value(f.expected, f.qout);
+        else     f.expected.vector() = f.qout;
         error.segment (row, nbRows) = f.expected - f.value;
         squaredNorm = std::max(squaredNorm,
             error.segment (row, nbRows).squaredNorm ());
@@ -108,6 +110,16 @@ namespace hpp {
         }
       }
       equalityIndices.updateRows<true, true, true>();
+    }
+
+    void ExplicitSolver::Function::setG (const DifferentiableFunctionPtr_t& _g,
+                                         const DifferentiableFunctionPtr_t& _ginv)
+    {
+      g = _g;
+      ginv = _ginv;
+      assert (bool(g) == bool(ginv));
+      size_type n = (g ? g->outputSpace()->nv() : 0);
+      jGinv.resize (n,n);
     }
 
     bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
@@ -226,7 +238,9 @@ namespace hpp {
       f.qin = f.inArg.rview(arg);
       f.f->value(f.value, f.qin);
       f.value += f.rightHandSide;
-      f.outArg.lview(arg) = f.value.vector();
+      if (f.ginv) f.ginv->value (f.expected, f.value.vector());
+      else        f.expected.vector() = f.value.vector();
+      f.outArg.lview(arg) = f.expected.vector();
     }
 
     void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
@@ -239,7 +253,13 @@ namespace hpp {
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
         f.qin = f.inArg.rview(arg);
+        if (f.ginv) f.f->value(f.value, f.qin);
         f.f->jacobian(f.jacobian, f.qin);
+        if (f.ginv) {
+          f.value += f.rightHandSide;
+          f.ginv->jacobian(f.jGinv, f.value.vector());
+          f.jacobian.applyOnTheLeft(f.jGinv);
+        }
       }
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         computeJacobian(computationOrder_[i], jacobian);
@@ -280,7 +300,9 @@ namespace hpp {
         Function& f = functions_[i];
         f.qin = f.inArg.rview(arg);
         f.f->value(f.value, f.qin);
-        f.expected.vector() = f.outArg.rview(arg);
+        f.qout = f.outArg.rview(arg);
+        if (f.g) f.g->value(f.expected, f.qout);
+        else     f.expected.vector() = f.qout;
         vector_t rhs = f.expected - f.value;
         f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
       }
@@ -292,12 +314,14 @@ namespace hpp {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
         if (f.f == df) {
-          // Computes f(q1) and q2
+          // Computes f(q1) and g(q2)
           f.qin = f.inArg.rview(arg);
           df->value(f.value, f.qin);
-          f.expected.vector() = f.outArg.rview(arg);
+          f.qout = f.outArg.rview(arg);
+          if (f.g) f.g->value(f.expected, f.qout);
+          else     f.expected.vector() = f.qout;
 
-          // Set rhs = q2 - f(q1)
+          // Set rhs = g(q2) - f(q1)
           vector_t rhs = f.expected - f.value;
           f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
           return true;

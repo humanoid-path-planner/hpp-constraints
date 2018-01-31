@@ -266,7 +266,9 @@ namespace hpp {
           Function (DifferentiableFunctionPtr_t _f, RowBlockIndices ia,
                     RowBlockIndices oa, ColBlockIndices id, RowBlockIndices od,
                     const ComparisonTypes_t& comp);
+          void setG (const DifferentiableFunctionPtr_t& _g, const DifferentiableFunctionPtr_t& _ginv);
           DifferentiableFunctionPtr_t f;
+          DifferentiableFunctionPtr_t g, ginv;
           RowBlockIndices inArg, outArg;
           ColBlockIndices inDer;
           RowBlockIndices outDer;
@@ -274,9 +276,9 @@ namespace hpp {
           RowBlockIndices equalityIndices;
           vector_t rightHandSide;
 
-          mutable vector_t qin;
+          mutable vector_t qin, qout;
           mutable LiegroupElement value, expected;
-          mutable matrix_t jacobian;
+          mutable matrix_t jacobian, jGinv;
         }; // struct Function
 
         RowBlockIndices inArgs_, freeArgs_;
