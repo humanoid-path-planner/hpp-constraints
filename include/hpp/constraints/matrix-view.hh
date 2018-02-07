@@ -461,6 +461,26 @@ namespace Eigen {
                                                 BlockIndex::extract (cols (), j, nj));
       }
 
+      /// Extract a set of rows
+      /// \param i, ni start and length of the set of rows
+      /// \return new instance
+      MatrixBlocks <AllRows, AllCols> middleRows
+      (size_type i, size_type ni) const
+      {
+        return MatrixBlocks <AllRows, AllCols> (BlockIndex::extract (rows (), i, ni),
+                                                cols ());
+      }
+
+      /// Extract a set of cols
+      /// \param i, ni start and length of the set of rows
+      /// \return new instance
+      MatrixBlocks <AllRows, AllCols> middleCols
+      (size_type j, size_type nj) const
+      {
+        return MatrixBlocks <AllRows, AllCols> (rows (),
+                                                BlockIndex::extract (cols (), j, nj));
+      }
+
     protected:
       /// Empty constructor
       MatrixBlocksBase () {}
@@ -486,6 +506,25 @@ namespace Eigen {
                           const segments_t& cols) :
         m_nbRows(BlockIndex::cardinal(rows)),
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
+      {
+# ifndef NDEBUG
+        // test that input is sorted
+        segments_t r (rows); BlockIndex::sort (r);
+        assert (r == rows);
+        segments_t c (cols); BlockIndex::sort (c);
+        assert (c == cols);
+#endif
+      }
+
+      /// Constructor by vectors of segments
+      /// \param nb0s number of rows,
+      /// \param nbCols number of columns,
+      /// \param rows set of row indices,
+      /// \param cols set of column indices,
+      /// \warning rows and cols must be sorted
+      MatrixBlocks (const size_type& nbrows, const RowIndices_t& rows,
+                    const size_type& nbCols, const ColIndices_t& cols) :
+        m_nbRows(nbRows), m_nbCols(nbCols), m_rows(rows), m_cols(cols)
       {
 # ifndef NDEBUG
         // test that input is sorted
