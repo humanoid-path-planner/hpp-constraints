@@ -182,11 +182,10 @@ namespace hpp {
             const GenericTransformationData<true, pos, true>& d,
             matrixOut_t J)
         {
-          d.tmpJac.noalias() =
-                  d.R2() * omega(d.J2())
-                - d.R1() * omega(d.J1());
+          d.tmpJac.noalias() = (d.R1().transpose() * d.R2()) * omega(d.J2());
+          d.tmpJac.noalias() -= omega(d.J1());
           assign_if<true>(!d.fullOri, d, J,
-              d.JlogXTR1inJ1 * d.R1().transpose () * d.tmpJac,
+              d.JlogXTR1inJ1 * d.tmpJac,
               d.rowOri);
         }
         template <bool ori> static inline void Jtranslation (
@@ -204,14 +203,13 @@ namespace hpp {
           // pinocchio:
           // A = [ 0t2 - 0t1 0R2 2t* ]x 0R1 1Jw1
           // B = ( 0R2 2Jt2 - 0R1 1Jt1 - [ 0R2 2t* ]x 0R2 2Jw2 )
-          d.tmpJac.noalias() =
-            - R1.colwise().cross(d.cross1) * omega(J1) // A
-            + R2 * trans(J2)  // B1
-            - R1 * trans(J1); // B2
+          d.tmpJac.noalias() = (- R1.transpose() * R1.colwise().cross(d.cross1) ) * omega(J1); // A
+          d.tmpJac.noalias() += ( R1.transpose() * R2 ) * trans(J2);  // B1
+          d.tmpJac.noalias() -= trans(J1); // B2
           if (!d.t2isZero)
-            d.tmpJac.noalias() += R2.colwise().cross(d.cross2) * omega(J2); // B3
-          if (d.R1isID) assign_if<false>(!d.fullPos, d, J,                       R1.transpose()  * d.tmpJac, 0);
-          else          assign_if<false>(!d.fullPos, d, J, (R1inJ1.transpose() * R1.transpose()) * d.tmpJac, 0);
+            d.tmpJac.noalias() += R1.transpose() * R2.colwise().cross(d.cross2) * omega(J2); // B3
+          if (d.R1isID) assign_if<false>(!d.fullPos, d, J,                      d.tmpJac, 0);
+          else          assign_if<false>(!d.fullPos, d, J, R1inJ1.transpose() * d.tmpJac, 0);
         }
       };
 
@@ -263,11 +261,11 @@ namespace hpp {
           const Transform3f& J1 = d.joint1->currentTransformation ();
           d.value.noalias() = J2.act (d.F2inJ2.translation())
                               - J1.translation();
-          d.value.applyOnTheLeft(J1.rotation().derived().transpose());
+          d.value.applyOnTheLeft(J1.rotation().transpose());
 
           if (!d.t1isZero) d.value.noalias() -= d.F1inJ1.translation();
           if (!d.R1isID)
-            d.value.applyOnTheLeft(d.F1inJ1.rotation().derived().transpose());
+            d.value.applyOnTheLeft(d.F1inJ1.rotation().transpose());
         }
       };
 
