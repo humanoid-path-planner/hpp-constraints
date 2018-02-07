@@ -274,6 +274,8 @@ namespace hpp {
         f.qin = f.inArg.rview(arg);
         if (f.ginv) f.f->value(f.value, f.qin);
         f.f->jacobian(f.jacobian, f.qin);
+        if (f.equalityIndices.nbIndices() > 0)
+          f.f->outputSpace ()->Jintegrate (f.rightHandSide, f.jacobian);
         if (f.ginv) {
           f.value += f.rightHandSide;
           f.ginv->jacobian(f.jGinv, f.value.vector());
