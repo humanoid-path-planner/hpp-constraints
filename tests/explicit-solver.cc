@@ -411,6 +411,88 @@ BOOST_AUTO_TEST_CASE(jacobian2)
       smallJ * solver.inArgs().rview(xres).eval());
 }
 
+BOOST_AUTO_TEST_CASE(jacobian3)
+{
+  matrix_t J[] = {
+      (matrix_t(1,2) << 3.2, -0.3).finished()
+    , (matrix_t(1,1) << 4.1).finished()
+    , (matrix_t(1,2) << -0.3, 1.2).finished()
+  };
+  matrix_t Jg0   (1,1); Jg0    << 2;
+  matrix_t Jginv0(1,1); Jginv0 << 0.5;
+
+  /* dof     :  1,2 -> 0 \
+   * function:      f0    --> 4
+   *            1   -> 3 / f2
+   *                f1
+   */
+  AffineFunctionPtr_t f[] = {
+      AffineFunctionPtr_t (new AffineFunction (J[0]))
+    , AffineFunctionPtr_t (new AffineFunction (J[1]))
+    , AffineFunctionPtr_t (new AffineFunction (J[2]))
+  };
+  AffineFunctionPtr_t g0    (new AffineFunction (Jg0   )),
+                      ginv0 (new AffineFunction (Jginv0));
+  std::vector<segments_t> s(6);
+  s[0] = (list_of(segment_t (1, 2)));
+  s[1] = (list_of(segment_t (0, 1)));
+  s[2] = (list_of(segment_t (3, 1)));
+  s[3] = (list_of(segment_t (4, 1)));
+  s[4] = (list_of(segment_t (0, 1))(segment_t (3, 1)));
+  s[5] = (list_of(segment_t (1, 1)));
+
+  ExplicitSolver solver (5, 5);
+  solver.add(f[0], s[0], s[1], s[0], s[1]);
+  solver.add(f[2], s[4], s[3], s[4], s[3]);
+  solver.add(f[1], s[5], s[2], s[5], s[2]);
+  solver.setG(f[0], g0, ginv0);
+
+  Eigen::MatrixXi inOutDependencies (3, 5);
+  inOutDependencies << 0, 1, 1, 0, 0,
+                       0, 2, 1, 0, 0,
+                       0, 1, 0, 0, 0;
+  BOOST_CHECK_EQUAL (solver.inOutDependencies(), inOutDependencies);
+  inOutDependencies.resize (3, 2);
+  inOutDependencies << 1, 1,
+                       1, 0,
+                       2, 1;
+  BOOST_CHECK_EQUAL (solver.inOutDofDependencies(), inOutDependencies);
+
+  segments_t inArgs = s[0],
+             outArgs = list_of(s[1][0])(s[2][0])(s[3][0]);
+  BlockIndex::shrink (outArgs);
+
+  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+
+  vector_t x(5); x << 1,2,3,4,5;
+  vector_t xres = x;
+  BOOST_CHECK (solver.solve(xres));
+
+  // Check the solution
+  BOOST_CHECK_EQUAL (xres.segment<2>(1), x.segment<2>(1));
+  BOOST_CHECK_EQUAL (xres.segment<1>(0), Jginv0 * (*f[0])(xres.segment<2>(1)).vector());
+  BOOST_CHECK_EQUAL (xres.segment<1>(3), (*f[1])(xres.segment<1>(1)).vector());
+  BOOST_CHECK_EQUAL (xres.segment<1>(4), (*f[2])(RowBlockIndices(s[4]).rview(xres).eval()).vector());
+
+  // Check the jacobian
+  // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
+  matrix_t expjac (matrix_t::Zero(solver.derSize(), solver.derSize()));
+  expjac.block<5, 2>(0,1) <<
+    Jginv0(0) * J[0](0,0), Jginv0(0) * J[0](0,1),
+    1, 0,
+    0, 1,
+    J[1](0,0), 0,
+    J[2](0,0) * Jginv0(0) * J[0](0,0) + J[2](0,1) * J[1](0,0), J[2](0,0) * Jginv0(0) * J[0](0,1);
+  matrix_t jacobian (solver.derSize(), solver.derSize());
+  solver.jacobian (jacobian, xres);
+  BOOST_CHECK_EQUAL (jacobian, expjac);
+
+  matrix_t smallJ = solver.viewJacobian(jacobian);
+  BOOST_CHECK_EQUAL (solver.outArgs().rview(xres).eval(),
+      smallJ * solver.inArgs().rview(xres).eval());
+}
+
 BOOST_AUTO_TEST_CASE(locked_joints)
 {
   DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
