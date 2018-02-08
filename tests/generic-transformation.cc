@@ -14,6 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#define EIGEN_RUNTIME_NO_MALLOC
+
 #include "hpp/constraints/generic-transformation.hh"
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
@@ -77,7 +79,6 @@ BOOST_AUTO_TEST_CASE (print) {
   DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
-  Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
   BasicConfigurationShooter cs (device);
 
@@ -86,13 +87,31 @@ BOOST_AUTO_TEST_CASE (print) {
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
 
-  std::cout << *Orientation::create            ("Orientation"           , device, ee2, tf2)           << std::endl;
-  std::cout << *Position::create               ("Position"              , device, ee2, tf2, tf1)      << std::endl;
-  std::cout << *Transformation::create         ("Transformation"        , device, ee1, tf1)           << std::endl;
-  std::cout << *RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)      << std::endl;
-  std::cout << *RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2) << std::endl;
-  std::cout << *RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2) << std::endl;
+  std::vector<DifferentiableFunctionPtr_t> functions;
+  functions.push_back(Orientation::create            ("Orientation"           , device, ee2, tf2)          );
+  functions.push_back(Position::create               ("Position"              , device, ee2, tf2, tf1)     );
+  functions.push_back(Transformation::create         ("Transformation"        , device, ee1, tf1)          );
+  functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)     );
+  functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
 
+  Configuration_t q1 = *cs.shoot(),
+                  q2 = *cs.shoot();
+  for (int i = 0; i < functions.size(); ++i) {
+    DifferentiableFunctionPtr_t f = functions[i];
+
+    std::cout << *f << std::endl;
+
+    LiegroupElement v (f->outputSpace());
+    matrix_t J (f->outputDerivativeSize(), f->inputDerivativeSize());
+
+    f->value    (v, q1);
+    f->jacobian (J, q1);
+    Eigen::internal::set_is_malloc_allowed(false);
+    f->value    (v, q2);
+    f->jacobian (J, q2);
+    Eigen::internal::set_is_malloc_allowed(true);
+  }
 
   // Check active parameters
   ArrayXb ap1 = Orientation::create ("Orientation"           , device, ee1, tf1)->activeParameters();
