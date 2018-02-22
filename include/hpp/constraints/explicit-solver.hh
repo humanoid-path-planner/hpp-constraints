@@ -77,19 +77,21 @@ namespace hpp {
         /// \name Construction of the problem
         /// \{
 
-        /// Returns true if the function was added, false otherwise
+        /// Returns the index of the function if the function was added,
+        /// -1 otherwise
         /// A function can be added iif its outputs do not interfere with the
         /// output of another function.
-        bool add (const DifferentiableFunctionPtr_t& f,
+        size_type add (const DifferentiableFunctionPtr_t& f,
             const RowBlockIndices& inArg,
             const RowBlockIndices& outArg,
             const ColBlockIndices& inDer,
             const RowBlockIndices& outDer);
 
-        /// Returns true if the function was added, false otherwise
+        /// Returns the index of the function if the function was added,
+        /// -1 otherwise
         /// A function can be added iif its outputs do not interfere with the
         /// output of another function.
-        bool add (const DifferentiableFunctionPtr_t& f,
+        size_type add (const DifferentiableFunctionPtr_t& f,
             const RowBlockIndices& inArg,
             const RowBlockIndices& outArg,
             const ColBlockIndices& inDer,
@@ -245,11 +247,15 @@ namespace hpp {
 
         bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg);
 
+        void rightHandSideFromInput (const size_type& fidx, vectorIn_t rhs);
+
         /// Set the level set parameter.
         /// \param rhs the level set parameter.
         void rightHandSide (vectorIn_t rhs);
 
         bool rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs);
+
+        void rightHandSide (const size_type& fidx, vectorIn_t rhs);
 
         /// Get the level set parameter.
         /// \return the parameter.

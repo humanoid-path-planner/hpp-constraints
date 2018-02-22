@@ -127,7 +127,7 @@ namespace hpp {
       jGinv.resize (n,n);
     }
 
-    bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
+    size_type ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
         const RowBlockIndices& inArg,
         const RowBlockIndices& outArg,
         const ColBlockIndices& inDer,
@@ -137,7 +137,7 @@ namespace hpp {
           ComparisonTypes_t(f->outputDerivativeSize(), EqualToZero));
     }
 
-    bool ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
+    size_type ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
         const RowBlockIndices& inArg,
         const RowBlockIndices& outArg,
         const ColBlockIndices& inDer,
@@ -154,14 +154,14 @@ namespace hpp {
       // Sanity check: is it explicit ?
       for (std::size_t i = 0; i < inArg.indices().size(); ++i)
         if (BlockIndex::overlap(inArg.indices()[i], outIdx))
-          return false;
+          return -1;
       // Sanity check: Comparison type must be either EqualToZero or Equality
       assert (comp.size() == (std::size_t)f->outputDerivativeSize());
       for (std::size_t i = 0; i < comp.size(); ++i)
-        if (comp[i] != EqualToZero && comp[i] != Equality) return false;
+        if (comp[i] != EqualToZero && comp[i] != Equality) return -1;
       // Check that no other function already computes its outputs.
       if ((outArg.rview(argFunction_).eval().array() >= 0).any())
-        return false;
+        return -1;
       // Check that it does not insert a loop.
       std::queue<size_type> idxArg;
       append(inArg, idxArg);
@@ -170,7 +170,7 @@ namespace hpp {
         size_type iArg = idxArg.back();
         idxArg.pop();
         // iArg is an output of f -> cannot be computed before f
-        if (iArg >= outIdx.first && iArg < outIdx.first + outIdx.second) return false;
+        if (iArg >= outIdx.first && iArg < outIdx.first + outIdx.second) return -1;
         // iArg is not computed by any function
         if (argFunction_[iArg] < 0) continue;
         const Function& func = functions_[argFunction_[iArg]];
@@ -216,7 +216,7 @@ namespace hpp {
       for(std::size_t i = 0; i < functions_.size(); ++i)
         computeOrder(i, order, computed);
       assert(order == functions_.size());
-      return true;
+      return functions_.size() - 1;
     }
 
     bool ExplicitSolver::setG (const DifferentiableFunctionPtr_t& df,
@@ -335,20 +335,28 @@ namespace hpp {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
         if (f.f == df) {
-          // Computes f(q1) and g(q2)
-          f.qin = f.inArg.rview(arg);
-          df->value(f.value, f.qin);
-          f.qout = f.outArg.rview(arg);
-          if (f.g) f.g->value(f.expected, f.qout);
-          else     f.expected.vector() = f.qout;
-
-          // Set rhs = g(q2) - f(q1)
-          vector_t rhs = f.expected - f.value;
-          f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
+          rightHandSideFromInput (i, arg);
           return true;
         }
       }
       return false;
+    }
+
+    void ExplicitSolver::rightHandSideFromInput (const size_type& fidx, vectorIn_t arg)
+    {
+      assert (fidx < functions_.size());
+      Function& f = functions_[fidx];
+
+      // Computes f(q1) and g(q2)
+      f.qin = f.inArg.rview(arg);
+      f.f->value(f.value, f.qin);
+      f.qout = f.outArg.rview(arg);
+      if (f.g) f.g->value(f.expected, f.qout);
+      else     f.expected.vector() = f.qout;
+
+      // Set rhs = g(q2) - f(q1)
+      vector_t rhs = f.expected - f.value;
+      f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
     }
 
     bool ExplicitSolver::rightHandSide (const DifferentiableFunctionPtr_t& df, vectorIn_t rhs)
@@ -356,11 +364,18 @@ namespace hpp {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
         if (f.f == df) {
-          f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
+          rightHandSide (i, rhs);
           return true;
         }
       }
       return false;
+    }
+
+    void ExplicitSolver::rightHandSide (const size_type& i, vectorIn_t rhs)
+    {
+      assert (i < functions_.size());
+      Function& f = functions_[i];
+      f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
     }
 
     void ExplicitSolver::rightHandSide (vectorIn_t rhs)
