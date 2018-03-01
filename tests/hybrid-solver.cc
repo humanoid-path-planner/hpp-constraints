@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
           parent->rankInVelocity()      + parent->numberDof () - 6));
   }
 
-  BOOST_CHECK(solver.explicitSolver().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()));
+  BOOST_CHECK(solver.explicitSolver().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()) >= 0);
   solver.explicitSolverHasChanged();
   solver.print(std::cout);
 

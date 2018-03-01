@@ -257,7 +257,7 @@ void order_test (const AffineFunctionPtr_t f[N], const segment_t s[N+1],
   for (int i = 0; i < N; ++i) {
     int fo = forder[i],
     si = forder[i], so = forder[i] + 1;
-    BOOST_CHECK( solver.add(f[fo], s[si], s[so], s[si], s[so]));
+    BOOST_CHECK( solver.add(f[fo], s[si], s[so], s[si], s[so]) >= 0);
   }
   BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
   BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
@@ -524,9 +524,9 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)));
-    BOOST_CHECK(!solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)));
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer(), ComparisonTypes_t(1, Equality)));
+    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)) >= 0);
+    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)) <  0);
+    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer(), ComparisonTypes_t(1, Equality)) >= 0);
 
     expectedRow = RowBlockIndices();
     expectedRow.addRow (ee1->rankInConfiguration(), 1);
@@ -573,8 +573,8 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()));
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()) >= 0);
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
 
     BOOST_CHECK(solver.solve(qrand));
     vector_t error(solver.outDers().nbIndices());
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     solver.jacobian(jacobian, q);
@@ -602,15 +602,15 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
-    BOOST_CHECK(!solver.add(t2, t2->inArg(), t2->outArg(), t2->inDer(), t2->outDer()));
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
+    BOOST_CHECK( solver.add(t2, t2->inArg(), t2->outArg(), t2->inDer(), t2->outDer()) <  0);
   }
 
   {
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()));
-    BOOST_CHECK(!solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()));
-    BOOST_CHECK( solver.add(l3, l3->inArg(), l3->outArg(), l3->inDer(), l3->outDer()));
+    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
+    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()) <  0);
+    BOOST_CHECK( solver.add(l3, l3->inArg(), l3->outArg(), l3->inDer(), l3->outDer()) >= 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     solver.jacobian(jacobian, q);
@@ -635,8 +635,8 @@ BOOST_AUTO_TEST_CASE(locked_joints)
           parent->rankInVelocity()      + parent->numberDof () - 6));
 
     ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(et, et->inArg(), et->outArg(), et->inDer(), et->outDer()));
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()));
+    BOOST_CHECK( solver.add(et, et->inArg(), et->outArg(), et->inDer(), et->outDer()) >= 0);
+    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()) >= 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     solver.jacobian(jacobian, qrand);
