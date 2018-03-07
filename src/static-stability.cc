@@ -170,8 +170,9 @@ namespace hpp {
 
       if (uMinus.isZero ()) return false;
 
-      v.noalias() = getV2 <MoE_t::SVD_t> (phi_.svd()) *
-        ( getV2 <MoE_t::SVD_t> (phi_.svd()).adjoint() * uMinus );
+      size_type rank = phi_.svd().rank();
+      v.noalias() = getV2 <MoE_t::SVD_t> (phi_.svd(), rank) *
+        ( getV2 <MoE_t::SVD_t> (phi_.svd(), rank).adjoint() * uMinus );
       // v.noalias() = uMinus;
       // v.noalias() -= getV1 <MoE_t::SVD_t> (phi_.svd()) *
         // ( getV1 <MoE_t::SVD_t> (phi_.svd()).adjoint() * uMinus );
@@ -184,10 +185,11 @@ namespace hpp {
     {
       using namespace hpp::pinocchio;
 
+      size_type rank = phi_.svd().rank();
       uMinusDot.noalias() = S.asDiagonal() * uDot;
       vDot.noalias() = uMinusDot;
-      vDot.noalias() -= getV1 <MoE_t::SVD_t> (phi_.svd()) *
-        ( getV1 <MoE_t::SVD_t> (phi_.svd()).adjoint() * uMinusDot );
+      vDot.noalias() -= getV1 <MoE_t::SVD_t> (phi_.svd(), rank) *
+        ( getV1 <MoE_t::SVD_t> (phi_.svd(), rank).adjoint() * uMinusDot );
 
       // TODO: preallocate this matrix
       Eigen::Matrix <value_type, 6, Eigen::Dynamic>

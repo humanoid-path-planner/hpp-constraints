@@ -130,8 +130,9 @@ namespace hpp {
 
       dqSmall_ = reduction_.transpose().rview(darg);
 
-      vector_t tmp (getV1(svd_).adjoint() * dqSmall_);
-      dqSmall_.noalias() -= getV1(svd_) * tmp;
+      size_type rank = svd_.rank();
+      vector_t tmp (getV1(svd_, rank).adjoint() * dqSmall_);
+      dqSmall_.noalias() -= getV1(svd_, rank) * tmp;
 
       reduction_.transpose().lview(result) = dqSmall_;
     }
