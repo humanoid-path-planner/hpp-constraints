@@ -16,11 +16,13 @@
 
 #include <hpp/constraints/configuration-constraint.hh>
 
+#include <pinocchio/multibody/liegroup/liegroup.hpp>
+
 #include <hpp/util/debug.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
-#include <hpp/pinocchio/liegroup-space.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 namespace hpp {
   namespace constraints {
@@ -39,8 +41,11 @@ namespace hpp {
         ConfigurationIn_t goal, std::vector <bool> mask) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::R1 (), name),
-      robot_ (robot), goal_ (goal), diff_ (robot->numberDof())
+      robot_ (robot), diff_ (robot->numberDof())
     {
+      LiegroupSpacePtr_t s (LiegroupSpace::createCopy(robot->configSpace()));
+      s->mergeVectorSpaces();
+      goal_ = LiegroupElement (goal, s);
       mask_ = EigenBoolVector_t (robot->numberDof ());
       for (std::size_t i = 0; i < mask.size (); ++i) {
         mask_[i] = mask[i];
@@ -52,15 +57,25 @@ namespace hpp {
                                                 ConfigurationIn_t argument)
       const throw ()
     {
+      using namespace hpp::pinocchio;
       // TODO: Add ability to put weights on DOF
-      hpp::pinocchio::difference (robot_, argument, goal_, diff_);
+      LiegroupConstElementRef a (argument, goal_.space());
+      diff_ = goal_ - a;
       result.vector () [0] = 0.5 * mask_.select (diff_, 0).squaredNorm ();
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
         ConfigurationIn_t argument) const throw ()
     {
-      hpp::pinocchio::difference (robot_, argument, goal_, diff_);
+      using namespace hpp::pinocchio;
+      matrix_t unused;
+
+      LiegroupConstElementRef a (argument, goal_.space());
+      diff_ = goal_ - a;
+
+      // Apply jacobian of the difference on the right.
+      goal_.space()->Jdifference<false> (argument, goal_.vector(), diff_.transpose(), unused);
+
       jacobian.leftCols (robot_->numberDof ()) =
         mask_.select (diff_, 0).transpose ();
     }

@@ -60,7 +60,7 @@ namespace hpp {
       private:
         typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
         DevicePtr_t robot_;
-        Configuration_t goal_;
+        LiegroupElement goal_;
         EigenBoolVector_t mask_;
         mutable vector_t diff_;
     }; // class ComBetweenFeet
