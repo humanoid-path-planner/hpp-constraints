@@ -101,7 +101,7 @@ DevicePtr_t createRobot ()
   return robot;
 }
 
-ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointPtr_t j)
+ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointPtr_t j, std::string name)
 {
   /** Floor = penta + square
    *     +
@@ -128,7 +128,7 @@ ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointP
   std::vector <vector3_t> point(1, vector3_t (0,0,0));
   ConvexShape pointCs (point, j);
 
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
   ConvexShapeContact& f = *fptr;
   f.addObject (pointCs);
   f.addFloor (sCs);
@@ -136,7 +136,7 @@ ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointP
   return fptr;
 }
 
-ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr_t j)
+ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr_t j, std::string name)
 {
   /** Floor = penta + square
    *     +
@@ -168,7 +168,7 @@ ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr
   trapeze[2] = vector3_t ( 0.2,-0.1,0); trapeze[3] = vector3_t (-0.1,-0.1,0);
   ConvexShape tCs (trapeze, j);
 
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
   ConvexShapeContact& f = *fptr;
   f.addObject (tCs);
   f.addFloor (sCs);
@@ -176,7 +176,7 @@ ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr
   return fptr;
 }
 
-ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, JointPtr_t j)
+ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, JointPtr_t j, std::string name)
 {
   vector3_t x (1,0,0), y (0,1,0), z (0,0,1);
   vector3_t p[12];
@@ -188,7 +188,7 @@ ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, Joint
                          f2 = list_of (p[3])(p[4])(p[5]),
                          th = list_of (p[6])(p[7])(p[8]),
                          o  = list_of (p[9])(p[10])(p[11]);
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (d);
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
   ConvexShapeContact& f = *fptr;
   f.addObject (ConvexShape (o, j));
   f.addFloor (ConvexShape (th, JointPtr_t()));
@@ -250,110 +250,44 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   Transform3f tf2 (ee2->currentTransformation ());
 
   /// Create the constraints
-  typedef DifferentiableFunction DF;
-  typedef std::pair <std::string, DifferentiableFunctionPtr_t> DFptr;
-  typedef std::list <DFptr> DFs;
+  typedef std::list <DifferentiableFunctionPtr_t> DFs;
   std::vector<bool> mask011 (3, true); mask011[0] = false;
   DFs functions;
-  functions.push_back ( DFptr (
-        "ConfigurationConstraint",
-        ConfigurationConstraint::create ("testConfigConstraint",
-          device, goal)
-      ));
-  // functions.push_back ( DFptr (
-        // "deprecated Orientation",
-        // deprecated::Orientation::create (device, ee2, tf2.rotation())
-      // ));
-  // functions.push_back ( DFptr (
-        // "deprecated Orientation with mask (0,1,1)",
-        // deprecated::Orientation::create (device, ee1, tf1.rotation(), mask011)
-      // ));
-  functions.push_back ( DFptr (
-        "Orientation",
-        Orientation::create ("Orientation", device, ee2, toSE3(tf2.rotation()))
-      ));
-  functions.push_back ( DFptr (
-        "Orientation with mask (0,1,1)",
-        Orientation::create ("Orientation", device, ee1, toSE3(tf1.rotation()), mask011)
-      ));
-  // functions.push_back ( DFptr (
-        // "deprecated Position",
-        // deprecated::Position::create (device, ee1, tf1.translation(),
-          // tf2.translation(), tf2.rotation())
-      // ));
-  functions.push_back ( DFptr (
-        "Position",
-        Position::create ("Position", device, ee1, toSE3(tf1.translation()), tf2)
-      ));
-  // functions.push_back ( DFptr (
-        // "deprecated Position with mask (0,1,1)",
-        // deprecated::Position::create (device, ee1, tf1.translation(),
-          // tf2.translation(), tf2.rotation (), mask011)
-      // ));
-  functions.push_back ( DFptr (
-        "Position with mask (0,1,1)",
-        Position::create ("Position (0,1,1)", device, ee1, toSE3(tf1.translation()),
-          tf2, mask011)
-      ));
+  functions.push_back (
+      ConfigurationConstraint::create ("Configuration", device, goal));
   // /*
-  functions.push_back ( DFptr (
-        "RelativeOrientation",
-        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2)
-      ));
-  functions.push_back ( DFptr (
-        "RelativeOrientation with mask (0,1,1)",
-        RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2, mask011)
-      ));
-  // functions.push_back ( DFptr (
-        // "deprecated::RelativeOrientation",
-        // deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.rotation())
-      // ));
-  // functions.push_back ( DFptr (
-        // "deprecated::RelativeOrientation with mask (0,1,1)",
-        // deprecated::RelativeOrientation::create (device, ee1, ee2, tf1.rotation(), mask011)
-      // ));
-  functions.push_back ( DFptr (
-        "RelativePosition",
-        RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2)
-      ));
-  functions.push_back ( DFptr (
-        "RelativePosition with mask (0,1,1)",
-        RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2, mask011)
-      ));
-  // functions.push_back ( DFptr (
-        // "deprecated::RelativePosition",
-        // deprecated::RelativePosition::create (device, ee1, ee2, tf1.translation(),
-          // tf2.translation())
-      // ));
-  // functions.push_back ( DFptr (
-        // "deprecated::RelativePosition with mask (0,1,1)",
-        // deprecated::RelativePosition::create (device, ee1, ee2, tf1.translation(),
-          // tf2.translation(), mask011)
-      // ));
+  functions.push_back (
+      Orientation::create ("Orientation", device, ee2, toSE3(tf2.rotation())));
+  functions.push_back (
+      Orientation::create ("Orientation with mask (0,1,1)", device, ee1, toSE3(tf1.rotation()), mask011));
+  functions.push_back (
+      Position::create ("Position", device, ee1, toSE3(tf1.translation()), tf2));
+  functions.push_back (
+      Position::create ("Position with mask (0,1,1)", device, ee1, toSE3(tf1.translation()), tf2, mask011));
+  functions.push_back (
+      RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2));
+  functions.push_back (
+      RelativeOrientation::create ("RelativeOrientation with mask (0,1,1)", device, ee1, ee2, tf1, tf2, mask011));
+  functions.push_back (
+      RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2));
+  functions.push_back (
+      RelativePosition::create ("RelativePosition with mask (0,1,1)", device, ee1, ee2, tf1, tf2, mask011));
 
   device->currentConfiguration (*cs.shoot ());
   device->computeForwardKinematics ();
   tf1 = ee1->currentTransformation ();
   tf2 = ee2->currentTransformation ();
 
-  functions.push_back (DFptr ("Transformation",
-			      Transformation::create
-			      ("", device, ee1, tf1)));
-  functions.push_back (DFptr ("RelativeTransformation",
-			      RelativeTransformation::create
-			      ("", device, ee1, ee2, tf1, tf2)));
-  functions.push_back ( DFptr (
-        "ConvexShapeContact triangle",
-        createConvexShapeContact_triangles (device, ee1)
-      ));
-  functions.push_back ( DFptr (
-        "ConvexShapeContact punctual",
-        createConvexShapeContact_punctual (device, ee1)
-      ));
-  functions.push_back ( DFptr (
-        "ConvexShapeContact convex",
-        createConvexShapeContact_convex (device, ee1)
-      ));
+  functions.push_back (
+      Transformation::create ("Transformation", device, ee1, tf1));
+  functions.push_back (
+      RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back (
+      createConvexShapeContact_triangles (device, ee1, "ConvexShapeContact triangle"));
+  functions.push_back (
+      createConvexShapeContact_punctual (device, ee1, "ConvexShapeContact punctual"));
+  functions.push_back (
+      createConvexShapeContact_convex (device, ee1, "ConvexShapeContact convex"));
 
   // DifferentiableFunctionStack
   DifferentiableFunctionStackPtr_t stack =
@@ -362,37 +296,21 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   stack->add (RelativeOrientation::create (
         "RelativeOrientation", device, ee1, ee2, MId,
         list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
-  // Cannot be tested with intervals as we later iterate on the robot DOFs
-  // DifferentiableFunctionStackPtr_t stack2 =
-    // DifferentiableFunctionStack::create("Stack with intervals");
-  // stack2->add (Position::create ("Position", device, ee1, vector3_t (0,0,0),
-        // vector3_t (0,0,0)));
-  // stack2->add (RelativeOrientation::create (
-        // "RelativeOrientation", device, ee1, ee2, identity (),
-        // list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
-  // stack2->add (SizeInterval_t(0,4));
-  // functions.push_back (DFptr (stack2->name (), stack2));
+  functions.push_back (stack);
   //*/
 
   std::vector<ConfigurationPtr_t> cfgs (NUMBER_JACOBIAN_CALCULUS);
   for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) cfgs[i] = cs.shoot();
   Configuration_t q1(device->currentConfiguration());
-  vector_t value1, value2, dvalue, error;
-  vector_t errorNorm (MAX_NB_ERROR);
-  vector_t dq (device->numberDof ()); dq.setZero ();
   matrix_t jacobian, fdCentral, fdForward, errorJacobian;
   for (DFs::iterator fit = functions.begin(); fit != functions.end(); ++fit) {
-    DF& f = *(fit->second);
-    value1 = vector_t (f.outputSize ());
-    value2 = vector_t (f.outputSize ());
-    errorNorm.setZero ();
+    DifferentiableFunction& f = **fit;
     jacobian.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
     fdForward.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
     fdCentral.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
 
     for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) {
       q1 = *cfgs[i];
-      f (value1, q1);
       jacobian.setZero ();
       f.jacobian (jacobian, q1);
 
@@ -408,31 +326,6 @@ BOOST_AUTO_TEST_CASE (jacobian) {
       // Central: check the error
       errorJacobian = jacobian - fdCentral;
       checkJacobianDiffIsZero<false> (f.name(), errorJacobian, sqrt(eps));
-
-      // We check the jacobian for each DOF.
-      /*
-      for (int idof = 0; idof < device->numberDof (); idof++){
-        dvalue = jacobian.col (idof);
-        // dq = (0,...,0,1,0,...,0), the 1 being at the rank idof.
-        // Check that ( e(q1 + eps*dq) - e(q1) / eps) -> jacobian * dq
-        size_t i_error;
-        dq[idof] = 10 * DQ_MAX;
-        for (i_error = 0; i_error < MAX_NB_ERROR; i_error++) {
-          //dq[idof] = DQ_MAX * std::pow (10, - i_error);
-          dq[idof] = dq[idof] / 10;
-          hpp::pinocchio::integrate (device, *q1, dq, *q2);
-          f (value2, *q2);
-          error = value2 - value1 - dq[idof] * dvalue;
-          errorNorm [i_error] = error.norm ();
-          if (errorNorm [i_error] < 0.5 * dq[idof] * dq[idof] * HESSIAN_MAXIMUM_COEF)
-            break;
-        }
-        BOOST_CHECK_MESSAGE (i_error != MAX_NB_ERROR,
-              "Constraint " << fit->first << ": error norm " << errorNorm [MAX_NB_ERROR - 1] / dq[idof]
-              << ", dof " << idof << ", config " << i << ".");
-        dq(idof) = 0;
-      }
-      //*/
     }
   }
 }
@@ -454,7 +347,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   DFptr relpos = RelativePosition::create ("RelPos", device, ee1, ee2, MId, MId);
 
   ConfigurationPtr_t q1, q2 = cs.shoot ();
-  vector_t value = vector_t (pos->outputSize ());
   matrix_t jacobian = matrix_t (pos->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
       q1 = cs.shoot ();
@@ -465,17 +357,17 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
       relpos_sb_ptr->invalidate ();
 
       /// Position
-      (*pos) (value, *q1);
+      LiegroupElement value = (*pos) (*q1);
       pij->computeValue ();
-      BOOST_CHECK (pij->value ().isApprox (value));
+      BOOST_CHECK (pij->value ().isApprox (value.vector()));
       jacobian.setZero ();
       pos->jacobian (jacobian, *q1);
       pij->computeJacobian ();
       BOOST_CHECK (pij->jacobian ().isApprox (jacobian));
       // Relative position
-      (*relpos) (value, *q1);
+      value = (*relpos) (*q1);
       relpos_sb_ptr->computeValue ();
-      BOOST_CHECK (relpos_sb_ptr->value ().isApprox (value));
+      BOOST_CHECK (relpos_sb_ptr->value ().isApprox (value.vector()));
       jacobian.setZero ();
       relpos->jacobian (jacobian, *q1);
       relpos_sb_ptr->computeJacobian ();
@@ -497,8 +389,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   DFptr sf = SymbolicFunction<JointFrame>::create ("SymbolicFunctionTest", device, jf);
 
   ConfigurationPtr_t q1, q2 = cs.shoot ();
-  vector_t value1 = vector_t (trans->outputSize ());
-  vector_t value2 = vector_t (trans->outputSize ());
   matrix_t jacobian1 = matrix_t (trans->outputSize (), device->numberDof ());
   matrix_t jacobian2 = matrix_t (trans->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
@@ -506,9 +396,9 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
       device->currentConfiguration (*q1);
       device->computeForwardKinematics ();
 
-      (*trans) (value1, *q1);
-      (*sf) (value2, *q1);
-      BOOST_CHECK (value1.isApprox ( value2));
+      LiegroupElement value1 = (*trans) (*q1);
+      LiegroupElement value2 = (*sf) (*q1);
+      BOOST_CHECK (value1.vector().isApprox ( value2.vector()));
       jacobian1.setZero ();
       jacobian2.setZero ();
       trans->jacobian (jacobian1, *q1);

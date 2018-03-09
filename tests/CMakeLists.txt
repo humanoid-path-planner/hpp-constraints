@@ -49,6 +49,7 @@ ADD_TESTCASE (logarithm                 FALSE TRUE )
 ADD_TESTCASE (matrix-view               FALSE FALSE )
 ADD_TESTCASE (svd                       FALSE TRUE )
 
+ADD_TESTCASE (test-jacobians            FALSE FALSE)
 ADD_TESTCASE (generic-transformation    FALSE FALSE)
 ADD_TESTCASE (convex-shape              FALSE FALSE)
 ADD_TESTCASE (symbolic-calculus         FALSE FALSE)
