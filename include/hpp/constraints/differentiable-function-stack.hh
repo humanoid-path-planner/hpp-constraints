@@ -74,7 +74,7 @@ namespace hpp {
           }
           functions_.push_back(func);
           result_.push_back (LiegroupElement (func->outputSpace ()));
-          outputSpace_ = outputSpace_ * func->outputSpace ();
+          *outputSpace_ *= func->outputSpace ();
         }
 
         /// The output columns selection of other is not taken into account.

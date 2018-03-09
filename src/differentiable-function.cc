@@ -16,6 +16,7 @@
 
 #include <hpp/constraints/differentiable-function.hh>
 
+#include <pinocchio/multibody/liegroup/liegroup.hpp>
 #include <pinocchio/algorithm/finite-differences.hpp>
 
 #include <hpp/pinocchio/joint.hh>
@@ -26,6 +27,7 @@
 namespace hpp {
   namespace constraints {
     namespace {
+      using hpp::pinocchio::DefaultLieGroupMap;
       typedef std::vector<se3::JointIndex> JointIndexVector;
 
       struct FiniteDiffRobotOp
@@ -54,17 +56,16 @@ namespace hpp {
         template <bool forward>
         inline void integrate (const vector_t& x, const vector_t& h, const size_type& /*i*/, vector_t& result) const
         {
-          using hpp::pinocchio::LieGroupTpl;
           // Use only the joint corresponding to velocity index i
           if (forward)
-            hpp::pinocchio::integrate<false, LieGroupTpl> (robot, x,  h, result);
+            hpp::pinocchio::integrate<false, DefaultLieGroupMap> (robot, x,  h, result);
           else
-            hpp::pinocchio::integrate<false, LieGroupTpl> (robot, x, -h, result);
+            hpp::pinocchio::integrate<false, DefaultLieGroupMap> (robot, x, -h, result);
         }
 
         inline value_type difference (const vector_t& x0, const vector_t& x1, const size_type& i) const
         {
-          hpp::pinocchio::difference (robot, x0, x1, v);
+          hpp::pinocchio::difference <DefaultLieGroupMap> (robot, x0, x1, v);
           return v[i];
         }
 
