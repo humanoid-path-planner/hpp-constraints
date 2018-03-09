@@ -427,6 +427,7 @@ namespace hpp {
             // TODO Eigen::JacobiSVD does a dynamic allocation here.
             dqSmall_ = d.svd.solve (err);
           } else {
+            // TODO check whether d.reducedJ * projector_ is not the null matrix.
             d.svd.compute (d.reducedJ * projector_);
             HPP_DEBUG_SVDCHECK (d.svd);
             // TODO Eigen::JacobiSVD does a dynamic allocation here.

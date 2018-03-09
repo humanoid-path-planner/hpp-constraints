@@ -115,6 +115,7 @@ namespace hpp {
       size_type errorDecreased = 3, iter = 0;
       value_type previousSquaredNorm =
 	std::numeric_limits<value_type>::infinity();
+      static const value_type dqMinSquaredNorm = Eigen::NumTraits<value_type>::dummy_precision();
 
       // Fill value and Jacobian
       computeValue<true> (arg);
@@ -123,11 +124,18 @@ namespace hpp {
       if (squaredNorm_ > squaredErrorThreshold_
           && reducedDimension_ == 0) return INFEASIBLE;
 
+      Status status;
       while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
 	     iter < maxIterations_) {
 
         computeSaturation(arg);
         computeDescentDirection ();
+        if (dq_.squaredNorm () < dqMinSquaredNorm) {
+          // TODO INFEASIBLE means that we have reached a local minima.
+          // The problem may still be feasible from a different starting point.
+          status = INFEASIBLE;
+          break;
+        }
         lineSearch (*this, arg, dq_);
 
 	computeValue<true> (arg);
@@ -135,7 +143,10 @@ namespace hpp {
 
 	hppDout (info, "squareNorm = " << squaredNorm_);
 	--errorDecreased;
-	if (squaredNorm_ < previousSquaredNorm) errorDecreased = 3;
+	if (squaredNorm_ < previousSquaredNorm)
+          errorDecreased = 3;
+        else
+          status = ERROR_INCREASED;
 	previousSquaredNorm = squaredNorm_;
 	++iter;
 
@@ -144,7 +155,7 @@ namespace hpp {
       hppDout (info, "number of iterations: " << iter);
       if (squaredNorm_ > squaredErrorThreshold_) {
 	hppDout (info, "Projection failed.");
-        return (!errorDecreased) ? ERROR_INCREASED : MAX_ITERATION_REACHED;
+        return (iter >= maxIterations_) ? MAX_ITERATION_REACHED : status;
       }
       hppDout (info, "After projection: " << arg.transpose ());
       assert (!arg.hasNaN());
