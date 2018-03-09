@@ -28,6 +28,7 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/constraints/generic-transformation.hh>
+#include <hpp/constraints/affine-function.hh>
 
 #include <../tests/util.hh>
 
@@ -38,28 +39,18 @@ const value_type test_precision = 1e-6;
 
 using Eigen::VectorXi;
 
-template <typename LineSearch = lineSearch::Constant>
-struct test_quadratic
+template <typename LineSearch>
+struct test_base
 {
   HierarchicalIterativeSolver solver;
   LineSearch ls;
 
-  test_quadratic (const matrix_t& A) : solver(2, 2)
+  test_base (const size_type& d) : solver(d, d)
   {
-    // Find (x, y)
-    // s.t. a * x^2 + b * y^2 - 1 = 0
-    //      0 <= x <= 1
-    //      0 <= y <= 1
-    BOOST_TEST_MESSAGE(A);
-    Quadratic::Ptr_t f (new Quadratic (A, -1));
-
     solver.maxIterations(20);
     solver.errorThreshold(test_precision);
     solver.integration(simpleIntegration<0,1>);
     solver.saturation(simpleSaturation<0,1>);
-
-    solver.add(f, 0);
-    BOOST_CHECK(solver.numberStacks() == 1);
   }
 
   vector_t success (value_type x0, value_type x1)
@@ -74,6 +65,25 @@ struct test_quadratic
     vector_t x (VECTOR2(x0,x1));
     BOOST_CHECK_PREDICATE (std::not_equal_to<HierarchicalIterativeSolver::Status>(), (solver.solve(x, ls))(HierarchicalIterativeSolver::SUCCESS));
     return x;
+  }
+};
+
+template <typename LineSearch = lineSearch::Constant>
+struct test_quadratic : test_base <LineSearch>
+{
+  test_quadratic (const matrix_t& A)
+    : test_base<LineSearch>(A.cols())
+  {
+    // Find (x, y)
+    // s.t. a * x^2 + b * y^2 - 1 = 0
+    //      0 <= x <= 1
+    //      0 <= y <= 1
+    BOOST_REQUIRE_EQUAL (A.rows(), A.cols());
+    BOOST_TEST_MESSAGE(A);
+    Quadratic::Ptr_t f (new Quadratic (A, -1));
+
+    this->solver.add(f, 0);
+    BOOST_CHECK(this->solver.numberStacks() == 1);
   }
 };
 
@@ -157,5 +167,56 @@ BOOST_AUTO_TEST_CASE(one_layer)
   BOOST_CHECK_EQUAL(solver.solve<lineSearch::ErrorNormBased>(qrand), HierarchicalIterativeSolver::SUCCESS);
   qrand = tmp;
   BOOST_CHECK_EQUAL(solver.solve<lineSearch::FixedSequence >(qrand), HierarchicalIterativeSolver::SUCCESS);
+}
+
+template <typename LineSearch = lineSearch::Constant>
+struct test_affine_opt : test_base <LineSearch>
+{
+  test_affine_opt (const matrix_t& A, const matrix_t& B)
+    : test_base<LineSearch>(A.cols())
+  {
+    // min  X^T * B * X
+    // s.t. A * X - 1 = 0
+    //      0 <= X <= 1
+    BOOST_REQUIRE_EQUAL (A.cols(), B.cols());
+    BOOST_REQUIRE_EQUAL (A.rows(), 1);
+    BOOST_TEST_MESSAGE(A);
+    BOOST_TEST_MESSAGE(B);
+    AffineFunctionPtr_t f (new AffineFunction (A, vector_t::Constant(1,-1)));
+    Quadratic::Ptr_t cost (new Quadratic (B));
+
+    this->solver.add(f   , 0);
+    this->solver.add(cost, 1);
+    // this->solver.add(cost, 0);
+    this->solver.lastIsOptional(true);
+    BOOST_CHECK(this->solver.numberStacks() == 2);
+  }
+
+  vector_t optimize (value_type x0, value_type x1)
+  {
+    vector_t x (VECTOR2(x0,x1));
+    this->solver.lastIsOptional(false);
+    this->solver.solve(x, this->ls);
+    this->solver.lastIsOptional(true);
+    return x;
+  }
+};
+
+BOOST_AUTO_TEST_CASE(affine_opt)
+{
+  matrix_t A(1,2);
+  A << 1, 1;
+  matrix_t B(2,2);
+  B << 1, 0, 0, 1;
+
+  test_affine_opt<> test (A, B);
+  test.success(0  , 0  );
+  test.success(0.1, 0  );
+  test.success(0  , 0.1);
+  test.success(0.5, 0.5);
+
+  EIGEN_VECTOR_IS_APPROX (test.optimize(0.1,0), VECTOR2(0.5, 0.5));
+  EIGEN_VECTOR_IS_APPROX (test.optimize(0,0.1), VECTOR2(0.5, 0.5));
+  EIGEN_VECTOR_IS_APPROX (test.optimize(0.5, 0.5), VECTOR2(0.5, 0.5));
 }
 
