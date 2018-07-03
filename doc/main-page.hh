@@ -4,7 +4,7 @@ namespace hpp {
     ///
     /// This package provides a representation of the concept of mathematical
     /// functions from a manifold, for instace the configuration space of a robot
-    /// (hpp::model::Device) to a finite dimensional vector space.<BR>
+    /// (hpp::pinocchio::Device) to a finite dimensional vector space.<BR>
     ///
     /// Some robots can be subject to constraints.
     /// \li closed kinematic chains,
