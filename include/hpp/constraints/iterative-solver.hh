@@ -33,7 +33,7 @@ namespace hpp {
     /// \addtogroup solvers
     /// \{
     namespace lineSearch {
-      /// No line search. Use \f$\alpha \gets 1\f$
+      /// No line search. Use \f$\alpha_i = 1\f$
       struct Constant {
         template <typename SolverType>
         bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
@@ -54,8 +54,9 @@ namespace hpp {
         mutable vector_t arg_darg, df, darg;
       };
 
-      /// The step size is computed using the recursion:
-      /// \f$ \alpha \gets \alpha - K \times (\alpha_{max} - \alpha) \f$
+      /// The step size is computed using the recursion
+      /// \f$ \alpha_{i+1} = \alpha - K \times (\alpha_{max} - \alpha_i) \f$
+      /// where \f$K\f$ and \f$\alpha_{max}\f$ are some constant values.
       struct FixedSequence {
         FixedSequence();
 
@@ -67,7 +68,10 @@ namespace hpp {
       };
 
       /// The step size is computed using the formula
-      /// \f$ \alpha \gets C - K \times \text{tanh}(a r + b) \f$
+      /// \f$ \alpha_{i} = C - K \times \text{tanh}(a \frac{\|f(\mathbf{q}_i)\|}{\epsilon^2} + b) \f$, where
+      /// \li \f$\epsilon\f$ is the error threshold:
+      /// if \f$\|f(\mathbf{q}_i)\|<\epsilon\f$, \f$\mathbf{q}_i\f$ is
+      /// considered to satisfy the constraint.
       struct ErrorNormBased {
         ErrorNormBased(value_type alphaMin, value_type _a, value_type _b);
         ErrorNormBased(value_type alphaMin = 0.2);
@@ -79,6 +83,60 @@ namespace hpp {
       };
     }
 
+    /// Solve a system of non-linear equations on a robot configuration
+    ///
+    /// The non-linear system of equations is built by adding equations with
+    /// method HierarchicalIterativeSolver::add.
+    ///
+    /// Note that a hierarchy between the equations can be
+    /// provided. In this case, the solver will try to solve the
+    /// highest priority equations first, and then to solve the lower priority
+    /// equations.
+    ///
+    /// The algorithm used is a Newton-Raphson like algorithm that works as
+    /// follows: let \f$f (\mathbf{q}) = 0\f$ be the system of equations where
+    /// \f$f\f$ is a \f$C^1\f$ mapping from the robot configuration space to
+    /// a Lie group space \f$\mathcal{L}\f$.
+    ///
+    /// Starting from initial guess \f$\mathbf{q}_0\f$, the method
+    /// HierarchicalIterativeSolver::solve builds a sequence of configurations
+    /// \f$\mathbf{q}_i\f$ as follows:
+    /// \f{eqnarray*}
+    /// \mathbf{q}_{i+1} = \mathbf{q}_i -
+    ///    \alpha_i \frac{\partial f}{\partial \mathbf{q}}(\mathbf{q}_i)^{+}
+    ///    f (\mathbf{q}_i)
+    /// \f}
+    /// where
+    /// \li \f$\frac{\partial f}{\partial \mathbf{q}}(\mathbf{q}_i)^{+}\f$ is
+    ///     the Moore-Penrose pseudo-inverse of the system Jacobian,
+    /// \li \f$\alpha_i\f$ is a sequence of real numbers depending on the
+    ///     line search strategy. Possible line-search strategies are
+    ///     lineSearch::Constant, lineSearch::Backtracking,
+    ///     lineSearch::FixedSequence, lineSearch::ErrorNormBased.
+    /// until
+    /// \li the residual \f$\|f(\mathbf{q})\|\f$ is below an error threshold, or
+    /// \li the maximal number of iterations has been reached.
+    ///
+    /// The error threshold can be accessed by methods
+    /// HierarchicalIterativeSolver::errorThreshold. The maximal number of
+    /// iterations can be accessed by methods
+    /// HierarchicalIterativeSolver::maxIterations.
+    ///
+    /// \note Lie group
+    ///
+    /// The unknowns \f$\mathbf{q}\f$ may take values in a more general set
+    /// than the configuration space of a robot. This set should be a Cartesian
+    /// product of Lie groups. In this case, the user can provide a method that
+    /// computes the exponential map of a tangent vector.
+    /// \sa HierarchicalIterativeSolver::Integration_t and
+    /// HierarchicalIterativeSolver::integration.
+    ///
+    /// \note Saturation
+    ///
+    /// To prevent configuration variables to get out of joint limits during
+    /// Newton Raphson iterations, the user may provide a method of type
+    /// HierarchicalIterativeSolver::Saturation_t using setter and getter
+    /// HierarchicalIterativeSolver::saturation.
     class HPP_CONSTRAINTS_DLLAPI HierarchicalIterativeSolver
     {
       public:
@@ -95,12 +153,14 @@ namespace hpp {
         /// It should be robust to cases where from and result points to the
         /// same vector in memory (aliasing)
         typedef boost::function<void (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)> Integration_t;
-        /// This function checks what DoF are saturated.
-        /// For each DoF, saturation is set to
-        /// \li -1 if the lower bound is reached.
-        /// \li  1 if the upper bound is reached.
-        /// \li  0 otherwise
-        /// saturates  velocity during unit time, from argument.
+        /// This function checks which degrees of freedom are saturated.
+        ///
+        /// \param result a configuration
+        ///
+        /// For each degree of freedom, saturation is set to
+        /// \li -1 if the lower bound is reached,
+        /// \li  1 if the upper bound is reached,
+        /// \li  0 otherwise.
         typedef boost::function<bool (vectorIn_t result, Eigen::VectorXi& saturation)> Saturation_t;
 
         HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize);
@@ -148,9 +208,31 @@ namespace hpp {
         /// \name Problem resolution
         /// \{
 
+        /// Solve the system of non linear equations
+        ///
+        /// \param arg initial guess,
+        /// \param ls line search method used.
+        ///
+        /// Use Newton Rhapson like iterative method until the error is below
+        /// the threshold, or until the maximal number of iterations has been
+        /// reached.
+        ///
+        /// \note Explicit constraints are expressed in their implicit
+        ///       form.
         template <typename LineSearchType>
         Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
 
+        /// Solve the system of non linear equations
+        ///
+        /// \param arg initial guess,
+        ///
+        /// Use Newton Rhapson like iterative method until the error is below
+        /// the threshold, or until the maximal number of iterations has been
+        /// reached. Use the default line search method (fixed sequence of
+        /// \f$\alpha_i\f$).
+        ///
+        /// \note Explicit constraints are expressed in their implicit
+        ///       form.
         inline Status solve (vectorOut_t arg) const
         {
           return solve (arg, DefaultLineSearch());
