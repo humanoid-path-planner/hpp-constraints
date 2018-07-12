@@ -35,7 +35,7 @@ namespace hpp {
       template bool ErrorNormBased::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
     }
 
-    void HybridSolver::explicitSolverHasChanged()
+    void HybridSolver::explicitConstraintSetHasChanged()
     {
       reduction(explicit_.freeDers());
     }

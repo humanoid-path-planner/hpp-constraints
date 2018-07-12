@@ -14,11 +14,11 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE EXPLICIT_SOLVER
+#define BOOST_TEST_MODULE EXPLICIT_CONSTRAINT_SET
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
 
-#include <hpp/constraints/explicit-solver.hh>
+#include <hpp/constraints/explicit-constraint-set.hh>
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
@@ -69,28 +69,28 @@ class LockedJoint : public AffineFunction
         idx_ (idx), length_ (length), value_ (value)
     {}
 
-    ExplicitSolver::RowBlockIndices inArg () const
+    ExplicitConstraintSet::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outArg () const
+    ExplicitConstraintSet::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (idx_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndices inDer () const
+    ExplicitConstraintSet::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndices ret;
+      ExplicitConstraintSet::ColBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outDer () const
+    ExplicitConstraintSet::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
@@ -106,30 +106,30 @@ class TestFunction : public AffineFunction
         idxIn_ (idxIn), idxOut_ (idxOut), length_ (length)
     {}
 
-    ExplicitSolver::RowBlockIndices inArg () const
+    ExplicitConstraintSet::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow(idxIn_, length_);
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outArg () const
+    ExplicitConstraintSet::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (idxOut_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndices inDer () const
+    ExplicitConstraintSet::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndices ret;
+      ExplicitConstraintSet::ColBlockIndices ret;
       ret.addCol(idxIn_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outDer () const
+    ExplicitConstraintSet::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (idxOut_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
@@ -174,30 +174,30 @@ class ExplicitTransformation : public DifferentiableFunction
           Transform3f::Identity());
     }
 
-    ExplicitSolver::RowBlockIndices inArg () const
+    ExplicitConstraintSet::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow(in_, inputSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outArg () const
+    ExplicitConstraintSet::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (0, 7);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndices inDer () const
+    ExplicitConstraintSet::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndices ret;
+      ExplicitConstraintSet::ColBlockIndices ret;
       ret.addCol(inDer_, inputDerivativeSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outDer () const
+    ExplicitConstraintSet::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (0, 6);
       return ret;
     }
@@ -253,14 +253,14 @@ void order_test (const AffineFunctionPtr_t f[N], const segment_t s[N+1],
     const segments_t& inArgs,
     const segments_t& outArgs)
 {
-  ExplicitSolver solver (4, 4);
+  ExplicitConstraintSet expression (4, 4);
   for (int i = 0; i < N; ++i) {
     int fo = forder[i],
     si = forder[i], so = forder[i] + 1;
-    BOOST_CHECK( solver.add(f[fo], s[si], s[so], s[si], s[so]) >= 0);
+    BOOST_CHECK( expression.add(f[fo], s[si], s[so], s[si], s[so]) >= 0);
   }
-  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
-  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+  BOOST_CHECK_EQUAL( expression.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( expression.outArgs().rows(), outArgs);
 }
 
 BOOST_AUTO_TEST_CASE(order)
@@ -312,13 +312,13 @@ BOOST_AUTO_TEST_CASE(jacobian1)
   };
   segment_t s[] = { segment_t (0, 1), segment_t (1, 1), segment_t (2, 1), segment_t (3, 1) };
 
-  ExplicitSolver solver (4, 4);
+  ExplicitConstraintSet expression (4, 4);
   for (int i = 0; i < 3; ++i)
-    solver.add(f[i], s[i], s[i+1], s[i], s[i+1]);
+    expression.add(f[i], s[i], s[i+1], s[i], s[i+1]);
 
   vector_t x(4); x << 1,2,3,4;
   vector_t xres = x;
-  BOOST_CHECK (solver.solve(xres));
+  BOOST_CHECK (expression.solve(xres));
 
   // Check the solution
   BOOST_CHECK_EQUAL (xres[0], x[0]);
@@ -327,10 +327,10 @@ BOOST_AUTO_TEST_CASE(jacobian1)
 
   // Check the jacobian
   // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
-  matrix_t expjac (matrix_t::Zero(solver.derSize(), solver.derSize()));
+  matrix_t expjac (matrix_t::Zero(expression.derSize(), expression.derSize()));
   expjac.col(0) << 1, J[0], J[1] * J[0], J[2] * J[1] * J[0];
-  matrix_t jacobian (solver.derSize(), solver.derSize());
-  solver.jacobian (jacobian, xres);
+  matrix_t jacobian (expression.derSize(), expression.derSize());
+  expression.jacobian (jacobian, xres);
   BOOST_CHECK_EQUAL (jacobian, expjac);
 }
 
@@ -360,32 +360,32 @@ BOOST_AUTO_TEST_CASE(jacobian2)
   s[4] = (list_of(segment_t (0, 1))(segment_t (3, 1)));
   s[5] = (list_of(segment_t (1, 1)));
 
-  ExplicitSolver solver (5, 5);
-  solver.add(f[0], s[0], s[1], s[0], s[1]);
-  solver.add(f[2], s[4], s[3], s[4], s[3]);
-  solver.add(f[1], s[5], s[2], s[5], s[2]);
+  ExplicitConstraintSet expression (5, 5);
+  expression.add(f[0], s[0], s[1], s[0], s[1]);
+  expression.add(f[2], s[4], s[3], s[4], s[3]);
+  expression.add(f[1], s[5], s[2], s[5], s[2]);
 
   Eigen::MatrixXi inOutDependencies (3, 5);
   inOutDependencies << 0, 1, 1, 0, 0,
                        0, 2, 1, 0, 0,
                        0, 1, 0, 0, 0;
-  BOOST_CHECK_EQUAL (solver.inOutDependencies(), inOutDependencies);
+  BOOST_CHECK_EQUAL (expression.inOutDependencies(), inOutDependencies);
   inOutDependencies.resize (3, 2);
   inOutDependencies << 1, 1,
                        1, 0,
                        2, 1;
-  BOOST_CHECK_EQUAL (solver.inOutDofDependencies(), inOutDependencies);
+  BOOST_CHECK_EQUAL (expression.inOutDofDependencies(), inOutDependencies);
 
   segments_t inArgs = s[0],
              outArgs = list_of(s[1][0])(s[2][0])(s[3][0]);
   BlockIndex::shrink (outArgs);
 
-  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
-  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+  BOOST_CHECK_EQUAL( expression.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( expression.outArgs().rows(), outArgs);
 
   vector_t x(5); x << 1,2,3,4,5;
   vector_t xres = x;
-  BOOST_CHECK (solver.solve(xres));
+  BOOST_CHECK (expression.solve(xres));
 
   // Check the solution
   BOOST_CHECK_EQUAL (xres.segment<2>(1), x.segment<2>(1));
@@ -395,20 +395,20 @@ BOOST_AUTO_TEST_CASE(jacobian2)
 
   // Check the jacobian
   // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
-  matrix_t expjac (matrix_t::Zero(solver.derSize(), solver.derSize()));
+  matrix_t expjac (matrix_t::Zero(expression.derSize(), expression.derSize()));
   expjac.block<5, 2>(0,1) <<
     J[0](0,0), J[0](0,1),
     1, 0,
     0, 1,
     J[1](0,0), 0,
     J[2](0,0) * J[0](0,0) + J[2](0,1) * J[1](0,0), J[2](0,0) * J[0](0,1);
-  matrix_t jacobian (solver.derSize(), solver.derSize());
-  solver.jacobian (jacobian, xres);
+  matrix_t jacobian (expression.derSize(), expression.derSize());
+  expression.jacobian (jacobian, xres);
   BOOST_CHECK_EQUAL (jacobian, expjac);
 
-  matrix_t smallJ = solver.viewJacobian(jacobian);
-  BOOST_CHECK_EQUAL (solver.outArgs().rview(xres).eval(),
-      smallJ * solver.inArgs().rview(xres).eval());
+  matrix_t smallJ = expression.viewJacobian(jacobian);
+  BOOST_CHECK_EQUAL (expression.outArgs().rview(xres).eval(),
+      smallJ * expression.inArgs().rview(xres).eval());
 }
 
 BOOST_AUTO_TEST_CASE(jacobian3)
@@ -441,33 +441,33 @@ BOOST_AUTO_TEST_CASE(jacobian3)
   s[4] = (list_of(segment_t (0, 1))(segment_t (3, 1)));
   s[5] = (list_of(segment_t (1, 1)));
 
-  ExplicitSolver solver (5, 5);
-  solver.add(f[0], s[0], s[1], s[0], s[1]);
-  solver.add(f[2], s[4], s[3], s[4], s[3]);
-  solver.add(f[1], s[5], s[2], s[5], s[2]);
-  solver.setG(f[0], g0, ginv0);
+  ExplicitConstraintSet expression (5, 5);
+  expression.add(f[0], s[0], s[1], s[0], s[1]);
+  expression.add(f[2], s[4], s[3], s[4], s[3]);
+  expression.add(f[1], s[5], s[2], s[5], s[2]);
+  expression.setG(f[0], g0, ginv0);
 
   Eigen::MatrixXi inOutDependencies (3, 5);
   inOutDependencies << 0, 1, 1, 0, 0,
                        0, 2, 1, 0, 0,
                        0, 1, 0, 0, 0;
-  BOOST_CHECK_EQUAL (solver.inOutDependencies(), inOutDependencies);
+  BOOST_CHECK_EQUAL (expression.inOutDependencies(), inOutDependencies);
   inOutDependencies.resize (3, 2);
   inOutDependencies << 1, 1,
                        1, 0,
                        2, 1;
-  BOOST_CHECK_EQUAL (solver.inOutDofDependencies(), inOutDependencies);
+  BOOST_CHECK_EQUAL (expression.inOutDofDependencies(), inOutDependencies);
 
   segments_t inArgs = s[0],
              outArgs = list_of(s[1][0])(s[2][0])(s[3][0]);
   BlockIndex::shrink (outArgs);
 
-  BOOST_CHECK_EQUAL( solver.inArgs().rows(), inArgs);
-  BOOST_CHECK_EQUAL( solver.outArgs().rows(), outArgs);
+  BOOST_CHECK_EQUAL( expression.inArgs().rows(), inArgs);
+  BOOST_CHECK_EQUAL( expression.outArgs().rows(), outArgs);
 
   vector_t x(5); x << 1,2,3,4,5;
   vector_t xres = x;
-  BOOST_CHECK (solver.solve(xres));
+  BOOST_CHECK (expression.solve(xres));
 
   // Check the solution
   BOOST_CHECK_EQUAL (xres.segment<2>(1), x.segment<2>(1));
@@ -477,20 +477,20 @@ BOOST_AUTO_TEST_CASE(jacobian3)
 
   // Check the jacobian
   // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
-  matrix_t expjac (matrix_t::Zero(solver.derSize(), solver.derSize()));
+  matrix_t expjac (matrix_t::Zero(expression.derSize(), expression.derSize()));
   expjac.block<5, 2>(0,1) <<
     Jginv0(0) * J[0](0,0), Jginv0(0) * J[0](0,1),
     1, 0,
     0, 1,
     J[1](0,0), 0,
     J[2](0,0) * Jginv0(0) * J[0](0,0) + J[2](0,1) * J[1](0,0), J[2](0,0) * Jginv0(0) * J[0](0,1);
-  matrix_t jacobian (solver.derSize(), solver.derSize());
-  solver.jacobian (jacobian, xres);
+  matrix_t jacobian (expression.derSize(), expression.derSize());
+  expression.jacobian (jacobian, xres);
   BOOST_CHECK_EQUAL (jacobian, expjac);
 
-  matrix_t smallJ = solver.viewJacobian(jacobian);
-  BOOST_CHECK_EQUAL (solver.outArgs().rview(xres).eval(),
-      smallJ * solver.inArgs().rview(xres).eval());
+  matrix_t smallJ = expression.viewJacobian(jacobian);
+  BOOST_CHECK_EQUAL (expression.outArgs().rview(xres).eval(),
+      smallJ * expression.inArgs().rview(xres).eval());
 }
 
 BOOST_AUTO_TEST_CASE(locked_joints)
@@ -523,100 +523,114 @@ BOOST_AUTO_TEST_CASE(locked_joints)
                   qrand = se3::randomConfiguration(device->model());
 
   {
-    ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)) >= 0);
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer(), ComparisonTypes_t(1, Equality)) <  0);
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer(), ComparisonTypes_t(1, Equality)) >= 0);
+    ExplicitConstraintSet expression
+      (device->configSize(), device->numberDof());
+    BOOST_CHECK( expression.add(l1, l1->inArg(), l1->outArg(), l1->inDer(),
+                                l1->outDer(), ComparisonTypes_t(1, Equality))
+                 >= 0);
+    BOOST_CHECK( expression.add(l1, l1->inArg(), l1->outArg(), l1->inDer(),
+                                l1->outDer(), ComparisonTypes_t(1, Equality))
+                 <  0);
+    BOOST_CHECK( expression.add(l2, l2->inArg(), l2->outArg(), l2->inDer(),
+                                l2->outDer(), ComparisonTypes_t(1, Equality))
+                 >= 0);
 
     expectedRow = RowBlockIndices();
     expectedRow.addRow (ee1->rankInConfiguration(), 1);
     expectedRow.addRow (ee2->rankInConfiguration(), 1);
     expectedRow.updateRows<true,true,true>();
-    BOOST_CHECK_EQUAL (solver.outArgs(), expectedRow);
+    BOOST_CHECK_EQUAL (expression.outArgs(), expectedRow);
 
     expectedRow = RowBlockIndices(BlockIndex::difference (
-          BlockIndex::segment_t(0, solver.argSize()),
+          BlockIndex::segment_t(0, expression.argSize()),
           expectedRow.rows()));
-    BOOST_CHECK_EQUAL (solver.freeArgs(), expectedRow);
+    BOOST_CHECK_EQUAL (expression.freeArgs(), expectedRow);
 
     expectedRow = RowBlockIndices();
     expectedRow.addRow (ee1->rankInVelocity(), 1);
     expectedRow.addRow (ee2->rankInVelocity(), 1);
     expectedRow.updateRows<true,true,true>();
-    BOOST_CHECK_EQUAL (solver.outDers(), expectedRow);
+    BOOST_CHECK_EQUAL (expression.outDers(), expectedRow);
 
     expectedCol = ColBlockIndices(BlockIndex::difference (
-          BlockIndex::segment_t(0, solver.derSize()),
+          BlockIndex::segment_t(0, expression.derSize()),
           expectedRow.rows()));
-    BOOST_CHECK_EQUAL (solver.freeDers(), expectedCol);
+    BOOST_CHECK_EQUAL (expression.freeDers(), expectedCol);
 
     expectedRow = RowBlockIndices();
-    BOOST_CHECK_EQUAL (solver.inArgs(), expectedRow);
+    BOOST_CHECK_EQUAL (expression.inArgs(), expectedRow);
     expectedCol = ColBlockIndices();
-    BOOST_CHECK_EQUAL (solver.inDers(), expectedCol);
+    BOOST_CHECK_EQUAL (expression.inDers(), expectedCol);
 
-    BOOST_CHECK(solver.solve(qrand));
+    BOOST_CHECK(expression.solve(qrand));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], 0);
 
-    solver.rightHandSide(l1, vector_t::Ones(1));
-    solver.rightHandSide(l2, vector_t::Constant(1,-0.2));
-    BOOST_CHECK(solver.solve(qrand));
+    expression.rightHandSide(l1, vector_t::Ones(1));
+    expression.rightHandSide(l2, vector_t::Constant(1,-0.2));
+    BOOST_CHECK(expression.solve(qrand));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 1);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], -0.2);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
-    solver.jacobian(jacobian, q);
-    BOOST_CHECK(solver.viewJacobian (jacobian).eval().isZero());
-    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+    expression.jacobian(jacobian, q);
+    BOOST_CHECK(expression.viewJacobian (jacobian).eval().isZero());
   }
 
   {
-    ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(l1, l1->inArg(), l1->outArg(), l1->inDer(), l1->outDer()) >= 0);
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
+    ExplicitConstraintSet expression
+      (device->configSize(), device->numberDof());
+    BOOST_CHECK( expression.add(l1, l1->inArg(), l1->outArg(),
+                                l1->inDer(), l1->outDer()) >= 0);
+    BOOST_CHECK( expression.add(t1, t1->inArg(), t1->outArg(),
+                                t1->inDer(), t1->outDer()) >= 0);
 
-    BOOST_CHECK(solver.solve(qrand));
-    vector_t error(solver.outDers().nbIndices());
-    BOOST_CHECK(solver.isSatisfied(qrand, error));
-    // std::cout << error.transpose() << std::endl;
+    BOOST_CHECK(expression.solve(qrand));
+    vector_t error(expression.outDers().nbIndices());
+    BOOST_CHECK(expression.isSatisfied(qrand, error));
     BOOST_CHECK_EQUAL(qrand[ee1->rankInConfiguration()], 0);
     BOOST_CHECK_EQUAL(qrand[ee2->rankInConfiguration()], 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
-    solver.jacobian(jacobian, q);
-    BOOST_CHECK(solver.viewJacobian (jacobian).eval().isZero());
-    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+    expression.jacobian(jacobian, q);
+    BOOST_CHECK(expression.viewJacobian (jacobian).eval().isZero());
   }
 
   {
-    ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
+    ExplicitConstraintSet expression
+      (device->configSize(), device->numberDof());
+    BOOST_CHECK( expression.add(t1, t1->inArg(), t1->outArg(), t1->inDer(),
+                                t1->outDer()) >= 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
-    solver.jacobian(jacobian, q);
+    expression.jacobian(jacobian, q);
     BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
-    BOOST_CHECK_EQUAL(solver.viewJacobian(jacobian).eval().norm(), 1);
-    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+    BOOST_CHECK_EQUAL(expression.viewJacobian(jacobian).eval().norm(), 1);
   }
 
   {
-    ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
-    BOOST_CHECK( solver.add(t2, t2->inArg(), t2->outArg(), t2->inDer(), t2->outDer()) <  0);
+    ExplicitConstraintSet expression
+      (device->configSize(), device->numberDof());
+    BOOST_CHECK( expression.add(t1, t1->inArg(), t1->outArg(), t1->inDer(),
+                                t1->outDer()) >= 0);
+    BOOST_CHECK( expression.add(t2, t2->inArg(), t2->outArg(), t2->inDer(),
+                                t2->outDer()) <  0);
   }
 
   {
-    ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(t1, t1->inArg(), t1->outArg(), t1->inDer(), t1->outDer()) >= 0);
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()) <  0);
-    BOOST_CHECK( solver.add(l3, l3->inArg(), l3->outArg(), l3->inDer(), l3->outDer()) >= 0);
+    ExplicitConstraintSet expression
+      (device->configSize(), device->numberDof());
+    BOOST_CHECK( expression.add(t1, t1->inArg(), t1->outArg(), t1->inDer(),
+                                t1->outDer()) >= 0);
+    BOOST_CHECK( expression.add(l2, l2->inArg(), l2->outArg(), l2->inDer(),
+                                l2->outDer()) <  0);
+    BOOST_CHECK( expression.add(l3, l3->inArg(), l3->outArg(), l3->inDer(),
+                                l3->outDer()) >= 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
-    solver.jacobian(jacobian, q);
+    expression.jacobian(jacobian, q);
     BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
-    BOOST_CHECK_EQUAL(solver.viewJacobian(jacobian).eval().norm(), 1);
-    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+    BOOST_CHECK_EQUAL(expression.viewJacobian(jacobian).eval().norm(), 1);
   }
 
   {
@@ -634,14 +648,14 @@ BOOST_AUTO_TEST_CASE(locked_joints)
           parent->rankInConfiguration() + parent->configSize() - 7,
           parent->rankInVelocity()      + parent->numberDof () - 6));
 
-    ExplicitSolver solver (device->configSize(), device->numberDof());
-    BOOST_CHECK( solver.add(et, et->inArg(), et->outArg(), et->inDer(), et->outDer()) >= 0);
-    BOOST_CHECK( solver.add(l2, l2->inArg(), l2->outArg(), l2->inDer(), l2->outDer()) >= 0);
+    ExplicitConstraintSet expression
+      (device->configSize(), device->numberDof());
+    BOOST_CHECK( expression.add(et, et->inArg(), et->outArg(), et->inDer(),
+                                et->outDer()) >= 0);
+    BOOST_CHECK( expression.add(l2, l2->inArg(), l2->outArg(), l2->inDer(),
+                                l2->outDer()) >= 0);
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
-    solver.jacobian(jacobian, qrand);
-    // BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
-    // BOOST_CHECK_EQUAL(jacobian.norm(), 1);
-    // std::cout << solver.viewJacobian (jacobian).eval() << '\n' << std::endl;
+    expression.jacobian(jacobian, qrand);
   }
 }

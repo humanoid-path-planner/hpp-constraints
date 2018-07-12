@@ -75,8 +75,8 @@ void test_quadratic ()
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (quad, 0);
-  solver.explicitSolver().add (expl, in, out, in, out);
-  solver.explicitSolverHasChanged();
+  solver.explicitConstraintSet().add (expl, in, out, in, out);
+  solver.explicitConstraintSetHasChanged();
 
   matrix_t M (N, N1 + N3);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N3),
@@ -100,8 +100,8 @@ void test_quadratic ()
   matrix_t expectedJ (1, N1 + N3), J(1, N1 + N3);
 
   x.setRandom();
-  solver.explicitSolver().solve(x);
-  expectedJ = 2 * solver.explicitSolver().freeArgs().rview(x).eval().transpose() * Ar;
+  solver.explicitConstraintSet().solve(x);
+  expectedJ = 2 * solver.explicitConstraintSet().freeArgs().rview(x).eval().transpose() * Ar;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -142,9 +142,9 @@ void test_quadratic2 ()
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (quad, 0);
-  solver.explicitSolver().add (expl1, in1, out1, in1, out1);
-  solver.explicitSolver().add (expl2, in2, out2, in2, out2);
-  solver.explicitSolverHasChanged();
+  solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
+  solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
+  solver.explicitConstraintSetHasChanged();
 
   matrix_t M (N, N1 + N4);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
@@ -171,8 +171,8 @@ void test_quadratic2 ()
   matrix_t expectedJ (1, N1 + N4), J(1, N1 + N4);
 
   x.setRandom();
-  solver.explicitSolver().solve(x);
-  expectedJ = 2 * solver.explicitSolver().freeArgs().rview(x).eval().transpose() * Ar;
+  solver.explicitConstraintSet().solve(x);
+  expectedJ = 2 * solver.explicitConstraintSet().freeArgs().rview(x).eval().transpose() * Ar;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -218,10 +218,10 @@ void test_quadratic3 ()
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (quad, 0);
-  solver.explicitSolver().add (expl1, in1, out1, in1, out1);
-  solver.explicitSolver().add (expl2, in2, out2, in2, out2);
-  solver.explicitSolver().add (expl3, in3, out3, in3, out3);
-  solver.explicitSolverHasChanged();
+  solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
+  solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
+  solver.explicitConstraintSet().add (expl3, in3, out3, in3, out3);
+  solver.explicitConstraintSetHasChanged();
 
   matrix_t M (N, N1 + N4);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
@@ -252,9 +252,9 @@ void test_quadratic3 ()
   matrix_t expectedJ (1, N1 + N4 - 1), J(1, N1 + N4 - 1);
 
   x.setRandom();
-  solver.explicitSolver().solve(x);
+  solver.explicitConstraintSet().solve(x);
   expectedJ = 2 *
-    (P * solver.explicitSolver().freeArgs().rview(x).eval() + Xr_0).transpose()
+    (P * solver.explicitConstraintSet().freeArgs().rview(x).eval() + Xr_0).transpose()
     * Ar * P;
 
   solver.computeValue<true> (x);
@@ -287,28 +287,28 @@ class LockedJoint : public DifferentiableFunction
         idx_ (idx), length_ (length), value_ (value)
     {}
 
-    ExplicitSolver::RowBlockIndices inArg () const
+    ExplicitConstraintSet::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outArg () const
+    ExplicitConstraintSet::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (idx_, length_);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndices inDer () const
+    ExplicitConstraintSet::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndices ret;
+      ExplicitConstraintSet::ColBlockIndices ret;
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outDer () const
+    ExplicitConstraintSet::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
@@ -364,30 +364,30 @@ class ExplicitTransformation : public DifferentiableFunction
           Transform3f::Identity());
     }
 
-    ExplicitSolver::RowBlockIndices inArg () const
+    ExplicitConstraintSet::RowBlockIndices inArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow(in_, inputSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outArg () const
+    ExplicitConstraintSet::RowBlockIndices outArg () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (0, 7);
       return ret;
     }
 
-    ExplicitSolver::ColBlockIndices inDer () const
+    ExplicitConstraintSet::ColBlockIndices inDer () const
     {
-      ExplicitSolver::ColBlockIndices ret;
+      ExplicitConstraintSet::ColBlockIndices ret;
       ret.addCol(inDer_, inputDerivativeSize());
       return ret;
     }
 
-    ExplicitSolver::RowBlockIndices outDer () const
+    ExplicitConstraintSet::RowBlockIndices outDer () const
     {
-      ExplicitSolver::RowBlockIndices ret;
+      ExplicitConstraintSet::RowBlockIndices ret;
       ret.addRow (0, 6);
       return ret;
     }
@@ -452,15 +452,15 @@ BOOST_AUTO_TEST_CASE(functions1)
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
   Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
   Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
-  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Ones(1,1))),
+  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Ones(1,1))),
       segment_t (2,1), segment_t(0,1),
       segment_t (2,1), segment_t(0,1));
   // q2 = C
-  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (matrix_t(1,0), vector_t::Zero(1))),
+  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (matrix_t(1,0), vector_t::Zero(1))),
       segment_t (), segment_t(1,1),
       segment_t (), segment_t(1,1));
 
-  solver.explicitSolverHasChanged();
+  solver.explicitConstraintSetHasChanged();
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
 
   // h
@@ -489,10 +489,10 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
   Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
   Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
-  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (Jg)),
+  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (Jg)),
       inArg, outArg, inDer, outArg);
 
-  solver.explicitSolverHasChanged();
+  solver.explicitConstraintSetHasChanged();
   BOOST_CHECK_EQUAL(solver.dimension(), 2);
 
   // We add to the system h(q3) = 0
@@ -507,10 +507,10 @@ BOOST_AUTO_TEST_CASE(functions2)
   // We add to the system q3 = C
   // Function h should be removed, f should not.
   vector_t C (1); C(0) = 0;
-  solver.explicitSolver().add(AffineFunctionPtr_t(new AffineFunction (matrix_t (1, 0), C)),
+  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (matrix_t (1, 0), C)),
       segments_t(), segment_t (2, 1),
       segments_t(), segment_t (2, 1));
-  solver.explicitSolverHasChanged();
+  solver.explicitConstraintSetHasChanged();
 
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
@@ -571,8 +571,8 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
           parent->rankInVelocity()      + parent->numberDof () - 6));
   }
 
-  BOOST_CHECK(solver.explicitSolver().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()) >= 0);
-  solver.explicitSolverHasChanged();
+  BOOST_CHECK(solver.explicitConstraintSet().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()) >= 0);
+  solver.explicitConstraintSetHasChanged();
   solver.print(std::cout);
 
   // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), HybridSolver::SUCCESS);

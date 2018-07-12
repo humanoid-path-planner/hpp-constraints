@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/explicit-solver.hh>
+#include <hpp/constraints/explicit-constraint-set.hh>
 
 #include <queue>
 
@@ -39,17 +39,18 @@ namespace hpp {
       }
     }
 
-    Eigen::ColBlockIndices ExplicitSolver::activeParameters () const
+    Eigen::ColBlockIndices ExplicitConstraintSet::activeParameters () const
     {
       return inArgs_.transpose();
     }
 
-    const Eigen::ColBlockIndices& ExplicitSolver::activeDerivativeParameters () const
+    const Eigen::ColBlockIndices&
+    ExplicitConstraintSet::activeDerivativeParameters () const
     {
       return inDers_;
     }
 
-    bool ExplicitSolver::solve (vectorOut_t arg) const
+    bool ExplicitConstraintSet::solve (vectorOut_t arg) const
     {
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         computeFunction(computationOrder_[i], arg);
@@ -57,7 +58,8 @@ namespace hpp {
       return true;
     }
 
-    bool ExplicitSolver::isSatisfied (vectorIn_t arg, vectorOut_t error) const
+    bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg, vectorOut_t error)
+      const
     {
       value_type squaredNorm = 0;
 
@@ -82,16 +84,15 @@ namespace hpp {
       return squaredNorm < squaredErrorThreshold_;
     }
 
-    bool ExplicitSolver::isSatisfied (vectorIn_t arg) const
+    bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg) const
     {
       diffSmall_.resize(outDers_.nbIndices());
       return isSatisfied (arg, diffSmall_);
     }
 
-    ExplicitSolver::Function::Function (DifferentiableFunctionPtr_t _f,
-        RowBlockIndices ia, RowBlockIndices oa,
-        ColBlockIndices id, RowBlockIndices od,
-        const ComparisonTypes_t& comp) :
+    ExplicitConstraintSet::Function::Function
+    (DifferentiableFunctionPtr_t _f, RowBlockIndices ia, RowBlockIndices oa,
+     ColBlockIndices id, RowBlockIndices od, const ComparisonTypes_t& comp) :
       f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
       comparison (comp),
       rightHandSide (vector_t::Zero(f->outputSpace()->nv())),
@@ -112,8 +113,9 @@ namespace hpp {
       equalityIndices.updateRows<true, true, true>();
     }
 
-    void ExplicitSolver::Function::setG (const DifferentiableFunctionPtr_t& _g,
-                                         const DifferentiableFunctionPtr_t& _ginv)
+    void ExplicitConstraintSet::Function::setG
+    (const DifferentiableFunctionPtr_t& _g,
+     const DifferentiableFunctionPtr_t& _ginv)
     {
       assert ( (!_g && !_ginv) // No function g and ginv
           || ( _g && _ginv
@@ -127,22 +129,22 @@ namespace hpp {
       jGinv.resize (n,n);
     }
 
-    size_type ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
-        const RowBlockIndices& inArg,
-        const RowBlockIndices& outArg,
-        const ColBlockIndices& inDer,
-        const RowBlockIndices& outDer)
+    size_type ExplicitConstraintSet::add (const DifferentiableFunctionPtr_t& f,
+                                          const RowBlockIndices& inArg,
+                                          const RowBlockIndices& outArg,
+                                          const ColBlockIndices& inDer,
+                                          const RowBlockIndices& outDer)
     {
       return add (f, inArg, outArg, inDer, outDer,
           ComparisonTypes_t(f->outputDerivativeSize(), EqualToZero));
     }
 
-    size_type ExplicitSolver::add (const DifferentiableFunctionPtr_t& f,
-        const RowBlockIndices& inArg,
-        const RowBlockIndices& outArg,
-        const ColBlockIndices& inDer,
-        const RowBlockIndices& outDer,
-        const ComparisonTypes_t& comp)
+    size_type ExplicitConstraintSet::add (const DifferentiableFunctionPtr_t& f,
+                                          const RowBlockIndices& inArg,
+                                          const RowBlockIndices& outArg,
+                                          const ColBlockIndices& inDer,
+                                          const RowBlockIndices& outDer,
+                                          const ComparisonTypes_t& comp)
     {
       assert (outArg.indices().size() == 1 && "Only contiguous function output is supported.");
       assert (outDer.indices().size() == 1 && "Only contiguous function output is supported.");
@@ -219,9 +221,9 @@ namespace hpp {
       return functions_.size() - 1;
     }
 
-    bool ExplicitSolver::setG (const DifferentiableFunctionPtr_t& df,
-        const DifferentiableFunctionPtr_t& g,
-        const DifferentiableFunctionPtr_t& ginv)
+    bool ExplicitConstraintSet::setG (const DifferentiableFunctionPtr_t& df,
+                                      const DifferentiableFunctionPtr_t& g,
+                                      const DifferentiableFunctionPtr_t& ginv)
     {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
@@ -233,9 +235,9 @@ namespace hpp {
       return false;
     }
 
-    bool ExplicitSolver::replace (
-        const DifferentiableFunctionPtr_t& oldf,
-        const DifferentiableFunctionPtr_t& newf)
+    bool ExplicitConstraintSet::replace
+    (const DifferentiableFunctionPtr_t& oldf,
+     const DifferentiableFunctionPtr_t& newf)
     {
       assert(oldf->inputSize() == newf->inputSize()
           && oldf->inputDerivativeSize() == newf->inputDerivativeSize()
@@ -250,7 +252,8 @@ namespace hpp {
       return false;
     }
 
-    void ExplicitSolver::computeFunction(const std::size_t& iF, vectorOut_t arg) const
+    void ExplicitConstraintSet::computeFunction
+    (const std::size_t& iF, vectorOut_t arg) const
     {
       const Function& f = functions_[iF];
       // Compute this function
@@ -262,7 +265,8 @@ namespace hpp {
       f.outArg.lview(arg) = f.expected.vector();
     }
 
-    void ExplicitSolver::jacobian(matrixOut_t jacobian, vectorIn_t arg) const
+    void ExplicitConstraintSet::jacobian
+    (matrixOut_t jacobian, vectorIn_t arg) const
     {
       // TODO this could be done only on the complement of inDers_
       jacobian.setZero();
@@ -287,14 +291,16 @@ namespace hpp {
       }
     }
 
-    void ExplicitSolver::computeJacobian(const std::size_t& iF, matrixOut_t J) const
+    void ExplicitConstraintSet::computeJacobian
+    (const std::size_t& iF, matrixOut_t J) const
     {
       const Function& f = functions_[iF];
       matrix_t Jg (MatrixBlocksRef (f.inDer, inDers_).rview(J));
       MatrixBlocksRef (f.outDer, inDers_).lview (J) = f.jacobian * Jg;
     }
 
-    void ExplicitSolver::computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed)
+    void ExplicitConstraintSet::computeOrder
+    (const std::size_t& iF, std::size_t& iOrder, Computed_t& computed)
     {
       if (computed[iF]) return;
       const Function& f = functions_[iF];
@@ -315,7 +321,7 @@ namespace hpp {
       computed[iF] = true;
     }
 
-    vector_t ExplicitSolver::rightHandSideFromInput (vectorIn_t arg)
+    vector_t ExplicitConstraintSet::rightHandSideFromInput (vectorIn_t arg)
     {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
@@ -330,7 +336,8 @@ namespace hpp {
       return rightHandSide();
     }
 
-    bool ExplicitSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& df, vectorIn_t arg)
+    bool ExplicitConstraintSet::rightHandSideFromInput
+    (const DifferentiableFunctionPtr_t& df, vectorIn_t arg)
     {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
@@ -342,7 +349,8 @@ namespace hpp {
       return false;
     }
 
-    void ExplicitSolver::rightHandSideFromInput (const size_type& fidx, vectorIn_t arg)
+    void ExplicitConstraintSet::rightHandSideFromInput
+    (const size_type& fidx, vectorIn_t arg)
     {
       assert (fidx < functions_.size());
       Function& f = functions_[fidx];
@@ -359,7 +367,8 @@ namespace hpp {
       f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
     }
 
-    bool ExplicitSolver::rightHandSide (const DifferentiableFunctionPtr_t& df, vectorIn_t rhs)
+    bool ExplicitConstraintSet::rightHandSide
+    (const DifferentiableFunctionPtr_t& df, vectorIn_t rhs)
     {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
@@ -371,14 +380,15 @@ namespace hpp {
       return false;
     }
 
-    void ExplicitSolver::rightHandSide (const size_type& i, vectorIn_t rhs)
+    void ExplicitConstraintSet::rightHandSide
+    (const size_type& i, vectorIn_t rhs)
     {
       assert (i < functions_.size());
       Function& f = functions_[i];
       f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
     }
 
-    void ExplicitSolver::rightHandSide (vectorIn_t rhs)
+    void ExplicitConstraintSet::rightHandSide (vectorIn_t rhs)
     {
       size_type row = 0;
       for (std::size_t i = 0; i < functions_.size (); ++i) {
@@ -391,7 +401,7 @@ namespace hpp {
       assert (row == rhs.size());
     }
 
-    vector_t ExplicitSolver::rightHandSide () const
+    vector_t ExplicitConstraintSet::rightHandSide () const
     {
       vector_t rhs(rightHandSideSize());
       size_type row = 0;
@@ -406,7 +416,7 @@ namespace hpp {
       return rhs;
     }
 
-    size_type ExplicitSolver::rightHandSideSize () const
+    size_type ExplicitConstraintSet::rightHandSideSize () const
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < functions_.size (); ++i)
@@ -414,9 +424,10 @@ namespace hpp {
       return rhsSize;
     }
 
-    std::ostream& ExplicitSolver::print (std::ostream& os) const
+    std::ostream& ExplicitConstraintSet::print (std::ostream& os) const
     {
-      os << "ExplicitSolver, " << functions_.size() << " functions." << incendl
+      os << "ExplicitConstraintSet, " << functions_.size()
+         << " functions." << incendl
         << "Free args: " << freeArgs_ << iendl
         << "Params: " << inArgs_ << " -> " << outArgs_ << iendl
         << "Dofs: "   << inDers_ << " -> " << outDers_ << iendl
@@ -431,7 +442,7 @@ namespace hpp {
       return os << decindent << decindent;
     }
 
-    Eigen::MatrixXi ExplicitSolver::inOutDofDependencies () const
+    Eigen::MatrixXi ExplicitConstraintSet::inOutDofDependencies () const
     {
       Eigen::MatrixXi iod (derSize(), inDers_.nbCols());
       if (inDers_.nbCols() == 0) return iod;

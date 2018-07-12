@@ -22,7 +22,7 @@
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 
-#include <hpp/constraints/explicit-solver.hh>
+#include <hpp/constraints/explicit-constraint-set.hh>
 #include <hpp/constraints/iterative-solver.hh>
 
 namespace hpp {
@@ -40,18 +40,40 @@ namespace hpp {
 
         virtual ~HybridSolver () {}
 
-        ExplicitSolver& explicitSolver()
+        /// \name deprecated
+        /// \{
+
+        /// \deprecated Use explicitConstraintSet instead
+        ExplicitConstraintSet& explicitSolver() HPP_CONSTRAINTS_DEPRECATED
         {
           return explicit_;
         }
 
-        const ExplicitSolver& explicitSolver () const
+        /// \deprecated Use explicitConstraintSet instead
+        const ExplicitConstraintSet& explicitSolver () const HPP_CONSTRAINTS_DEPRECATED
+        {
+          return explicit_;
+        }
+
+        /// \deprecated call explicitConstraintSetHasChanged instead
+        void explicitSolverHasChanged() HPP_CONSTRAINTS_DEPRECATED
+        {
+          return explicitConstraintSetHasChanged();
+        }
+        /// \}
+
+        ExplicitConstraintSet& explicitConstraintSet()
+        {
+          return explicit_;
+        }
+
+        const ExplicitConstraintSet& explicitConstraintSet () const
         {
           return explicit_;
         }
 
         /// Should be called whenever explicit solver is modified
-        void explicitSolverHasChanged();
+        void explicitConstraintSetHasChanged();
 
         template <typename LineSearchType>
         Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const
@@ -223,7 +245,7 @@ namespace hpp {
         template <typename LineSearchType>
         Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
 
-        ExplicitSolver explicit_;
+        ExplicitConstraintSet explicit_;
         mutable matrix_t Je_, JeExpanded_;
     }; // class HybridSolver
     /// \}

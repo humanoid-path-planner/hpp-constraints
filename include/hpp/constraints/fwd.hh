@@ -147,9 +147,10 @@ namespace hpp {
     };
     typedef std::vector<ComparisonType> ComparisonTypes_t;
 
-    class ExplicitSolver;
+    class ExplicitConstraintSet;
     class HierarchicalIterativeSolver;
     class HybridSolver;
+    typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
   } // namespace constraints
 } // namespace hpp
 

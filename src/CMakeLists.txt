@@ -26,7 +26,7 @@ SET (${LIBRARY_NAME}_SOURCES
   convex-shape-contact.cc
   matrix-view.cc
   static-stability.cc
-  explicit-solver.cc
+  explicit-constraint-set.cc
   hybrid-solver.cc
   iterative-solver.cc
 )
