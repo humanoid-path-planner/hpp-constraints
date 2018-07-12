@@ -91,7 +91,8 @@ namespace hpp {
     /// Note that a hierarchy between the equations can be
     /// provided. In this case, the solver will try to solve the
     /// highest priority equations first, and then to solve the lower priority
-    /// equations.
+    /// equations. Note that priorities are in decreasing order: 0 has higher
+    /// priority than 1.
     ///
     /// The algorithm used is a Newton-Raphson like algorithm that works as
     /// follows: let \f$f (\mathbf{q}) = 0\f$ be the system of equations where
@@ -218,7 +219,8 @@ namespace hpp {
         /// reached.
         ///
         /// \note Explicit constraints are expressed in their implicit
-        ///       form.
+        ///       form: \f$\mathbf{q}_2 = f (\mathbf{q}_1)\f$ is replaced by
+        ///       \f$\mathbf{q}_2 - f (\mathbf{q}_1) = 0\f$.
         template <typename LineSearchType>
         Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
 
