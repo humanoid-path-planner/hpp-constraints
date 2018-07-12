@@ -220,7 +220,9 @@ namespace hpp {
         ///
         /// \note Explicit constraints are expressed in their implicit
         ///       form: \f$\mathbf{q}_2 = f (\mathbf{q}_1)\f$ is replaced by
-        ///       \f$\mathbf{q}_2 - f (\mathbf{q}_1) = 0\f$.
+        ///       \f$\mathbf{q}_2 - f (\mathbf{q}_1) = 0\f$,
+        ///  where \f$\mathbf{q}_1\f$ and \f$\mathbf{q}_2\f$ are vectors
+        ///  composed of the components of \f$\mathbf{q}\f$.
         template <typename LineSearchType>
         Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
 
@@ -234,7 +236,10 @@ namespace hpp {
         /// \f$\alpha_i\f$).
         ///
         /// \note Explicit constraints are expressed in their implicit
-        ///       form.
+        ///       form: \f$\mathbf{q}_2 = f (\mathbf{q}_1)\f$ is replaced by
+        ///       \f$\mathbf{q}_2 - f (\mathbf{q}_1) = 0\f$,
+        ///  where \f$\mathbf{q}_1\f$ and \f$\mathbf{q}_2\f$ are vectors
+        ///  composed of the components of \f$\mathbf{q}\f$.
         inline Status solve (vectorOut_t arg) const
         {
           return solve (arg, DefaultLineSearch());
