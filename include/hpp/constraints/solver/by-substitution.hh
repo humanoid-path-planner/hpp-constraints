@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Joseph Mirabel
+// Copyright (c) 2017, 2018 CNRS
 // Authors: Joseph Mirabel (joseph.mirabel@laas.fr)
 //
 // This file is part of hpp-constraints.
@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_HYBRID_SOLVER_HH
-#define HPP_CONSTRAINTS_HYBRID_SOLVER_HH
+#ifndef HPP_CONSTRAINTS_SOLVER_BY_SUBSTITUTION_HH
+#define HPP_CONSTRAINTS_SOLVER_BY_SUBSTITUTION_HH
 
 #include <vector>
 
@@ -27,40 +27,19 @@
 
 namespace hpp {
   namespace constraints {
+    namespace solver {
     /// \addtogroup solvers
     /// \{
-    class HPP_CONSTRAINTS_DLLAPI HybridSolver
+    class HPP_CONSTRAINTS_DLLAPI BySubstitution
       : public solver::HierarchicalIterative
     {
       public:
-        HybridSolver (const std::size_t& argSize, const std::size_t derSize)
+        BySubstitution (const std::size_t& argSize, const std::size_t derSize)
           : solver::HierarchicalIterative(argSize, derSize), explicit_ (argSize, derSize),
           JeExpanded_ (derSize, derSize)
         {}
 
-        virtual ~HybridSolver () {}
-
-        /// \name deprecated
-        /// \{
-
-        /// \deprecated Use explicitConstraintSet instead
-        ExplicitConstraintSet& explicitSolver() HPP_CONSTRAINTS_DEPRECATED
-        {
-          return explicit_;
-        }
-
-        /// \deprecated Use explicitConstraintSet instead
-        const ExplicitConstraintSet& explicitSolver () const HPP_CONSTRAINTS_DEPRECATED
-        {
-          return explicit_;
-        }
-
-        /// \deprecated call explicitConstraintSetHasChanged instead
-        void explicitSolverHasChanged() HPP_CONSTRAINTS_DEPRECATED
-        {
-          return explicitConstraintSetHasChanged();
-        }
-        /// \}
+        virtual ~BySubstitution () {}
 
         ExplicitConstraintSet& explicitConstraintSet()
         {
@@ -247,14 +226,15 @@ namespace hpp {
 
         ExplicitConstraintSet explicit_;
         mutable matrix_t Je_, JeExpanded_;
-    }; // class HybridSolver
+    }; // class BySubstitution
     /// \}
 
-    inline std::ostream& operator<< (std::ostream& os, const HybridSolver& hs)
+    inline std::ostream& operator<< (std::ostream& os, const BySubstitution& hs)
     {
       return hs.print(os);
     }
+    } // namespace solver
   } // namespace constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_HYBRID_SOLVER_HH
+#endif // HPP_CONSTRAINTS_SOLVER_BY_SUBSTITUTION_HH

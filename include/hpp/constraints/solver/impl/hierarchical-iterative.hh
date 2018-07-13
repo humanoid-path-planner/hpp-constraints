@@ -21,6 +21,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace solver {
     namespace lineSearch {
       template <typename SolverType>
       inline bool Constant::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
@@ -105,7 +106,7 @@ namespace hpp {
     }
 
     template <typename LineSearchType>
-    inline HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (
+    inline solver::HierarchicalIterative::Status solver::HierarchicalIterative::solve (
         vectorOut_t arg,
         LineSearchType lineSearch) const
     {
@@ -161,7 +162,7 @@ namespace hpp {
       assert (!arg.hasNaN());
       return SUCCESS;
     }
-
+    } // namespace solver
   } // namespace constraints
 } // namespace hpp
 

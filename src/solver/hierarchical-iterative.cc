@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/iterative-solver.hh>
-#include <hpp/constraints/impl/iterative-solver.hh>
+#include <hpp/constraints/solver/hierarchical-iterative.hh>
+#include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 
 #include <limits>
 #include <hpp/util/debug.hh>
@@ -31,6 +31,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace solver {
     namespace {
       template <bool Superior, bool ComputeJac, typename Derived>
       void compare (value_type& val, const Eigen::MatrixBase<Derived>& jac, const value_type& thr)
@@ -62,13 +63,13 @@ namespace hpp {
     }
 
     namespace lineSearch {
-      template bool Constant::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool Constant::operator() (const HierarchicalIterative& solver, vectorOut_t arg, vectorOut_t darg);
 
       Backtracking::Backtracking () : c (0.001), tau (0.7), smallAlpha (0.2) {}
-      template bool Backtracking::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool Backtracking::operator() (const HierarchicalIterative& solver, vectorOut_t arg, vectorOut_t darg);
 
       FixedSequence::FixedSequence() : alpha (.2), alphaMax (.95), K (.8) {}
-      template bool FixedSequence::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool FixedSequence::operator() (const HierarchicalIterative& solver, vectorOut_t arg, vectorOut_t darg);
 
       ErrorNormBased::ErrorNormBased(value_type alphaMin, value_type _a, value_type _b)
           : C (0.5 + alphaMin / 2), K ((1 - alphaMin) / 2), a (_a), b (_b)
@@ -84,10 +85,10 @@ namespace hpp {
         b = - r_half * a;
       }
 
-      template bool ErrorNormBased::operator() (const HierarchicalIterativeSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool ErrorNormBased::operator() (const HierarchicalIterative& solver, vectorOut_t arg, vectorOut_t darg);
     }
 
-    HierarchicalIterativeSolver::HierarchicalIterativeSolver (const std::size_t& argSize, const std::size_t derSize)
+    HierarchicalIterative::HierarchicalIterative (const std::size_t& argSize, const std::size_t derSize)
       : stacks_ (),
       argSize_ (argSize),
       derSize_ (derSize),
@@ -96,12 +97,12 @@ namespace hpp {
       reduction_ (),
       saturation_ (derSize),
       datas_(),
-      statistics_ ("HierarchicalIterativeSolver")
+      statistics_ ("HierarchicalIterative")
     {
       reduction_.addCol (0, derSize_);
     }
 
-    void HierarchicalIterativeSolver::add (
+    void HierarchicalIterative::add (
         const DifferentiableFunctionPtr_t& f,
         const std::size_t& priority,
         const ComparisonTypes_t& comp)
@@ -132,7 +133,7 @@ namespace hpp {
       update();
     }
 
-    ArrayXb HierarchicalIterativeSolver::activeParameters () const
+    ArrayXb HierarchicalIterative::activeParameters () const
     {
       ArrayXb ap (ArrayXb::Constant(argSize_, false));
       for (std::size_t i = 0; i < stacks_.size (); ++i)
@@ -140,7 +141,7 @@ namespace hpp {
       return ap;
     }
 
-    ArrayXb HierarchicalIterativeSolver::activeDerivativeParameters () const
+    ArrayXb HierarchicalIterative::activeDerivativeParameters () const
     {
       ArrayXb ap (ArrayXb::Constant(derSize_, false));
       for (std::size_t i = 0; i < stacks_.size (); ++i)
@@ -148,7 +149,7 @@ namespace hpp {
       return ap;
     }
 
-    void HierarchicalIterativeSolver::update()
+    void HierarchicalIterative::update()
     {
       // Compute reduced size
       std::size_t reducedSize = reduction_.nbIndices();
@@ -184,7 +185,7 @@ namespace hpp {
       svd_ = SVD_t (reducedDimension_, reducedSize, Eigen::ComputeThinU | Eigen::ComputeThinV);
     }
 
-    void HierarchicalIterativeSolver::computeActiveRowsOfJ (std::size_t iStack)
+    void HierarchicalIterative::computeActiveRowsOfJ (std::size_t iStack)
     {
       Data& d = datas_[iStack];
       const DifferentiableFunctionStack& f = stacks_[iStack];
@@ -204,7 +205,7 @@ namespace hpp {
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
-    vector_t HierarchicalIterativeSolver::rightHandSideFromInput (vectorIn_t arg)
+    vector_t HierarchicalIterative::rightHandSideFromInput (vectorIn_t arg)
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
@@ -216,7 +217,7 @@ namespace hpp {
       return rightHandSide();
     }
 
-    bool HierarchicalIterativeSolver::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg)
+    bool HierarchicalIterative::rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t arg)
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
@@ -240,7 +241,7 @@ namespace hpp {
       return false;
     }
 
-    bool HierarchicalIterativeSolver::rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs)
+    bool HierarchicalIterative::rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs)
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         Data& d = datas_[i];
@@ -261,7 +262,7 @@ namespace hpp {
       return false;
     }
 
-    void HierarchicalIterativeSolver::rightHandSide (vectorIn_t rhs)
+    void HierarchicalIterative::rightHandSide (vectorIn_t rhs)
     {
       size_type row = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
@@ -273,7 +274,7 @@ namespace hpp {
       assert (row == rhs.size());
     }
 
-    vector_t HierarchicalIterativeSolver::rightHandSide () const
+    vector_t HierarchicalIterative::rightHandSide () const
     {
       vector_t rhs(rightHandSideSize());
       size_type row = 0;
@@ -288,7 +289,7 @@ namespace hpp {
       return rhs;
     }
 
-    size_type HierarchicalIterativeSolver::rightHandSideSize () const
+    size_type HierarchicalIterative::rightHandSideSize () const
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < stacks_.size (); ++i)
@@ -297,7 +298,7 @@ namespace hpp {
     }
 
     template <bool ComputeJac>
-    void HierarchicalIterativeSolver::computeValue (vectorIn_t arg) const
+    void HierarchicalIterative::computeValue (vectorIn_t arg) const
     {
       for (std::size_t i = 0; i < stacks_.size (); ++i) {
         const DifferentiableFunctionStack& f = stacks_[i];
@@ -313,10 +314,10 @@ namespace hpp {
       }
     }
 
-    template void HierarchicalIterativeSolver::computeValue<false>(vectorIn_t arg) const;
-    template void HierarchicalIterativeSolver::computeValue<true >(vectorIn_t arg) const;
+    template void HierarchicalIterative::computeValue<false>(vectorIn_t arg) const;
+    template void HierarchicalIterative::computeValue<true >(vectorIn_t arg) const;
 
-    void HierarchicalIterativeSolver::computeSaturation (vectorIn_t arg) const
+    void HierarchicalIterative::computeSaturation (vectorIn_t arg) const
     {
       bool applySaturate;
       applySaturate = saturate_ (arg, saturation_);
@@ -340,7 +341,7 @@ namespace hpp {
       }
     }
 
-    void HierarchicalIterativeSolver::getValue (vectorOut_t v) const
+    void HierarchicalIterative::getValue (vectorOut_t v) const
     {
       size_type row = 0;
       for (std::size_t i = 0; i < datas_.size(); ++i) {
@@ -351,7 +352,7 @@ namespace hpp {
       assert (v.rows() == row);
     }
 
-    void HierarchicalIterativeSolver::getReducedJacobian (matrixOut_t J) const
+    void HierarchicalIterative::getReducedJacobian (matrixOut_t J) const
     {
       size_type row = 0;
       for (std::size_t i = 0; i < datas_.size(); ++i) {
@@ -362,7 +363,7 @@ namespace hpp {
       assert (J.rows() == row);
     }
 
-    void HierarchicalIterativeSolver::computeError () const
+    void HierarchicalIterative::computeError () const
     {
       const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 : stacks_.size());
       squaredNorm_ = 0;
@@ -378,7 +379,7 @@ namespace hpp {
       }
     }
 
-    void HierarchicalIterativeSolver::residualError (vectorOut_t error) const
+    void HierarchicalIterative::residualError (vectorOut_t error) const
     {
       size_type row = 0;
       for (std::size_t i = 0; i < datas_.size(); ++i) {
@@ -388,7 +389,7 @@ namespace hpp {
       }
     }
 
-    void HierarchicalIterativeSolver::computeDescentDirection () const
+    void HierarchicalIterative::computeDescentDirection () const
     {
       sigma_ = std::numeric_limits<value_type>::max();
 
@@ -448,14 +449,14 @@ namespace hpp {
       expandDqSmall();
     }
 
-    void HierarchicalIterativeSolver::expandDqSmall () const
+    void HierarchicalIterative::expandDqSmall () const
     {
       Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true> (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
     }
 
-    std::ostream& HierarchicalIterativeSolver::print (std::ostream& os) const
+    std::ostream& HierarchicalIterative::print (std::ostream& os) const
     {
-      os << "HierarchicalIterativeSolver, " << stacks_.size() << " level." << iendl
+      os << "HierarchicalIterative, " << stacks_.size() << " level." << iendl
         << "dimension " << dimension() << iendl
         << "reduced dimension " << reducedDimension() << iendl
         << "reduction: " << reduction_ << incendl;
@@ -482,9 +483,10 @@ namespace hpp {
       return os << decindent;
     }
 
-    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
-    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
-    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
-    template HierarchicalIterativeSolver::Status HierarchicalIterativeSolver::solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
+    template HierarchicalIterative::Status HierarchicalIterative::solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
+    template HierarchicalIterative::Status HierarchicalIterative::solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
+    template HierarchicalIterative::Status HierarchicalIterative::solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
+    template HierarchicalIterative::Status HierarchicalIterative::solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
+    } // namespace solver
   } // namespace constraints
 } // namespace hpp

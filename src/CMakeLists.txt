@@ -28,7 +28,7 @@ SET (${LIBRARY_NAME}_SOURCES
   static-stability.cc
   explicit-constraint-set.cc
   hybrid-solver.cc
-  iterative-solver.cc
+  solver/hierarchical-iterative.cc
 )
 
 IF (${USE_QPOASES})

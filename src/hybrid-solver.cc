@@ -16,7 +16,7 @@
 
 #include <hpp/constraints/hybrid-solver.hh>
 #include <hpp/constraints/impl/hybrid-solver.hh>
-#include <hpp/constraints/impl/iterative-solver.hh>
+#include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 
 #include <hpp/pinocchio/util.hh>
 
@@ -25,6 +25,7 @@
 
 namespace hpp {
   namespace constraints {
+    namespace solver {
     namespace lineSearch {
       template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
 
@@ -34,6 +35,8 @@ namespace hpp {
 
       template bool ErrorNormBased::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
     }
+
+    } // namespace solver
 
     void HybridSolver::explicitConstraintSetHasChanged()
     {
@@ -140,14 +143,14 @@ namespace hpp {
     std::ostream& HybridSolver::print (std::ostream& os) const
     {
       os << "HybridSolver" << incendl;
-      HierarchicalIterativeSolver::print (os) << iendl;
+      solver::HierarchicalIterative::print (os) << iendl;
       explicit_.print (os) << decindent;
       return os;
     }
 
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::Constant       lineSearch) const;
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::Backtracking   lineSearch) const;
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::FixedSequence  lineSearch) const;
+    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::ErrorNormBased lineSearch) const;
   } // namespace constraints
 } // namespace hpp

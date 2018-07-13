@@ -92,7 +92,8 @@ void test_quadratic ()
   BOOST_CHECK (solver.isSatisfied(x));
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Backtracking>(x), SUCCESS);
+  SOLVER_CHECK_SOLVE (solver.solve<solver::lineSearch::Backtracking>(x),
+                      SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
   EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.tail<N3>());
   BOOST_CHECK_SMALL (value_type(x.transpose() * A * x), test_precision);
@@ -161,7 +162,8 @@ void test_quadratic2 ()
   BOOST_CHECK (solver.isSatisfied(x));
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Backtracking>(x), SUCCESS);
+  SOLVER_CHECK_SOLVE (solver.solve<solver::lineSearch::Backtracking>(x),
+                      SUCCESS);
   // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
   EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.segment<N3>(N1+N2));
@@ -242,7 +244,8 @@ void test_quadratic3 ()
   vector_t x (N);
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Backtracking>(x), SUCCESS);
+  SOLVER_CHECK_SOLVE (solver.solve<solver::lineSearch::Backtracking>(x),
+                      SUCCESS);
   // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
   EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.segment<N3+N4>(N1+N2));
@@ -578,11 +581,14 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), HybridSolver::SUCCESS);
 
   Configuration_t tmp = qrand;
-  BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(qrand), HybridSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::Backtracking  >(qrand),
+                    HybridSolver::SUCCESS);
   qrand = tmp;
-  BOOST_CHECK_EQUAL(solver.solve<lineSearch::ErrorNormBased>(qrand), HybridSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::ErrorNormBased>(qrand),
+                    HybridSolver::SUCCESS);
   qrand = tmp;
-  BOOST_CHECK_EQUAL(solver.solve<lineSearch::FixedSequence >(qrand), HybridSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::FixedSequence >(qrand),
+                    HybridSolver::SUCCESS);
 
   vector_t dq (device->numberDof());
   dq.setRandom();

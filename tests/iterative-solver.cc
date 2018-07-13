@@ -17,7 +17,7 @@
 #define BOOST_TEST_MODULE HIERARCHICAL_ITERATIVE_SOLVER
 #include <boost/test/unit_test.hpp>
 
-#include <hpp/constraints/iterative-solver.hh>
+#include <hpp/constraints/solver/hierarchical-iterative.hh>
 
 #include <functional>
 
@@ -42,7 +42,7 @@ using Eigen::VectorXi;
 template <typename LineSearch>
 struct test_base
 {
-  HierarchicalIterativeSolver solver;
+  solver::HierarchicalIterative solver;
   LineSearch ls;
 
   test_base (const size_type& d) : solver(d, d)
@@ -56,19 +56,19 @@ struct test_base
   vector_t success (value_type x0, value_type x1)
   {
     vector_t x (VECTOR2(x0,x1));
-    BOOST_CHECK_EQUAL(solver.solve(x, ls), HierarchicalIterativeSolver::SUCCESS);
+    BOOST_CHECK_EQUAL(solver.solve(x, ls), solver::HierarchicalIterative::SUCCESS);
     return x;
   }
 
   vector_t failure (value_type x0, value_type x1)
   {
     vector_t x (VECTOR2(x0,x1));
-    BOOST_CHECK_PREDICATE (std::not_equal_to<HierarchicalIterativeSolver::Status>(), (solver.solve(x, ls))(HierarchicalIterativeSolver::SUCCESS));
+    BOOST_CHECK_PREDICATE (std::not_equal_to<solver::HierarchicalIterative::Status>(), (solver.solve(x, ls))(solver::HierarchicalIterative::SUCCESS));
     return x;
   }
 };
 
-template <typename LineSearch = lineSearch::Constant>
+template <typename LineSearch = solver::lineSearch::Constant>
 struct test_quadratic : test_base <LineSearch>
 {
   test_quadratic (const matrix_t& A)
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(quadratic)
   BOOST_CHECK_EQUAL (test.success (0.001, 1), VECTOR2(1,1)); // Slide on the border y = 1
 
   A << 0.75, 0, 0, 0.75;
-  test_quadratic<lineSearch::FixedSequence> test4 (A);
+  test_quadratic<solver::lineSearch::FixedSequence> test4 (A);
   // This is not exact because the solver does not saturate.
   EIGEN_VECTOR_IS_APPROX (test4.success (1, 0.1), VECTOR2(1.,1/sqrt(3))); // Slide on the border x = 1
   EIGEN_VECTOR_IS_APPROX (test4.success (0.1, 1), VECTOR2(1/sqrt(3),1.)); // Slide on the border y = 1
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(quadratic)
 
   // Ellipsoid: computations are approximative
   A << 0.5, 0, 0, 2;
-  test_quadratic<lineSearch::FixedSequence> test1 (A);
+  test_quadratic<solver::lineSearch::FixedSequence> test1 (A);
   BOOST_CHECK_EQUAL (test1.success (1, 0.5), VECTOR2(1.,0.5)); // Slide on the border x = 1
   EIGEN_VECTOR_IS_APPROX (test1.success (1, 0.1), VECTOR2(1.,0.5)); // Slide on the border x = 1
   EIGEN_VECTOR_IS_APPROX (test1.success (0, 1), VECTOR2(0.,1/sqrt(2)));
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
-  HierarchicalIterativeSolver solver(device->configSize(), device->numberDof());
+  solver::HierarchicalIterative solver(device->configSize(), device->numberDof());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
   solver.integration(boost::bind(hpp::pinocchio::integrate<true, hpp::pinocchio::DefaultLieGroupMap>, device, _1, _2, _3));
@@ -162,14 +162,14 @@ BOOST_AUTO_TEST_CASE(one_layer)
   BOOST_CHECK(solver.isSatisfied(q));
 
   Configuration_t tmp = qrand;
-  BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(qrand), HierarchicalIterativeSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::Backtracking  >(qrand), solver::HierarchicalIterative::SUCCESS);
   qrand = tmp;
-  BOOST_CHECK_EQUAL(solver.solve<lineSearch::ErrorNormBased>(qrand), HierarchicalIterativeSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::ErrorNormBased>(qrand), solver::HierarchicalIterative::SUCCESS);
   qrand = tmp;
-  BOOST_CHECK_EQUAL(solver.solve<lineSearch::FixedSequence >(qrand), HierarchicalIterativeSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::FixedSequence >(qrand), solver::HierarchicalIterative::SUCCESS);
 }
 
-template <typename LineSearch = lineSearch::Constant>
+template <typename LineSearch = solver::lineSearch::Constant>
 struct test_affine_opt : test_base <LineSearch>
 {
   test_affine_opt (const matrix_t& A, const matrix_t& B)
