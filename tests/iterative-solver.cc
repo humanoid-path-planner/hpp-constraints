@@ -33,7 +33,7 @@
 #include <../tests/util.hh>
 
 using namespace hpp::constraints;
-const value_type test_precision = 1e-6;
+const value_type test_precision = 1e-5;
 
 #define VECTOR2(x0, x1) ((hpp::constraints::vector_t (2) << x0, x1).finished())
 
