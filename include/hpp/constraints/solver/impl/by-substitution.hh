@@ -14,13 +14,14 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_IMPL_HYBRID_SOLVER_HH
-#define HPP_CONSTRAINTS_IMPL_HYBRID_SOLVER_HH
+#ifndef HPP_CONSTRAINTS_SOLVER_IMPL_BY_SUBSTITUTION_HH
+#define HPP_CONSTRAINTS_SOLVER_IMPL_BY_SUBSTITUTION_HH
 
 namespace hpp {
   namespace constraints {
+    namespace solver {
     template <typename LineSearchType>
-    inline HybridSolver::Status HybridSolver::impl_solve (
+    inline HierarchicalIterative::Status BySubstitution::impl_solve (
         vectorOut_t arg,
         LineSearchType lineSearch) const
     {
@@ -92,7 +93,8 @@ namespace hpp {
       assert (!arg.hasNaN());
       return SUCCESS;
     }
+    } // namespace solver
   } // namespace constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_IMPL_HYBRID_SOLVER_HH
+#endif // HPP_CONSTRAINTS_SOLVER_IMPL_BY_SUBSTITUTION_HH

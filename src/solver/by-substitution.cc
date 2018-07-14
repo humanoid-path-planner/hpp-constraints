@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Joseph Mirabel
+// Copyright (c) 2017, 2018 CNRS
 // Authors: Joseph Mirabel (joseph.mirabel@laas.fr)
 //
 // This file is part of hpp-constraints.
@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/hybrid-solver.hh>
-#include <hpp/constraints/impl/hybrid-solver.hh>
+#include <hpp/constraints/solver/by-substitution.hh>
+#include <hpp/constraints/solver/impl/by-substitution.hh>
 #include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 
 #include <hpp/pinocchio/util.hh>
@@ -27,23 +27,21 @@ namespace hpp {
   namespace constraints {
     namespace solver {
     namespace lineSearch {
-      template bool Constant::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool Constant::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
 
-      template bool Backtracking::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool Backtracking::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
 
-      template bool FixedSequence::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool FixedSequence::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
 
-      template bool ErrorNormBased::operator() (const HybridSolver& solver, vectorOut_t arg, vectorOut_t darg);
+      template bool ErrorNormBased::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
     }
 
-    } // namespace solver
-
-    void HybridSolver::explicitConstraintSetHasChanged()
+    void BySubstitution::explicitConstraintSetHasChanged()
     {
       reduction(explicit_.freeDers());
     }
 
-    segments_t HybridSolver::implicitDof () const
+    segments_t BySubstitution::implicitDof () const
     {
       const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();
       const Eigen::VectorXi& derF = explicit_.derFunction();
@@ -62,7 +60,7 @@ namespace hpp {
       return BlockIndex::fromLogicalExpression(out.array().cast<bool>());
     }
 
-    void HybridSolver::updateJacobian (vectorIn_t arg) const
+    void BySubstitution::updateJacobian (vectorIn_t arg) const
     {
       if (explicit_.inDers().nbCols() == 0) return;
       // Compute Je_
@@ -87,7 +85,7 @@ namespace hpp {
       }
     }
 
-    void HybridSolver::computeActiveRowsOfJ (std::size_t iStack)
+    void BySubstitution::computeActiveRowsOfJ (std::size_t iStack)
     {
       Data& d = datas_[iStack];
       const DifferentiableFunctionStack& f = stacks_[iStack];
@@ -123,7 +121,7 @@ namespace hpp {
       d.activeRowsOfJ.updateRows<true, true, true>();
     }
 
-    void HybridSolver::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
+    void BySubstitution::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
     {
       computeValue<true> (arg);
       updateJacobian(arg);
@@ -140,17 +138,18 @@ namespace hpp {
       reduction_.transpose().lview(result) = dqSmall_;
     }
 
-    std::ostream& HybridSolver::print (std::ostream& os) const
+    std::ostream& BySubstitution::print (std::ostream& os) const
     {
-      os << "HybridSolver" << incendl;
-      solver::HierarchicalIterative::print (os) << iendl;
+      os << "BySubstitution" << incendl;
+      HierarchicalIterative::print (os) << iendl;
       explicit_.print (os) << decindent;
       return os;
     }
 
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::Constant       lineSearch) const;
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::Backtracking   lineSearch) const;
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::FixedSequence  lineSearch) const;
-    template HybridSolver::Status HybridSolver::impl_solve (vectorOut_t arg, solver::lineSearch::ErrorNormBased lineSearch) const;
+    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
+    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
+    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
+    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
+    } // namespace solver
   } // namespace constraints
 } // namespace hpp

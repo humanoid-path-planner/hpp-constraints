@@ -149,12 +149,13 @@ namespace hpp {
 
     class ExplicitConstraintSet;
     namespace solver {
-    class HierarchicalIterative;
+      class HierarchicalIterative;
+      class BySubstitution;
     } // namespace solver
-    class HybridSolver;
     typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
     typedef solver::HierarchicalIterative HierarchicalIterativeSolver
     HPP_CONSTRAINTS_DEPRECATED;
+    typedef solver::BySubstitution HybridSolver HPP_CONSTRAINTS_DEPRECATED;
   } // namespace constraints
 } // namespace hpp
 

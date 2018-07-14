@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_IMPL_ITERATIVE_SOLVER_HH
-#define HPP_CONSTRAINTS_IMPL_ITERATIVE_SOLVER_HH
+#ifndef HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
+#define HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
 
 #include <hpp/constraints/svd.hh>
 
@@ -166,4 +166,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_IMPL_HYBRID_SOLVER_HH
+#endif //HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH

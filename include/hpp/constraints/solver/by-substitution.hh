@@ -30,6 +30,34 @@ namespace hpp {
     namespace solver {
     /// \addtogroup solvers
     /// \{
+
+    /// Solve a non-linear system equations with explicit and implicit constraints
+    ///
+    /// This solver is defined in paper \link
+    /// https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf\endlink. We
+    /// give here only a brief description
+    ///
+    /// The unknows (denoted by \f$\mathbf{q}\f$) of the system of equations
+    /// is a Lie group. It is usually a robot configuration space or
+    /// the Cartesian product of robot configuration spaces.
+    ///
+    /// The solver stores a set of implicit numerical constraints:
+    /// \f$g_1 (\mathbf{q}) = 0, g_2 (\mathbf{q}) = 0, \cdots\f$. These implicit
+    /// constraints are added using method HierarchicalIterative::add.
+    ///
+    /// The solver also stores explicit numerical constraints (constraints where
+    /// some configuration variables depend on others) in an instance of class
+    /// ExplicitConstraintSet. This instance is accessible via method
+    /// BySubstitution::explicitConstraintSet.
+    ///
+    /// When an explicit constraint is added using method
+    /// ExplicitConstraintSet::add, this method checks that the explicit
+    /// constraint is compatible with the previously added ones. If so,
+    /// the constraint is stored in the explicit constraint set. Otherwise,
+    /// it has to be added as an implicit constraint.
+    ///
+    /// See Section III of the above mentioned paper for the description of
+    /// the constraint resolution.
     class HPP_CONSTRAINTS_DLLAPI BySubstitution
       : public solver::HierarchicalIterative
     {
@@ -41,11 +69,35 @@ namespace hpp {
 
         virtual ~BySubstitution () {}
 
+        /// \name deprecated
+        /// \{
+
+        /// \deprecated Use explicitConstraintSet instead
+        ExplicitConstraintSet& explicitSolver() HPP_CONSTRAINTS_DEPRECATED
+        {
+          return explicit_;
+        }
+
+        /// \deprecated Use explicitConstraintSet instead
+        const ExplicitConstraintSet& explicitSolver () const HPP_CONSTRAINTS_DEPRECATED
+        {
+          return explicit_;
+        }
+
+        /// \deprecated call explicitConstraintSetHasChanged instead
+        void explicitSolverHasChanged() HPP_CONSTRAINTS_DEPRECATED
+        {
+          return explicitConstraintSetHasChanged ();
+        }
+        /// \}
+
+        /// Get explicit constraint set
         ExplicitConstraintSet& explicitConstraintSet()
         {
           return explicit_;
         }
 
+        /// Set explicit constraint set
         const ExplicitConstraintSet& explicitConstraintSet () const
         {
           return explicit_;
@@ -74,7 +126,7 @@ namespace hpp {
 
         bool isSatisfied (vectorIn_t arg) const
         {
-          return 
+          return
             solver::HierarchicalIterative::isSatisfied (arg)
             && explicit_.isSatisfied (arg);
         }
@@ -121,7 +173,8 @@ namespace hpp {
           return solver::HierarchicalIterative::errorThreshold();
         }
 
-        /// Returns the indices in the input vector which are solved implicitely.
+        /// Return the indices in the input vector which are solved implicitely.
+        ///
         /// The other dof which are modified are solved explicitely.
         segments_t implicitDof () const;
 
