@@ -352,7 +352,7 @@ namespace hpp {
     void ExplicitConstraintSet::rightHandSideFromInput
     (const size_type& fidx, vectorIn_t arg)
     {
-      assert (fidx < functions_.size());
+      assert (fidx < (size_type) functions_.size());
       Function& f = functions_[fidx];
 
       // Computes f(q1) and g(q2)
@@ -383,7 +383,7 @@ namespace hpp {
     void ExplicitConstraintSet::rightHandSide
     (const size_type& i, vectorIn_t rhs)
     {
-      assert (i < functions_.size());
+      assert (i < (size_type) functions_.size());
       Function& f = functions_[i];
       f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
     }
