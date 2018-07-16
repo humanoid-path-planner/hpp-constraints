@@ -33,8 +33,8 @@ namespace hpp {
 
     /// Solve a non-linear system equations with explicit and implicit constraints
     ///
-    /// This solver is defined in paper \link
-    /// https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf\endlink. We
+    /// This solver is defined in paper
+    /// https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf. We
     /// give here only a brief description
     ///
     /// The unknows (denoted by \f$\mathbf{q}\f$) of the system of equations

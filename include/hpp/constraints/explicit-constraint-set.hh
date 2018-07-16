@@ -36,9 +36,8 @@ namespace hpp {
     Set of explicit constraints
 
     This class combines compatible explicit constraints as
-    defined in the following 2018 Robotics Science and System
-    paper \link
-    https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf\endlink,
+    defined in the following paper published in Robotics Science and System
+    2018: https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf\endlink,
     Section II-B Definition 4.
 
     An explicit constraint \f$E=(in,out,f)\f$ on a robot
