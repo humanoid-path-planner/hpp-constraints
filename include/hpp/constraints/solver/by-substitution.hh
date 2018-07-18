@@ -28,44 +28,44 @@
 namespace hpp {
   namespace constraints {
     namespace solver {
-    /// \addtogroup solvers
-    /// \{
+      /// \addtogroup solvers
+      /// \{
 
-    /// Solve a non-linear system equations with explicit and implicit constraints
-    ///
-    /// This solver is defined in paper
-    /// https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf. We
-    /// give here only a brief description
-    ///
-    /// The unknows (denoted by \f$\mathbf{q}\f$) of the system of equations
-    /// is a Lie group. It is usually a robot configuration space or
-    /// the Cartesian product of robot configuration spaces.
-    ///
-    /// The solver stores a set of implicit numerical constraints:
-    /// \f$g_1 (\mathbf{q}) = 0, g_2 (\mathbf{q}) = 0, \cdots\f$. These implicit
-    /// constraints are added using method HierarchicalIterative::add.
-    ///
-    /// The solver also stores explicit numerical constraints (constraints where
-    /// some configuration variables depend on others) in an instance of class
-    /// ExplicitConstraintSet. This instance is accessible via method
-    /// BySubstitution::explicitConstraintSet.
-    ///
-    /// When an explicit constraint is added using method
-    /// ExplicitConstraintSet::add, this method checks that the explicit
-    /// constraint is compatible with the previously added ones. If so,
-    /// the constraint is stored in the explicit constraint set. Otherwise,
-    /// it has to be added as an implicit constraint.
-    ///
-    /// See Section III of the above mentioned paper for the description of
-    /// the constraint resolution.
-    class HPP_CONSTRAINTS_DLLAPI BySubstitution
-      : public solver::HierarchicalIterative
-    {
+      /// Solve a non-linear system equations with explicit and implicit constraints
+      ///
+      /// This solver is defined in paper
+      /// https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf. We
+      /// give here only a brief description
+      ///
+      /// The unknows (denoted by \f$\mathbf{q}\f$) of the system of equations
+      /// is a Lie group. It is usually a robot configuration space or
+      /// the Cartesian product of robot configuration spaces.
+      ///
+      /// The solver stores a set of implicit numerical constraints:
+      /// \f$g_1 (\mathbf{q}) = 0, g_2 (\mathbf{q}) = 0, \cdots\f$. These implicit
+      /// constraints are added using method HierarchicalIterative::add.
+      ///
+      /// The solver also stores explicit numerical constraints (constraints where
+      /// some configuration variables depend on others) in an instance of class
+      /// ExplicitConstraintSet. This instance is accessible via method
+      /// BySubstitution::explicitConstraintSet.
+      ///
+      /// When an explicit constraint is added using method
+      /// ExplicitConstraintSet::add, this method checks that the explicit
+      /// constraint is compatible with the previously added ones. If so,
+      /// the constraint is stored in the explicit constraint set. Otherwise,
+      /// it has to be added as an implicit constraint.
+      ///
+      /// See Section III of the above mentioned paper for the description of
+      /// the constraint resolution.
+      class HPP_CONSTRAINTS_DLLAPI BySubstitution
+        : public solver::HierarchicalIterative
+      {
       public:
         BySubstitution (const std::size_t& argSize, const std::size_t derSize)
-          : solver::HierarchicalIterative(argSize, derSize), explicit_ (argSize, derSize),
-          JeExpanded_ (derSize, derSize)
-        {}
+          : solver::HierarchicalIterative(argSize, derSize), explicit_
+          (argSize, derSize), JeExpanded_ (derSize, derSize)
+            {}
 
         virtual ~BySubstitution () {}
 
@@ -107,13 +107,13 @@ namespace hpp {
         void explicitConstraintSetHasChanged();
 
         template <typename LineSearchType>
-        Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const
+          Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const
         {
           // TODO when there are only locked joint explicit constraints,
           // there is no need for this intricated loop.
           // if (explicit_.isConstant()) {
-            // explicit_.solve(arg);
-            // iterative_.solve(arg, ls);
+          // explicit_.solve(arg);
+          // iterative_.solve(arg, ls);
           // } else {
           return impl_solve (arg, ls);
           // }
@@ -144,10 +144,11 @@ namespace hpp {
 
         /// Project the point arg + darg onto the null space of the jacobian
         /// at arg.
-        void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const;
+        void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result)
+          const;
 
         template <typename LineSearchType>
-        bool oneStep (vectorOut_t arg, LineSearchType& lineSearch) const
+          bool oneStep (vectorOut_t arg, LineSearchType& lineSearch) const
         {
           computeValue<true> (arg);
           updateJacobian (arg);
@@ -197,10 +198,9 @@ namespace hpp {
         /// \param fExplicit explicit formulation of the constraint. Can be NULL
         /// \param arg a vector of size argSize_
         /// \warning At least one of fImplicit and fExplicit must be non-NULL.
-        bool rightHandSideFromInput (
-            const DifferentiableFunctionPtr_t& fImplicit,
-            const DifferentiableFunctionPtr_t& fExplicit,
-            vectorIn_t arg)
+        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& fImplicit,
+                                     const DifferentiableFunctionPtr_t& fExplicit,
+                                     vectorIn_t arg)
         {
           assert (fImplicit || fExplicit);
           if (fExplicit && explicit_.rightHandSideFromInput (fExplicit, arg))
@@ -215,10 +215,9 @@ namespace hpp {
         /// \param fExplicit explicit formulation of the constraint. Can be NULL
         /// \param rhs the desired right hand side
         /// \warning At least one of fImplicit and fExplicit must be non-NULL.
-        bool rightHandSide (
-            const DifferentiableFunctionPtr_t& fImplicit,
-            const DifferentiableFunctionPtr_t& fExplicit,
-            vectorIn_t rhs)
+        bool rightHandSide (const DifferentiableFunctionPtr_t& fImplicit,
+                            const DifferentiableFunctionPtr_t& fExplicit,
+                            vectorIn_t rhs)
         {
           assert (fImplicit || fExplicit);
           if (fExplicit && explicit_.rightHandSide (fExplicit, rhs))
@@ -262,7 +261,8 @@ namespace hpp {
 
         virtual std::ostream& print (std::ostream& os) const;
 
-        void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
+        void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result)
+          const
         {
           solver::HierarchicalIterative::integrate(from, velocity, result);
           explicit_.solve (result);
@@ -275,17 +275,17 @@ namespace hpp {
         typedef solver::HierarchicalIterative parent_t;
 
         template <typename LineSearchType>
-        Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
+          Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
 
         ExplicitConstraintSet explicit_;
         mutable matrix_t Je_, JeExpanded_;
-    }; // class BySubstitution
-    /// \}
+      }; // class BySubstitution
+      /// \}
 
-    inline std::ostream& operator<< (std::ostream& os, const BySubstitution& hs)
-    {
-      return hs.print(os);
-    }
+      inline std::ostream& operator<< (std::ostream& os, const BySubstitution& hs)
+      {
+        return hs.print(os);
+      }
     } // namespace solver
   } // namespace constraints
 } // namespace hpp

@@ -26,130 +26,143 @@
 namespace hpp {
   namespace constraints {
     namespace solver {
-    namespace lineSearch {
-      template bool Constant::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
+      namespace lineSearch {
+        template bool Constant::operator()
+          (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
 
-      template bool Backtracking::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
+        template bool Backtracking::operator()
+          (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
 
-      template bool FixedSequence::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
+        template bool FixedSequence::operator()
+          (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
 
-      template bool ErrorNormBased::operator() (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
-    }
+        template bool ErrorNormBased::operator()
+          (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
+      }
 
-    void BySubstitution::explicitConstraintSetHasChanged()
-    {
-      reduction(explicit_.freeDers());
-    }
+      void BySubstitution::explicitConstraintSetHasChanged()
+      {
+        reduction(explicit_.freeDers());
+      }
 
-    segments_t BySubstitution::implicitDof () const
-    {
-      const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();
-      const Eigen::VectorXi& derF = explicit_.derFunction();
-      ArrayXb adp (activeDerivativeParameters());
-      Eigen::VectorXi out (Eigen::VectorXi::Zero(adp.size()));
+      segments_t BySubstitution::implicitDof () const
+      {
+        const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();
+        const Eigen::VectorXi& derF = explicit_.derFunction();
+        ArrayXb adp (activeDerivativeParameters());
+        Eigen::VectorXi out (Eigen::VectorXi::Zero(adp.size()));
 
-      for (size_type i = 0; i < adp.size(); ++i) {
-        if (adp(i)) {
-         if (derF[i] >= 0) {
-           out += ioDep.row(derF[i]);
-           out(i) = 0;
-         } else
-           out(i) += 1;
+        for (size_type i = 0; i < adp.size(); ++i) {
+          if (adp(i)) {
+            if (derF[i] >= 0) {
+              out += ioDep.row(derF[i]);
+              out(i) = 0;
+            } else
+              out(i) += 1;
+          }
+        }
+        return BlockIndex::fromLogicalExpression(out.array().cast<bool>());
+      }
+
+      void BySubstitution::updateJacobian (vectorIn_t arg) const
+      {
+        if (explicit_.inDers().nbCols() == 0) return;
+        // Compute Je_
+        explicit_.jacobian(JeExpanded_, arg);
+        Je_ = explicit_.viewJacobian(JeExpanded_);
+
+        hppDnum (info, "Jacobian of explicit system is" << iendl <<
+                 setpyformat << pretty_print(Je_));
+
+        for (std::size_t i = 0; i < stacks_.size (); ++i) {
+          Data& d = datas_[i];
+          hppDnum (info, "Jacobian of stack " << i << " before update:" << iendl
+                   << pretty_print(d.reducedJ) << iendl
+                   << "Jacobian of explicit variable of stack " << i << ":" << iendl
+                   << pretty_print(explicit_.outDers().transpose().rview(d.jacobian).
+                                   eval()));
+          d.reducedJ.noalias() += Eigen::MatrixBlocksRef<>
+            (d.activeRowsOfJ.keepRows(), explicit_.outDers())
+            .rview(d.jacobian).eval()
+            * Je_;
+          hppDnum (info, "Jacobian of stack " << i << " after update:" << iendl
+                   << pretty_print(d.reducedJ) << unsetpyformat);
         }
       }
-      return BlockIndex::fromLogicalExpression(out.array().cast<bool>());
-    }
 
-    void BySubstitution::updateJacobian (vectorIn_t arg) const
-    {
-      if (explicit_.inDers().nbCols() == 0) return;
-      // Compute Je_
-      explicit_.jacobian(JeExpanded_, arg);
-      Je_ = explicit_.viewJacobian(JeExpanded_);
+      void BySubstitution::computeActiveRowsOfJ (std::size_t iStack)
+      {
+        Data& d = datas_[iStack];
+        const DifferentiableFunctionStack& f = stacks_[iStack];
+        const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+        std::size_t row = 0;
 
-      hppDnum (info, "Jacobian of explicit system is" << iendl <<
-          setpyformat << pretty_print(Je_));
+        /// ADP: Active Derivative Param
+        Eigen::MatrixXi explicitIOdep = explicit_.inOutDofDependencies();
+        assert ((explicitIOdep.array() >= 0).all());
 
-      for (std::size_t i = 0; i < stacks_.size (); ++i) {
-        Data& d = datas_[i];
-        hppDnum (info, "Jacobian of stack " << i << " before update:" << iendl
-            << pretty_print(d.reducedJ) << iendl
-            << "Jacobian of explicit variable of stack " << i << ":" << iendl
-            << pretty_print(explicit_.outDers().transpose().rview(d.jacobian).eval()));
-        d.reducedJ.noalias() +=
-          Eigen::MatrixBlocksRef<> (d.activeRowsOfJ.keepRows(), explicit_.outDers())
-          .rview(d.jacobian).eval()
-          * Je_;
-        hppDnum (info, "Jacobian of stack " << i << " after update:" << iendl
-            << pretty_print(d.reducedJ) << unsetpyformat);
-      }
-    }
+        typedef Eigen::MatrixBlocks<false, false> BlockIndices;
 
-    void BySubstitution::computeActiveRowsOfJ (std::size_t iStack)
-    {
-      Data& d = datas_[iStack];
-      const DifferentiableFunctionStack& f = stacks_[iStack];
-      const DifferentiableFunctionStack::Functions_t& fs = f.functions();
-      std::size_t row = 0;
+        ArrayXb adpF, adpC;
+        BlockIndices::segments_t rows;
+        for (std::size_t i = 0; i < fs.size (); ++i) {
+          bool active;
 
-      /// ADP: Active Derivative Param
-      Eigen::MatrixXi explicitIOdep = explicit_.inOutDofDependencies();
-      assert ((explicitIOdep.array() >= 0).all());
-
-      typedef Eigen::MatrixBlocks<false, false> BlockIndices;
-
-      ArrayXb adpF, adpC;
-      BlockIndices::segments_t rows;
-      for (std::size_t i = 0; i < fs.size (); ++i) {
-        bool active;
-
-        // Test on the variable left free by the explicit solver.
-        adpF = reduction_.transpose().rview(fs[i]->activeDerivativeParameters().matrix()).eval().array();
-        active = adpF.any();
-        if (!active && explicitIOdep.size() > 0) {
-          // Test on the variable constrained by the explicit solver.
-          adpC = explicit_.outDers().rview(fs[i]->activeDerivativeParameters().matrix()).eval().array();
-          adpF = (explicitIOdep.transpose() * adpC.cast<int>().matrix()).array().cast<bool>();
+          // Test on the variable left free by the explicit solver.
+          adpF = reduction_.transpose().rview
+            (fs[i]->activeDerivativeParameters().matrix()).eval().array();
           active = adpF.any();
+          if (!active && explicitIOdep.size() > 0) {
+            // Test on the variable constrained by the explicit solver.
+            adpC = explicit_.outDers().rview
+              (fs[i]->activeDerivativeParameters().matrix()).eval().array();
+            adpF = (explicitIOdep.transpose() * adpC.cast<int>().matrix()).
+              array().cast<bool>();
+            active = adpF.any();
+          }
+          if (active) // If at least one element of adp is true
+            rows.push_back (BlockIndices::segment_t
+                            (row, fs[i]->outputDerivativeSize()));
+          row += fs[i]->outputDerivativeSize();
         }
-        if (active) // If at least one element of adp is true
-          rows.push_back (BlockIndices::segment_t
-                          (row, fs[i]->outputDerivativeSize()));
-        row += fs[i]->outputDerivativeSize();
+        d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
+        d.activeRowsOfJ.updateRows<true, true, true>();
       }
-      d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
-      d.activeRowsOfJ.updateRows<true, true, true>();
-    }
 
-    void BySubstitution::projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
-    {
-      computeValue<true> (arg);
-      updateJacobian(arg);
-      getReducedJacobian (reducedJ_);
+      void BySubstitution::projectOnKernel (vectorIn_t arg, vectorIn_t darg,
+                                            vectorOut_t result) const
+      {
+        computeValue<true> (arg);
+        updateJacobian(arg);
+        getReducedJacobian (reducedJ_);
 
-      svd_.compute (reducedJ_);
+        svd_.compute (reducedJ_);
 
-      dqSmall_ = reduction_.transpose().rview(darg);
+        dqSmall_ = reduction_.transpose().rview(darg);
 
-      size_type rank = svd_.rank();
-      vector_t tmp (getV1(svd_, rank).adjoint() * dqSmall_);
-      dqSmall_.noalias() -= getV1(svd_, rank) * tmp;
+        size_type rank = svd_.rank();
+        vector_t tmp (getV1(svd_, rank).adjoint() * dqSmall_);
+        dqSmall_.noalias() -= getV1(svd_, rank) * tmp;
 
-      reduction_.transpose().lview(result) = dqSmall_;
-    }
+        reduction_.transpose().lview(result) = dqSmall_;
+      }
 
-    std::ostream& BySubstitution::print (std::ostream& os) const
-    {
-      os << "BySubstitution" << incendl;
-      HierarchicalIterative::print (os) << iendl;
-      explicit_.print (os) << decindent;
-      return os;
-    }
+      std::ostream& BySubstitution::print (std::ostream& os) const
+      {
+        os << "BySubstitution" << incendl;
+        HierarchicalIterative::print (os) << iendl;
+        explicit_.print (os) << decindent;
+        return os;
+      }
 
-    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
-    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
-    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
-    template BySubstitution::Status BySubstitution::impl_solve (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
+      template BySubstitution::Status BySubstitution::impl_solve
+      (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
+      template BySubstitution::Status BySubstitution::impl_solve
+      (vectorOut_t arg, lineSearch::Backtracking   lineSearch) const;
+      template BySubstitution::Status BySubstitution::impl_solve
+      (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
+      template BySubstitution::Status BySubstitution::impl_solve
+      (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
     } // namespace solver
   } // namespace constraints
 } // namespace hpp

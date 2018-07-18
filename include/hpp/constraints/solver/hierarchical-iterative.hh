@@ -30,130 +30,134 @@
 namespace hpp {
   namespace constraints {
     namespace solver {
-    /// \addtogroup solvers
-    /// \{
-    namespace lineSearch {
-      /// No line search. Use \f$\alpha_i = 1\f$
-      struct Constant {
-        template <typename SolverType>
-        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
-      };
+      /// \addtogroup solvers
+      /// \{
+      namespace lineSearch {
+        /// No line search. Use \f$\alpha_i = 1\f$
+        struct Constant {
+          template <typename SolverType>
+          bool operator() (const SolverType& solver, vectorOut_t arg,
+                           vectorOut_t darg);
+        };
 
-      /// Implements the backtracking line search algorithm.
-      /// See https://en.wikipedia.org/wiki/Backtracking_line_search.
-      struct Backtracking {
-        Backtracking ();
+        /// Implements the backtracking line search algorithm.
+        /// See https://en.wikipedia.org/wiki/Backtracking_line_search.
+        struct Backtracking {
+          Backtracking ();
 
-        template <typename SolverType>
-        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+          template <typename SolverType>
+          bool operator() (const SolverType& solver, vectorOut_t arg,
+                           vectorOut_t darg);
 
-        template <typename SolverType>
-        inline value_type computeLocalSlope(const SolverType& solver) const;
+          template <typename SolverType>
+          inline value_type computeLocalSlope(const SolverType& solver) const;
 
-        value_type c, tau, smallAlpha; // 0.8 ^ 7 = 0.209, 0.8 ^ 8 = 0.1677
-        mutable vector_t arg_darg, df, darg;
-      };
+          value_type c, tau, smallAlpha; // 0.8 ^ 7 = 0.209, 0.8 ^ 8 = 0.1677
+          mutable vector_t arg_darg, df, darg;
+        };
 
-      /// The step size is computed using the recursion
-      /// \f$ \alpha_{i+1} = \alpha - K \times (\alpha_{max} - \alpha_i) \f$
-      /// where \f$K\f$ and \f$\alpha_{max}\f$ are some constant values.
-      struct FixedSequence {
-        FixedSequence();
+        /// The step size is computed using the recursion
+        /// \f$ \alpha_{i+1} = \alpha - K \times (\alpha_{max} - \alpha_i) \f$
+        /// where \f$K\f$ and \f$\alpha_{max}\f$ are some constant values.
+        struct FixedSequence {
+          FixedSequence();
 
-        template <typename SolverType>
-        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+          template <typename SolverType>
+          bool operator() (const SolverType& solver, vectorOut_t arg,
+                           vectorOut_t darg);
 
-        value_type alpha;
-        value_type alphaMax, K;
-      };
+          value_type alpha;
+          value_type alphaMax, K;
+        };
 
-      /// The step size is computed using the formula
-      /// \f$ \alpha_{i} = C - K \times \text{tanh}(a \frac{\|f(\mathbf{q}_i)\|}{\epsilon^2} + b) \f$, where
-      /// \li \f$\epsilon\f$ is the error threshold:
-      /// if \f$\|f(\mathbf{q}_i)\|<\epsilon\f$, \f$\mathbf{q}_i\f$ is
-      /// considered to satisfy the constraint.
-      struct ErrorNormBased {
-        ErrorNormBased(value_type alphaMin, value_type _a, value_type _b);
-        ErrorNormBased(value_type alphaMin = 0.2);
+        /// The step size is computed using the formula
+        /// \f$ \alpha_{i} = C - K \times \text{tanh}(a \frac{\|f(\mathbf{q}_i)\|}{\epsilon^2} + b) \f$, where
+        /// \li \f$\epsilon\f$ is the error threshold:
+        /// if \f$\|f(\mathbf{q}_i)\|<\epsilon\f$, \f$\mathbf{q}_i\f$ is
+        /// considered to satisfy the constraint.
+        struct ErrorNormBased {
+          ErrorNormBased(value_type alphaMin, value_type _a, value_type _b);
+          ErrorNormBased(value_type alphaMin = 0.2);
 
-        template <typename SolverType>
-        bool operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg);
+          template <typename SolverType>
+          bool operator() (const SolverType& solver, vectorOut_t arg,
+                           vectorOut_t darg);
 
-        value_type C, K, a, b;
-      };
-    } // namespace lineSearch
+          value_type C, K, a, b;
+        };
+      } // namespace lineSearch
 
-    /// Solve a system of non-linear equations on a robot configuration
-    ///
-    /// The non-linear system of equations is built by adding equations with
-    /// method HierarchicalIterative::add.
-    ///
-    /// Note that a hierarchy between the equations can be
-    /// provided. In this case, the solver will try to solve the
-    /// highest priority equations first, and then to solve the lower priority
-    /// equations. Note that priorities are in decreasing order: 0 has higher
-    /// priority than 1.
-    ///
-    /// The algorithm used is a Newton-Raphson like algorithm that works as
-    /// follows: let \f$f (\mathbf{q}) = 0\f$ be the system of equations where
-    /// \f$f\f$ is a \f$C^1\f$ mapping from the robot configuration space to
-    /// a Lie group space \f$\mathcal{L}\f$.
-    ///
-    /// Starting from initial guess \f$\mathbf{q}_0\f$, the method
-    /// HierarchicalIterative::solve builds a sequence of configurations
-    /// \f$\mathbf{q}_i\f$ as follows:
-    /// \f{eqnarray*}
-    /// \mathbf{q}_{i+1} = \mathbf{q}_i -
-    ///    \alpha_i \frac{\partial f}{\partial \mathbf{q}}(\mathbf{q}_i)^{+}
-    ///    f (\mathbf{q}_i)
-    /// \f}
-    /// where
-    /// \li \f$\frac{\partial f}{\partial \mathbf{q}}(\mathbf{q}_i)^{+}\f$ is
-    ///     the Moore-Penrose pseudo-inverse of the system Jacobian,
-    /// \li \f$\alpha_i\f$ is a sequence of real numbers depending on the
-    ///     line search strategy. Possible line-search strategies are
-    ///     lineSearch::Constant, lineSearch::Backtracking,
-    ///     lineSearch::FixedSequence, lineSearch::ErrorNormBased.
-    /// until
-    /// \li the residual \f$\|f(\mathbf{q})\|\f$ is below an error threshold, or
-    /// \li the maximal number of iterations has been reached.
-    ///
-    /// The error threshold can be accessed by methods
-    /// HierarchicalIterative::errorThreshold. The maximal number of
-    /// iterations can be accessed by methods
-    /// HierarchicalIterative::maxIterations.
-    ///
-    /// \note Lie group
-    ///
-    /// The unknowns \f$\mathbf{q}\f$ may take values in a more general set
-    /// than the configuration space of a robot. This set should be a Cartesian
-    /// product of Lie groups. In this case, the user can provide a method that
-    /// computes the exponential map of a tangent vector.
-    /// \sa HierarchicalIterative::Integration_t and
-    /// HierarchicalIterative::integration.
-    ///
-    /// \note Saturation
-    ///
-    /// To prevent configuration variables to get out of joint limits during
-    /// Newton Raphson iterations, the user may provide a method of type
-    /// HierarchicalIterative::Saturation_t using setter and getter
-    /// HierarchicalIterative::saturation.
-    ///
-    /// \note Right hand side and comparison types
-    ///
-    /// Instead of \f$f(\mathbf{q}) = 0\f$, other constraints can be defined.
-    /// Several comparison types are available:
-    /// \li Equality: \f$f(\mathbf{q}) = rhs\f$, where \f$rhs\f$ is a
-    /// parameterizable right hand side,
-    /// \li EqualToZero: \f$f(\mathbf{q}) = 0\f$,
-    /// \li Superior: \f$f(\mathbf{q}) > 0\f$
-    /// \li Inferior: \f$f(\mathbf{q}) < 0\f$
-    /// If several constraint are of type equality, the right hand side of the
-    /// system of equations can be modified by methods
-    /// HierarchicalIterative::rightHandSideFromInput,
-    /// HierarchicalIterative::rightHandSide.
-    class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative
-    {
+      /// Solve a system of non-linear equations on a robot configuration
+      ///
+      /// The non-linear system of equations is built by adding equations with
+      /// method HierarchicalIterative::add.
+      ///
+      /// Note that a hierarchy between the equations can be
+      /// provided. In this case, the solver will try to solve the
+      /// highest priority equations first, and then to solve the lower priority
+      /// equations. Note that priorities are in decreasing order: 0 has higher
+      /// priority than 1.
+      ///
+      /// The algorithm used is a Newton-Raphson like algorithm that works as
+      /// follows: let \f$f (\mathbf{q}) = 0\f$ be the system of equations where
+      /// \f$f\f$ is a \f$C^1\f$ mapping from the robot configuration space to
+      /// a Lie group space \f$\mathcal{L}\f$.
+      ///
+      /// Starting from initial guess \f$\mathbf{q}_0\f$, the method
+      /// HierarchicalIterative::solve builds a sequence of configurations
+      /// \f$\mathbf{q}_i\f$ as follows:
+      /// \f{eqnarray*}
+      /// \mathbf{q}_{i+1} = \mathbf{q}_i -
+      ///    \alpha_i \frac{\partial f}{\partial \mathbf{q}}(\mathbf{q}_i)^{+}
+      ///    f (\mathbf{q}_i)
+      /// \f}
+      /// where
+      /// \li \f$\frac{\partial f}{\partial \mathbf{q}}(\mathbf{q}_i)^{+}\f$ is
+      ///     the Moore-Penrose pseudo-inverse of the system Jacobian,
+      /// \li \f$\alpha_i\f$ is a sequence of real numbers depending on the
+      ///     line search strategy. Possible line-search strategies are
+      ///     lineSearch::Constant, lineSearch::Backtracking,
+      ///     lineSearch::FixedSequence, lineSearch::ErrorNormBased.
+      /// until
+      /// \li the residual \f$\|f(\mathbf{q})\|\f$ is below an error threshold, or
+      /// \li the maximal number of iterations has been reached.
+      ///
+      /// The error threshold can be accessed by methods
+      /// HierarchicalIterative::errorThreshold. The maximal number of
+      /// iterations can be accessed by methods
+      /// HierarchicalIterative::maxIterations.
+      ///
+      /// \note Lie group
+      ///
+      /// The unknowns \f$\mathbf{q}\f$ may take values in a more general set
+      /// than the configuration space of a robot. This set should be a Cartesian
+      /// product of Lie groups. In this case, the user can provide a method that
+      /// computes the exponential map of a tangent vector.
+      /// \sa HierarchicalIterative::Integration_t and
+      /// HierarchicalIterative::integration.
+      ///
+      /// \note Saturation
+      ///
+      /// To prevent configuration variables to get out of joint limits during
+      /// Newton Raphson iterations, the user may provide a method of type
+      /// HierarchicalIterative::Saturation_t using setter and getter
+      /// HierarchicalIterative::saturation.
+      ///
+      /// \note Right hand side and comparison types
+      ///
+      /// Instead of \f$f(\mathbf{q}) = 0\f$, other constraints can be defined.
+      /// Several comparison types are available:
+      /// \li Equality: \f$f(\mathbf{q}) = rhs\f$, where \f$rhs\f$ is a
+      /// parameterizable right hand side,
+      /// \li EqualToZero: \f$f(\mathbf{q}) = 0\f$,
+      /// \li Superior: \f$f(\mathbf{q}) > 0\f$
+      /// \li Inferior: \f$f(\mathbf{q}) < 0\f$
+      /// If several constraint are of type equality, the right hand side of the
+      /// system of equations can be modified by methods
+      /// HierarchicalIterative::rightHandSideFromInput,
+      /// HierarchicalIterative::rightHandSide.
+      class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative
+      {
       public:
         typedef Eigen::ColBlockIndices Reduction_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
@@ -206,7 +210,8 @@ namespace hpp {
         /// \param priority level of priority of the constraint: priority are
         ///        in decreasing order: 0 is the highest priority level,
         /// \param comp comparison type. See class documentation for details.
-        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority, const ComparisonTypes_t& comp);
+        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority,
+                  const ComparisonTypes_t& comp);
 
         /// Set the integration function
         void integration (const Integration_t& integrate)
@@ -252,7 +257,7 @@ namespace hpp {
         ///  where \f$\mathbf{q}_1\f$ and \f$\mathbf{q}_2\f$ are vectors
         ///  composed of the components of \f$\mathbf{q}\f$.
         template <typename LineSearchType>
-        Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
+          Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const;
 
         /// Solve the system of non linear equations
         ///
@@ -549,8 +554,8 @@ namespace hpp {
         mutable ::hpp::statistics::SuccessStatistics statistics_;
 
         friend struct lineSearch::Backtracking;
-    }; // class HierarchicalIterative
-    /// \}
+      }; // class HierarchicalIterative
+      /// \}
     } // namespace solver
     namespace lineSearch {
       typedef ::hpp::constraints::solver::lineSearch::Constant Constant
