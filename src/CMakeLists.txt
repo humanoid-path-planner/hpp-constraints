@@ -27,6 +27,7 @@ SET (${LIBRARY_NAME}_SOURCES
   matrix-view.cc
   static-stability.cc
   explicit-constraint-set.cc
+  implicit.cc
   solver/by-substitution.cc
   solver/hierarchical-iterative.cc
 )

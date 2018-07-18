@@ -139,6 +139,9 @@ namespace hpp {
 
     typedef Eigen::BlockIndex BlockIndex;
 
+    HPP_PREDEF_CLASS (Implicit);
+    typedef boost::shared_ptr <Implicit> ImplicitPtr_t;
+
     enum ComparisonType {
       Equality,
       EqualToZero,
