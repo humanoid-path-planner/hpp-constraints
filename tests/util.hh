@@ -39,10 +39,10 @@
 
 #define SOLVER_CHECK_SOLVE(expr,expected)                                      \
   {                                                                            \
-    solver::HierarchicalIterative::Status __status = expr;                       \
-    BOOST_CHECK_MESSAGE(__status == solver::HierarchicalIterative::expected,     \
+    hpp::constraints::solver::HierarchicalIterative::Status __status = expr; \
+    BOOST_CHECK_MESSAGE(__status == hpp::constraints::solver::HierarchicalIterative::expected, \
         "check " #expr " == " #expected " failed ["                            \
-        << __status << " != " << solver::HierarchicalIterative::expected << "]");\
+                        << __status << " != " << hpp::constraints::solver::HierarchicalIterative::expected << "]"); \
   }
 
 

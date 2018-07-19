@@ -58,6 +58,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/implicit.hh
   include/hpp/constraints/hybrid-solver.hh
   include/hpp/constraints/iterative-solver.hh
+  include/hpp/constraints/locked-joint.hh
   include/hpp/constraints/solver/hierarchical-iterative.hh
   include/hpp/constraints/solver/by-substitution.hh
 

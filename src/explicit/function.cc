@@ -121,7 +121,7 @@ namespace hpp {
         J_qout.bottomRightCorner<3,3>() = Jlog_R_f_T_R_out;
         // extract 3 bottom rows of inJacobian_
         v.inJacobian_.middleRows(3,3).lview (v.result_) =
-          ( - Jlog_R_f_T_R_out * R_out.transpose () * R_f ) 
+          ( - Jlog_R_f_T_R_out * R_out.transpose () * R_f )
           * v.Jf_.template bottomRows <3> ();
         hppDout (info, "result_ = " << std::endl << v.result_);
 
@@ -377,6 +377,9 @@ namespace hpp {
           ++rank;
         }
       }
+
+      template class Function <true >;
+      template class Function <false>;
 
     } // namespace explicit_
   } // namespace constraints

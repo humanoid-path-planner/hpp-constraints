@@ -18,7 +18,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
 
-#include <hpp/constraints/hybrid-solver.hh>
+#include <hpp/constraints/solver/by-substitution.hh>
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
@@ -33,7 +33,38 @@
 
 #include <../tests/util.hh>
 
-using namespace hpp::constraints;
+using hpp::constraints::DifferentiableFunction;
+using hpp::constraints::solver::BySubstitution;
+using hpp::constraints::matrix_t;
+using hpp::constraints::vector_t;
+using hpp::constraints::vector3_t;
+using hpp::constraints::segment_t;
+using hpp::constraints::segments_t;
+using hpp::constraints::size_type;
+using hpp::constraints::value_type;
+using hpp::constraints::AffineFunction;
+using hpp::constraints::AffineFunctionPtr_t;
+using hpp::constraints::ConstantFunction;
+using hpp::constraints::ConstantFunctionPtr_t;
+using hpp::constraints::ExplicitConstraintSet;
+using hpp::constraints::matrix3_t;
+using hpp::constraints::LiegroupSpace;
+using hpp::constraints::JointPtr_t;
+using hpp::constraints::RelativeTransformation;
+using hpp::constraints::RelativeTransformationPtr_t;
+using hpp::constraints::LiegroupElement;
+using hpp::constraints::vectorIn_t;
+using hpp::constraints::matrixOut_t;
+using hpp::constraints::Transform3f;
+using hpp::constraints::DevicePtr_t;
+using hpp::constraints::Configuration_t;
+using hpp::constraints::Orientation;
+using hpp::constraints::solver::lineSearch::Backtracking;
+using hpp::constraints::solver::lineSearch::ErrorNormBased;
+using hpp::constraints::solver::lineSearch::FixedSequence;
+using hpp::pinocchio::unittest::HumanoidRomeo;
+using hpp::pinocchio::unittest::makeDevice;
+
 using boost::assign::list_of;
 
 matrix_t randomPositiveDefiniteMatrix (int N)
@@ -68,7 +99,7 @@ void test_quadratic ()
   AffineFunctionPtr_t expl (new AffineFunction (B));
 
   // Make solver
-  HybridSolver solver (N, N);
+  BySubstitution solver (N, N);
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
   solver.integration(simpleIntegration<-1,1>);
@@ -92,8 +123,7 @@ void test_quadratic ()
   BOOST_CHECK (solver.isSatisfied(x));
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<solver::lineSearch::Backtracking>(x),
-                      SUCCESS);
+  SOLVER_CHECK_SOLVE (solver.solve <Backtracking>(x), SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
   EIGEN_VECTOR_IS_APPROX (x.segment<N2>(N1), B * x.tail<N3>());
   BOOST_CHECK_SMALL (value_type(x.transpose() * A * x), test_precision);
@@ -136,7 +166,7 @@ void test_quadratic2 ()
   AffineFunctionPtr_t expl2 (new AffineFunction (C));
 
   // Make solver
-  HybridSolver solver (N, N);
+  BySubstitution solver (N, N);
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
   solver.integration(simpleIntegration<-1,1>);
@@ -162,7 +192,7 @@ void test_quadratic2 ()
   BOOST_CHECK (solver.isSatisfied(x));
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<solver::lineSearch::Backtracking>(x),
+  SOLVER_CHECK_SOLVE (solver.solve<Backtracking>(x),
                       SUCCESS);
   // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
@@ -213,7 +243,7 @@ void test_quadratic3 ()
   Quadratic::Ptr_t quad (new Quadratic (A, -d[0]));
 
   // Make solver
-  HybridSolver solver (N, N);
+  BySubstitution solver (N, N);
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
   solver.integration(simpleIntegration<-1,1>);
@@ -244,7 +274,7 @@ void test_quadratic3 ()
   vector_t x (N);
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<solver::lineSearch::Backtracking>(x),
+  SOLVER_CHECK_SOLVE (solver.solve<Backtracking>(x),
                       SUCCESS);
   // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
@@ -440,7 +470,7 @@ typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(functions1)
 {
-  HybridSolver solver(3, 3);
+  BySubstitution solver(3, 3);
 
   /// System:
   /// f (q1, q2) = 0
@@ -478,7 +508,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
 BOOST_AUTO_TEST_CASE(functions2)
 {
-  HybridSolver solver(3, 3);
+  BySubstitution solver(3, 3);
 
   /// System:
   /// f (q1, q3) = 0
@@ -524,7 +554,7 @@ BOOST_AUTO_TEST_CASE(functions2)
 
 BOOST_AUTO_TEST_CASE(hybrid_solver)
 {
-  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
+  DevicePtr_t device (makeDevice (HumanoidRomeo));
   BOOST_REQUIRE (device);
   device->rootJoint()->lowerBound (0, -1);
   device->rootJoint()->lowerBound (1, -1);
@@ -539,7 +569,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
-  HybridSolver solver(device->configSize(), device->numberDof());
+  BySubstitution solver(device->configSize(), device->numberDof());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
   solver.integration(boost::bind(hpp::pinocchio::integrate<true, hpp::pinocchio::DefaultLieGroupMap>, device, _1, _2, _3));
@@ -578,17 +608,17 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   solver.explicitConstraintSetHasChanged();
   solver.print(std::cout);
 
-  // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), HybridSolver::SUCCESS);
+  // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), BySubstitution::SUCCESS);
 
   Configuration_t tmp = qrand;
-  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::Backtracking  >(qrand),
-                    HybridSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<Backtracking  >(qrand),
+                    BySubstitution::SUCCESS);
   qrand = tmp;
-  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::ErrorNormBased>(qrand),
-                    HybridSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<ErrorNormBased>(qrand),
+                    BySubstitution::SUCCESS);
   qrand = tmp;
-  BOOST_CHECK_EQUAL(solver.solve<solver::lineSearch::FixedSequence >(qrand),
-                    HybridSolver::SUCCESS);
+  BOOST_CHECK_EQUAL(solver.solve<FixedSequence>(qrand),
+                    BySubstitution::SUCCESS);
 
   vector_t dq (device->numberDof());
   dq.setRandom();

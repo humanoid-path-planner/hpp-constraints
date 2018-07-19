@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE (print) {
 
   Configuration_t q1 = *cs.shoot(),
                   q2 = *cs.shoot();
-  for (int i = 0; i < functions.size(); ++i) {
+  for (std::size_t i = 0; i < functions.size(); ++i) {
     DifferentiableFunctionPtr_t f = functions[i];
 
     std::cout << *f << std::endl;

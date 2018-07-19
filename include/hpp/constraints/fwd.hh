@@ -163,6 +163,10 @@ namespace hpp {
       template <bool GisIdentity> class Function;
     } // namespace explicit
 
+    HPP_PREDEF_CLASS (LockedJoint);
+    typedef boost::shared_ptr <LockedJoint> LockedJointPtr_t;
+    typedef boost::shared_ptr <const LockedJoint> LockedJointConstPtr_t;
+
     typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
     typedef solver::HierarchicalIterative HierarchicalIterativeSolver
     HPP_CONSTRAINTS_DEPRECATED;

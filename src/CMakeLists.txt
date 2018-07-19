@@ -30,6 +30,7 @@ SET (${LIBRARY_NAME}_SOURCES
   implicit.cc
   explicit.cc
   explicit/function.cc
+  locked-joint.cc
   solver/by-substitution.cc
   solver/hierarchical-iterative.cc
 )

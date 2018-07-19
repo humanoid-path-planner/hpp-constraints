@@ -37,15 +37,43 @@
 
 using boost::assign::list_of;
 
-using namespace hpp::constraints;
 using Eigen::RowBlockIndices;
 using Eigen::ColBlockIndices;
 using Eigen::BlockIndex;
 
+using hpp::pinocchio::unittest::HumanoidRomeo;
+using hpp::pinocchio::unittest::makeDevice;
+using hpp::constraints::AffineFunction;
+using hpp::constraints::size_type;
+using hpp::constraints::vector_t;
+using hpp::constraints::matrix_t;
+using hpp::constraints::ExplicitConstraintSet;
+using hpp::constraints::matrix3_t;
+using hpp::constraints::vector3_t;
+using hpp::constraints::DifferentiableFunction;
+using hpp::constraints::JointPtr_t;
+using hpp::constraints::RelativeTransformation;
+using hpp::constraints::RelativeTransformationPtr_t;
+using hpp::constraints::LiegroupSpace;
+using hpp::constraints::LiegroupSpacePtr_t;
+using hpp::constraints::Transform3f;
+using hpp::constraints::vectorIn_t;
+using hpp::constraints::LiegroupElement;
+using hpp::constraints::matrixOut_t;
+using hpp::constraints::AffineFunctionPtr_t;
+using hpp::constraints::segment_t;
+using hpp::constraints::segments_t;
+using hpp::constraints::DevicePtr_t;
+using hpp::constraints::Device;
+using hpp::constraints::Configuration_t;
+using hpp::constraints::value_type;
+using hpp::constraints::Equality;
+using hpp::constraints::ComparisonTypes_t;
+
 namespace Eigen {
   namespace internal {
     bool operator== (const empty_struct&, const empty_struct&) { return true; }
-  }
+  } // namespace internal
 
   template <bool _allRows, bool _allCols>
   bool operator== (const MatrixBlocks<_allRows,_allCols>& a,
@@ -56,7 +84,7 @@ namespace Eigen {
       &&   ( _allRows || a.rows()   == b.rows())
       &&   ( _allCols || a.cols()   == b.cols());
   }
-}
+} // namespace Eigen
 
 class LockedJoint : public AffineFunction
 {
@@ -94,7 +122,7 @@ class LockedJoint : public AffineFunction
       ret.addRow (idx_ - 1, length_);
       return ret;
     }
-};
+}; // class LockedJoint
 
 class TestFunction : public AffineFunction
 {
@@ -133,7 +161,7 @@ class TestFunction : public AffineFunction
       ret.addRow (idxOut_ - 1, length_); // TODO this assumes there is only the freeflyer
       return ret;
     }
-};
+}; // class TestFunction
 
 matrix3_t exponential (const vector3_t& aa)
 {
@@ -222,13 +250,6 @@ class ExplicitTransformation : public DifferentiableFunction
       result. vector ().tail<4>() =
         Eigen::Quaternion<value_type>
         (exponential(transform. vector ().tail<3>())).coeffs();
-
-      // Transform3f tf1 = joint_->robot()->rootJoint()->currentTransformation();
-      // Transform3f tf2 = joint_->currentTransformation();
-      // Transform3f tf = tf2.inverse() * tf1;
-
-      // result.head<3> = tf.translation();
-      // result.tail<4> = Eigen::Quaternion<value_type>(tf.rotation());
     }
 
     void impl_jacobian (matrixOut_t jacobian,
@@ -495,7 +516,7 @@ BOOST_AUTO_TEST_CASE(jacobian3)
 
 BOOST_AUTO_TEST_CASE(locked_joints)
 {
-  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
+  DevicePtr_t device (makeDevice (HumanoidRomeo));
   device->controlComputation((Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
 
   BOOST_REQUIRE (device);
