@@ -28,6 +28,8 @@ SET (${LIBRARY_NAME}_SOURCES
   static-stability.cc
   explicit-constraint-set.cc
   implicit.cc
+  explicit.cc
+  explicit/function.cc
   solver/by-substitution.cc
   solver/hierarchical-iterative.cc
 )

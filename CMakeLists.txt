@@ -53,6 +53,8 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/configuration-constraint.hh
   include/hpp/constraints/explicit-constraint-set.hh
   include/hpp/constraints/explicit-solver.hh
+  include/hpp/constraints/explicit.hh
+  include/hpp/constraints/explicit/function.hh
   include/hpp/constraints/implicit.hh
   include/hpp/constraints/hybrid-solver.hh
   include/hpp/constraints/iterative-solver.hh

@@ -150,11 +150,19 @@ namespace hpp {
     };
     typedef std::vector<ComparisonType> ComparisonTypes_t;
 
+    HPP_PREDEF_CLASS (Explicit);
+    typedef boost::shared_ptr <Explicit> ExplicitPtr_t;
+
     class ExplicitConstraintSet;
     namespace solver {
       class HierarchicalIterative;
       class BySubstitution;
     } // namespace solver
+
+    namespace explicit_ {
+      template <bool GisIdentity> class Function;
+    } // namespace explicit
+
     typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
     typedef solver::HierarchicalIterative HierarchicalIterativeSolver
     HPP_CONSTRAINTS_DEPRECATED;
