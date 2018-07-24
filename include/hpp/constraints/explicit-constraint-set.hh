@@ -155,6 +155,11 @@ namespace hpp {
         bool replace (const DifferentiableFunctionPtr_t& oldf,
                       const DifferentiableFunctionPtr_t& newd);
 
+        /// Constructor
+        ///
+        /// \param argSize dimension of vector space in which the robot
+        ///                configuration space is immersed.
+        /// \param derSize dimension of tangent space to configuration space.
         ExplicitConstraintSet (const std::size_t& argSize, const std::size_t derSize)
           : argSize_ (argSize), derSize_ (derSize)
           ,   inArgs_ (), freeArgs_ ()

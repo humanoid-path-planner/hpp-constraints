@@ -156,8 +156,17 @@ namespace hpp {
       // It is done in the while loop below
       // Sanity check: is it explicit ?
       for (std::size_t i = 0; i < inArg.indices().size(); ++i)
-        if (BlockIndex::overlap(inArg.indices()[i], outIdx))
-          return -1;
+        if (BlockIndex::overlap(inArg.indices()[i], outIdx)) {
+          size_type f0 (inArg.indices()[i].first);
+          size_type s0 (f0 + inArg.indices()[i].second - 1);
+          size_type f1 (outIdx.first);
+          size_type s1 (f1 + outIdx.second - 1);
+          std::ostringstream oss;
+          oss << "Explicit constraint \"" << f->name () << "\" is malformed.";
+          oss << " input [" << f0 << "," << s0
+              << "] and output [" << f1 << "," << s1 << "] segments overlap.";
+            throw std::logic_error (oss.str ().c_str ());
+        }
       // Sanity check: Comparison type must be either EqualToZero or Equality
       assert (comp.size() == (std::size_t)f->outputDerivativeSize());
       for (std::size_t i = 0; i < comp.size(); ++i)

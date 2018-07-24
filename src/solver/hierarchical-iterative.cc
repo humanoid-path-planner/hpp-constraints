@@ -22,9 +22,11 @@
 #include <hpp/util/timer.hh>
 
 #include <hpp/pinocchio/util.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
+#include <hpp/constraints/implicit.hh>
 
 // #define SVD_THRESHOLD Eigen::NumTraits<value_type>::dummy_precision()
 #define SVD_THRESHOLD 1e-8
@@ -98,18 +100,34 @@ namespace hpp {
       }
 
       HierarchicalIterative::HierarchicalIterative
-      (const std::size_t& argSize, const std::size_t derSize)
+      (const LiegroupSpacePtr_t& configSpace)
         : stacks_ (),
-          argSize_ (argSize),
-          derSize_ (derSize),
+          configSpace_ (configSpace),
           dimension_ (0),
           lastIsOptional_ (false),
           reduction_ (),
-          saturation_ (derSize),
+          functions_ (),
+          lockedJoints_ (),
+          saturation_ (configSpace->nv ()),
+          qSat_ (configSpace_->nv ()),
           datas_(),
+          OM_ (configSpace->nv ()),
+          OP_ (configSpace->nv ()),
           statistics_ ("HierarchicalIterative")
+
       {
-        reduction_.addCol (0, derSize_);
+        reduction_.addCol (0, configSpace_->nv ());
+      }
+
+      bool HierarchicalIterative::contains
+      (const ImplicitPtr_t& numericalConstraint) const
+      {
+        for (NumericalConstraints_t::const_iterator it = functions_.begin ();
+             it != functions_.end (); ++it) {
+          if (numericalConstraint == *it || *numericalConstraint == **it)
+            return true;
+        }
+        return false;
       }
 
       void HierarchicalIterative::add (const DifferentiableFunctionPtr_t& f,
@@ -144,7 +162,7 @@ namespace hpp {
 
       ArrayXb HierarchicalIterative::activeParameters () const
       {
-        ArrayXb ap (ArrayXb::Constant(argSize_, false));
+        ArrayXb ap (ArrayXb::Constant(configSpace_->nq (), false));
         for (std::size_t i = 0; i < stacks_.size (); ++i)
           ap = ap || stacks_[i].activeParameters();
         return ap;
@@ -152,7 +170,7 @@ namespace hpp {
 
       ArrayXb HierarchicalIterative::activeDerivativeParameters () const
       {
-        ArrayXb ap (ArrayXb::Constant(derSize_, false));
+        ArrayXb ap (ArrayXb::Constant(configSpace_->nv (), false));
         for (std::size_t i = 0; i < stacks_.size (); ++i)
           ap = ap || stacks_[i].activeDerivativeParameters();
         return ap;
@@ -175,7 +193,7 @@ namespace hpp {
           datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
           datas_[i].rightHandSide.setNeutral ();
 
-          assert(derSize_ == f.inputDerivativeSize());
+          assert(configSpace_->nv () == f.inputDerivativeSize());
           datas_[i].jacobian.resize(f.outputDerivativeSize(),
                                     f.inputDerivativeSize());
           datas_[i].jacobian.setZero();
@@ -189,7 +207,7 @@ namespace hpp {
           datas_[i].maxRank = 0;
         }
 
-        dq_ = vector_t::Zero(derSize_);
+        dq_ = vector_t::Zero(configSpace_->nv ());
         dqSmall_.resize(reducedSize);
         projector_.resize(reducedSize, reducedSize);
         reducedJ_.resize(reducedDimension_, reducedSize);
@@ -338,7 +356,7 @@ namespace hpp {
       void HierarchicalIterative::computeSaturation (vectorIn_t arg) const
       {
         bool applySaturate;
-        applySaturate = saturate_ (arg, saturation_);
+        applySaturate = saturate_ (arg, qSat_, saturation_);
         if (!applySaturate) return;
 
         reducedSaturation_ = reduction_.transpose().rview (saturation_);
@@ -399,6 +417,16 @@ namespace hpp {
             row += fs[j]->outputSize();
           }
         }
+      }
+
+      void HierarchicalIterative::integrate
+      (vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
+      {
+        typedef pinocchio::LiegroupElement Lge_t;
+        typedef pinocchio::LiegroupConstElementRef LgeConstRef_t;
+        LgeConstRef_t O (from, configSpace_);
+        Lge_t M (O + velocity);
+        saturate_ (M.vector (), result, saturation_);
       }
 
       void HierarchicalIterative::residualError (vectorOut_t error) const

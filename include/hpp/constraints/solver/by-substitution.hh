@@ -22,6 +22,7 @@
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 
+#include <hpp/constraints/locked-joint.hh>
 #include <hpp/constraints/explicit-constraint-set.hh>
 #include <hpp/constraints/solver/hierarchical-iterative.hh>
 
@@ -62,10 +63,28 @@ namespace hpp {
         : public solver::HierarchicalIterative
       {
       public:
-        BySubstitution (const std::size_t& argSize, const std::size_t derSize)
-          : solver::HierarchicalIterative(argSize, derSize), explicit_
-          (argSize, derSize), JeExpanded_ (derSize, derSize)
+        BySubstitution (const LiegroupSpacePtr_t& configSpace) :
+          HierarchicalIterative(configSpace),
+          explicit_ (configSpace->nq (), configSpace->nv ()),
+          JeExpanded_ (configSpace->nv (), configSpace->nv ())
             {}
+
+        BySubstitution (const BySubstitution& other) :
+          HierarchicalIterative (other), explicit_ (other.explicit_),
+          Je_ (other.Je_), JeExpanded_ (other.JeExpanded_)
+          {
+            // TODO remove me
+            for (LockedJoints_t::const_iterator it = lockedJoints_.begin ();
+                 it != lockedJoints_.end (); ++it) {
+              LockedJointPtr_t lj = HPP_STATIC_PTR_CAST
+                (LockedJoint, (*it)->copy ());
+              if (!explicitConstraintSet().replace
+                  ((*it)->explicitFunction(), lj->explicitFunction()))
+                throw std::runtime_error
+                  ("Could not replace lockedJoint function");
+              lockedJoints_.push_back (lj);
+            }
+          }
 
         virtual ~BySubstitution () {}
 
@@ -90,6 +109,58 @@ namespace hpp {
           return explicitConstraintSetHasChanged ();
         }
         /// \}
+
+        /// Add a numerical constraints
+        ///
+        /// \param numericalConstraint The numerical constraint.
+        /// \param passiveDofs degrees of freedom that are not modified during
+        ///        implicit constraint resolution: column indices of the
+        ///        Jacobian vector that will are set to zero before
+        ///        pseudo-inversion,
+        /// \param priority priority of the function. The last level might be
+        ///        optional,
+        /// \return false if numerical constraint had already been inserted.
+        ///
+        /// If the constraint is explicit and compatible with previously
+        /// inserted constraints, it is added as explicit. Otherwise, it is
+        /// added as implicit.
+        ///
+        /// \note The intervals are interpreted as a list of couple
+        /// (index_start, length) and NOT as (index_start, index_end).
+        bool add (const ImplicitPtr_t& numericalConstraint,
+                  const segments_t& passiveDofs = segments_t (0),
+                  const std::size_t priority = 0);
+
+        /// Add an implicit constraint
+        ///
+        /// \param f differentiable function from the robot configuration space
+        ///          to a Lie group (See hpp::pinocchio::LiegroupSpace),
+        /// \param priority level of priority of the constraint: priority are
+        ///        in decreasing order: 0 is the highest priority level,
+        /// \param comp comparison type. See class documentation for details.
+        ///
+        /// \deprecated Use bool BySubstitution::add (const
+        ///          ImplicitPtr_t& numericalConstraint, const
+        ///          segments_t& passiveDofs = segments_t (0), const
+        ///          std::size_t priority = 0) instead.
+        void add (const DifferentiableFunctionPtr_t& f,
+                  const std::size_t& priority,
+                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED
+        {
+          HierarchicalIterative::add (f, priority, comp);
+        }
+
+        void add (const LockedJointPtr_t& lockedJoint);
+
+        /// Get the numerical constraints implicit and explicit
+        const NumericalConstraints_t& numericalConstraints () const
+        {
+          return functions_;
+        }
+
+        LockedJoints_t lockedJoints () const {
+          return lockedJoints_;
+        }
 
         /// Get explicit constraint set
         ExplicitConstraintSet& explicitConstraintSet()
@@ -119,6 +190,32 @@ namespace hpp {
           // }
         }
 
+        /// Project velocity on constraint tangent space in "from"
+        ///
+        /// \param from configuration,
+        /// \param velocity velocity to project
+        ///
+        /// \f[
+        /// \textbf{q}_{res} = \left(I_n -
+        /// J^{+}J(\textbf{q}_{from})\right) (\textbf{v})
+        /// \f]
+        void projectVectorOnKernel (vectorIn_t from, vectorIn_t velocity,
+                                    vectorOut_t result) const;
+
+        /// Project configuration "to" on constraint tangent space in "from"
+        ///
+        /// \param from configuration,
+        /// \param to configuration to project
+        ///
+        /// \f[
+        /// \textbf{q}_{res} = \textbf{q}_{from} + \left(I_n -
+        /// J^{+}J(\textbf{q}_{from})\right) (\textbf{q}_{to} -
+        ///                                   \textbf{q}_{from})
+        /// \f]
+        virtual void projectOnKernel (ConfigurationIn_t from,
+                                      ConfigurationIn_t to,
+                                      ConfigurationOut_t result);
+
         inline Status solve (vectorOut_t arg) const
         {
           return solve(arg, DefaultLineSearch());
@@ -142,12 +239,7 @@ namespace hpp {
           return iterative && _explicit;
         }
 
-        /// Project the point arg + darg onto the null space of the jacobian
-        /// at arg.
-        void projectOnKernel (vectorIn_t arg, vectorIn_t darg, vectorOut_t result)
-          const;
-
-        template <typename LineSearchType>
+      template <typename LineSearchType>
           bool oneStep (vectorOut_t arg, LineSearchType& lineSearch) const
         {
           computeValue<true> (arg);
@@ -196,7 +288,7 @@ namespace hpp {
         /// Set the right hand side for a given constraint.
         /// \param fImplicit implicit formulation of the constraint. Can be NULL
         /// \param fExplicit explicit formulation of the constraint. Can be NULL
-        /// \param arg a vector of size argSize_
+        /// \param arg a vector of size configSpace->nq ()
         /// \warning At least one of fImplicit and fExplicit must be non-NULL.
         bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& fImplicit,
                                      const DifferentiableFunctionPtr_t& fExplicit,
