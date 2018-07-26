@@ -180,6 +180,8 @@ namespace hpp {
 
         HierarchicalIterative (const LiegroupSpacePtr_t& configSpace);
 
+        HierarchicalIterative (const HierarchicalIterative& other);
+
         virtual ~HierarchicalIterative () {}
 
         /// \name Problem definition

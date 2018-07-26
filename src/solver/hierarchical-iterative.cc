@@ -100,23 +100,38 @@ namespace hpp {
       }
 
       HierarchicalIterative::HierarchicalIterative
-      (const LiegroupSpacePtr_t& configSpace)
-        : stacks_ (),
-          configSpace_ (configSpace),
-          dimension_ (0),
-          lastIsOptional_ (false),
-          reduction_ (),
-          functions_ (),
-          lockedJoints_ (),
-          saturation_ (configSpace->nv ()),
-          qSat_ (configSpace_->nv ()),
-          datas_(),
-          OM_ (configSpace->nv ()),
-          OP_ (configSpace->nv ()),
-          statistics_ ("HierarchicalIterative")
-
+      (const LiegroupSpacePtr_t& configSpace) :
+        squaredErrorThreshold_ (0), inequalityThreshold_ (0),
+        maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
+        dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
+        reduction_ (), saturate_ (), functions_ (), lockedJoints_ (),
+        sigma_ (0), dq_ (), dqSmall_ (), projector_ (), reducedJ_ (),
+        saturation_ (configSpace->nv ()), reducedSaturation_ (),
+        qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
+        svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ()),
+        statistics_ ("HierarchicalIterative")
       {
         reduction_.addCol (0, configSpace_->nv ());
+      }
+
+      HierarchicalIterative::HierarchicalIterative
+      (const HierarchicalIterative& other) :
+        squaredErrorThreshold_ (other.squaredErrorThreshold_),
+        inequalityThreshold_ (other.inequalityThreshold_),
+        maxIterations_ (other.maxIterations_), stacks_ (other.stacks_),
+        configSpace_ (other.configSpace_), dimension_ (other.dimension_),
+        reducedDimension_ (other.reducedDimension_),
+        lastIsOptional_ (other.lastIsOptional_), reduction_ (other.reduction_),
+        saturate_ (other.saturate_), functions_ (other.functions_),
+        lockedJoints_ (other.lockedJoints_), sigma_(other.sigma_),
+        dq_ (other.dq_), dqSmall_ (other.dqSmall_),
+        projector_ (other.projector_),reducedJ_ (other.reducedJ_),
+        saturation_ (other.saturation_),
+        reducedSaturation_ (other.reducedSaturation_), qSat_ (other.qSat_),
+        tmpSat_ (other.tmpSat_), squaredNorm_ (other.squaredNorm_),
+        datas_ (other.datas_), svd_ (other.svd_),
+        statistics_ (other.statistics_)
+      {
       }
 
       bool HierarchicalIterative::contains
