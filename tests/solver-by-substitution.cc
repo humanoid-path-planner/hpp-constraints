@@ -132,7 +132,8 @@ void test_quadratic ()
 
   x.setRandom();
   solver.explicitConstraintSet().solve(x);
-  expectedJ = 2 * solver.explicitConstraintSet().freeArgs().rview(x).eval().transpose() * Ar;
+  expectedJ = 2 * solver.explicitConstraintSet().notOutArgs().rview(x).eval().
+    transpose() * Ar;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -204,7 +205,8 @@ void test_quadratic2 ()
 
   x.setRandom();
   solver.explicitConstraintSet().solve(x);
-  expectedJ = 2 * solver.explicitConstraintSet().freeArgs().rview(x).eval().transpose() * Ar;
+  expectedJ = 2 * solver.explicitConstraintSet().notOutArgs().rview(x).eval().
+    transpose() * Ar;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -287,8 +289,8 @@ void test_quadratic3 ()
   x.setRandom();
   solver.explicitConstraintSet().solve(x);
   expectedJ = 2 *
-    (P * solver.explicitConstraintSet().freeArgs().rview(x).eval() + Xr_0).transpose()
-    * Ar * P;
+    (P * solver.explicitConstraintSet().notOutArgs().rview(x).eval() +
+     Xr_0).transpose() * Ar * P;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);

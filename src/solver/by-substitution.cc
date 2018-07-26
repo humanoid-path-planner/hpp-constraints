@@ -189,7 +189,7 @@ namespace hpp {
 
       void BySubstitution::explicitConstraintSetHasChanged()
       {
-        reduction(explicit_.freeDers());
+        reduction(explicit_.notOutDers ());
       }
 
       segments_t BySubstitution::implicitDof () const
@@ -216,7 +216,7 @@ namespace hpp {
         if (explicit_.inDers().nbCols() == 0) return;
         // Compute Je_
         explicit_.jacobian(JeExpanded_, arg);
-        Je_ = explicit_.viewJacobian(JeExpanded_);
+        Je_ = explicit_.jacobianNotOutToOut (JeExpanded_);
 
         hppDnum (info, "Jacobian of explicit system is" << iendl <<
                  setpyformat << pretty_print(Je_));

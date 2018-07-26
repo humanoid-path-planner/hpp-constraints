@@ -348,9 +348,9 @@ BOOST_AUTO_TEST_CASE(jacobian1)
 
   // Check the jacobian
   // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
-  matrix_t expjac (matrix_t::Zero(expression.derSize(), expression.derSize()));
+  matrix_t expjac (matrix_t::Zero(expression.nv (), expression.nv ()));
   expjac.col(0) << 1, J[0], J[1] * J[0], J[2] * J[1] * J[0];
-  matrix_t jacobian (expression.derSize(), expression.derSize());
+  matrix_t jacobian (expression.nv (), expression.nv ());
   expression.jacobian (jacobian, xres);
   BOOST_CHECK_EQUAL (jacobian, expjac);
 }
@@ -416,18 +416,18 @@ BOOST_AUTO_TEST_CASE(jacobian2)
 
   // Check the jacobian
   // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
-  matrix_t expjac (matrix_t::Zero(expression.derSize(), expression.derSize()));
+  matrix_t expjac (matrix_t::Zero(expression.nv (), expression.nv ()));
   expjac.block<5, 2>(0,1) <<
     J[0](0,0), J[0](0,1),
     1, 0,
     0, 1,
     J[1](0,0), 0,
     J[2](0,0) * J[0](0,0) + J[2](0,1) * J[1](0,0), J[2](0,0) * J[0](0,1);
-  matrix_t jacobian (expression.derSize(), expression.derSize());
+  matrix_t jacobian (expression.nv (), expression.nv ());
   expression.jacobian (jacobian, xres);
   BOOST_CHECK_EQUAL (jacobian, expjac);
 
-  matrix_t smallJ = expression.viewJacobian(jacobian);
+  matrix_t smallJ = expression.jacobianNotOutToOut (jacobian);
   BOOST_CHECK_EQUAL (expression.outArgs().rview(xres).eval(),
       smallJ * expression.inArgs().rview(xres).eval());
 }
@@ -498,18 +498,18 @@ BOOST_AUTO_TEST_CASE(jacobian3)
 
   // Check the jacobian
   // It should be ( J[0], J[1] * J[0], J[2] * J[1] * J[0])
-  matrix_t expjac (matrix_t::Zero(expression.derSize(), expression.derSize()));
+  matrix_t expjac (matrix_t::Zero(expression.nv (), expression.nv ()));
   expjac.block<5, 2>(0,1) <<
     Jginv0(0) * J[0](0,0), Jginv0(0) * J[0](0,1),
     1, 0,
     0, 1,
     J[1](0,0), 0,
     J[2](0,0) * Jginv0(0) * J[0](0,0) + J[2](0,1) * J[1](0,0), J[2](0,0) * Jginv0(0) * J[0](0,1);
-  matrix_t jacobian (expression.derSize(), expression.derSize());
+  matrix_t jacobian (expression.nv (), expression.nv ());
   expression.jacobian (jacobian, xres);
   BOOST_CHECK_EQUAL (jacobian, expjac);
 
-  matrix_t smallJ = expression.viewJacobian(jacobian);
+  matrix_t smallJ = expression.jacobianNotOutToOut (jacobian);
   BOOST_CHECK_EQUAL (expression.outArgs().rview(xres).eval(),
       smallJ * expression.inArgs().rview(xres).eval());
 }
@@ -563,9 +563,9 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     BOOST_CHECK_EQUAL (expression.outArgs(), expectedRow);
 
     expectedRow = RowBlockIndices(BlockIndex::difference (
-          BlockIndex::segment_t(0, expression.argSize()),
+          BlockIndex::segment_t(0, expression.nq ()),
           expectedRow.rows()));
-    BOOST_CHECK_EQUAL (expression.freeArgs(), expectedRow);
+    BOOST_CHECK_EQUAL (expression.notOutArgs (), expectedRow);
 
     expectedRow = RowBlockIndices();
     expectedRow.addRow (ee1->rankInVelocity(), 1);
@@ -574,9 +574,9 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     BOOST_CHECK_EQUAL (expression.outDers(), expectedRow);
 
     expectedCol = ColBlockIndices(BlockIndex::difference (
-          BlockIndex::segment_t(0, expression.derSize()),
+          BlockIndex::segment_t(0, expression.nv ()),
           expectedRow.rows()));
-    BOOST_CHECK_EQUAL (expression.freeDers(), expectedCol);
+    BOOST_CHECK_EQUAL (expression.notOutDers(), expectedCol);
 
     expectedRow = RowBlockIndices();
     BOOST_CHECK_EQUAL (expression.inArgs(), expectedRow);
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     expression.jacobian(jacobian, q);
-    BOOST_CHECK(expression.viewJacobian (jacobian).eval().isZero());
+    BOOST_CHECK(expression.jacobianNotOutToOut (jacobian).eval ().isZero ());
   }
 
   {
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     expression.jacobian(jacobian, q);
-    BOOST_CHECK(expression.viewJacobian (jacobian).eval().isZero());
+    BOOST_CHECK(expression.jacobianNotOutToOut (jacobian).eval ().isZero ());
   }
 
   {
@@ -626,7 +626,8 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     matrix_t jacobian (device->numberDof(), device->numberDof());
     expression.jacobian(jacobian, q);
     BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
-    BOOST_CHECK_EQUAL(expression.viewJacobian(jacobian).eval().norm(), 1);
+    BOOST_CHECK_EQUAL
+      (expression.jacobianNotOutToOut (jacobian).eval ().norm (), 1);
   }
 
   {
@@ -651,7 +652,8 @@ BOOST_AUTO_TEST_CASE(locked_joints)
     matrix_t jacobian (device->numberDof(), device->numberDof());
     expression.jacobian(jacobian, q);
     BOOST_CHECK_EQUAL(jacobian(ee2->rankInVelocity(), ee1->rankInVelocity()), 1);
-    BOOST_CHECK_EQUAL(expression.viewJacobian(jacobian).eval().norm(), 1);
+    BOOST_CHECK_EQUAL
+      (expression.jacobianNotOutToOut (jacobian).eval ().norm (), 1);
   }
 
   {
