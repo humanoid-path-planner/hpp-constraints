@@ -63,28 +63,8 @@ namespace hpp {
         : public solver::HierarchicalIterative
       {
       public:
-        BySubstitution (const LiegroupSpacePtr_t& configSpace) :
-          HierarchicalIterative(configSpace),
-          explicit_ (configSpace->nq (), configSpace->nv ()),
-          JeExpanded_ (configSpace->nv (), configSpace->nv ())
-            {}
-
-        BySubstitution (const BySubstitution& other) :
-          HierarchicalIterative (other), explicit_ (other.explicit_),
-          Je_ (other.Je_), JeExpanded_ (other.JeExpanded_)
-          {
-            // TODO remove me
-            for (LockedJoints_t::const_iterator it = lockedJoints_.begin ();
-                 it != lockedJoints_.end (); ++it) {
-              LockedJointPtr_t lj = HPP_STATIC_PTR_CAST
-                (LockedJoint, (*it)->copy ());
-              if (!explicitConstraintSet().replace
-                  ((*it)->explicitFunction(), lj->explicitFunction()))
-                throw std::runtime_error
-                  ("Could not replace lockedJoint function");
-              lockedJoints_.push_back (lj);
-            }
-          }
+        BySubstitution (const LiegroupSpacePtr_t& configSpace);
+        BySubstitution (const BySubstitution& other);
 
         virtual ~BySubstitution () {}
 
