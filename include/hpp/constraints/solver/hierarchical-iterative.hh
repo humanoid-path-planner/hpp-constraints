@@ -153,10 +153,18 @@ namespace hpp {
       /// system of equations can be modified by methods
       /// HierarchicalIterative::rightHandSideFromInput,
       /// HierarchicalIterative::rightHandSide.
+      ///
+      /// \note Free variables
+      ///
+      /// Some variables can be locked, or computed explicitely. In this case,
+      /// the iterative resolution will only change the other variables called
+      /// free variables. \sa methods
+      /// \li \ref void freeVariables (const Indices_t& indices) and
+      /// \li \ref void freeVariables (const Indices_t& indices).
       class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative
       {
       public:
-        typedef Eigen::ColBlockIndices Reduction_t;
+        typedef Eigen::RowBlockIndices Indices_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
 
         enum Status {
@@ -290,24 +298,28 @@ namespace hpp {
         /// \name Parameters
         /// \{
 
-        /// Set the velocity variable that must be changed.
+        /// Set free velocity variables
+        ///
         /// The other variables will be left unchanged by the iterative
-        /// algorithm.
-        void reduction (const segments_t intervals)
+        /// resolution.
+        ///
+        /// \param intervals set of index intervals
+        void freeVariables (const segments_t intervals)
         {
-          reduction_ = Reduction_t();
+          freeVariables_ = Indices_t();
           for (std::size_t i = 0; i < intervals.size(); ++i)
-            reduction_.addCol(intervals[i].first, intervals[i].second);
-          reduction_.updateIndices<true, true, true>();
+            freeVariables_.addRow (intervals[i].first, intervals[i].second);
+          freeVariables_.updateIndices<true, true, true>();
           update ();
         }
 
-        /// Set the velocity variable that must be changed.
+        /// Set free velocity variables
+        ///
         /// The other variables will be left unchanged by the iterative
-        /// algorithm.
-        void reduction (const Reduction_t& reduction)
+        /// resolution.
+        void freeVariables (const Indices_t& indices)
         {
-          reduction_ = reduction;
+          freeVariables_ = indices;
           update ();
         }
 
@@ -525,7 +537,8 @@ namespace hpp {
         LiegroupSpacePtr_t configSpace_;
         size_type dimension_, reducedDimension_;
         bool lastIsOptional_;
-        Reduction_t reduction_;
+        /// Unknown of the set of implicit constraints
+        Indices_t freeVariables_;
         Saturation_t saturate_;
         /// Members moved from core::ConfigProjector
         NumericalConstraints_t functions_;

@@ -104,14 +104,15 @@ namespace hpp {
         squaredErrorThreshold_ (0), inequalityThreshold_ (0),
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
-        reduction_ (), saturate_ (), functions_ (), lockedJoints_ (),
+        freeVariables_ (), saturate_ (), functions_ (), lockedJoints_ (),
         sigma_ (0), dq_ (), dqSmall_ (), projector_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
         svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ()),
         statistics_ ("HierarchicalIterative")
       {
-        reduction_.addCol (0, configSpace_->nv ());
+        // Initialize freeVariables_ to all indices.
+        freeVariables_.addRow (0, configSpace_->nv ());
       }
 
       HierarchicalIterative::HierarchicalIterative
@@ -121,7 +122,8 @@ namespace hpp {
         maxIterations_ (other.maxIterations_), stacks_ (other.stacks_),
         configSpace_ (other.configSpace_), dimension_ (other.dimension_),
         reducedDimension_ (other.reducedDimension_),
-        lastIsOptional_ (other.lastIsOptional_), reduction_ (other.reduction_),
+        lastIsOptional_ (other.lastIsOptional_),
+        freeVariables_ (other.freeVariables_),
         saturate_ (other.saturate_), functions_ (other.functions_),
         lockedJoints_ (other.lockedJoints_), sigma_(other.sigma_),
         dq_ (other.dq_), dqSmall_ (other.dqSmall_),
@@ -194,7 +196,7 @@ namespace hpp {
       void HierarchicalIterative::update()
       {
         // Compute reduced size
-        std::size_t reducedSize = reduction_.nbIndices();
+        std::size_t reducedSize = freeVariables_.nbIndices();
 
         dimension_ = 0;
         reducedDimension_ = 0;
@@ -239,15 +241,17 @@ namespace hpp {
 
         typedef Eigen::MatrixBlocks<false, false> BlockIndices;
         BlockIndices::segments_t rows;
+        // Loop over functions of the stack
         for (std::size_t i = 0; i < fs.size (); ++i) {
-          ArrayXb adp = reduction_.transpose().rview
+          ArrayXb adp = freeVariables_.rview
             (fs[i]->activeDerivativeParameters().matrix()).eval();
           if (adp.any()) // If at least one element of adp is true
             rows.push_back (BlockIndices::segment_t
                             (row, fs[i]->outputDerivativeSize()));
           row += fs[i]->outputDerivativeSize();
         }
-        d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
+        d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
+          (rows, freeVariables_.m_rows);
         d.activeRowsOfJ.updateRows<true, true, true>();
       }
 
@@ -374,7 +378,7 @@ namespace hpp {
         applySaturate = saturate_ (arg, qSat_, saturation_);
         if (!applySaturate) return;
 
-        reducedSaturation_ = reduction_.transpose().rview (saturation_);
+        reducedSaturation_ = freeVariables_.rview (saturation_);
         assert (
                 (    reducedSaturation_.array() == -1
                      || reducedSaturation_.array() ==  0
@@ -517,7 +521,8 @@ namespace hpp {
       void HierarchicalIterative::expandDqSmall () const
       {
         Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true>
-          (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
+          (dq_, freeVariables_.nbIndices(), freeVariables_.indices()) =
+          dqSmall_;
       }
 
       std::ostream& HierarchicalIterative::print (std::ostream& os) const
@@ -525,7 +530,7 @@ namespace hpp {
         os << "HierarchicalIterative, " << stacks_.size() << " level." << iendl
            << "dimension " << dimension() << iendl
            << "reduced dimension " << reducedDimension() << iendl
-           << "reduction: " << reduction_ << incendl;
+           << "reduction: " << freeVariables_ << incendl;
         const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 :
                                  stacks_.size());
         for (std::size_t i = 0; i < stacks_.size(); ++i) {
