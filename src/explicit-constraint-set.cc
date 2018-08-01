@@ -67,13 +67,14 @@ namespace hpp {
       for(std::size_t i = 0; i < functions_.size(); ++i) {
         const Function& f = functions_[i];
         // Compute this function
-        f.qin = f.inArg.rview(arg);
-        f.f->value(f.value, f.qin);
-        f.value += f.rightHandSide;
+        f.qin = f.inArg.rview(arg); // q_{in}
+        f.f->value(f.value, f.qin); // f (q_{in})
+        f.value += f.rightHandSide; // f (q_{in}) + rhs
         const size_type& nbRows = f.outDer.nbRows();
-        f.qout = f.outArg.rview(arg);
-        if (f.g) f.g->value(f.expected, f.qout);
+        f.qout = f.outArg.rview(arg); // q_{out}
+        if (f.g) f.g->value(f.expected, f.qout); // g (q_{out})
         else     f.expected.vector() = f.qout;
+        // g (q_{out}) - (f (q_{in}) + rhs)
         error.segment (row, nbRows) = f.expected - f.value;
         squaredNorm = std::max(squaredNorm,
             error.segment (row, nbRows).squaredNorm ());
@@ -325,12 +326,12 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < functions_.size (); ++i) {
         Function& f = functions_[i];
-        f.qin = f.inArg.rview(arg);
-        f.f->value(f.value, f.qin);
-        f.qout = f.outArg.rview(arg);
-        if (f.g) f.g->value(f.expected, f.qout);
+        f.qin = f.inArg.rview(arg); // q_{in}
+        f.f->value(f.value, f.qin); // f (q_{in})
+        f.qout = f.outArg.rview(arg); // q_{out}
+        if (f.g) f.g->value(f.expected, f.qout); // g (q_{out})
         else     f.expected.vector() = f.qout;
-        vector_t rhs = f.expected - f.value;
+        vector_t rhs = f.expected - f.value;  // g (q_{out}) - f (q_{in})
         f.equalityIndices.lview(f.rightHandSide) = f.equalityIndices.rview(rhs);
       }
       return rightHandSide();
@@ -356,10 +357,10 @@ namespace hpp {
       Function& f = functions_[fidx];
 
       // Computes f(q1) and g(q2)
-      f.qin = f.inArg.rview(arg);
-      f.f->value(f.value, f.qin);
-      f.qout = f.outArg.rview(arg);
-      if (f.g) f.g->value(f.expected, f.qout);
+      f.qin = f.inArg.rview(arg); // q_{in}
+      f.f->value(f.value, f.qin); // f (q_{in})
+      f.qout = f.outArg.rview(arg); // q_{out}
+      if (f.g) f.g->value(f.expected, f.qout); // g (q_{out})
       else     f.expected.vector() = f.qout;
 
       // Set rhs = g(q2) - f(q1)
