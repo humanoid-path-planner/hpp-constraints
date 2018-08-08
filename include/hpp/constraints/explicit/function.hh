@@ -37,14 +37,57 @@ namespace hpp {
     class Function : public DifferentiableFunction
     {
     public:
+      /// create instance and return shared pointer
+      /// \deprecated used create method that takes a LiegroupSpace instead
+      ///             of a robot as input.
       typedef boost::shared_ptr <Function> Ptr_t;
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
        const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity);
+       const segments_t& outputConf, const segments_t& outputVelocity)
+        HPP_CONSTRAINTS_DEPRECATED;
 
+      /// create instance and return shared pointer
+      /// \deprecated used create method that takes a LiegroupSpace instead
+      ///             of a robot as input.
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
+       const DifferentiableFunctionPtr_t& g,
+       const segments_t& inputConf, const segments_t& inputVelocity,
+       const segments_t& outputConf, const segments_t& outputVelocity)
+        HPP_CONSTRAINTS_DEPRECATED;
+
+      /// create instance and return shared pointer
+      ///
+      /// \param configSpace input space of this function - usually a robot
+      ///                    configuration space,
+      /// \param function function f,
+      /// \param inputConf set of indices defining q_in,
+      /// \param inputVelocity set of indices defining q_in derivative,
+      /// \param outputConf set of indices defining q_out
+      /// \param outputVel set of indices defining q_out derivative
+      ///
+      /// Function g is set to identity.
+
+      static Ptr_t create
+      (const LiegroupSpacePtr_t& configSpace,
+       const DifferentiableFunctionPtr_t& function,
+       const segments_t& inputConf, const segments_t& inputVelocity,
+       const segments_t& outputConf, const segments_t& outputVelocity);
+
+      /// create instance and return shared pointer
+      ///
+      /// \param configSpace input space of this function - usually a robot
+      ///                    configuration space,
+      /// \param function function f,
+      /// \param g function g,
+      /// \param inputConf set of indices defining q_in,
+      /// \param inputVelocity set of indices defining q_in derivative,
+      /// \param outputConf set of indices defining q_out
+      /// \param outputVel set of indices defining q_out derivative
+      static Ptr_t create
+      (const LiegroupSpacePtr_t& configSpace,
+       const DifferentiableFunctionPtr_t& function,
        const DifferentiableFunctionPtr_t& g,
        const segments_t& inputConf, const segments_t& inputVelocity,
        const segments_t& outputConf, const segments_t& outputVelocity);
@@ -53,15 +96,35 @@ namespace hpp {
       const DifferentiableFunctionPtr_t& inputToOutput () const;
 
     protected:
+      /// Constructor
+      /// \deprecated used constructor that takes a LiegroupSpace instead
+      ///             of a robot as input.
       Function (const DevicePtr_t& robot,
 			const DifferentiableFunctionPtr_t& function,
                         const DifferentiableFunctionPtr_t& g,
 			const segments_t& inputConf,
 			const segments_t& inputVelocity,
                         const segments_t& outputConf,
-			const segments_t& outputVelocity);
+			const segments_t& outputVelocity)
+        HPP_CONSTRAINTS_DEPRECATED;
 
-      /// Compute q_{output} - f (q_{input})
+      /// Constructor
+      /// \param configSpace input space of this function - usually a robot
+      ///                    configuration space,
+      /// \param function function f,
+      /// \param g function g,
+      /// \param inputConf set of indices defining q_in,
+      /// \param inputVelocity set of indices defining q_in derivative,
+      /// \param outputConf set of indices defining q_out
+      /// \param outputVel set of indices defining q_out derivative
+      Function (const LiegroupSpacePtr_t& configSpace,
+                const DifferentiableFunctionPtr_t& function,
+                const DifferentiableFunctionPtr_t& g,
+                const segments_t& inputConf,
+                const segments_t& inputVelocity,
+                const segments_t& outputConf,
+                const segments_t& outputVelocity);
+      /// Compute g (q_out) - f (q_in)
       void impl_compute (LiegroupElement& result, vectorIn_t argument) const;
 
       /// Compute Jacobian of q_{output} - f (q_{input})

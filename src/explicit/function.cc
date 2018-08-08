@@ -199,6 +199,7 @@ namespace hpp {
       matrixOut_t result_;
     }; // struct JacobianVisitor
 
+      // Deprecated
       template <bool GisIdentity> typename Function <GisIdentity>::Ptr_t
       Function <GisIdentity>::create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
@@ -212,6 +213,7 @@ namespace hpp {
 	return Function <GisIdentity>::Ptr_t (ptr);
       }
 
+      // Deprecated
       template <bool GisIdentity> typename Function <GisIdentity>::Ptr_t
       Function <GisIdentity>::create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
@@ -222,6 +224,35 @@ namespace hpp {
         assert (!GisIdentity);
 	Function* ptr = new Function
 	  (robot, function, g, inputConf, inputVelocity, outputConf,
+           outputVelocity);
+	return Function <GisIdentity>::Ptr_t (ptr);
+      }
+
+      template <bool GisIdentity> typename Function <GisIdentity>::Ptr_t
+      Function <GisIdentity>::create
+      (const LiegroupSpacePtr_t& configSpace,
+       const DifferentiableFunctionPtr_t& function,
+       const segments_t& inputConf, const segments_t& inputVelocity,
+       const segments_t& outputConf, const segments_t& outputVelocity)
+      {
+        assert (GisIdentity);
+	Function* ptr = new Function
+	  (configSpace, function, DifferentiableFunctionPtr_t(), inputConf,
+           inputVelocity, outputConf, outputVelocity);
+	return Function <GisIdentity>::Ptr_t (ptr);
+      }
+
+      template <bool GisIdentity> typename Function <GisIdentity>::Ptr_t
+      Function <GisIdentity>::create
+      (const LiegroupSpacePtr_t& configSpace,
+       const DifferentiableFunctionPtr_t& function,
+       const DifferentiableFunctionPtr_t& g,
+       const segments_t& inputConf, const segments_t& inputVelocity,
+       const segments_t& outputConf, const segments_t& outputVelocity)
+      {
+        assert (!GisIdentity);
+	Function* ptr = new Function
+	  (configSpace, function, g, inputConf, inputVelocity, outputConf,
            outputVelocity);
 	return Function <GisIdentity>::Ptr_t (ptr);
       }
@@ -260,6 +291,56 @@ namespace hpp {
 	// Each velocity variable is either input or output
 	assert (function->inputDerivativeSize () +
 		function->outputDerivativeSize () <= robot->numberDof ());
+	qIn_.resize (function->inputSize ());
+	Jf_.resize (function->outputDerivativeSize (),
+                    function->inputDerivativeSize ());
+	assert (BlockIndex::cardinal (outputConf) == function->outputSize ());
+	// Sum of velocity output interval sizes equal function output
+	// derivative size
+	assert (BlockIndex::cardinal (outputVelocity) ==
+                function->outputDerivativeSize ());
+        computeJacobianBlocks ();
+
+        activeParameters_          .setConstant(false);
+        activeDerivativeParameters_.setConstant(false);
+        inputConfIntervals_ .lview
+          (activeParameters_.matrix()).setConstant(true);
+        inputDerivIntervals_.lview
+          (activeDerivativeParameters_.matrix()).setConstant(true);
+        outputConfIntervals_ .lview
+          (activeParameters_.matrix()).setConstant(true);
+        outputDerivIntervals_.lview
+          (activeDerivativeParameters_.matrix()).setConstant(true);
+      }
+
+      template <bool GisIdentity>
+      Function <GisIdentity>::Function (const LiegroupSpacePtr_t& configSpace,
+                          const DifferentiableFunctionPtr_t& function,
+                          const DifferentiableFunctionPtr_t& g,
+                          const segments_t& inputConf,
+                          const segments_t& inputVelocity,
+                          const segments_t& outputConf,
+                          const segments_t& outputVelocity)
+	: DifferentiableFunction (configSpace->nq (), configSpace->nv (),
+				  LiegroupSpace::Rn
+                                  (function->outputSpace ()->nv ()),
+                                  "implicit " + function->name()),
+          robot_ (),
+	  inputToOutput_ (function),
+          inputConfIntervals_ (inputConf),
+	  inputDerivIntervals_ (inputVelocity),
+          outputConfIntervals_ (outputConf),
+	  outputDerivIntervals_ (outputVelocity), outJacobian_ (),
+          inJacobian_ (), gData_ (g), f_qIn_ (function->outputSpace ()),
+          qOut_ (function->outputSpace ()), result_ (outputSpace ())
+      {
+	// Check input consistency
+	// Each configuration variable is either input or output
+	assert (function->inputSize () + function->outputSize () <=
+		configSpace->nq ());
+	// Each velocity variable is either input or output
+	assert (function->inputDerivativeSize () +
+		function->outputDerivativeSize () <= configSpace->nv ());
 	qIn_.resize (function->inputSize ());
 	Jf_.resize (function->outputDerivativeSize (),
                     function->inputDerivativeSize ());

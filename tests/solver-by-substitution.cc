@@ -47,6 +47,7 @@ using hpp::constraints::AffineFunctionPtr_t;
 using hpp::constraints::ConstantFunction;
 using hpp::constraints::ConstantFunctionPtr_t;
 using hpp::constraints::ExplicitConstraintSet;
+using hpp::constraints::Implicit;
 using hpp::constraints::matrix3_t;
 using hpp::constraints::LiegroupSpace;
 using hpp::constraints::JointPtr_t;
@@ -105,7 +106,7 @@ void test_quadratic ()
   solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
-  solver.add (quad, 0);
+  solver.add (Implicit::create (quad));
   solver.explicitConstraintSet().add (expl, in, out, in, out);
   solver.explicitConstraintSetHasChanged();
 
@@ -173,7 +174,7 @@ void test_quadratic2 ()
   solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
-  solver.add (quad, 0);
+  solver.add (Implicit::create (quad));
   solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
   solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
   solver.explicitConstraintSetHasChanged();
@@ -251,7 +252,7 @@ void test_quadratic3 ()
   solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
-  solver.add (quad, 0);
+  solver.add (Implicit::create (quad));
   solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
   solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
   solver.explicitConstraintSet().add (expl3, in3, out3, in3, out3);
@@ -481,7 +482,9 @@ BOOST_AUTO_TEST_CASE(functions1)
   ///         q2 = C
 
   // f
-  solver.add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Identity(2,3))), 0);
+  solver.add(Implicit::create
+             (AffineFunctionPtr_t (new AffineFunction
+                                   (matrix_t::Identity(2,3)))));
   // q1 = g(q3)
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -500,7 +503,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
   // h
   matrix_t h (1,3); h << 0, 1, 0;
-  solver.add(AffineFunctionPtr_t(new AffineFunction (h)), 0);
+  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (h))));
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
 
@@ -518,7 +521,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::Matrix<value_type, 2, 3> Jf;
   Jf << 1, 0, 0,
         0, 0, 1;
-  solver.add(AffineFunctionPtr_t(new AffineFunction (Jf)), 0);
+  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jf))));
 
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -536,7 +539,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   /// q2 = g(q3)
   // This function should not be removed from the system.
   Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
-  solver.add(AffineFunctionPtr_t(new AffineFunction (Jh)), 0);
+  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jh))));
   BOOST_CHECK_EQUAL(solver.dimension(), 3);
 
   // We add to the system q3 = C
@@ -583,9 +586,12 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   Transform3f tf2 (ee2->currentTransformation ());
   Transform3f tf3 (ee3->currentTransformation ());
 
-  solver.add(Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2), 0);
-  solver.add(Orientation::create ("Orientation LWristPitch", device, ee3, tf3), 0);
-  // solver.add(Position::create    ("Position"   , device, ee2, tf2), 0);
+  solver.add
+    (Implicit::create
+     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2)));
+  solver.add
+     (Implicit::create
+      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3)));
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
