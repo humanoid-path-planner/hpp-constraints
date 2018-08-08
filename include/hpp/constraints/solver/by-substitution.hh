@@ -179,8 +179,8 @@ namespace hpp {
         /// \textbf{q}_{res} = \left(I_n -
         /// J^{+}J(\textbf{q}_{from})\right) (\textbf{v})
         /// \f]
-        void projectVectorOnKernel (vectorIn_t from, vectorIn_t velocity,
-                                    vectorOut_t result) const;
+        void projectVectorOnKernel (ConfigurationIn_t from, vectorIn_t velocity,
+                                    ConfigurationOut_t result) const;
 
         /// Project configuration "to" on constraint tangent space in "from"
         ///

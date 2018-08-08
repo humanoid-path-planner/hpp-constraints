@@ -287,7 +287,7 @@ namespace hpp {
       }
 
       void BySubstitution::projectVectorOnKernel
-      (vectorIn_t arg, vectorIn_t darg, vectorOut_t result) const
+      (ConfigurationIn_t arg, vectorIn_t darg, ConfigurationOut_t result) const
       {
         if (functions_.empty ()) {
           result = darg;

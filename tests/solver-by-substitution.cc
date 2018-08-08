@@ -631,5 +631,5 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   vector_t dq (device->numberDof());
   dq.setRandom();
   qrand = tmp;
-  solver.projectOnKernel (qrand, dq, tmp);
+  solver.projectVectorOnKernel (qrand, dq, tmp);
 }
