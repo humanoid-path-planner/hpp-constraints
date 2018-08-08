@@ -100,10 +100,9 @@ void test_quadratic ()
   AffineFunctionPtr_t expl (new AffineFunction (B));
 
   // Make solver
-  BySubstitution solver (N, N);
+  BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (Implicit::create (quad));
@@ -168,10 +167,9 @@ void test_quadratic2 ()
   AffineFunctionPtr_t expl2 (new AffineFunction (C));
 
   // Make solver
-  BySubstitution solver (N, N);
+  BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (Implicit::create (quad));
@@ -246,10 +244,9 @@ void test_quadratic3 ()
   Quadratic::Ptr_t quad (new Quadratic (A, -d[0]));
 
   // Make solver
-  BySubstitution solver (N, N);
+  BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (Implicit::create (quad));
@@ -473,7 +470,7 @@ typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(functions1)
 {
-  BySubstitution solver(3, 3);
+  BySubstitution solver(LiegroupSpace::R3 ());
 
   /// System:
   /// f (q1, q2) = 0
@@ -513,7 +510,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
 BOOST_AUTO_TEST_CASE(functions2)
 {
-  BySubstitution solver(3, 3);
+  BySubstitution solver(LiegroupSpace::R3 ());
 
   /// System:
   /// f (q1, q3) = 0
@@ -574,11 +571,10 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
-  BySubstitution solver(device->configSize(), device->numberDof());
+  BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.integration(boost::bind(hpp::pinocchio::integrate<true, hpp::pinocchio::DefaultLieGroupMap>, device, _1, _2, _3));
-  solver.saturation(boost::bind(saturate, device, _1, _2));
+  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();
