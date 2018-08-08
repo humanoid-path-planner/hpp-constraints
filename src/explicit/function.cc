@@ -52,7 +52,7 @@ namespace hpp {
 
       vectorIn_t qOut_, f_qIn_;
       vector_t result_;
-    }; // struct JacobianVisitor
+    }; // struct ValueVisitor
 
     template <> inline void ValueVisitor::operator () <SE3> (const SE3&)
     {

@@ -211,10 +211,20 @@ namespace hpp {
         return BlockIndex::fromLogicalExpression(out.array().cast<bool>());
       }
 
+      // Note that the jacobian of the implicit constraints have already
+      // been computed by computeValue <true>
+      // The Jacobian of the implicit constraint of priority i is stored in
+      // datas_ [i].jacobian
       void BySubstitution::updateJacobian (vectorIn_t arg) const
       {
         if (explicit_.inDers().nbCols() == 0) return;
-        // Compute Je_
+        /*                                ------
+                         /   in          in u out \
+                         |                        |
+                   Je_ = |   df                   |
+                         |  ---- (qin)      0     |
+                         \  dqin                  /
+        */
         explicit_.jacobian(JeExpanded_, arg);
         Je_ = explicit_.jacobianNotOutToOut (JeExpanded_);
 
