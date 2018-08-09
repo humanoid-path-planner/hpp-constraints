@@ -66,7 +66,7 @@ void CwiseBinaryOpImpl<BinaryOp, LHS_TYPE, RHS_TYPE, Dense>::evalTo            \
                       Functor, Dense2Dense, Scalar> {                          \
       typedef CwiseBinaryOp<BinaryOp, LHS_TYPE, RHS_TYPE> CwiseDerived;        \
       static EIGEN_STRONG_INLINE void run                                      \
-        (Derived& dst, const CwiseDerived& o, const Functor& func)             \
+        (Derived& dst, const CwiseDerived& o, const Functor&)                  \
       { o.evalTo(dst); }                                                       \
     };
 

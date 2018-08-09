@@ -54,7 +54,7 @@ namespace hpp {
             const typename Traits<Expression>::Ptr_t expr,
             std::vector <bool> mask)
         {
-          assert (mask.size() == expr->value().size());
+          assert (mask.size() == (std::size_t) expr->value().size());
           Ptr_t ptr (new SymbolicFunction (name,robot,expr,mask));
           ptr->init (ptr);
           return ptr;
