@@ -138,6 +138,9 @@ namespace hpp {
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
+      /// \deprecated Call method that takes LiegroupSpacePtr_t instead of
+      ///             DevicePtr_t as input and used robot->configSpace () as
+      ///             argument.
       static ExplicitPtr_t create
         (const DevicePtr_t& robot,
          const DifferentiableFunctionPtr_t& function,
@@ -145,7 +148,8 @@ namespace hpp {
 	 const segments_t& inputVelocity,
 	 const segments_t& outputConf,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp = ComparisonTypes_t());
+         const ComparisonTypes_t& comp = ComparisonTypes_t())
+        HPP_CONSTRAINTS_DEPRECATED;
 
       /// Create instance and return shared pointer
       ///
@@ -159,8 +163,57 @@ namespace hpp {
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
+      /// \deprecated Call method that takes LiegroupSpacePtr_t instead of
+      ///             DevicePtr_t as input and used robot->configSpace () as
+      ///             argument.
       static ExplicitPtr_t create
         (const DevicePtr_t& robot,
+         const DifferentiableFunctionPtr_t& function,
+         const DifferentiableFunctionPtr_t& g,
+         const DifferentiableFunctionPtr_t& ginv,
+	 const segments_t& inputConf,
+	 const segments_t& inputVelocity,
+	 const segments_t& outputConf,
+	 const segments_t& outputVelocity,
+         const ComparisonTypes_t& comp = ComparisonTypes_t())
+        HPP_CONSTRAINTS_DEPRECATED;
+
+      /// Create instance and return shared pointer
+      ///
+      /// \param configSpace Configuration space on which the constraint is
+      ///        defined,
+      /// \param function relation between input configuration variables and
+      ///        output configuration variables,
+      /// \param outputConf set of integer intervals defining indices
+      ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param outputVeclocity set of integer defining indices
+      ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
+      /// \param rhs        right hand side.
+      /// \note comparison type for this constraint is always equality
+      static ExplicitPtr_t create
+        (const LiegroupSpacePtr_t& configSpace,
+         const DifferentiableFunctionPtr_t& function,
+	 const segments_t& inputConf,
+	 const segments_t& inputVelocity,
+	 const segments_t& outputConf,
+	 const segments_t& outputVelocity,
+         const ComparisonTypes_t& comp = ComparisonTypes_t());
+
+      /// Create instance and return shared pointer
+      ///
+      /// \param configSpace Configuration space on which the constraint is
+      ///        defined,
+      /// \param function relation between input configuration variables and
+      ///        output configuration variables,
+      /// \param g,ginv
+      /// \param outputConf set of integer intervals defining indices
+      ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param outputVeclocity set of integer defining indices
+      ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
+      /// \param rhs        right hand side.
+      /// \note comparison type for this constraint is always equality
+      static ExplicitPtr_t create
+        (const LiegroupSpacePtr_t& configSpace,
          const DifferentiableFunctionPtr_t& function,
          const DifferentiableFunctionPtr_t& g,
          const DifferentiableFunctionPtr_t& ginv,
@@ -221,13 +274,16 @@ namespace hpp {
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
+      /// \deprecated Use constructor that takes LiegroupSpacePtr_t instead of
+      ///             DevicePtr_t as input and used robot->configSpace () as
+      ///             argument.
       Explicit
 	(const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputConf,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp);
+         const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
 
       /// Constructor
       ///
@@ -241,8 +297,56 @@ namespace hpp {
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
+      /// \deprecated Use constructor that takes LiegroupSpacePtr_t instead of
+      ///             DevicePtr_t as input and used robot->configSpace () as
+      ///             argument.
       Explicit
 	(const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
+         const DifferentiableFunctionPtr_t& g,
+         const DifferentiableFunctionPtr_t& ginv,
+	 const segments_t& inputConf,
+	 const segments_t& inputVelocity,
+	 const segments_t& outputConf,
+	 const segments_t& outputVelocity,
+         const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
+
+      /// Constructor
+      ///
+      /// \param configSpace Configuration space on which the constraint is
+      ///        defined,
+      /// \param function relation between input configuration variables and
+      ///        output configuration variables,
+      /// \param outputConf set of integer intervals defining indices
+      ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param outputVeclocity set of integer defining indices
+      ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
+      /// \param rhs        right hand side.
+      /// \note comparison type for this constraint is always equality
+      Explicit
+	(const LiegroupSpacePtr_t& configSpace,
+         const DifferentiableFunctionPtr_t& function,
+	 const segments_t& inputConf,
+	 const segments_t& inputVelocity,
+	 const segments_t& outputConf,
+	 const segments_t& outputVelocity,
+         const ComparisonTypes_t& comp);
+
+      /// Constructor
+      ///
+      /// \param configSpace Configuration space on which the constraint is
+      ///        defined,
+      /// \param function relation between input configuration variables and
+      ///        output configuration variables,
+      /// \param g, ginv
+      /// \param outputConf set of integer intervals defining indices
+      ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param outputVeclocity set of integer defining indices
+      ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
+      /// \param rhs        right hand side.
+      /// \note comparison type for this constraint is always equality
+      Explicit
+	(const LiegroupSpacePtr_t& configSpace,
+         const DifferentiableFunctionPtr_t& function,
          const DifferentiableFunctionPtr_t& g,
          const DifferentiableFunctionPtr_t& ginv,
 	 const segments_t& inputConf,

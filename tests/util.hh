@@ -56,11 +56,12 @@
 #include <hpp/constraints/differentiable-function.hh>
 
 bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
-    hpp::pinocchio::vectorIn_t q,
+    hpp::pinocchio::vectorIn_t q, hpp::pinocchio::vectorOut_t qSat,
     Eigen::VectorXi& sat)
 {
   using hpp::pinocchio::size_type;
   bool ret = false;
+  qSat = q;
   const se3::Model& model = robot->model();
 
   for (std::size_t i = 1; i < model.joints.size(); ++i) {
@@ -73,9 +74,11 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
       const size_type iv = idx_v + std::min(j,nv-1);
       if        (q[iq] >= model.upperPositionLimit[iq]) {
         sat[iv] =  1;
+        qSat [iq] = model.upperPositionLimit[iq];
         ret = true;
       } else if (q[iq] <= model.lowerPositionLimit[iq]) {
         sat[iv] = -1;
+        qSat [iq] = model.lowerPositionLimit[iq];
         ret = true;
       } else
         sat[iv] =  0;
@@ -99,22 +102,23 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
   }
   return ret;
 }
+
 template <int Lower, int Upper>
-void simpleIntegration (hpp::constraints::vectorIn_t from, hpp::constraints::vectorIn_t velocity, hpp::constraints::vectorOut_t result)
-{
-  result = (from + velocity).cwiseMin(Upper).cwiseMax(Lower);
-}
-template <int Lower, int Upper>
-bool simpleSaturation (hpp::constraints::vectorIn_t x, Eigen::VectorXi& sat)
+bool simpleSaturation (hpp::constraints::vectorIn_t x,
+                       hpp::constraints::vectorOut_t xSat,
+                       Eigen::VectorXi& sat)
 {
   bool ret = false;
+  xSat = x;
   for (hpp::constraints::size_type i = 0; i < x.size(); ++i) {
     if (x[i] <= Lower) {
       sat[i] = -1;
+      xSat [i] = Lower;
       ret = true;
     }
     else if (x[i] >= Upper) {
       sat[i] =  1;
+      xSat [i] = Upper;
       ret = true;
     } else {
       sat[i] = 0;

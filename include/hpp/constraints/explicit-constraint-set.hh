@@ -77,10 +77,18 @@ namespace hpp {
     g(\mathbf{q}_{out}) = f(\mathbf{p}_{in}) + rhs
     \f}
 
-    To add explicit constraints, use methods ExplicitConstraintSet::add. Note
-    that explicit constraints should be compatible.
+    To add explicit constraints, use methods ExplicitConstraintSet::add. If the
+    constraint to add is not compatible with the previous one, this method
+    returns -1.
 
     Method ExplicitConstraintSet::solve solves the explicit constraints.
+
+    The combination of compatible explicit constraints is an explicit
+    constraint. As such this class can be considered as an explicit constraint.
+
+    We will therefore use the following notation
+    \li \f$in\f$ for the set of indices of input variables,
+    \li \f$out\f$ for the set of indices of output variables.
     **/
     class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet
     {
@@ -117,7 +125,8 @@ namespace hpp {
         /// \param inDer subset of input indices for the velocity,
         /// \param outDer subset of output indices for the velocity,
         /// \return the index of the function if the function was added,
-        /// -1 otherwise.
+        /// -1 if the input explicit constraint is not compatible with the
+        ///       current set.
         /// \note A function can be added iff it is compatible with the
         ///       previously added functions.
         size_type add (const DifferentiableFunctionPtr_t& f,
@@ -155,19 +164,24 @@ namespace hpp {
         bool replace (const DifferentiableFunctionPtr_t& oldf,
                       const DifferentiableFunctionPtr_t& newd);
 
-        ExplicitConstraintSet (const std::size_t& argSize, const std::size_t derSize)
-          : argSize_ (argSize), derSize_ (derSize)
-          ,   inArgs_ (), freeArgs_ ()
-          ,   inDers_ (), freeDers_ ()
+        /// Constructor
+        ///
+        /// \param nq dimension of vector space in which the robot
+        ///                configuration space is immersed.
+        /// \param nv dimension of tangent space to configuration space.
+        ExplicitConstraintSet (const std::size_t& nq, const std::size_t nv)
+          : nq_ (nq), nv_ (nv)
+          ,   inArgs_ (), notOutArgs_ ()
+          ,   inDers_ (), notOutDers_ ()
           ,  outArgs_ (),  outDers_ ()
-          , argFunction_ (Eigen::VectorXi::Constant(argSize, -1))
-          , derFunction_ (Eigen::VectorXi::Constant(derSize, -1))
+          , argFunction_ (Eigen::VectorXi::Constant(nq, -1))
+          , derFunction_ (Eigen::VectorXi::Constant(nv, -1))
           , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
-          // , Jg (derSize, derSize)
-          , arg_ (argSize), diff_(derSize), diffSmall_()
+          // , Jg (nv, nv)
+          , arg_ (nq), diff_(nv), diffSmall_()
         {
-          freeArgs_.addRow(0, argSize);
-          freeDers_.addCol(0, derSize);
+          notOutArgs_.addRow(0, nq);
+          notOutDers_.addCol(0, nv);
         }
 
         /// \}
@@ -196,32 +210,50 @@ namespace hpp {
         /// \name Input and outputs
         /// \{
 
-        /// The set of variable indices which affects the output.
-        /// This is a subset of \ref freeArgs
+        /// Set \f$in\f$ of input configuration variables
         const RowBlockIndices& inArgs () const
         {
           return inArgs_;
         }
 
-        /// The set of derivative variable indices which affects the output.
-        /// This is a subset of \ref freeDers
+        /// Set of input velocity variables
         const ColBlockIndices& inDers () const
         {
           return inDers_;
         }
 
-        /// The set of variable indices which are not affected by the
-        /// resolution.
-        const RowBlockIndices& freeArgs () const
+        /// Set \f$i\overline{n\cup ou}t\f$ of other configuration variables
+        ///
+        /// Configuration variables that are neither input nor output
+        /// \deprecated use \ref notOutArgs
+        const RowBlockIndices& freeArgs () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return freeArgs_;
+          return notOutArgs_;
         }
 
-        /// The set of derivative variable indices which are not affected by the
-        /// resolution.
-        const ColBlockIndices& freeDers () const
+        /// Set \f$i\overline{n\cup ou}t\f$ of other velocity variables
+        ///
+        /// Velocity variables that are neither input nor output
+        /// \deprecated use \ref notOutDers
+        const ColBlockIndices& freeDers () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return freeDers_;
+          return notOutDers_;
+        }
+
+        /// Set \f$i\overline{n\cup ou}t\f$ of other configuration variables
+        ///
+        /// Configuration variables that are neither input nor output
+        const RowBlockIndices& notOutArgs () const
+        {
+          return notOutArgs_;
+        }
+
+        /// Set \f$i\overline{n\cup ou}t\f$ of other velocity variables
+        ///
+        /// Velocity variables that are neither input nor output
+        const ColBlockIndices& notOutDers () const
+        {
+          return notOutDers_;
         }
 
         /// Same as \ref inArgs
@@ -248,43 +280,98 @@ namespace hpp {
           return derFunction_;
         }
 
-        /// The set of variable indices which are computed.
+        /// Set \f$out\f$ of output configuration variables
+        /// \return the set of intervals corresponding the the configuration
+        ///         variables that are ouputs of the combination of explicit
+        ///         constraints.
         const RowBlockIndices& outArgs () const
         {
           return outArgs_;
         }
 
-        /// The set of derivative variable indices which are computed.
+        /// Set of output velocity variables
+        /// \return the set of intervals corresponding the the velocity
+        ///         variables that are ouputs of the combination of explicit
+        ///         constraints.
         const RowBlockIndices& outDers () const
         {
           return outDers_;
         }
 
-        /// The number of variables
-        const std::size_t& argSize () const
+        /// The number of configuration variables
+        /// \deprecated use \ref nq instead.
+        const std::size_t& argSize () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return argSize_;
+          return nq_;
         }
 
         /// The number of derivative variables
-        const std::size_t& derSize () const
+        /// \deprecated use \ref nv instead.
+        const std::size_t& derSize () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return derSize_;
+          return nv_;
+        }
+
+        /// The number of variables
+        const std::size_t& nq () const
+        {
+          return nq_;
+        }
+
+        /// The number of derivative variables
+        const std::size_t& nv () const
+        {
+          return nv_;
         }
 
         /// \}
 
+        /// Return Jacobian matrix of output variable wrt not output variables
+        /// \deprecated use \ref JacobianNotOutToOut instead.
         inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
+          HPP_CONSTRAINTS_DEPRECATED
         {
           return MatrixBlockView(jacobian,
               outDers_.nbIndices() , outDers_.indices(),
-              freeDers_.nbIndices(), freeDers_.indices());
+              notOutDers_.nbIndices(), notOutDers_.indices());
         }
 
-        // /// \param jacobian must be of dimensions (derSize - freeDers().nbIndices(), freeDers().nbIndices())
-        /// \param jacobian must be of dimensions (derSize, derSize) but only a subsegment will be used.
-        /// \warning it is assumed solve(arg) has been called before.
-        void jacobian(matrixOut_t jacobian, vectorIn_t arg) const;
+        /// Return Jacobian matrix of output variable wrt not output variables
+        ///
+        /// \retval jacobian Jacobian matrix of the mapping from non output
+        ///         variables to output variables. The columns of this matrix
+        ///         corresponding to variables \f$in\f$ are filled with the
+        ///         Jacobian of \f$f\f$:
+        ///         \f{equation}
+        ///         \frac{\partial f}{\partial \mathbf{q}_{in}}
+        ///         (\mathbf{q}_{in}).
+        ///         \f}
+        ///         The columns corresponding to variables
+        ///         \f$i\overline{n\cup ou}t\f$ are set to 0.
+        inline MatrixBlockView jacobianNotOutToOut (matrix_t& jacobian) const
+        {
+          return MatrixBlockView(jacobian,
+              outDers_.nbIndices() , outDers_.indices(),
+              notOutDers_.nbIndices(), notOutDers_.indices());
+        }
+
+        /** Compute the Jacobian of the explicit constraint resolution
+        
+            \param q input configuration
+            \param jacobian square Jacobian matrix of same size as velocity
+                            i.e. given by \ref nv method.
+        
+            The result is the Jacobian of the explicit constraint set considered
+            as a projector that maps to any \f$\mathbf{p}\in\mathcal{C}\f$,
+            \f$\mathbf{q} = E(\mathbf{p})\f$ defined by
+            \f{eqnarray}
+            \mathbf{q}_{\bar{out}} &=& \mathbf{p}_{out} \\
+            \mathbf{q}_{out} &=& g^{-1} (f (\mathbf{p}_{in}) + rhs)
+            \f}
+        
+            \warning it is assumed solve(q) has been called before.
+        */
+        void jacobian(matrixOut_t jacobian, vectorIn_t q) const;
 
         /// \name Right hand side accessors
         /// \{
@@ -366,10 +453,24 @@ namespace hpp {
         typedef std::vector<bool> Computed_t;
 
         void computeFunction(const std::size_t& i, vectorOut_t arg) const;
+        /// Compute rows of Jacobian corresponding to output of function
+        ///
+        /// \param i index of the explicit constraint,
+        /// \retval J Jacobian in which rows are computed
+        ///
+        /// Let
+        ///   \li E = (f, in, out) be the explicit constraint of index i,
+        ///   \li E.jacobian be the Jacobian of f,
+        ///   \li E.in the input velocity variables of the constraints,
+        ///   \li E.out the output velocity variables of the constraints,
+        ///   \li Jin the matrix composed of E.in rows of J,
+        ///   \li Jout the matrix composed of E.out rows of J,
+        /// then,
+        ///   Jout = E.jacobian * Jin
         void computeJacobian(const std::size_t& i, matrixOut_t J) const;
         void computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed);
 
-        const std::size_t argSize_, derSize_;
+        const std::size_t nq_, nv_;
 
         struct Function {
           Function (DifferentiableFunctionPtr_t _f, RowBlockIndices ia,
@@ -390,16 +491,20 @@ namespace hpp {
           mutable matrix_t jacobian, jGinv;
         }; // struct Function
 
-        RowBlockIndices inArgs_, freeArgs_;
-        ColBlockIndices inDers_, freeDers_;
+        RowBlockIndices inArgs_, notOutArgs_;
+        ColBlockIndices inDers_, notOutDers_;
+        /// Output indices
         RowBlockIndices outArgs_, outDers_;
 
         Eigen::MatrixXi inOutDependencies_;
 
         std::vector<Function> functions_;
         std::vector<std::size_t> computationOrder_;
-        /// For dof i, dofFunction_[i] is the index of the function that computes it.
-        /// -1 means it is the output of no function.
+        /// For each configuration variable i, argFunction_[i] is the index in
+        /// functions_ of the function that computes this configuration
+        /// variable.
+        /// -1 means that the configuration variable is not ouput of any
+        /// function in functions_.
         Eigen::VectorXi argFunction_, derFunction_;
         value_type squaredErrorThreshold_;
         // mutable matrix_t Jg;

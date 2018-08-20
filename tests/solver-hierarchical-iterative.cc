@@ -27,6 +27,7 @@
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
+#include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/affine-function.hh>
 
@@ -38,6 +39,7 @@ const value_type test_precision = 1e-5;
 #define VECTOR2(x0, x1) ((hpp::constraints::vector_t (2) << x0, x1).finished())
 
 using Eigen::VectorXi;
+using hpp::pinocchio::LiegroupSpace;
 
 template <typename LineSearch>
 struct test_base
@@ -45,11 +47,10 @@ struct test_base
   solver::HierarchicalIterative solver;
   LineSearch ls;
 
-  test_base (const size_type& d) : solver(d, d)
+  test_base (const size_type& d) : solver(LiegroupSpace::Rn (d))
   {
     solver.maxIterations(20);
     solver.errorThreshold(test_precision);
-    solver.integration(simpleIntegration<0,1>);
     solver.saturation(simpleSaturation<0,1>);
   }
 
@@ -143,11 +144,10 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
-  solver::HierarchicalIterative solver(device->configSize(), device->numberDof());
+  solver::HierarchicalIterative solver(device->configSpace());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.integration(boost::bind(hpp::pinocchio::integrate<true, hpp::pinocchio::DefaultLieGroupMap>, device, _1, _2, _3));
-  solver.saturation(boost::bind(saturate, device, _1, _2));
+  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();

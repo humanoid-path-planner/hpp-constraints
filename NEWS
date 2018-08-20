@@ -1,0 +1,24 @@
+                                                                -*- outline -*-
+* Rename LieGroupTpl -> LieGroupMap,
+* Rename a few classes and make old names deprecated:
+  - ExplicitSolver -> ExplicitConstraintSet,
+  - HierarchicalIterativeSolver -> solver::HierarchicalIterative,
+  - HybridSolver -> solver::BySubstitution.
+* Move and rename some classes from hpp-core:
+  - core::Equation and core::NumericalConstraints -> constraints::Implicit,
+  - core::ExplicitNumericalConstraints -> constraints::Explicit.
+* Refactor ExplicitConstraintSet: rename members and methods to better fit RSS
+  paper notation and pinocchio convention:
+  - argSize -> nq,
+  - derSize -> nv,
+  - freeArgs -> notOutArgs_,
+  - freeDers -> notOutDers_,
+  - viewJacobian -> jacobianNotOutToOut.
+* Constructor and create methods of Explicit take a LiegroupSpace instead of a
+  robot,
+* Modify prototype of BySubstitution::projectVectorOnKernel
+  - vectorIn_t -> ConfigurationIn_t,
+  - vectorOut_t -> ConfigurationOut_t.
+* In class HierarchicalIterative, rename "reduction" -> "free variables".
+
+New in 4.1, 2018-05-13

@@ -22,9 +22,11 @@
 #include <hpp/util/timer.hh>
 
 #include <hpp/pinocchio/util.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
+#include <hpp/constraints/implicit.hh>
 
 // #define SVD_THRESHOLD Eigen::NumTraits<value_type>::dummy_precision()
 #define SVD_THRESHOLD 1e-8
@@ -98,18 +100,51 @@ namespace hpp {
       }
 
       HierarchicalIterative::HierarchicalIterative
-      (const std::size_t& argSize, const std::size_t derSize)
-        : stacks_ (),
-          argSize_ (argSize),
-          derSize_ (derSize),
-          dimension_ (0),
-          lastIsOptional_ (false),
-          reduction_ (),
-          saturation_ (derSize),
-          datas_(),
-          statistics_ ("HierarchicalIterative")
+      (const LiegroupSpacePtr_t& configSpace) :
+        squaredErrorThreshold_ (0), inequalityThreshold_ (0),
+        maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
+        dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
+        freeVariables_ (), saturate_ (), functions_ (), lockedJoints_ (),
+        sigma_ (0), dq_ (), dqSmall_ (), projector_ (), reducedJ_ (),
+        saturation_ (configSpace->nv ()), reducedSaturation_ (),
+        qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
+        svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ()),
+        statistics_ ("HierarchicalIterative")
       {
-        reduction_.addCol (0, derSize_);
+        // Initialize freeVariables_ to all indices.
+        freeVariables_.addRow (0, configSpace_->nv ());
+      }
+
+      HierarchicalIterative::HierarchicalIterative
+      (const HierarchicalIterative& other) :
+        squaredErrorThreshold_ (other.squaredErrorThreshold_),
+        inequalityThreshold_ (other.inequalityThreshold_),
+        maxIterations_ (other.maxIterations_), stacks_ (other.stacks_),
+        configSpace_ (other.configSpace_), dimension_ (other.dimension_),
+        reducedDimension_ (other.reducedDimension_),
+        lastIsOptional_ (other.lastIsOptional_),
+        freeVariables_ (other.freeVariables_),
+        saturate_ (other.saturate_), functions_ (other.functions_),
+        lockedJoints_ (other.lockedJoints_), sigma_(other.sigma_),
+        dq_ (other.dq_), dqSmall_ (other.dqSmall_),
+        projector_ (other.projector_),reducedJ_ (other.reducedJ_),
+        saturation_ (other.saturation_),
+        reducedSaturation_ (other.reducedSaturation_), qSat_ (other.qSat_),
+        tmpSat_ (other.tmpSat_), squaredNorm_ (other.squaredNorm_),
+        datas_ (other.datas_), svd_ (other.svd_),
+        statistics_ (other.statistics_)
+      {
+      }
+
+      bool HierarchicalIterative::contains
+      (const ImplicitPtr_t& numericalConstraint) const
+      {
+        for (NumericalConstraints_t::const_iterator it = functions_.begin ();
+             it != functions_.end (); ++it) {
+          if (numericalConstraint == *it || *numericalConstraint == **it)
+            return true;
+        }
+        return false;
       }
 
       void HierarchicalIterative::add (const DifferentiableFunctionPtr_t& f,
@@ -144,7 +179,7 @@ namespace hpp {
 
       ArrayXb HierarchicalIterative::activeParameters () const
       {
-        ArrayXb ap (ArrayXb::Constant(argSize_, false));
+        ArrayXb ap (ArrayXb::Constant(configSpace_->nq (), false));
         for (std::size_t i = 0; i < stacks_.size (); ++i)
           ap = ap || stacks_[i].activeParameters();
         return ap;
@@ -152,7 +187,7 @@ namespace hpp {
 
       ArrayXb HierarchicalIterative::activeDerivativeParameters () const
       {
-        ArrayXb ap (ArrayXb::Constant(derSize_, false));
+        ArrayXb ap (ArrayXb::Constant(configSpace_->nv (), false));
         for (std::size_t i = 0; i < stacks_.size (); ++i)
           ap = ap || stacks_[i].activeDerivativeParameters();
         return ap;
@@ -161,7 +196,7 @@ namespace hpp {
       void HierarchicalIterative::update()
       {
         // Compute reduced size
-        std::size_t reducedSize = reduction_.nbIndices();
+        std::size_t reducedSize = freeVariables_.nbIndices();
 
         dimension_ = 0;
         reducedDimension_ = 0;
@@ -175,7 +210,7 @@ namespace hpp {
           datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
           datas_[i].rightHandSide.setNeutral ();
 
-          assert(derSize_ == f.inputDerivativeSize());
+          assert(configSpace_->nv () == f.inputDerivativeSize());
           datas_[i].jacobian.resize(f.outputDerivativeSize(),
                                     f.inputDerivativeSize());
           datas_[i].jacobian.setZero();
@@ -189,7 +224,7 @@ namespace hpp {
           datas_[i].maxRank = 0;
         }
 
-        dq_ = vector_t::Zero(derSize_);
+        dq_ = vector_t::Zero(configSpace_->nv ());
         dqSmall_.resize(reducedSize);
         projector_.resize(reducedSize, reducedSize);
         reducedJ_.resize(reducedDimension_, reducedSize);
@@ -206,15 +241,17 @@ namespace hpp {
 
         typedef Eigen::MatrixBlocks<false, false> BlockIndices;
         BlockIndices::segments_t rows;
+        // Loop over functions of the stack
         for (std::size_t i = 0; i < fs.size (); ++i) {
-          ArrayXb adp = reduction_.transpose().rview
+          ArrayXb adp = freeVariables_.rview
             (fs[i]->activeDerivativeParameters().matrix()).eval();
           if (adp.any()) // If at least one element of adp is true
             rows.push_back (BlockIndices::segment_t
                             (row, fs[i]->outputDerivativeSize()));
           row += fs[i]->outputDerivativeSize();
         }
-        d.activeRowsOfJ = Eigen::MatrixBlocks<false,false> (rows, reduction_.m_cols);
+        d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
+          (rows, freeVariables_.m_rows);
         d.activeRowsOfJ.updateRows<true, true, true>();
       }
 
@@ -338,10 +375,10 @@ namespace hpp {
       void HierarchicalIterative::computeSaturation (vectorIn_t arg) const
       {
         bool applySaturate;
-        applySaturate = saturate_ (arg, saturation_);
+        applySaturate = saturate_ (arg, qSat_, saturation_);
         if (!applySaturate) return;
 
-        reducedSaturation_ = reduction_.transpose().rview (saturation_);
+        reducedSaturation_ = freeVariables_.rview (saturation_);
         assert (
                 (    reducedSaturation_.array() == -1
                      || reducedSaturation_.array() ==  0
@@ -399,6 +436,16 @@ namespace hpp {
             row += fs[j]->outputSize();
           }
         }
+      }
+
+      void HierarchicalIterative::integrate
+      (vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
+      {
+        typedef pinocchio::LiegroupElement Lge_t;
+        typedef pinocchio::LiegroupConstElementRef LgeConstRef_t;
+        LgeConstRef_t O (from, configSpace_);
+        Lge_t M (O + velocity);
+        saturate_ (M.vector (), result, saturation_);
       }
 
       void HierarchicalIterative::residualError (vectorOut_t error) const
@@ -474,7 +521,8 @@ namespace hpp {
       void HierarchicalIterative::expandDqSmall () const
       {
         Eigen::MatrixBlockView<vector_t, Eigen::Dynamic, 1, false, true>
-          (dq_, reduction_.nbIndices(), reduction_.indices()) = dqSmall_;
+          (dq_, freeVariables_.nbIndices(), freeVariables_.indices()) =
+          dqSmall_;
       }
 
       std::ostream& HierarchicalIterative::print (std::ostream& os) const
@@ -482,7 +530,7 @@ namespace hpp {
         os << "HierarchicalIterative, " << stacks_.size() << " level." << iendl
            << "dimension " << dimension() << iendl
            << "reduced dimension " << reducedDimension() << iendl
-           << "reduction: " << reduction_ << incendl;
+           << "reduction: " << freeVariables_ << incendl;
         const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 :
                                  stacks_.size());
         for (std::size_t i = 0; i < stacks_.size(); ++i) {

@@ -130,11 +130,8 @@ namespace hpp {
       /// \note Lie group
       ///
       /// The unknowns \f$\mathbf{q}\f$ may take values in a more general set
-      /// than the configuration space of a robot. This set should be a Cartesian
-      /// product of Lie groups. In this case, the user can provide a method that
-      /// computes the exponential map of a tangent vector.
-      /// \sa HierarchicalIterative::Integration_t and
-      /// HierarchicalIterative::integration.
+      /// than the configuration space of a robot. This set should be a
+      /// Cartesian product of Lie groups: hpp::pinocchio::LiegroupSpace.
       ///
       /// \note Saturation
       ///
@@ -156,10 +153,18 @@ namespace hpp {
       /// system of equations can be modified by methods
       /// HierarchicalIterative::rightHandSideFromInput,
       /// HierarchicalIterative::rightHandSide.
+      ///
+      /// \note Free variables
+      ///
+      /// Some variables can be locked, or computed explicitely. In this case,
+      /// the iterative resolution will only change the other variables called
+      /// free variables. \sa methods
+      /// \li \ref void freeVariables (const Indices_t& indices) and
+      /// \li \ref void freeVariables (const Indices_t& indices).
       class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative
       {
       public:
-        typedef Eigen::ColBlockIndices Reduction_t;
+        typedef Eigen::RowBlockIndices Indices_t;
         typedef lineSearch::FixedSequence DefaultLineSearch;
 
         enum Status {
@@ -168,27 +173,33 @@ namespace hpp {
           INFEASIBLE,
           SUCCESS
         };
-        /// This function integrates velocity during unit time, from argument.
-        /// It should be robust to cases where from and result points to the
-        /// same vector in memory (aliasing)
-        typedef boost::function<void (vectorIn_t from, vectorIn_t velocity, vectorOut_t result)> Integration_t;
         /// This function checks which degrees of freedom are saturated.
         ///
-        /// \param result a configuration
-        ///
-        /// For each degree of freedom, saturation is set to
+        /// \param q a configuration,
+        /// \retval qSat configuration after saturing values out of bounds
+        /// \retval saturation vector: for each degree of freedom, saturation
+        ///         is set to
         /// \li -1 if the lower bound is reached,
         /// \li  1 if the upper bound is reached,
         /// \li  0 otherwise.
-        typedef boost::function<bool (vectorIn_t result, Eigen::VectorXi& saturation)> Saturation_t;
+        typedef boost::function<bool (vectorIn_t q, vectorOut_t qSat,
+                                      Eigen::VectorXi& saturation)>
+          Saturation_t;
 
-        HierarchicalIterative (const std::size_t& argSize,
-                               const std::size_t derSize);
+        HierarchicalIterative (const LiegroupSpacePtr_t& configSpace);
+
+        HierarchicalIterative (const HierarchicalIterative& other);
 
         virtual ~HierarchicalIterative () {}
 
         /// \name Problem definition
         /// \{
+
+        /// Check whether a numerical constraint has been added
+        /// \param numericalConstraint numerical constraint
+        /// \return true if numerical constraint is already in the solver
+        ///         whatever the passive dofs are.
+        bool contains (const ImplicitPtr_t& numericalConstraint) const;
 
         /// Add an implicit equality constraint
         ///
@@ -212,18 +223,6 @@ namespace hpp {
         /// \param comp comparison type. See class documentation for details.
         void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority,
                   const ComparisonTypes_t& comp);
-
-        /// Set the integration function
-        void integration (const Integration_t& integrate)
-        {
-          integrate_ = integrate;
-        }
-
-        /// Get the integration function
-        const Integration_t& integration () const
-        {
-          return integrate_;
-        }
 
         /// Set the saturation function
         void saturation (const Saturation_t& saturate)
@@ -299,24 +298,28 @@ namespace hpp {
         /// \name Parameters
         /// \{
 
-        /// Set the velocity variable that must be changed.
+        /// Set free velocity variables
+        ///
         /// The other variables will be left unchanged by the iterative
-        /// algorithm.
-        void reduction (const segments_t intervals)
+        /// resolution.
+        ///
+        /// \param intervals set of index intervals
+        void freeVariables (const segments_t intervals)
         {
-          reduction_ = Reduction_t();
+          freeVariables_ = Indices_t();
           for (std::size_t i = 0; i < intervals.size(); ++i)
-            reduction_.addCol(intervals[i].first, intervals[i].second);
-          reduction_.updateIndices<true, true, true>();
+            freeVariables_.addRow (intervals[i].first, intervals[i].second);
+          freeVariables_.updateIndices<true, true, true>();
           update ();
         }
 
-        /// Set the velocity variable that must be changed.
+        /// Set free velocity variables
+        ///
         /// The other variables will be left unchanged by the iterative
-        /// algorithm.
-        void reduction (const Reduction_t& reduction)
+        /// resolution.
+        void freeVariables (const Indices_t& indices)
         {
-          reduction_ = reduction;
+          freeVariables_ = indices;
           update ();
         }
 
@@ -478,11 +481,8 @@ namespace hpp {
           return dq_;
         }
 
-        virtual void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
-        {
-          integrate_ (from, velocity, result);
-        }
-
+        virtual void integrate(vectorIn_t from, vectorIn_t velocity,
+                               vectorOut_t result) const;
         /// \}
 
         virtual std::ostream& print (std::ostream& os) const;
@@ -534,22 +534,30 @@ namespace hpp {
         size_type maxIterations_;
 
         std::vector<DifferentiableFunctionStack> stacks_;
-        size_type argSize_, derSize_;
+        LiegroupSpacePtr_t configSpace_;
         size_type dimension_, reducedDimension_;
         bool lastIsOptional_;
-        Reduction_t reduction_;
-        Integration_t integrate_;
+        /// Unknown of the set of implicit constraints
+        Indices_t freeVariables_;
         Saturation_t saturate_;
+        /// Members moved from core::ConfigProjector
+        NumericalConstraints_t functions_;
+        LockedJoints_t lockedJoints_;
+
         /// The smallest non-zero singular value
         mutable value_type sigma_;
 
         mutable vector_t dq_, dqSmall_;
         mutable matrix_t projector_, reducedJ_;
         mutable Eigen::VectorXi saturation_, reducedSaturation_;
+        mutable Configuration_t qSat_;
         mutable ArrayXb tmpSat_;
         mutable value_type squaredNorm_;
         mutable std::vector<Data> datas_;
         mutable SVD_t svd_;
+        mutable vector_t OM_;
+        mutable vector_t OP_;
+
 
         mutable ::hpp::statistics::SuccessStatistics statistics_;
 

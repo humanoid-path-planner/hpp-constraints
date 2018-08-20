@@ -100,7 +100,7 @@ namespace hpp {
         const value_type r = solver.residualError() / solver.squaredErrorThreshold();
         const value_type alpha = C - K * std::tanh(a * r + b);
         darg *= alpha;
-        solver.integration() (arg, darg, arg);
+        solver.integrate (arg, darg, arg);
         return true;
       }
     }

@@ -141,6 +141,7 @@ namespace hpp {
 
     HPP_PREDEF_CLASS (Implicit);
     typedef boost::shared_ptr <Implicit> ImplicitPtr_t;
+    typedef std::vector < constraints::ImplicitPtr_t > NumericalConstraints_t;
 
     enum ComparisonType {
       Equality,
@@ -166,6 +167,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (LockedJoint);
     typedef boost::shared_ptr <LockedJoint> LockedJointPtr_t;
     typedef boost::shared_ptr <const LockedJoint> LockedJointConstPtr_t;
+    typedef std::vector <LockedJointPtr_t> LockedJoints_t;
 
     typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
     typedef solver::HierarchicalIterative HierarchicalIterativeSolver

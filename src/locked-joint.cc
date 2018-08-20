@@ -137,7 +137,7 @@ namespace hpp {
     LockedJoint::LockedJoint (const JointPtr_t& joint,
                               const LiegroupElement& value) :
       Explicit (
-          joint->robot(),
+                joint->robot()->configSpace (),
           makeFunction (value, joint->name()),
           segments_t(), // input conf
           segments_t(), // input vel
@@ -155,7 +155,7 @@ namespace hpp {
     LockedJoint::LockedJoint (const JointPtr_t& joint, const size_type index,
         vectorIn_t value) :
       Explicit (
-          joint->robot(),
+                joint->robot()->configSpace (),
           makeFunction (
             LiegroupElement (value, LiegroupSpace::Rn (joint->configSize () - index)),
             "partial_" + joint->name()),
@@ -176,7 +176,7 @@ namespace hpp {
     LockedJoint::LockedJoint (const DevicePtr_t& dev, const size_type index,
         vectorIn_t value) :
       Explicit (
-          dev,
+                dev->configSpace (),
           makeFunction (
             LiegroupElement (value, LiegroupSpace::Rn (value.size ())),
             dev->name() + "_extraDof" + numToStr (index)),

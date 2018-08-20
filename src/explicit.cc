@@ -99,6 +99,44 @@ namespace hpp {
       return shPtr;
     }
 
+    ExplicitPtr_t Explicit::create
+    (const LiegroupSpacePtr_t& configSpace,
+     const DifferentiableFunctionPtr_t& function,
+     const DifferentiableFunctionPtr_t& g,
+     const DifferentiableFunctionPtr_t& ginv,
+     const segments_t& inputConf,
+     const segments_t& inputVelocity,
+     const segments_t& outputConf,
+     const segments_t& outputVelocity,
+     const ComparisonTypes_t& comp)
+    {
+      Explicit* ptr = new Explicit
+	(configSpace, function, g, ginv, inputConf, inputVelocity, outputConf,
+         outputVelocity, defaultCompTypes(outputVelocity,comp));
+      ExplicitPtr_t shPtr (ptr);
+      ExplicitWkPtr_t wkPtr (shPtr);
+      ptr->init (wkPtr);
+      return shPtr;
+    }
+
+    ExplicitPtr_t Explicit::create
+    (const LiegroupSpacePtr_t& configSpace,
+     const DifferentiableFunctionPtr_t& function,
+     const segments_t& inputConf,
+     const segments_t& inputVelocity,
+     const segments_t& outputConf,
+     const segments_t& outputVelocity,
+     const ComparisonTypes_t& comp)
+    {
+      Explicit* ptr = new Explicit
+	(configSpace, function, inputConf, inputVelocity, outputConf,
+         outputVelocity, defaultCompTypes(outputVelocity,comp));
+      ExplicitPtr_t shPtr (ptr);
+      ExplicitWkPtr_t wkPtr (shPtr);
+      ptr->init (wkPtr);
+      return shPtr;
+    }
+
     ExplicitPtr_t Explicit::createCopy
     (const ExplicitPtr_t& other)
     {
@@ -145,6 +183,48 @@ namespace hpp {
      const ComparisonTypes_t& comp) :
       Implicit (explicit_::BasicFunction::create
                 (robot, explicitFunction, inputConf, inputVelocity,
+                 outputConf, outputVelocity),
+                comp),
+      inputToOutput_ (explicitFunction),
+      inputConf_ (inputConf),
+      inputVelocity_ (inputVelocity),
+      outputConf_ (outputConf),
+      outputVelocity_ (outputVelocity)
+    {
+    }
+
+    Explicit::Explicit
+    (const LiegroupSpacePtr_t& configSpace,
+     const DifferentiableFunctionPtr_t& explicitFunction,
+     const DifferentiableFunctionPtr_t& g,
+     const DifferentiableFunctionPtr_t& ginv,
+     const segments_t& inputConf,
+     const segments_t& inputVelocity,
+     const segments_t& outputConf,
+     const segments_t& outputVelocity,
+     const ComparisonTypes_t& comp) :
+      Implicit (explicit_::GenericFunction::create
+                (configSpace, explicitFunction, g, inputConf, inputVelocity,
+                 outputConf, outputVelocity),
+                comp),
+      inputToOutput_ (explicitFunction), g_ (g), ginv_ (ginv),
+      inputConf_ (inputConf),
+      inputVelocity_ (inputVelocity),
+      outputConf_ (outputConf),
+      outputVelocity_ (outputVelocity)
+    {
+    }
+
+    Explicit::Explicit
+    (const LiegroupSpacePtr_t& configSpace,
+     const DifferentiableFunctionPtr_t& explicitFunction,
+     const segments_t& inputConf,
+     const segments_t& inputVelocity,
+     const segments_t& outputConf,
+     const segments_t& outputVelocity,
+     const ComparisonTypes_t& comp) :
+      Implicit (explicit_::BasicFunction::create
+                (configSpace, explicitFunction, inputConf, inputVelocity,
                  outputConf, outputVelocity),
                 comp),
       inputToOutput_ (explicitFunction),

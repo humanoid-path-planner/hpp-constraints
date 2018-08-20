@@ -47,6 +47,7 @@ using hpp::constraints::AffineFunctionPtr_t;
 using hpp::constraints::ConstantFunction;
 using hpp::constraints::ConstantFunctionPtr_t;
 using hpp::constraints::ExplicitConstraintSet;
+using hpp::constraints::Implicit;
 using hpp::constraints::matrix3_t;
 using hpp::constraints::LiegroupSpace;
 using hpp::constraints::JointPtr_t;
@@ -99,13 +100,12 @@ void test_quadratic ()
   AffineFunctionPtr_t expl (new AffineFunction (B));
 
   // Make solver
-  BySubstitution solver (N, N);
+  BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
-  solver.add (quad, 0);
+  solver.add (Implicit::create (quad));
   solver.explicitConstraintSet().add (expl, in, out, in, out);
   solver.explicitConstraintSetHasChanged();
 
@@ -132,7 +132,8 @@ void test_quadratic ()
 
   x.setRandom();
   solver.explicitConstraintSet().solve(x);
-  expectedJ = 2 * solver.explicitConstraintSet().freeArgs().rview(x).eval().transpose() * Ar;
+  expectedJ = 2 * solver.explicitConstraintSet().notOutArgs().rview(x).eval().
+    transpose() * Ar;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -166,13 +167,12 @@ void test_quadratic2 ()
   AffineFunctionPtr_t expl2 (new AffineFunction (C));
 
   // Make solver
-  BySubstitution solver (N, N);
+  BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
-  solver.add (quad, 0);
+  solver.add (Implicit::create (quad));
   solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
   solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
   solver.explicitConstraintSetHasChanged();
@@ -204,7 +204,8 @@ void test_quadratic2 ()
 
   x.setRandom();
   solver.explicitConstraintSet().solve(x);
-  expectedJ = 2 * solver.explicitConstraintSet().freeArgs().rview(x).eval().transpose() * Ar;
+  expectedJ = 2 * solver.explicitConstraintSet().notOutArgs().rview(x).eval().
+    transpose() * Ar;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -243,13 +244,12 @@ void test_quadratic3 ()
   Quadratic::Ptr_t quad (new Quadratic (A, -d[0]));
 
   // Make solver
-  BySubstitution solver (N, N);
+  BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.integration(simpleIntegration<-1,1>);
   solver.saturation(simpleSaturation<-1,1>);
 
-  solver.add (quad, 0);
+  solver.add (Implicit::create (quad));
   solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
   solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
   solver.explicitConstraintSet().add (expl3, in3, out3, in3, out3);
@@ -287,8 +287,8 @@ void test_quadratic3 ()
   x.setRandom();
   solver.explicitConstraintSet().solve(x);
   expectedJ = 2 *
-    (P * solver.explicitConstraintSet().freeArgs().rview(x).eval() + Xr_0).transpose()
-    * Ar * P;
+    (P * solver.explicitConstraintSet().notOutArgs().rview(x).eval() +
+     Xr_0).transpose() * Ar * P;
 
   solver.computeValue<true> (x);
   solver.updateJacobian(x);
@@ -470,7 +470,7 @@ typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(functions1)
 {
-  BySubstitution solver(3, 3);
+  BySubstitution solver(LiegroupSpace::R3 ());
 
   /// System:
   /// f (q1, q2) = 0
@@ -479,7 +479,9 @@ BOOST_AUTO_TEST_CASE(functions1)
   ///         q2 = C
 
   // f
-  solver.add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Identity(2,3))), 0);
+  solver.add(Implicit::create
+             (AffineFunctionPtr_t (new AffineFunction
+                                   (matrix_t::Identity(2,3)))));
   // q1 = g(q3)
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -498,7 +500,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
   // h
   matrix_t h (1,3); h << 0, 1, 0;
-  solver.add(AffineFunctionPtr_t(new AffineFunction (h)), 0);
+  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (h))));
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
 
@@ -508,7 +510,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
 BOOST_AUTO_TEST_CASE(functions2)
 {
-  BySubstitution solver(3, 3);
+  BySubstitution solver(LiegroupSpace::R3 ());
 
   /// System:
   /// f (q1, q3) = 0
@@ -516,7 +518,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::Matrix<value_type, 2, 3> Jf;
   Jf << 1, 0, 0,
         0, 0, 1;
-  solver.add(AffineFunctionPtr_t(new AffineFunction (Jf)), 0);
+  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jf))));
 
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -534,7 +536,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   /// q2 = g(q3)
   // This function should not be removed from the system.
   Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
-  solver.add(AffineFunctionPtr_t(new AffineFunction (Jh)), 0);
+  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jh))));
   BOOST_CHECK_EQUAL(solver.dimension(), 3);
 
   // We add to the system q3 = C
@@ -569,11 +571,10 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   Configuration_t q = device->currentConfiguration (),
                   qrand = se3::randomConfiguration(device->model());
 
-  BySubstitution solver(device->configSize(), device->numberDof());
+  BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.integration(boost::bind(hpp::pinocchio::integrate<true, hpp::pinocchio::DefaultLieGroupMap>, device, _1, _2, _3));
-  solver.saturation(boost::bind(saturate, device, _1, _2));
+  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();
@@ -581,9 +582,12 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   Transform3f tf2 (ee2->currentTransformation ());
   Transform3f tf3 (ee3->currentTransformation ());
 
-  solver.add(Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2), 0);
-  solver.add(Orientation::create ("Orientation LWristPitch", device, ee3, tf3), 0);
-  // solver.add(Position::create    ("Position"   , device, ee2, tf2), 0);
+  solver.add
+    (Implicit::create
+     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2)));
+  solver.add
+     (Implicit::create
+      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3)));
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
@@ -623,5 +627,5 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   vector_t dq (device->numberDof());
   dq.setRandom();
   qrand = tmp;
-  solver.projectOnKernel (qrand, dq, tmp);
+  solver.projectVectorOnKernel (qrand, dq, tmp);
 }

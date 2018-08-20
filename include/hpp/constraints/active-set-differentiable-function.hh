@@ -24,10 +24,22 @@
 namespace hpp {
   namespace constraints {
 
+    /// Handle bounds on input variables of a differentiable function.
+    ///
+    /// This class is a decorator of class DifferentiableFunction that
+    /// sets to 0 some columns of the Jacobian of the function.
+    ///
+    /// The class is used to handle saturation of input variables of
+    /// the function during numerical resolution of implicit constraints
+    /// built with the function.
     class HPP_CONSTRAINTS_DLLAPI ActiveSetDifferentiableFunction :
       public DifferentiableFunction
     {
       public:
+        /// Constructor
+        /// \param f initial differentiable function,
+        /// \intervals set of intervals of indices corresponding to saturated
+        ///            input variables.
         ActiveSetDifferentiableFunction (const DifferentiableFunctionPtr_t& f,
             segments_t intervals)
           : DifferentiableFunction(
@@ -40,11 +52,13 @@ namespace hpp {
           context (f->context());
         }
 
+        /// Get the original function
         const DifferentiableFunction& function() const
         {
           return *function_;
         }
 
+        /// Get the original function
         const DifferentiableFunctionPtr_t& functionPtr() const
         {
           return function_;
