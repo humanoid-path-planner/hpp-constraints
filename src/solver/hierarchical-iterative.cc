@@ -104,7 +104,7 @@ namespace hpp {
         squaredErrorThreshold_ (0), inequalityThreshold_ (0),
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
-        freeVariables_ (), saturate_ (), functions_ (), lockedJoints_ (),
+        freeVariables_ (), saturate_ (), constraints_ (), lockedJoints_ (),
         sigma_ (0), dq_ (), dqSmall_ (), projector_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
@@ -124,7 +124,7 @@ namespace hpp {
         reducedDimension_ (other.reducedDimension_),
         lastIsOptional_ (other.lastIsOptional_),
         freeVariables_ (other.freeVariables_),
-        saturate_ (other.saturate_), functions_ (other.functions_),
+        saturate_ (other.saturate_), constraints_ (other.constraints_),
         lockedJoints_ (other.lockedJoints_), sigma_(other.sigma_),
         dq_ (other.dq_), dqSmall_ (other.dqSmall_),
         projector_ (other.projector_),reducedJ_ (other.reducedJ_),
@@ -139,8 +139,8 @@ namespace hpp {
       bool HierarchicalIterative::contains
       (const ImplicitPtr_t& numericalConstraint) const
       {
-        for (NumericalConstraints_t::const_iterator it = functions_.begin ();
-             it != functions_.end (); ++it) {
+        for (NumericalConstraints_t::const_iterator it = constraints_.begin ();
+             it != constraints_.end (); ++it) {
           if (numericalConstraint == *it || *numericalConstraint == **it)
             return true;
         }
@@ -151,14 +151,18 @@ namespace hpp {
                                        const std::size_t& priority,
                                        const ComparisonTypes_t& comp)
       {
-        assert (comp.size() == (std::size_t)f->outputSize());
+        add (Implicit::create (f, comp), priority);
+      }
+
+      void HierarchicalIterative::add (const ImplicitPtr_t& constraint,
+                                       const std::size_t& priority)
+      {
+        const ComparisonTypes_t comp (constraint->comparisonType ());
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
-          stacks_.resize (minSize, DifferentiableFunctionSet());
-          datas_. resize (minSize, Data());
+          stacks_.resize (minSize, ImplicitConstraintSet ());
         }
-        stacks_[priority].add(f);
-#if 1 // moved to method ImplicitConstraintSet::add
+        stacks_ [priority].add (constraint);
         Data& d = datas_[priority];
         for (std::size_t i = 0; i < comp.size(); ++i) {
           switch (comp[i]) {
@@ -175,23 +179,39 @@ namespace hpp {
           d.comparison.push_back (comp[i]);
         }
         d.equalityIndices.updateRows<true, true, true>();
-#endif
         update();
+
       }
 
       ArrayXb HierarchicalIterative::activeParameters () const
       {
         ArrayXb ap (ArrayXb::Constant(configSpace_->nq (), false));
-        for (std::size_t i = 0; i < stacks_.size (); ++i)
-          ap = ap || stacks_[i].activeParameters();
+        for (std::size_t i = 0; i < stacks_.size (); ++i) {
+#ifndef NDEBUG
+          dynamic_cast <const DifferentiableFunctionSet&>
+            (stacks_[i].function ());
+#endif
+          const DifferentiableFunctionSet& dfs
+            (dynamic_cast <const DifferentiableFunctionSet&>
+             (stacks_[i].function ()));
+          ap = ap || dfs.activeParameters();
+        }
         return ap;
       }
 
       ArrayXb HierarchicalIterative::activeDerivativeParameters () const
       {
         ArrayXb ap (ArrayXb::Constant(configSpace_->nv (), false));
-        for (std::size_t i = 0; i < stacks_.size (); ++i)
-          ap = ap || stacks_[i].activeDerivativeParameters();
+        for (std::size_t i = 0; i < stacks_.size (); ++i) {
+#ifndef NDEBUG
+          dynamic_cast <const DifferentiableFunctionSet&>
+            (stacks_[i].function ());
+#endif
+          const DifferentiableFunctionSet& dfs
+            (dynamic_cast <const DifferentiableFunctionSet&>
+             (stacks_[i].function ()));
+          ap = ap || dfs.activeDerivativeParameters();
+        }
         return ap;
       }
 
@@ -205,7 +225,14 @@ namespace hpp {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           computeActiveRowsOfJ (i);
 
-          const DifferentiableFunctionSet& f = stacks_[i];
+          const ImplicitConstraintSet& constraints (stacks_ [i]);
+#ifndef NDEBUG
+          dynamic_cast <const DifferentiableFunctionSet&>
+            (constraints.function ());
+#endif
+          const DifferentiableFunctionSet& f
+            (static_cast <const DifferentiableFunctionSet&>
+             (constraints.function ()));
           dimension_ += f.outputSize();
           reducedDimension_ += datas_[i].activeRowsOfJ.nbRows();
           datas_[i].output = LiegroupElement (f.outputSpace ());
@@ -237,50 +264,59 @@ namespace hpp {
       void HierarchicalIterative::computeActiveRowsOfJ (std::size_t iStack)
       {
         Data& d = datas_[iStack];
-        const DifferentiableFunctionSet& f = stacks_[iStack];
-        const DifferentiableFunctionSet::Functions_t& fs = f.functions();
+        const ImplicitConstraintSet::Implicits_t constraints
+          (stacks_ [iStack].constraints ());
         std::size_t row = 0;
 
         typedef Eigen::MatrixBlocks<false, false> BlockIndices;
         BlockIndices::segments_t rows;
         // Loop over functions of the stack
-        for (std::size_t i = 0; i < fs.size (); ++i) {
+        for (std::size_t i = 0; i < constraints.size (); ++i) {
           ArrayXb adp = freeVariables_.rview
-            (fs[i]->activeDerivativeParameters().matrix()).eval();
+            (constraints [i]->function ().activeDerivativeParameters().
+             matrix()).eval();
           if (adp.any()) // If at least one element of adp is true
             rows.push_back (BlockIndices::segment_t
-                            (row, fs[i]->outputDerivativeSize()));
-          row += fs[i]->outputDerivativeSize();
+                            (row, constraints [i]->function ().
+                             outputDerivativeSize()));
+          row += constraints [i]->function ().outputDerivativeSize();
         }
         d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
           (rows, freeVariables_.m_rows);
         d.activeRowsOfJ.updateRows<true, true, true>();
       }
 
-      vector_t HierarchicalIterative::rightHandSideFromInput (vectorIn_t arg)
+      vector_t HierarchicalIterative::rightHandSideFromConfig
+      (vectorIn_t config)
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          const DifferentiableFunctionSet& f = stacks_[i];
+          ImplicitConstraintSet& ics = stacks_[i];
           Data& d = datas_[i];
-          f.value (d.output, arg);
+          ics.function ().value (d.output, config);
           d.equalityIndices.lview(d.rightHandSide.vector ()) =
             d.equalityIndices.rview(d.output.vector ());
         }
         return rightHandSide();
       }
 
-      bool HierarchicalIterative::rightHandSideFromInput
-      (const DifferentiableFunctionPtr_t& f, vectorIn_t arg)
+      bool HierarchicalIterative::rightHandSideFromConfig
+      (const ImplicitPtr_t& constraint, vectorIn_t config)
       {
+        const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           Data& d = datas_[i];
-          const DifferentiableFunctionSet::Functions_t& fs =
-            stacks_[i].functions();
+          const ImplicitConstraintSet& ics (stacks_[i]);
+          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
+                                        ics.functionPtr ()));
+          DifferentiableFunctionSetPtr_t dfs
+            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
+                                  ics.functionPtr ()));
+          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
             if (f == fs[j]) {
               LiegroupElement tmp (f->outputSpace ());
-              f->value (tmp, arg);
+              f->value (tmp, config);
               d.output.vector ().segment(row, f->outputSize()) = tmp.vector ();
               for (size_type k = 0; k < f->outputSize(); ++k) {
                 if (d.comparison[row + k] == Equality) {
@@ -296,12 +332,18 @@ namespace hpp {
       }
 
       bool HierarchicalIterative::rightHandSide
-      (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs)
+      (const ImplicitPtr_t& constraint, vectorIn_t rhs)
       {
+        const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           Data& d = datas_[i];
-          const DifferentiableFunctionSet::Functions_t& fs =
-            stacks_[i].functions();
+          const ImplicitConstraintSet& ics (stacks_[i]);
+          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
+                                        ics.functionPtr ()));
+          DifferentiableFunctionSetPtr_t dfs
+            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
+                                  ics.functionPtr ()));
+          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
             if (f == fs[j]) {
@@ -354,14 +396,15 @@ namespace hpp {
       }
 
       template <bool ComputeJac>
-      void HierarchicalIterative::computeValue (vectorIn_t arg) const
+      void HierarchicalIterative::computeValue (vectorIn_t config) const
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          const DifferentiableFunctionSet& f = stacks_[i];
+          const ImplicitConstraintSet& constraints (stacks_ [i]);
+          const DifferentiableFunction& f = constraints.function ();
           Data& d = datas_[i];
 
-          f.value   (d.output, arg);
-          if (ComputeJac) f.jacobian(d.jacobian, arg);
+          f.value   (d.output, config);
+          if (ComputeJac) f.jacobian(d.jacobian, config);
           d.error = d.output - d.rightHandSide;
           applyComparison<ComputeJac>(d.comparison, d.inequalityIndices,
                                       d.error, d.jacobian, inequalityThreshold_);
@@ -371,13 +414,13 @@ namespace hpp {
         }
       }
 
-      template void HierarchicalIterative::computeValue<false>(vectorIn_t arg) const;
-      template void HierarchicalIterative::computeValue<true >(vectorIn_t arg) const;
+      template void HierarchicalIterative::computeValue<false>(vectorIn_t config) const;
+      template void HierarchicalIterative::computeValue<true >(vectorIn_t config) const;
 
-      void HierarchicalIterative::computeSaturation (vectorIn_t arg) const
+      void HierarchicalIterative::computeSaturation (vectorIn_t config) const
       {
         bool applySaturate;
-        applySaturate = saturate_ (arg, qSat_, saturation_);
+        applySaturate = saturate_ (config, qSat_, saturation_);
         if (!applySaturate) return;
 
         reducedSaturation_ = freeVariables_.rview (saturation_);
@@ -427,15 +470,16 @@ namespace hpp {
                                  stacks_.size());
         squaredNorm_ = 0;
         for (std::size_t i = 0; i < end; ++i) {
-          const DifferentiableFunctionSet::Functions_t& fs =
-            stacks_[i].functions();
+          const ImplicitConstraintSet::Implicits_t constraints
+            (stacks_ [i].constraints ());
           const Data& d = datas_[i];
           size_type row = 0;
-          for (std::size_t j = 0; j < fs.size(); ++j) {
+          for (std::size_t j = 0; j < constraints.size(); ++j) {
+            size_type outputSize (constraints [j]->function ().outputSize ());
             squaredNorm_ = std::max
               (squaredNorm_,
-               d.error.segment(row, fs[j]->outputSize()).squaredNorm());
-            row += fs[j]->outputSize();
+               d.error.segment(row, outputSize).squaredNorm());
+            row += outputSize;
           }
         }
       }
@@ -482,7 +526,7 @@ namespace hpp {
         } else {
           projector_.setIdentity();
           for (std::size_t i = 0; i < stacks_.size (); ++i) {
-            const DifferentiableFunctionSet& f = stacks_[i];
+            const DifferentiableFunction& f = stacks_[i].function ();
             Data& d = datas_[i];
 
             // TODO: handle case where this is the first element of the stack and it
@@ -536,20 +580,21 @@ namespace hpp {
         const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 :
                                  stacks_.size());
         for (std::size_t i = 0; i < stacks_.size(); ++i) {
-          const DifferentiableFunctionSet::Functions_t& fs =
-            stacks_[i].functions();
+          const ImplicitConstraintSet::Implicits_t constraints
+            (stacks_ [i].constraints ());
           const Data& d = datas_[i];
           os << iendl << "Level " << i;
           if (lastIsOptional_ && i == end) os << " (optional)";
-          os << ": Stack of " << fs.size() << " functions" << incindent;
+          os << ": Stack of " << constraints.size () << " functions" << incindent;
           size_type row = 0;
-          for (std::size_t j = 0; j < fs.size(); ++j) {
-            const DifferentiableFunctionPtr_t& f = fs[j];
+          for (std::size_t j = 0; j < constraints.size (); ++j) {
+            const DifferentiableFunctionPtr_t& f
+              (constraints [j]->functionPtr ());
             os << iendl << j << ": ["
                << row << ", " << f->outputSize() << "],"
                << *f
                << iendl << "Rhs: " << condensed(d.rightHandSide.vector().segment
-                                                (row, fs[j]->outputSize()));
+                                                (row, f->outputSize()));
             row += f->outputSize();
           }
           os << decendl;

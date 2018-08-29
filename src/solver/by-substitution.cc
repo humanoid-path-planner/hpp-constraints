@@ -133,7 +133,7 @@ namespace hpp {
         hppDout (info, "Constraints " << name() << " has dimension "
                  << dimension());
 
-        functions_.push_back (nm);
+        constraints_.push_back (nm);
         return true;
       }
 
@@ -252,8 +252,8 @@ namespace hpp {
       void BySubstitution::computeActiveRowsOfJ (std::size_t iStack)
       {
         Data& d = datas_[iStack];
-        const DifferentiableFunctionSet& f = stacks_[iStack];
-        const DifferentiableFunctionSet::Functions_t& fs = f.functions();
+        const ImplicitConstraintSet::Implicits_t constraints
+          (stacks_ [iStack].constraints ());
         std::size_t row = 0;
 
         /// ADP: Active Derivative Param
@@ -264,25 +264,28 @@ namespace hpp {
 
         ArrayXb adpF, adpC;
         BlockIndices::segments_t rows;
-        for (std::size_t i = 0; i < fs.size (); ++i) {
+        for (std::size_t i = 0; i < constraints.size (); ++i) {
           bool active;
 
           // Test on the variable left free by the explicit solver.
           adpF = freeVariables_.rview
-            (fs[i]->activeDerivativeParameters().matrix()).eval().array();
+            (constraints [i]->function ().activeDerivativeParameters().
+             matrix()).eval().array();
           active = adpF.any();
           if (!active && explicitIOdep.size() > 0) {
             // Test on the variable constrained by the explicit solver.
             adpC = explicit_.outDers().rview
-              (fs[i]->activeDerivativeParameters().matrix()).eval().array();
+              (constraints [i]->function ().activeDerivativeParameters().
+               matrix()).eval().array();
             adpF = (explicitIOdep.transpose() * adpC.cast<int>().matrix()).
               array().cast<bool>();
             active = adpF.any();
           }
           if (active) // If at least one element of adp is true
             rows.push_back (BlockIndices::segment_t
-                            (row, fs[i]->outputDerivativeSize()));
-          row += fs[i]->outputDerivativeSize();
+                            (row, constraints [i]->function ().
+                             outputDerivativeSize()));
+          row += constraints [i]->function ().outputDerivativeSize();
         }
         d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
           (rows, freeVariables_.m_rows);
@@ -292,7 +295,7 @@ namespace hpp {
       void BySubstitution::projectVectorOnKernel
       (ConfigurationIn_t arg, vectorIn_t darg, ConfigurationOut_t result) const
       {
-        if (functions_.empty ()) {
+        if (constraints_.empty ()) {
           result = darg;
           return;
         }
@@ -316,7 +319,7 @@ namespace hpp {
                                             ConfigurationOut_t result)
       {
         // TODO equivalent
-        if (functions_.empty ()) {
+        if (constraints_.empty ()) {
           result = to;
           return;
         }
