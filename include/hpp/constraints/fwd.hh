@@ -144,6 +144,9 @@ namespace hpp {
     HPP_PREDEF_CLASS (Implicit);
     typedef boost::shared_ptr <Implicit> ImplicitPtr_t;
     typedef std::vector < constraints::ImplicitPtr_t > NumericalConstraints_t;
+    HPP_PREDEF_CLASS (ImplicitConstraintSet);
+    typedef boost::shared_ptr <ImplicitConstraintSet>
+    ImplicitConstraintSetPtr_t;
 
     enum ComparisonType {
       Equality,

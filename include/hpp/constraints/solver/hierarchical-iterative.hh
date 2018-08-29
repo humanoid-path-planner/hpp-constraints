@@ -25,7 +25,7 @@
 #include <hpp/constraints/config.hh>
 
 #include <hpp/constraints/matrix-view.hh>
-#include <hpp/constraints/differentiable-function-set.hh>
+#include <hpp/constraints/implicit-constraint-set.hh>
 
 namespace hpp {
   namespace constraints {

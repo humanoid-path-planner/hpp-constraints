@@ -158,6 +158,7 @@ namespace hpp {
           datas_. resize (minSize, Data());
         }
         stacks_[priority].add(f);
+#if 1 // moved to method ImplicitConstraintSet::add
         Data& d = datas_[priority];
         for (std::size_t i = 0; i < comp.size(); ++i) {
           switch (comp[i]) {
@@ -174,6 +175,7 @@ namespace hpp {
           d.comparison.push_back (comp[i]);
         }
         d.equalityIndices.updateRows<true, true, true>();
+#endif
         update();
       }
 

@@ -159,6 +159,7 @@ namespace hpp {
 	  weak_ = weak;
 	}
 
+        friend class ImplicitConstraintSet;
       private:
         ComparisonTypes_t comparison_;
         vector_t rhs_;
