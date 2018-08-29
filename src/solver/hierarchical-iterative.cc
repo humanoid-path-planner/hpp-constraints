@@ -154,7 +154,7 @@ namespace hpp {
         assert (comp.size() == (std::size_t)f->outputSize());
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
-          stacks_.resize (minSize, DifferentiableFunctionStack());
+          stacks_.resize (minSize, DifferentiableFunctionSet());
           datas_. resize (minSize, Data());
         }
         stacks_[priority].add(f);
@@ -203,7 +203,7 @@ namespace hpp {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           computeActiveRowsOfJ (i);
 
-          const DifferentiableFunctionStack& f = stacks_[i];
+          const DifferentiableFunctionSet& f = stacks_[i];
           dimension_ += f.outputSize();
           reducedDimension_ += datas_[i].activeRowsOfJ.nbRows();
           datas_[i].output = LiegroupElement (f.outputSpace ());
@@ -235,8 +235,8 @@ namespace hpp {
       void HierarchicalIterative::computeActiveRowsOfJ (std::size_t iStack)
       {
         Data& d = datas_[iStack];
-        const DifferentiableFunctionStack& f = stacks_[iStack];
-        const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+        const DifferentiableFunctionSet& f = stacks_[iStack];
+        const DifferentiableFunctionSet::Functions_t& fs = f.functions();
         std::size_t row = 0;
 
         typedef Eigen::MatrixBlocks<false, false> BlockIndices;
@@ -258,7 +258,7 @@ namespace hpp {
       vector_t HierarchicalIterative::rightHandSideFromInput (vectorIn_t arg)
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          const DifferentiableFunctionStack& f = stacks_[i];
+          const DifferentiableFunctionSet& f = stacks_[i];
           Data& d = datas_[i];
           f.value (d.output, arg);
           d.equalityIndices.lview(d.rightHandSide.vector ()) =
@@ -272,7 +272,7 @@ namespace hpp {
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           Data& d = datas_[i];
-          const DifferentiableFunctionStack::Functions_t& fs =
+          const DifferentiableFunctionSet::Functions_t& fs =
             stacks_[i].functions();
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
@@ -298,7 +298,7 @@ namespace hpp {
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           Data& d = datas_[i];
-          const DifferentiableFunctionStack::Functions_t& fs =
+          const DifferentiableFunctionSet::Functions_t& fs =
             stacks_[i].functions();
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
@@ -355,7 +355,7 @@ namespace hpp {
       void HierarchicalIterative::computeValue (vectorIn_t arg) const
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          const DifferentiableFunctionStack& f = stacks_[i];
+          const DifferentiableFunctionSet& f = stacks_[i];
           Data& d = datas_[i];
 
           f.value   (d.output, arg);
@@ -425,7 +425,7 @@ namespace hpp {
                                  stacks_.size());
         squaredNorm_ = 0;
         for (std::size_t i = 0; i < end; ++i) {
-          const DifferentiableFunctionStack::Functions_t& fs =
+          const DifferentiableFunctionSet::Functions_t& fs =
             stacks_[i].functions();
           const Data& d = datas_[i];
           size_type row = 0;
@@ -480,7 +480,7 @@ namespace hpp {
         } else {
           projector_.setIdentity();
           for (std::size_t i = 0; i < stacks_.size (); ++i) {
-            const DifferentiableFunctionStack& f = stacks_[i];
+            const DifferentiableFunctionSet& f = stacks_[i];
             Data& d = datas_[i];
 
             // TODO: handle case where this is the first element of the stack and it
@@ -534,7 +534,7 @@ namespace hpp {
         const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 :
                                  stacks_.size());
         for (std::size_t i = 0; i < stacks_.size(); ++i) {
-          const DifferentiableFunctionStack::Functions_t& fs =
+          const DifferentiableFunctionSet::Functions_t& fs =
             stacks_[i].functions();
           const Data& d = datas_[i];
           os << iendl << "Level " << i;

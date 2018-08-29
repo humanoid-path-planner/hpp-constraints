@@ -34,6 +34,7 @@ set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
+  include/hpp/constraints/differentiable-function-set.hh
   include/hpp/constraints/differentiable-function-stack.hh
   include/hpp/constraints/active-set-differentiable-function.hh
   include/hpp/constraints/affine-function.hh

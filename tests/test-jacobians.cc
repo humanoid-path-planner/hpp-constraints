@@ -289,9 +289,9 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       createConvexShapeContact_convex (device, ee1, "ConvexShapeContact convex"));
 
-  // DifferentiableFunctionStack
-  DifferentiableFunctionStackPtr_t stack =
-    DifferentiableFunctionStack::create("Stack");
+  // DifferentiableFunctionSet
+  DifferentiableFunctionSetPtr_t stack =
+    DifferentiableFunctionSet::create("Stack");
   stack->add (Position::create ("Position", device, ee1, MId, MId));
   stack->add (RelativeOrientation::create (
         "RelativeOrientation", device, ee1, ee2, MId,

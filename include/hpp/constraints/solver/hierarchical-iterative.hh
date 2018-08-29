@@ -25,7 +25,7 @@
 #include <hpp/constraints/config.hh>
 
 #include <hpp/constraints/matrix-view.hh>
-#include <hpp/constraints/differentiable-function-stack.hh>
+#include <hpp/constraints/differentiable-function-set.hh>
 
 namespace hpp {
   namespace constraints {
@@ -376,7 +376,7 @@ namespace hpp {
         /// \name Stack
         /// \{
 
-        const DifferentiableFunctionStack& stack(const std::size_t priority)
+        const DifferentiableFunctionSet& stack(const std::size_t priority)
         {
           assert(priority < stacks_.size());
           return stacks_[priority];
@@ -533,7 +533,7 @@ namespace hpp {
         value_type squaredErrorThreshold_, inequalityThreshold_;
         size_type maxIterations_;
 
-        std::vector<DifferentiableFunctionStack> stacks_;
+        std::vector<DifferentiableFunctionSet> stacks_;
         LiegroupSpacePtr_t configSpace_;
         size_type dimension_, reducedDimension_;
         bool lastIsOptional_;

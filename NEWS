@@ -1,6 +1,7 @@
                                                                 -*- outline -*-
 * Rename LieGroupTpl -> LieGroupMap,
 * Rename a few classes and make old names deprecated:
+  - DifferentiableFunctionStack -> DifferentiableFunctionSet,
   - ExplicitSolver -> ExplicitConstraintSet,
   - HierarchicalIterativeSolver -> solver::HierarchicalIterative,
   - HybridSolver -> solver::BySubstitution.

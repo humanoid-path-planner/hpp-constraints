@@ -252,8 +252,8 @@ namespace hpp {
       void BySubstitution::computeActiveRowsOfJ (std::size_t iStack)
       {
         Data& d = datas_[iStack];
-        const DifferentiableFunctionStack& f = stacks_[iStack];
-        const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+        const DifferentiableFunctionSet& f = stacks_[iStack];
+        const DifferentiableFunctionSet::Functions_t& fs = f.functions();
         std::size_t row = 0;
 
         /// ADP: Active Derivative Param

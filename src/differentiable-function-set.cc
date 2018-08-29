@@ -14,13 +14,13 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/constraints/differentiable-function-stack.hh>
+#include <hpp/constraints/differentiable-function-set.hh>
 
 #include <hpp/util/indent.hh>
 
 namespace hpp {
   namespace constraints {
-    std::ostream& DifferentiableFunctionStack::print (std::ostream& os) const
+    std::ostream& DifferentiableFunctionSet::print (std::ostream& os) const
     {
       DifferentiableFunction::print (os) << incindent;
       for (std::size_t i = 0; i < functions_.size(); ++i)

@@ -30,7 +30,7 @@ namespace Eigen {
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
-    HPP_PREDEF_CLASS (DifferentiableFunctionStack);
+    HPP_PREDEF_CLASS (DifferentiableFunctionSet);
     HPP_PREDEF_CLASS (ActiveSetDifferentiableFunction);
     typedef pinocchio::size_type size_type;
     typedef pinocchio::value_type value_type;
@@ -88,8 +88,10 @@ namespace hpp {
     typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
     typedef boost::shared_ptr <DifferentiableFunction>
     DifferentiableFunctionPtr_t;
-    typedef boost::shared_ptr <DifferentiableFunctionStack>
-    DifferentiableFunctionStackPtr_t;
+    typedef boost::shared_ptr <DifferentiableFunctionSet>
+    DifferentiableFunctionSetPtr_t;
+    typedef DifferentiableFunctionSet DifferentiableFunctionStack
+    HPP_CONSTRAINTS_DEPRECATED;
     typedef boost::shared_ptr <ActiveSetDifferentiableFunction>
     ActiveSetDifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DistanceBetweenBodies>

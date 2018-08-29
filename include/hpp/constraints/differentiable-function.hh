@@ -204,7 +204,7 @@ namespace hpp {
       /// Context of creation of function
       std::string context_;
 
-      friend class DifferentiableFunctionStack;
+      friend class DifferentiableFunctionSet;
     }; // class DifferentiableFunction
     inline std::ostream&
     operator<< (std::ostream& os, const DifferentiableFunction& f)
