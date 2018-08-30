@@ -41,11 +41,19 @@ namespace hpp {
             ConfigurationIn_t goal,
             std::vector <bool> mask = std::vector <bool> (0));
 
+        /// Return a shared pointer to a new instance
+        /// \param weights vector of size robot->numberDof()
+        static ConfigurationConstraintPtr_t create (
+            const std::string& name, const DevicePtr_t& robot,
+            ConfigurationIn_t goal,
+            const vector_t& weights);
+
         virtual ~ConfigurationConstraint () throw () {}
 
+        /// \param weights vector of size robot->numberDof()
         ConfigurationConstraint (const std::string& name,
             const DevicePtr_t& robot, ConfigurationIn_t goal,
-            std::vector <bool> mask);
+            const vector_t& weights);
 
       protected:
         /// Compute value of error
@@ -61,6 +69,7 @@ namespace hpp {
         typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
         DevicePtr_t robot_;
         LiegroupElement goal_;
+        vector_t weights_;
         EigenBoolVector_t mask_;
         mutable vector_t diff_;
     }; // class ComBetweenFeet

@@ -31,26 +31,36 @@ namespace hpp {
         const std::string& name, const DevicePtr_t& robot,
         ConfigurationIn_t goal, std::vector <bool> mask)
     {
+      vector_t ws (vector_t::Ones(robot->numberDof ()));
+      for (std::size_t i = 0; i < mask.size (); ++i) {
+        if (!mask[i]) ws[i] = 0;
+      }
+
       ConfigurationConstraint* ptr = new ConfigurationConstraint
-        (name, robot, goal, mask);
+        (name, robot, goal, ws);
+      return ConfigurationConstraintPtr_t (ptr);
+    }
+
+    ConfigurationConstraintPtr_t ConfigurationConstraint::create (
+        const std::string& name, const DevicePtr_t& robot,
+        ConfigurationIn_t goal, const vector_t& weights)
+    {
+      ConfigurationConstraint* ptr = new ConfigurationConstraint
+        (name, robot, goal, weights);
       return ConfigurationConstraintPtr_t (ptr);
     }
 
     ConfigurationConstraint::ConfigurationConstraint (
         const std::string& name, const DevicePtr_t& robot,
-        ConfigurationIn_t goal, std::vector <bool> mask) :
+        ConfigurationIn_t goal, const vector_t& weights) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::R1 (), name),
-      robot_ (robot), diff_ (robot->numberDof())
+      robot_ (robot), weights_ (weights), diff_ (robot->numberDof())
     {
+      assert (weights.size() == robot->numberDof());
       LiegroupSpacePtr_t s (LiegroupSpace::createCopy(robot->configSpace()));
       s->mergeVectorSpaces();
       goal_ = LiegroupElement (goal, s);
-      mask_ = EigenBoolVector_t (robot->numberDof ());
-      for (std::size_t i = 0; i < mask.size (); ++i) {
-        mask_[i] = mask[i];
-      }
-      mask_.tail (robot->numberDof () - mask.size ()).setConstant (true);
     }
 
     void ConfigurationConstraint::impl_compute (LiegroupElement& result,
@@ -58,10 +68,9 @@ namespace hpp {
       const throw ()
     {
       using namespace hpp::pinocchio;
-      // TODO: Add ability to put weights on DOF
       LiegroupConstElementRef a (argument, goal_.space());
-      diff_ = goal_ - a;
-      result.vector () [0] = 0.5 * mask_.select (diff_, 0).squaredNorm ();
+      diff_.noalias() = (goal_ - a).cwiseAbs2();
+      result.vector () [0] = 0.5 * weights_.dot(diff_);
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
@@ -76,8 +85,8 @@ namespace hpp {
       // Apply jacobian of the difference on the right.
       goal_.space()->Jdifference<false> (argument, goal_.vector(), diff_.transpose(), unused);
 
-      jacobian.leftCols (robot_->numberDof ()) =
-        mask_.select (diff_, 0).transpose ();
+      jacobian.leftCols (robot_->numberDof ()).noalias() =
+        weights_.cwiseProduct(diff_).transpose ();
     }
   } // namespace constraints
 } // namespace hpp
