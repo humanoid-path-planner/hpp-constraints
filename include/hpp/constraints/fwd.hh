@@ -174,6 +174,10 @@ namespace hpp {
     typedef boost::shared_ptr <const LockedJoint> LockedJointConstPtr_t;
     typedef std::vector <LockedJointPtr_t> LockedJoints_t;
 
+    namespace function {
+      HPP_PREDEF_CLASS (OfParameterSubset);
+      typedef boost::shared_ptr <OfParameterSubset> OfParameterSubsetPtr_t;
+    } // namespace function
     typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
     typedef solver::HierarchicalIterative HierarchicalIterativeSolver
     HPP_CONSTRAINTS_DEPRECATED;

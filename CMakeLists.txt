@@ -64,6 +64,8 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/solver/hierarchical-iterative.hh
   include/hpp/constraints/solver/by-substitution.hh
 
+  include/hpp/constraints/function/of-parameter-subset.hh
+
   include/hpp/constraints/solver/impl/by-substitution.hh
   include/hpp/constraints/solver/impl/hierarchical-iterative.hh
   include/hpp/constraints/impl/matrix-view.hh
