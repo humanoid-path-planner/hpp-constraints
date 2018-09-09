@@ -165,6 +165,12 @@ namespace hpp {
       class BySubstitution;
     } // namespace solver
 
+    namespace implicit {
+      HPP_PREDEF_CLASS (RelativePose);
+      typedef boost::shared_ptr <RelativePose> RelativePosePtr_t;
+      typedef boost::shared_ptr <const RelativePose> RelativePoseConstPtr_t;
+    } // namespace implicit
+
     namespace explicit_ {
       class Function;
     } // namespace explicit
