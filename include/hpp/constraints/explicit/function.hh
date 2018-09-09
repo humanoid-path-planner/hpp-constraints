@@ -18,6 +18,7 @@
 # define HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
 
 # include <hpp/constraints/differentiable-function.hh>
+# include <hpp/constraints/matrix-view.hh>
 
 namespace hpp {
   namespace constraints {
@@ -33,7 +34,6 @@ namespace hpp {
     ///
     ///  This class is mainly used to create hpp::constraints::Explicit
     ///  instances.
-    template <bool GisIdentity>
     class Function : public DifferentiableFunction
     {
     public:
@@ -145,10 +145,7 @@ namespace hpp {
       mutable matrix_t Jf_;
     }; // class Function
 
-    typedef Function<true > BasicFunction;
-    typedef Function<false> GenericFunction;
-
-  } // namespace explicit_
+    } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
 
