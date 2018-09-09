@@ -97,9 +97,10 @@ namespace hpp {
       robot_ (robot),
       parentJoint_ (joint2->parentJoint ()),
       joint1_ (joint1), joint2_ (joint2),
+      frame1_ (frame1), frame2_ (frame2),
       inConf_ (inConf),   inVel_  (inVel),
       outConf_ (outConf), outVel_ (outVel),
-      F1inJ1_invF2inJ2_ (frame1)
+        F1inJ1_invF2inJ2_ (frame1 * frame2.inverse ())
     {
     }
 

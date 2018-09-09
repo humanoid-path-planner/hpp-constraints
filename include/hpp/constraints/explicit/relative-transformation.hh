@@ -137,6 +137,7 @@ namespace hpp {
       // Parent of the R3 joint.
       JointConstPtr_t parentJoint_;
       JointConstPtr_t joint1_, joint2_;
+      Transform3f frame1_, frame2_;
       RowBlockIndices inConf_;
       ColBlockIndices inVel_;
       RowBlockIndices outConf_ , outVel_;
