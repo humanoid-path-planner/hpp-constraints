@@ -119,40 +119,12 @@ namespace hpp {
 
         /// Attempt to add an explicit constraint
         ///
-        /// \param f differentiable function,
-        /// \param inArg subset of input indices,
-        /// \param outArg subset of output indices,
-        /// \param inDer subset of input indices for the velocity,
-        /// \param outDer subset of output indices for the velocity,
-        /// \return the index of the function if the function was added,
-        /// -1 if the input explicit constraint is not compatible with the
-        ///       current set.
-        /// \note A function can be added iff it is compatible with the
-        ///       previously added functions.
-        size_type add (const DifferentiableFunctionPtr_t& f,
-            const RowBlockIndices& inArg,
-            const RowBlockIndices& outArg,
-            const ColBlockIndices& inDer,
-            const RowBlockIndices& outDer);
-
-        /// Attempt to add an explicit constraint
-        ///
-        /// \param f differentiable function,
-        /// \param inArg subset of input indices,
-        /// \param outArg subset of output indices,
-        /// \param inDer subset of input indices for the velocity,
-        /// \param outDer subset of output indices for the velocity,
-        /// \param comp Comparison type,
+        /// \param constraint explicit constraint
         /// \return the index of the function if the function was added,
         /// -1 otherwise.
         /// \note A function can be added iff it is compatible with the
         ///       previously added functions.
-        size_type add (const DifferentiableFunctionPtr_t& f,
-            const RowBlockIndices& inArg,
-            const RowBlockIndices& outArg,
-            const ColBlockIndices& inDer,
-            const RowBlockIndices& outDer,
-            const ComparisonTypes_t& comp);
+        size_type add (const ExplicitPtr_t& constraint);
 
         /// Set \f$g\f$  and \f$g^{-1}\f$ functions
         bool setG (const DifferentiableFunctionPtr_t& f,

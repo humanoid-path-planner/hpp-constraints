@@ -90,20 +90,7 @@ namespace hpp {
         bool addedAsExplicit = false;
         ExplicitPtr_t enm (HPP_DYNAMIC_PTR_CAST (Explicit, nm));
         if (enm) {
-          addedAsExplicit = explicitConstraintSet().add
-            (enm->explicitFunction(),
-             Eigen::RowBlockIndices(enm->inputConf()),
-             Eigen::RowBlockIndices(enm->outputConf()),
-             Eigen::ColBlockIndices(enm->inputVelocity()),
-             Eigen::RowBlockIndices(enm->outputVelocity()),
-             types) >= 0;
-          if (addedAsExplicit && enm->outputFunction() &&
-              enm->outputFunctionInverse()) {
-            bool ok = explicitConstraintSet().setG
-              (enm->explicitFunction(),
-               enm->outputFunction(), enm->outputFunctionInverse());
-            assert (ok);
-          }
+          addedAsExplicit = explicitConstraintSet().add (enm) >= 0;
           if (!addedAsExplicit) {
             hppDout (info, "Could not treat " <<
                      enm->explicitFunction()->name()
@@ -112,9 +99,10 @@ namespace hpp {
         }
 
         if (!addedAsExplicit) {
-          HierarchicalIterative::add (activeSetFunction(nm->functionPtr(),
-                                                        passiveDofs), priority,
-                                      types);
+          ImplicitPtr_t constraint
+            (Implicit::create (activeSetFunction(nm->functionPtr(),
+                                                 passiveDofs), types));
+          HierarchicalIterative::add (constraint, priority);
           // add (Implicit::create
           //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
           //      segments_t (0), priority);
@@ -159,13 +147,7 @@ namespace hpp {
 
         ComparisonTypes_t types = lockedJoint->comparisonType();
 
-        bool added = explicitConstraintSet().add
-          (lockedJoint->explicitFunction(),
-           Eigen::RowBlockIndices(lockedJoint->inputConf()),
-           Eigen::RowBlockIndices(lockedJoint->outputConf()),
-           Eigen::ColBlockIndices(lockedJoint->inputVelocity()),
-           Eigen::RowBlockIndices(lockedJoint->outputVelocity()),
-           types) >= 0;
+        bool added = explicitConstraintSet().add (lockedJoint) >= 0;
 
         if (!added) {
           throw std::runtime_error("Could not add lockedJoint function " +

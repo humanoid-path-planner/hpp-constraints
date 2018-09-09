@@ -25,6 +25,7 @@
 #include <hpp/pinocchio/liegroup.hh>
 
 #include <hpp/constraints/matrix-view.hh>
+#include <hpp/constraints/explicit.hh>
 
 
 namespace hpp {
@@ -33,10 +34,16 @@ namespace hpp {
 
     namespace {
       /// Append all indices of a set of segments to a queue of indices
-      void append (const Eigen::RowBlockIndices& rbi, std::queue<size_type>& q) {
-        for (std::size_t i = 0; i < rbi.indices().size(); ++i)
-          for (size_type j = 0; j < rbi.indices()[i].second; ++j)
-            q.push(rbi.indices()[i].first + j);
+      void append (const Eigen::RowBlockIndices& rbi, std::queue<size_type>& q)
+      {
+        append (rbi.indices (), q);
+    }
+      /// Append all indices of a set of segments to a queue of indices
+      void append (const segments_t& segments, std::queue<size_type>& q)
+      {
+        for (std::size_t i = 0; i < segments.size(); ++i)
+          for (size_type j = 0; j < segments[i].second; ++j)
+            q.push (segments [i].first + j);
       }
     }
 
@@ -118,66 +125,48 @@ namespace hpp {
     void ExplicitConstraintSet::Function::setG
     (const DifferentiableFunctionPtr_t& _g,
      const DifferentiableFunctionPtr_t& _ginv)
+    size_type ExplicitConstraintSet::add (const ExplicitPtr_t& constraint)
     {
-      assert ( (!_g && !_ginv) // No function g and ginv
-          || ( _g && _ginv
-            && * f->outputSpace() == *_g->outputSpace()
-            && *_g->outputSpace() == *_ginv->outputSpace())
-          // Functions specified and the output spaces are all the same.
-          );
-      g = _g;
-      ginv = _ginv;
-      size_type n = (g ? g->outputSpace()->nv() : 0);
-      jGinv.resize (n,n);
-    }
-
-    size_type ExplicitConstraintSet::add (const DifferentiableFunctionPtr_t& f,
-                                          const RowBlockIndices& inArg,
-                                          const RowBlockIndices& outArg,
-                                          const ColBlockIndices& inDer,
-                                          const RowBlockIndices& outDer)
-    {
-      return add (f, inArg, outArg, inDer, outDer,
-          ComparisonTypes_t(f->outputDerivativeSize(), EqualToZero));
-    }
-
-    size_type ExplicitConstraintSet::add (const DifferentiableFunctionPtr_t& f,
-                                          const RowBlockIndices& inArg,
-                                          const RowBlockIndices& outArg,
-                                          const ColBlockIndices& inDer,
-                                          const RowBlockIndices& outDer,
-                                          const ComparisonTypes_t& comp)
-    {
-      assert (outArg.indices().size() == 1 && "Only contiguous function output is supported.");
-      assert (outDer.indices().size() == 1 && "Only contiguous function output is supported.");
-      const RowBlockIndices::segment_t& outIdx = outArg.indices()[0];
-      const RowBlockIndices::segment_t& outDerIdx = outDer.indices()[0];
+      assert (constraint->outputConf ().size() == 1 &&
+              "Only contiguous function output is supported.");
+      assert (constraint->outputVelocity ().size() == 1 &&
+              "Only contiguous function output is supported.");
+      typedef Eigen::RowBlockIndices RowBlockIndices;
+      typedef Eigen::ColBlockIndices ColBlockIndices;
+      const RowBlockIndices::segment_t& outIdx (constraint->outputConf () [0]);
+      const RowBlockIndices::segment_t& outDerIdx
+        (constraint->outputVelocity () [0]);
 
       // TODO This sanity check should not be necessary
       // It is done in the while loop below
       // Sanity check: is it explicit ?
-      for (std::size_t i = 0; i < inArg.indices().size(); ++i)
-        if (BlockIndex::overlap(inArg.indices()[i], outIdx)) {
-          size_type f0 (inArg.indices()[i].first);
-          size_type s0 (f0 + inArg.indices()[i].second - 1);
+      for (std::size_t i = 0; i < constraint->inputConf ().size(); ++i)
+        if (BlockIndex::overlap(constraint->inputConf ()[i], outIdx)) {
+          size_type f0 (constraint->inputConf ()[i].first);
+          size_type s0 (f0 + constraint->inputConf ()[i].second - 1);
           size_type f1 (outIdx.first);
           size_type s1 (f1 + outIdx.second - 1);
           std::ostringstream oss;
-          oss << "Explicit constraint \"" << f->name () << "\" is malformed.";
+          oss << "Explicit constraint \"" << constraint->function ().name ()
+              << "\" is malformed.";
           oss << " input [" << f0 << "," << s0
               << "] and output [" << f1 << "," << s1 << "] segments overlap.";
             throw std::logic_error (oss.str ().c_str ());
         }
       // Sanity check: Comparison type must be either EqualToZero or Equality
-      assert (comp.size() == (std::size_t)f->outputDerivativeSize());
+      const ComparisonTypes_t& comp (constraint->comparisonType ());
+      assert (comp.size() ==
+              (std::size_t) constraint->function ().outputDerivativeSize());
       for (std::size_t i = 0; i < comp.size(); ++i)
         if (comp[i] != EqualToZero && comp[i] != Equality) return -1;
       // Check that no other function already computes its outputs.
+      RowBlockIndices outArg (constraint->outputConf ());
       if ((outArg.rview(argFunction_).eval().array() >= 0).any())
         return -1;
       // Check that it does not insert a loop.
       std::queue<size_type> idxArg;
       // Put all indices of inArg into idxArg
+      RowBlockIndices inArg (constraint->inputConf ());
       append(inArg, idxArg);
       while (!idxArg.empty()) {
         // iArg must be computed before f
@@ -185,18 +174,20 @@ namespace hpp {
         idxArg.pop();
         // iArg is an output of the new function -> new function should be
         // computed earlier -> incompatible.
-        if (iArg >= outIdx.first && iArg < outIdx.first + outIdx.second) return -1;
+        if (iArg >= outIdx.first && iArg < outIdx.first + outIdx.second)
+          return -1;
         // iArg is not computed by any function
-        if (argFunction_[iArg] < 0) continue;
-        const Function& func = functions_[argFunction_[iArg]];
-        append(func.inArg, idxArg);
+        if (argFunction_ [iArg] < 0) continue;
+        const Data& d = data_ [argFunction_ [iArg]];
+        append(d.constraint->inputConf (), idxArg);
       }
 
       // Add the function
-      int idx = int(functions_.size());
+      int idx = int(data_.size());
       outArg.lview(argFunction_).setConstant(idx);
-      outDer.lview(derFunction_).setConstant(idx);
-      functions_.push_back (Function(f, inArg, outArg, inDer, outDer, comp));
+      RowBlockIndices (constraint->outputVelocity ()).lview(derFunction_).
+        setConstant(idx);
+      data_.push_back (Data (constraint));
 
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
@@ -217,7 +208,8 @@ namespace hpp {
         (BlockIndex::difference(BlockIndex::segment_t(0, nv_),
                                 outDers_.indices()));
 
-      BlockIndex::add (inDers_.m_cols, inDer.cols());
+      BlockIndex::add (inDers_.m_cols,
+                       ColBlockIndices (constraint->inputVelocity ()).cols());
       inDers_ = ColBlockIndices
         (BlockIndex::difference (inDers_.cols(), outDers_.rows()));
       // should be sorted already
