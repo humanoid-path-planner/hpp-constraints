@@ -61,16 +61,6 @@ namespace hpp {
         HierarchicalIterative (other), explicit_ (other.explicit_),
         Je_ (other.Je_), JeExpanded_ (other.JeExpanded_)
       {
-        // TODO remove me
-        for (LockedJoints_t::const_iterator it = lockedJoints_.begin ();
-             it != lockedJoints_.end (); ++it) {
-          LockedJointPtr_t lj = HPP_STATIC_PTR_CAST
-            (LockedJoint, (*it)->copy ());
-          if (!explicitConstraintSet().replace
-              ((*it)->explicitFunction(), lj->explicitFunction()))
-            throw std::runtime_error
-              ("Could not replace lockedJoint function");
-        }
       }
 
       bool BySubstitution::add (const ImplicitPtr_t& nm,
@@ -83,9 +73,6 @@ namespace hpp {
           return false;
         }
         ComparisonTypes_t types = nm->comparisonType();
-
-        LockedJointPtr_t lj = HPP_DYNAMIC_PTR_CAST (LockedJoint, nm);
-        assert (!lj);
 
         bool addedAsExplicit = false;
         ExplicitPtr_t enm (HPP_DYNAMIC_PTR_CAST (Explicit, nm));
@@ -130,50 +117,6 @@ namespace hpp {
                                 const ComparisonTypes_t& comp)
       {
         HierarchicalIterative::add (f, priority, comp);
-      }
-
-      void BySubstitution::add (const LockedJointPtr_t& lockedJoint)
-      {
-        if (lockedJoint->numberDof () == 0) return;
-        // If the same dof is already locked, replace by new value
-        for (LockedJoints_t::iterator itLock = lockedJoints_.begin ();
-             itLock != lockedJoints_.end (); ++itLock) {
-          if (lockedJoint->rankInVelocity () == (*itLock)->rankInVelocity ()) {
-            if (!explicitConstraintSet().replace
-                ((*itLock)->explicitFunction(),
-                 lockedJoint->explicitFunction ()))
-              {
-                throw std::runtime_error
-                  ("Could not replace lockedJoint function " +
-                   lockedJoint->jointName ());
-              }
-            *itLock = lockedJoint;
-            return;
-          }
-        }
-
-        ComparisonTypes_t types = lockedJoint->comparisonType();
-
-        bool added = explicitConstraintSet().add (lockedJoint) >= 0;
-
-        if (!added) {
-          throw std::runtime_error("Could not add lockedJoint function " +
-                                   lockedJoint->jointName ());
-        }
-        if (added) {
-          explicitConstraintSet().rightHandSide
-            (lockedJoint->explicitFunction(), lockedJoint->rightHandSide());
-        }
-        explicitConstraintSetHasChanged();
-
-        lockedJoints_.push_back (lockedJoint);
-        hppDout (info, "add locked joint " << lockedJoint->jointName ()
-                 << " rank in velocity: " << lockedJoint->rankInVelocity ()
-                 << ", size: " << lockedJoint->numberDof ());
-        hppDout (info, "Intervals: "
-                 << explicitConstraintSet().outDers());
-        hppDout (info, "Constraints " << name() << " has dimension "
-                 << dimension());
       }
 
       void BySubstitution::explicitConstraintSetHasChanged()

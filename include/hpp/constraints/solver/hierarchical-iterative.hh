@@ -546,7 +546,6 @@ namespace hpp {
         Saturation_t saturate_;
         /// Members moved from core::ConfigProjector
         NumericalConstraints_t constraints_;
-        LockedJoints_t lockedJoints_;
 
         /// The smallest non-zero singular value
         mutable value_type sigma_;

@@ -127,16 +127,10 @@ namespace hpp {
                   const std::size_t& priority,
                   const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
 
-        void add (const LockedJointPtr_t& lockedJoint);
-
         /// Get the numerical constraints implicit and explicit
         const NumericalConstraints_t& numericalConstraints () const
         {
           return constraints_;
-        }
-
-        LockedJoints_t lockedJoints () const {
-          return lockedJoints_;
         }
 
         /// Get explicit constraint set
