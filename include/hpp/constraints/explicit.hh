@@ -134,7 +134,7 @@ namespace hpp {
       ///        output configuration variables,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
@@ -186,7 +186,7 @@ namespace hpp {
       ///        output configuration variables,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
@@ -208,7 +208,7 @@ namespace hpp {
       /// \param g,ginv
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
@@ -270,7 +270,7 @@ namespace hpp {
       ///        output configuration variables,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
@@ -293,7 +293,7 @@ namespace hpp {
       /// \param g, ginv
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
@@ -318,7 +318,7 @@ namespace hpp {
       ///        output configuration variables,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
@@ -362,7 +362,7 @@ namespace hpp {
       ///        output configuration variables,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVeclocity set of integer defining indices
+      /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
