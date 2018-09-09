@@ -60,8 +60,8 @@ namespace hpp {
 
     bool ExplicitConstraintSet::solve (vectorOut_t arg) const
     {
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        computeFunction(computationOrder_[i], arg);
+      for(std::size_t i = 0; i < data_.size(); ++i) {
+        solveExplicitConstraint(computationOrder_[i], arg);
       }
       return true;
     }
@@ -72,21 +72,17 @@ namespace hpp {
       value_type squaredNorm = 0;
 
       size_type row = 0;
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        const Function& f = functions_[i];
-        // Compute this function
-        f.qin = f.inArg.rview(arg); // q_{in}
-        f.f->value(f.value, f.qin); // f (q_{in})
-        f.value += f.rightHandSide; // f (q_{in}) + rhs
-        const size_type& nbRows = f.outDer.nbRows();
-        f.qout = f.outArg.rview(arg); // q_{out}
-        if (f.g) f.g->value(f.expected, f.qout); // g (q_{out})
-        else     f.expected.vector() = f.qout;
-        // g (q_{out}) - (f (q_{in}) + rhs)
-        error.segment (row, nbRows) = f.expected - f.value;
+      for(std::size_t i = 0; i < data_.size(); ++i) {
+        const Data& d (data_[i]);
+        const DifferentiableFunction& f (d.constraint->function ());
+        f.value (d.h_value, arg);
+        size_type nRows (f.outputSpace ()->nv ());
+        assert (*(d.h_value.space ()) == *(LiegroupSpace::Rn
+                                           (d.rhs_implicit.size ())));
+        error.segment (row, nRows) = d.h_value.vector () - d.rhs_implicit;
         squaredNorm = std::max(squaredNorm,
-            error.segment (row, nbRows).squaredNorm ());
-        row += nbRows;
+            error.segment (row, nRows).squaredNorm ());
+        row += nRows;
       }
       assert (row == error.size());
       hppDout (info, "Max squared error norm is " << squaredNorm);
@@ -99,17 +95,19 @@ namespace hpp {
       return isSatisfied (arg, diffSmall_);
     }
 
-    ExplicitConstraintSet::Function::Function
-    (DifferentiableFunctionPtr_t _f, RowBlockIndices ia, RowBlockIndices oa,
-     ColBlockIndices id, RowBlockIndices od, const ComparisonTypes_t& comp) :
-      f (_f), inArg (ia), outArg (oa), inDer (id), outDer (od),
-      comparison (comp),
-      rightHandSide (vector_t::Zero(f->outputSpace()->nv())),
-      value (f->outputSpace ()), expected (f->outputSpace ())
+    ExplicitConstraintSet::Data::Data
+    (const ExplicitPtr_t& _constraint) :
+      constraint (_constraint), rhs_implicit
+      (vector_t::Zero(_constraint->functionPtr ()->outputSpace()->nv())),
+      rhs_explicit (rhs_implicit),
+      h_value (_constraint->functionPtr ()->outputSpace()),
+      f_value (_constraint->explicitFunction()->outputSpace ()),
+      res_qout (_constraint->explicitFunction ()->outputSpace ())
     {
-      jacobian.resize(_f->outputDerivativeSize(), _f->inputDerivativeSize());
-      for (std::size_t i = 0; i < comp.size(); ++i) {
-        switch (comp[i]) {
+      jacobian.resize(_constraint->functionPtr ()->outputDerivativeSize(),
+                      _constraint->functionPtr ()->inputDerivativeSize());
+      for (std::size_t i = 0; i < constraint->comparisonType ().size(); ++i) {
+        switch (constraint->comparisonType ()[i]) {
           case Equality:
             equalityIndices.addRow(i, 1);
             break;
@@ -122,9 +120,6 @@ namespace hpp {
       equalityIndices.updateRows<true, true, true>();
     }
 
-    void ExplicitConstraintSet::Function::setG
-    (const DifferentiableFunctionPtr_t& _g,
-     const DifferentiableFunctionPtr_t& _ginv)
     size_type ExplicitConstraintSet::add (const ExplicitPtr_t& constraint)
     {
       assert (constraint->outputConf ().size() == 1 &&
@@ -217,57 +212,26 @@ namespace hpp {
 
       /// Computation order
       std::size_t order = 0;
-      computationOrder_.resize(functions_.size());
-      inOutDependencies_ = Eigen::MatrixXi::Zero(functions_.size(), nv_);
-      Computed_t computed(functions_.size(), false);
-      for(std::size_t i = 0; i < functions_.size(); ++i)
+      computationOrder_.resize(data_.size());
+      inOutDependencies_ = Eigen::MatrixXi::Zero(data_.size(), nv_);
+      Computed_t computed(data_.size(), false);
+      for(std::size_t i = 0; i < data_.size(); ++i)
         computeOrder(i, order, computed);
-      assert(order == functions_.size());
-      return functions_.size() - 1;
+      assert(order == data_.size());
+      return data_.size() - 1;
     }
 
-    bool ExplicitConstraintSet::setG (const DifferentiableFunctionPtr_t& df,
-                                      const DifferentiableFunctionPtr_t& g,
-                                      const DifferentiableFunctionPtr_t& ginv)
-    {
-      for (std::size_t i = 0; i < functions_.size (); ++i) {
-        Function& f = functions_[i];
-        if (f.f == df) {
-          f.setG (g, ginv);
-          return true;
-        }
-      }
-      return false;
-    }
-
-    bool ExplicitConstraintSet::replace
-    (const DifferentiableFunctionPtr_t& oldf,
-     const DifferentiableFunctionPtr_t& newf)
-    {
-      assert(oldf->inputSize() == newf->inputSize()
-          && oldf->inputDerivativeSize() == newf->inputDerivativeSize()
-          && oldf->outputSize() == newf->outputSize()
-          && oldf->outputDerivativeSize() == newf->outputDerivativeSize());
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        if (functions_[i].f == oldf) {
-          functions_[i].f = newf;
-          return true;
-        }
-      }
-      return false;
-    }
-
-    void ExplicitConstraintSet::computeFunction
+    void ExplicitConstraintSet::solveExplicitConstraint
     (const std::size_t& iF, vectorOut_t arg) const
     {
-      const Function& f = functions_[iF];
+      const Data& d = data_[iF];
       // Compute this function
-      f.qin = f.inArg.rview(arg);
-      f.f->value(f.value, f.qin);
-      f.value += f.rightHandSide;
-      if (f.ginv) f.ginv->value (f.expected, f.value.vector());
-      else        f.expected.vector() = f.value.vector();
-      f.outArg.lview(arg) = f.expected.vector();
+      d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
+      d.constraint->explicitFunction ()->value(d.f_value, d.qin);
+      d.f_value += d.rhs_explicit;
+      d.res_qout.vector() = d.f_value.vector();
+      RowBlockIndices (d.constraint->outputConf ()).lview(arg) =
+        d.res_qout.vector();
     }
 
     void ExplicitConstraintSet::jacobian
@@ -278,20 +242,15 @@ namespace hpp {
       MatrixBlocksRef (notOutDers_, notOutDers_)
         .lview (jacobian).setIdentity();
       // Compute the function jacobians
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        const Function& E = functions_[i];
-        E.qin = E.inArg.rview(arg);
-        if (E.ginv) E.f->value(E.value, E.qin);
-        E.f->jacobian(E.jacobian, E.qin);
-        if (E.equalityIndices.nbIndices() > 0)
-          E.f->outputSpace ()->dIntegrate_dq (E.value, E.rightHandSide, E.jacobian);
-        if (E.ginv) {
-          E.value += E.rightHandSide;
-          E.ginv->jacobian(E.jGinv, E.value.vector());
-          E.jacobian.applyOnTheLeft(E.jGinv);
-        }
+      for(std::size_t i = 0; i < data_.size(); ++i) {
+        const Data& d = data_[i];
+        d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
+        d.constraint->explicitFunction ()->jacobian(d.jacobian, d.qin);
+        if (d.equalityIndices.nbIndices() > 0)
+          d.constraint->explicitFunction ()->outputSpace ()->dIntegrate_dq
+            (d.f_value, d.rhs_explicit, d.jacobian);
       }
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
+      for(std::size_t i = 0; i < data_.size(); ++i) {
         computeJacobian(computationOrder_[i], jacobian);
       }
     }
@@ -299,24 +258,27 @@ namespace hpp {
     void ExplicitConstraintSet::computeJacobian
     (const std::size_t& iE, matrixOut_t J) const
     {
-      const Function& E = functions_[iE];
-      matrix_t Jin (MatrixBlocksRef (E.inDer, inDers_).rview(J));
-      // Jout = E.jacobian * Jin
-      MatrixBlocksRef (E.outDer, inDers_).lview (J) = E.jacobian * Jin;
+      const Data& d = data_[iE];
+      ColBlockIndices inDer (d.constraint->inputVelocity ());
+      matrix_t Jin (MatrixBlocksRef (inDer, inDers_).rview(J));
+      // Jout = d.jacobian * Jin
+      MatrixBlocksRef (RowBlockIndices (d.constraint->outputVelocity ()),
+                       inDers_).lview (J) = d.jacobian * Jin;
     }
 
     void ExplicitConstraintSet::computeOrder
     (const std::size_t& iE, std::size_t& iOrder, Computed_t& computed)
     {
       if (computed[iE]) return;
-      const Function& E = functions_[iE];
-      for (std::size_t i = 0; i < E.inDer.indices().size(); ++i) {
-        const BlockIndex::segment_t& segment = E.inDer.indices()[i];
+      const Data& d = data_[iE];
+      for (std::size_t i = 0; i < d.constraint->inputVelocity ().size(); ++i) {
+        const BlockIndex::segment_t& segment
+          (d.constraint->inputVelocity () [i]);
         for (size_type j = 0; j < segment.second; ++j) {
           if (derFunction_[segment.first + j] < 0) {
             inOutDependencies_(iE, segment.first + j) += 1;
           } else {
-            assert((std::size_t)derFunction_[segment.first + j] < functions_.size());
+            assert((std::size_t)derFunction_[segment.first + j] < data_.size());
             computeOrder(derFunction_[segment.first + j], iOrder, computed);
             inOutDependencies_.row(iE) += inOutDependencies_.row(derFunction_[segment.first + j]);
           }
@@ -329,25 +291,19 @@ namespace hpp {
 
     vector_t ExplicitConstraintSet::rightHandSideFromInput (vectorIn_t arg)
     {
-      for (std::size_t i = 0; i < functions_.size (); ++i) {
-        Function& E = functions_[i];
-        E.qin = E.inArg.rview(arg);
-        E.f->value(E.value, E.qin);
-        E.qout = E.outArg.rview(arg);
-        if (E.g) E.g->value(E.expected, E.qout);
-        else     E.expected.vector() = E.qout;
-        vector_t rhs = E.expected - E.value;
-        E.equalityIndices.lview(E.rightHandSide) = E.equalityIndices.rview(rhs);
+      // Compute right hand side of explicit formulation
+      for (std::size_t i = 0; i < data_.size (); ++i) {
+        rightHandSideFromInput (i, arg);
       }
       return rightHandSide();
     }
 
     bool ExplicitConstraintSet::rightHandSideFromInput
-    (const DifferentiableFunctionPtr_t& df, vectorIn_t arg)
+    (const ExplicitPtr_t& constraint, vectorIn_t arg)
     {
-      for (std::size_t i = 0; i < functions_.size (); ++i) {
-        Function& E = functions_[i];
-        if (E.f == df) {
+      for (std::size_t i = 0; i < data_.size (); ++i) {
+        Data& d = data_[i];
+        if (d.constraint == constraint) {
           rightHandSideFromInput (i, arg);
           return true;
         }
@@ -356,29 +312,43 @@ namespace hpp {
     }
 
     void ExplicitConstraintSet::rightHandSideFromInput
-    (const size_type& fidx, vectorIn_t arg)
+    (const size_type& i, vectorIn_t arg)
     {
-      assert (fidx < (size_type) functions_.size());
-      Function& E = functions_[fidx];
+      Data& d = data_[i];
+      d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
+      d.constraint->explicitFunction ()->value(d.f_value, d.qin);
+      d.qout = RowBlockIndices (d.constraint->outputConf ()).rview(arg);
+      d.res_qout.vector() = d.qout;
+      vector_t rhs = d.res_qout - d.f_value;
+      d.equalityIndices.lview(d.rhs_explicit) = d.equalityIndices.rview(rhs);
 
-      // Computes f(q1) and g(q2)
-      E.qin = E.inArg.rview(arg);
-      E.f->value(E.value, E.qin);
-      E.qout = E.outArg.rview(arg);
-      if (E.g) E.g->value(E.expected, E.qout);
-      else     E.expected.vector() = E.qout;
+      // compute right hand side of implicit formulation that might be
+      // different (RelativePose)
+      d.constraint->function ().value (d.h_value, arg);
+      rhs = d.h_value.vector ();
+      d.equalityIndices.lview(d.rhs_implicit) = d.equalityIndices.rview(rhs);
+    }
 
-      // Set rhs = g(q2) - f(q1)
-      vector_t rhs = E.expected - E.value;
-      E.equalityIndices.lview(E.rightHandSide) = E.equalityIndices.rview(rhs);
+    void ExplicitConstraintSet::rightHandSide (vectorIn_t rhs)
+    {
+      size_type row = 0;
+      for (std::size_t i = 0; i < data_.size (); ++i) {
+        Data& d = data_[i];
+
+        d.equalityIndices.lview(d.rhs_implicit)
+          = rhs.segment(row, d.equalityIndices.nbRows());
+        row += d.equalityIndices.nbRows();
+        d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
+      }
+      assert (row == rhs.size());
     }
 
     bool ExplicitConstraintSet::rightHandSide
-    (const DifferentiableFunctionPtr_t& df, vectorIn_t rhs)
+    (const ExplicitPtr_t& constraint, vectorIn_t rhs)
     {
-      for (std::size_t i = 0; i < functions_.size (); ++i) {
-        Function& E = functions_[i];
-        if (E.f == df) {
+      for (std::size_t i = 0; i < data_.size (); ++i) {
+        Data& d = data_[i];
+        if (d.constraint == constraint) {
           rightHandSide (i, rhs);
           return true;
         }
@@ -389,33 +359,21 @@ namespace hpp {
     void ExplicitConstraintSet::rightHandSide
     (const size_type& i, vectorIn_t rhs)
     {
-      assert (i < (size_type) functions_.size());
-      Function& E = functions_[i];
-      E.equalityIndices.lview(E.rightHandSide) = E.equalityIndices.rview(rhs);
-    }
-
-    void ExplicitConstraintSet::rightHandSide (vectorIn_t rhs)
-    {
-      size_type row = 0;
-      for (std::size_t i = 0; i < functions_.size (); ++i) {
-        Function& E = functions_[i];
-
-        E.equalityIndices.lview(E.rightHandSide)
-          = rhs.segment(row, E.equalityIndices.nbRows());
-        row += E.equalityIndices.nbRows();
-      }
-      assert (row == rhs.size());
+      assert (i < (size_type) data_.size());
+      Data& d = data_[i];
+      d.equalityIndices.lview(d.rhs_implicit) = d.equalityIndices.rview(rhs);
+      d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
     }
 
     vector_t ExplicitConstraintSet::rightHandSide () const
     {
       vector_t rhs(rightHandSideSize());
       size_type row = 0;
-      for (std::size_t i = 0; i < functions_.size (); ++i) {
-        const Function& E = functions_[i];
-        const size_type nRows = E.equalityIndices.nbRows();
+      for (std::size_t i = 0; i < data_.size (); ++i) {
+        const Data& d = data_[i];
+        const size_type nRows = d.equalityIndices.nbRows();
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        seg = E.equalityIndices.rview(E.rightHandSide);
+        seg = d.equalityIndices.rview(d.rhs_implicit);
         row += nRows;
       }
       assert (row == rhs.size());
@@ -425,25 +383,27 @@ namespace hpp {
     size_type ExplicitConstraintSet::rightHandSideSize () const
     {
       size_type rhsSize = 0;
-      for (std::size_t i = 0; i < functions_.size (); ++i)
-        rhsSize += functions_[i].equalityIndices.nbRows();
+      for (std::size_t i = 0; i < data_.size (); ++i)
+        rhsSize += data_[i].equalityIndices.nbRows();
       return rhsSize;
     }
 
     std::ostream& ExplicitConstraintSet::print (std::ostream& os) const
     {
-      os << "ExplicitConstraintSet, " << functions_.size()
+      os << "ExplicitConstraintSet, " << data_.size()
          << " functions." << incendl
         << "Other args: " << notOutArgs_ << iendl
         << "Params: " << inArgs_ << " -> " << outArgs_ << iendl
         << "Dofs: "   << inDers_ << " -> " << outDers_ << iendl
         << "Functions" << incindent;
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        const Function& E = functions_[computationOrder_[i]];
-        os << iendl << i << ": " << E.inArg << " -> " << E.outArg
-          << incendl << *E.f
-          << decendl << "Rhs: " << condensed(E.rightHandSide)
-          << iendl   << "Equality: " << E.equalityIndices;
+      for(std::size_t i = 0; i < data_.size(); ++i) {
+        const Data& d = data_[computationOrder_[i]];
+        os << iendl << i << ": " << RowBlockIndices (d.constraint->inputConf ())
+           << " -> "
+           << RowBlockIndices (d.constraint->outputConf ())
+          << incendl << *d.constraint->explicitFunction ()
+          << decendl << "Rhs: " << condensed(d.rhs_explicit)
+          << iendl   << "Equality: " << d.equalityIndices;
       }
       return os << decindent << decindent;
     }
@@ -453,10 +413,11 @@ namespace hpp {
       Eigen::MatrixXi iod (nv (), inDers_.nbCols());
       if (inDers_.nbCols() == 0) return iod;
       Eigen::RowVectorXi tmp (inDers_.nbCols());
-      for(std::size_t i = 0; i < functions_.size(); ++i) {
-        const Function& E = functions_[i];
+      for(std::size_t i = 0; i < data_.size(); ++i) {
+        const Data& d = data_[i];
         tmp = inDers_.rview (inOutDependencies_.row(i));
-        E.outDer.lview(iod).rowwise() = tmp;
+        RowBlockIndices
+          (d.constraint->outputVelocity ()).lview(iod).rowwise() = tmp;
       }
       return outDers_.rview(iod);
     }
