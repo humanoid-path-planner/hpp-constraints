@@ -166,7 +166,7 @@ namespace hpp {
     } // namespace solver
 
     namespace explicit_ {
-      template <bool GisIdentity> class Function;
+      class Function;
     } // namespace explicit
 
     HPP_PREDEF_CLASS (LockedJoint);

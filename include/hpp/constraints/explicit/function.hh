@@ -101,7 +101,6 @@ namespace hpp {
       ///             of a robot as input.
       Function (const DevicePtr_t& robot,
 			const DifferentiableFunctionPtr_t& function,
-                        const DifferentiableFunctionPtr_t& g,
 			const segments_t& inputConf,
 			const segments_t& inputVelocity,
                         const segments_t& outputConf,
@@ -112,14 +111,12 @@ namespace hpp {
       /// \param configSpace input space of this function - usually a robot
       ///                    configuration space,
       /// \param function function f,
-      /// \param g function g,
       /// \param inputConf set of indices defining q_in,
       /// \param inputVelocity set of indices defining q_in derivative,
       /// \param outputConf set of indices defining q_out
       /// \param outputVel set of indices defining q_out derivative
       Function (const LiegroupSpacePtr_t& configSpace,
                 const DifferentiableFunctionPtr_t& function,
-                const DifferentiableFunctionPtr_t& g,
                 const segments_t& inputConf,
                 const segments_t& inputVelocity,
                 const segments_t& outputConf,
@@ -133,40 +130,6 @@ namespace hpp {
     private:
       void computeJacobianBlocks ();
 
-      struct GenericGData {
-        DifferentiableFunctionPtr_t g_;
-        mutable LiegroupElement g_qOut_;
-        mutable matrix_t Jg_;
-
-        GenericGData (const DifferentiableFunctionPtr_t& g)
-          : g_ (g), g_qOut_ (g->outputSpace()),
-          Jg_ (g->outputSpace()->nv(), g->inputDerivativeSize())
-        {}
-        void computeValue (const LiegroupElement& qOut) const
-        {
-          g_->value (g_qOut_, qOut.vector());
-        }
-        const LiegroupElement& value (const LiegroupElement&) const
-        {
-          return g_qOut_;
-        }
-        matrix_t& jacobian (const LiegroupElement& qOut) const
-        {
-          g_->jacobian (Jg_, qOut.vector());
-          return Jg_;
-        }
-      };
-
-      struct IdentityData {
-        mutable matrix_t Jg_;
-        IdentityData (const DifferentiableFunctionPtr_t&) {}
-        void computeValue (const LiegroupElement&) const {}
-        const LiegroupElement& value (const LiegroupElement& qOut) const { return qOut; }
-        const matrix_t& jacobian (const LiegroupElement&) const { return Jg_; }
-      };
-
-      typedef typename boost::conditional<GisIdentity, IdentityData, GenericGData>::type GData;
-
       DevicePtr_t robot_;
       DifferentiableFunctionPtr_t inputToOutput_;
       Eigen::RowBlockIndices inputConfIntervals_;
@@ -175,7 +138,6 @@ namespace hpp {
       Eigen::RowBlockIndices outputDerivIntervals_;
       std::vector <Eigen::MatrixBlocks <false, false> > outJacobian_;
       std::vector <Eigen::MatrixBlocks <false, false> > inJacobian_;
-      GData gData_;
       mutable vector_t qIn_;
       mutable LiegroupElement f_qIn_, qOut_;
       mutable LiegroupElement result_;
