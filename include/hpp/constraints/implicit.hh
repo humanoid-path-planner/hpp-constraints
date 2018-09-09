@@ -27,8 +27,8 @@ namespace hpp {
     /// \{
 
     /// This class represents a numerical constraint  with the following format
-    /// \f{equation} f(q) comp rhs \f},
-    /// where \f$comp\f$ is one of the following comparison operators:
+    /// \f{equation} f(q) \bowtie rhs \f},
+    /// where \f$\bowtie\f$ is one of the following comparison operators:
     /// \li Equality: \f$f(\mathbf{q}) = rhs\f$, where \f$rhs\f$ is a
     /// parameterizable right hand side,
     /// \li EqualToZero: \f$f(\mathbf{q}) = 0\f$,
