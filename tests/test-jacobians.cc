@@ -27,7 +27,7 @@
 #include "hpp/constraints/convex-shape-contact.hh"
 #include "hpp/constraints/static-stability.hh"
 #include "hpp/constraints/configuration-constraint.hh"
-#include "hpp/constraints/differentiable-function-stack.hh"
+#include "hpp/constraints/differentiable-function-set.hh"
 #include "hpp/constraints/tools.hh"
 
 // The following 6 includes are deprecated and will be removed
