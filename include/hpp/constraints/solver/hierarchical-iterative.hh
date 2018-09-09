@@ -210,10 +210,7 @@ namespace hpp {
         ///        in decreasing order: 0 is the highest priority level.
         ///
         /// Constraint is defined by \f$f (\mathbf{q}) = 0\f$.
-        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority) HPP_CONSTRAINTS_DEPRECATED
-        {
-          add (f, priority, ComparisonTypes_t(f->outputSize(), EqualToZero));
-        }
+        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Add an implicit constraint
         ///
