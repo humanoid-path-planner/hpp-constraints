@@ -125,10 +125,7 @@ namespace hpp {
         ///          std::size_t priority = 0) instead.
         void add (const DifferentiableFunctionPtr_t& f,
                   const std::size_t& priority,
-                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED
-        {
-          HierarchicalIterative::add (f, priority, comp);
-        }
+                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
 
         void add (const LockedJointPtr_t& lockedJoint);
 

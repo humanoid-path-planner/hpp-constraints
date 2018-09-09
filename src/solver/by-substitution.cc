@@ -125,6 +125,13 @@ namespace hpp {
         return true;
       }
 
+      void BySubstitution::add (const DifferentiableFunctionPtr_t& f,
+                                const std::size_t& priority,
+                                const ComparisonTypes_t& comp)
+      {
+        HierarchicalIterative::add (f, priority, comp);
+      }
+
       void BySubstitution::add (const LockedJointPtr_t& lockedJoint)
       {
         if (lockedJoint->numberDof () == 0) return;
