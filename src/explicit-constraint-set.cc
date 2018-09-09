@@ -176,7 +176,8 @@ namespace hpp {
         const Data& d = data_ [argFunction_ [iArg]];
         append(d.constraint->inputConf (), idxArg);
       }
-
+      size_type nq (configSpace_->nq ());
+      size_type nv (configSpace_->nv ());
       // Add the function
       int idx = int(data_.size());
       outArg.lview(argFunction_).setConstant(idx);
@@ -188,7 +189,7 @@ namespace hpp {
       outArgs_.addRow(outIdx.first, outIdx.second);
       outArgs_.updateIndices<true, true, true>();
       notOutArgs_ = RowBlockIndices
-        (BlockIndex::difference (BlockIndex::segment_t(0, nq_),
+        (BlockIndex::difference (BlockIndex::segment_t(0, nq),
                                  outArgs_.indices()));
 
       BlockIndex::add (inArgs_.m_rows, inArg.rows());
@@ -200,7 +201,7 @@ namespace hpp {
       outDers_.addRow(outDerIdx.first, outDerIdx.second);
       outDers_.updateIndices<true, true, true>();
       notOutDers_ = ColBlockIndices
-        (BlockIndex::difference(BlockIndex::segment_t(0, nv_),
+        (BlockIndex::difference(BlockIndex::segment_t(0, nv),
                                 outDers_.indices()));
 
       BlockIndex::add (inDers_.m_cols,
@@ -213,7 +214,7 @@ namespace hpp {
       /// Computation order
       std::size_t order = 0;
       computationOrder_.resize(data_.size());
-      inOutDependencies_ = Eigen::MatrixXi::Zero(data_.size(), nv_);
+      inOutDependencies_ = Eigen::MatrixXi::Zero(data_.size(), nv);
       Computed_t computed(data_.size(), false);
       for(std::size_t i = 0; i < data_.size(); ++i)
         computeOrder(i, order, computed);

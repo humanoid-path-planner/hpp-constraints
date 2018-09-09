@@ -53,7 +53,7 @@ namespace hpp {
 
       BySubstitution::BySubstitution (const LiegroupSpacePtr_t& configSpace) :
         HierarchicalIterative(configSpace),
-        explicit_ (configSpace->nq (), configSpace->nv ()),
+        explicit_ (configSpace),
         JeExpanded_ (configSpace->nv (), configSpace->nv ())
       {}
 

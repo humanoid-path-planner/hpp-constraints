@@ -128,22 +128,20 @@ namespace hpp {
 
         /// Constructor
         ///
-        /// \param nq dimension of vector space in which the robot
-        ///                configuration space is immersed.
-        /// \param nv dimension of tangent space to configuration space.
-        ExplicitConstraintSet (const std::size_t& nq, const std::size_t nv)
-          : nq_ (nq), nv_ (nv)
+        /// \param space Lie group on which constraints are defined.
+        ExplicitConstraintSet (const LiegroupSpacePtr_t& space)
+          : configSpace_ (space)
           ,   inArgs_ (), notOutArgs_ ()
           ,   inDers_ (), notOutDers_ ()
           ,  outArgs_ (),  outDers_ ()
-          , argFunction_ (Eigen::VectorXi::Constant(nq, -1))
-          , derFunction_ (Eigen::VectorXi::Constant(nv, -1))
+          , argFunction_ (Eigen::VectorXi::Constant(space->nq (), -1))
+          , derFunction_ (Eigen::VectorXi::Constant(space->nv (), -1))
           , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
           // , Jg (nv, nv)
-          , arg_ (nq), diff_(nv), diffSmall_()
+          , arg_ (space->nq ()), diff_(space->nv ()), diffSmall_()
         {
-          notOutArgs_.addRow(0, nq);
-          notOutDers_.addCol(0, nv);
+          notOutArgs_.addRow(0, space->nq ());
+          notOutDers_.addCol(0, space->nv ());
         }
 
         /// \}
@@ -262,28 +260,34 @@ namespace hpp {
 
         /// The number of configuration variables
         /// \deprecated use \ref nq instead.
-        const std::size_t& argSize () const HPP_CONSTRAINTS_DEPRECATED
+        std::size_t argSize () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return nq_;
+          return configSpace_->nq ();
         }
 
         /// The number of derivative variables
         /// \deprecated use \ref nv instead.
-        const std::size_t& derSize () const HPP_CONSTRAINTS_DEPRECATED
+        std::size_t derSize () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return nv_;
+          return configSpace_->nv ();
+        }
+
+        /// The Lie group on which constraints are defined
+        LiegroupSpacePtr_t configSpace () const
+        {
+          return configSpace_;
         }
 
         /// The number of variables
-        const std::size_t& nq () const
+        std::size_t nq () const
         {
-          return nq_;
+          return configSpace_->nq ();
         }
 
         /// The number of derivative variables
-        const std::size_t& nv () const
+        std::size_t nv () const
         {
-          return nv_;
+          return configSpace_->nv ();
         }
 
         /// \}
@@ -318,11 +322,11 @@ namespace hpp {
         }
 
         /** Compute the Jacobian of the explicit constraint resolution
-        
+
             \param q input configuration
             \param jacobian square Jacobian matrix of same size as velocity
                             i.e. given by \ref nv method.
-        
+
             The result is the Jacobian of the explicit constraint set considered
             as a projector that maps to any \f$\mathbf{p}\in\mathcal{C}\f$,
             \f$\mathbf{q} = E(\mathbf{p})\f$ defined by
@@ -330,7 +334,7 @@ namespace hpp {
             \mathbf{q}_{\bar{out}} &=& \mathbf{p}_{out} \\
             \mathbf{q}_{out} &=& g^{-1} (f (\mathbf{p}_{in}) + rhs)
             \f}
-        
+
             \warning it is assumed solve(q) has been called before.
         */
         void jacobian(matrixOut_t jacobian, vectorIn_t q) const;
@@ -462,7 +466,7 @@ namespace hpp {
         void computeJacobian(const std::size_t& i, matrixOut_t J) const;
         void computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed);
 
-        const std::size_t nq_, nv_;
+        LiegroupSpacePtr_t configSpace_;
 
         struct Data {
           Data (const ExplicitPtr_t& constraint);

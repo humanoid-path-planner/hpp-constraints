@@ -241,7 +241,7 @@ void order_test (const AffineFunctionPtr_t f[N], const segment_t s[N+1],
     const segments_t& inArgs,
     const segments_t& outArgs)
 {
-  ExplicitConstraintSet expression (4, 4);
+  ExplicitConstraintSet expression (LiegroupSpace::Rn (4));
   for (int i = 0; i < N; ++i) {
     int fo = forder[i],
     si = forder[i], so = forder[i] + 1;
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(jacobian1)
                      segments_t (1, segment_t (2, 1)),
                      segments_t (1, segment_t (3, 1)) };
 
-  ExplicitConstraintSet expression (4, 4);
+  ExplicitConstraintSet expression (LiegroupSpace::Rn (4));
   for (int i = 0; i < 3; ++i) {
     ExplicitPtr_t constraint (Explicit::create
                               (LiegroupSpace::Rn (4), f[i], s[i], s[i+1], s[i],
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(jacobian2)
   s[4] = (list_of(segment_t (0, 1))(segment_t (3, 1)));
   s[5] = (list_of(segment_t (1, 1)));
 
-  ExplicitConstraintSet expression (5, 5);
+  ExplicitConstraintSet expression (LiegroupSpace::Rn (5));
   ExplicitPtr_t constraint;
   constraint = Explicit::create
     (LiegroupSpace::Rn (5), f[0], s[0], s[1], s[0], s[1]);
@@ -454,8 +454,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
                   qrand = se3::randomConfiguration(device->model());
 
   {
-    ExplicitConstraintSet expression
-      (device->configSize(), device->numberDof());
+    ExplicitConstraintSet expression (device->configSpace ());
     ExplicitPtr_t constraint;
     BOOST_CHECK (expression.add (l1) >= 0);
     BOOST_CHECK (expression.add (l1) <  0);
@@ -504,8 +503,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   }
 
   {
-    ExplicitConstraintSet expression
-      (device->configSize(), device->numberDof());
+    ExplicitConstraintSet expression (device->configSpace());
     BOOST_CHECK( expression.add (l1) >= 0);
     ExplicitPtr_t constraint;
     constraint = Explicit::create
@@ -526,8 +524,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   }
 
   {
-    ExplicitConstraintSet expression
-      (device->configSize(), device->numberDof());
+    ExplicitConstraintSet expression (device->configSpace ());
     ExplicitPtr_t constraint;
     constraint = Explicit::create
       (device->configSpace (), t1, t1->inArg().indices (),
@@ -543,8 +540,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   }
 
   {
-    ExplicitConstraintSet expression
-      (device->configSize(), device->numberDof());
+    ExplicitConstraintSet expression (device->configSpace());
     ExplicitPtr_t constraint;
     constraint = Explicit::create
       (device->configSpace (), t1, t1->inArg().indices (),
@@ -559,8 +555,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   }
 
   {
-    ExplicitConstraintSet expression
-      (device->configSize(), device->numberDof());
+    ExplicitConstraintSet expression (device->configSpace ());
     ExplicitPtr_t constraint;
     constraint = Explicit::create
       (device->configSpace (), t1, t1->inArg().indices (),
@@ -592,8 +587,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
           parent->rankInConfiguration() + parent->configSize() - 7,
           parent->rankInVelocity()      + parent->numberDof () - 6));
 
-    ExplicitConstraintSet expression
-      (device->configSize(), device->numberDof());
+    ExplicitConstraintSet expression (device->configSpace ());
     ExplicitPtr_t constraint;
     constraint = Explicit::create
       (device->configSpace (), et, et->inArg().indices (),
