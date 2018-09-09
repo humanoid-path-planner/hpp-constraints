@@ -26,6 +26,7 @@
 #include <hpp/pinocchio/joint.hh>
 
 #include <hpp/constraints/affine-function.hh>
+#include <hpp/constraints/explicit/function.hh>
 
 namespace hpp {
   namespace constraints {
@@ -136,62 +137,99 @@ namespace hpp {
 
     LockedJoint::LockedJoint (const JointPtr_t& joint,
                               const LiegroupElement& value) :
-      Explicit (
-                joint->robot()->configSpace (),
-          makeFunction (value, joint->name()),
-          segments_t(), // input conf
-          segments_t(), // input vel
-          list_of(segment_t (joint->rankInConfiguration(), joint->configSize())), // output conf
-          list_of(segment_t (joint->rankInVelocity     (), joint->numberDof ())), // output vel
-          ComparisonTypes_t(joint->numberDof(), Equality)),
+      Implicit (explicit_::Function::create
+                (joint->robot()->configSpace (),
+                 makeFunction (value, joint->name()),
+                 segments_t(), // input conf
+                 segments_t(), // input vel
+                 list_of(segment_t (joint->rankInConfiguration(),
+                                    joint->configSize())), // output conf
+                 list_of(segment_t (joint->rankInVelocity     (),
+                                    joint->numberDof ()))), // output vel
+                ComparisonTypes_t (joint->numberDof(), Equality)),
+      Explicit (joint->robot()->configSpace (),
+                HPP_STATIC_PTR_CAST
+                (explicit_::Function, functionPtr ())->inputToOutput (),
+                segments_t(), // input conf
+                segments_t(), // input vel
+                list_of(segment_t (joint->rankInConfiguration(),
+                                   joint->configSize())), // output conf
+                list_of(segment_t (joint->rankInVelocity     (),
+                                   joint->numberDof ())), // output vel
+                ComparisonTypes_t (joint->numberDof(), Equality)),
       jointName_ (joint->name ()),
       configSpace_ (joint->configurationSpace ())
     {
+      assert (HPP_DYNAMIC_PTR_CAST (explicit_::Function, functionPtr ()));
       assert (rhsSize () == joint->numberDof ());
       assert (*(value.space ()) == *configSpace_);
-      // rightHandSide (value - configSpace_->neutral ());
     }
 
     LockedJoint::LockedJoint (const JointPtr_t& joint, const size_type index,
-        vectorIn_t value) :
-      Explicit (
-                joint->robot()->configSpace (),
-          makeFunction (
-            LiegroupElement (value, LiegroupSpace::Rn (joint->configSize () - index)),
-            "partial_" + joint->name()),
-          segments_t(), // input conf
-          segments_t(), // input vel
-          list_of(segment_t (joint->rankInConfiguration(), joint->configSize()-index)), // output conf
-          list_of(segment_t (joint->rankInVelocity     (), joint->numberDof ()-index)), // output vel
-          ComparisonTypes_t(joint->numberDof()-index, Equality)),
+                              vectorIn_t value) :
+      Implicit (explicit_::Function::create
+                (joint->robot()->configSpace (),
+                 makeFunction (LiegroupElement
+                               (value, LiegroupSpace::Rn (joint->configSize ()
+                                                          - index)),
+                               "partial_" + joint->name ()),
+                 segments_t(), // input conf
+                 segments_t(), // input vel
+                 list_of(segment_t (joint->rankInConfiguration(),
+                                    joint->configSize())), // output conf
+                 list_of(segment_t (joint->rankInVelocity     (),
+                                    joint->numberDof ()))), // output vel
+                ComparisonTypes_t (joint->numberDof(), Equality)),
+      Explicit (joint->robot()->configSpace (), HPP_STATIC_PTR_CAST
+                (explicit_::Function, functionPtr ())->inputToOutput (),
+                segments_t(), // input conf
+                segments_t(), // input vel
+                list_of(segment_t (joint->rankInConfiguration(),
+                                   joint->configSize()-index)), // output conf
+                list_of(segment_t (joint->rankInVelocity     (),
+                                   joint->numberDof ()-index)), // output vel
+                ComparisonTypes_t(joint->numberDof()-index, Equality)),
       jointName_ ("partial_" + joint->name ()),
       joint_ (joint),
       configSpace_ (LiegroupSpace::Rn (joint->configSize () - index))
     {
+      assert (HPP_DYNAMIC_PTR_CAST (explicit_::Function, functionPtr ()));
       assert (joint->numberDof () == joint->configSize ());
       // rightHandSide (value);
       assert (rhsSize () == value.size());
     }
 
     LockedJoint::LockedJoint (const DevicePtr_t& dev, const size_type index,
-        vectorIn_t value) :
-      Explicit (
-                dev->configSpace (),
-          makeFunction (
-            LiegroupElement (value, LiegroupSpace::Rn (value.size ())),
-            dev->name() + "_extraDof" + numToStr (index)),
-          segments_t(), // input conf
-          segments_t(), // input vel
-          list_of(segment_t (
-              dev->configSize () - dev->extraConfigSpace().dimension() + index,
-              value.size())), // output conf
-          list_of(segment_t (
-              dev->numberDof ()  - dev->extraConfigSpace().dimension() + index,
-              value.size())), // output vel
-          ComparisonTypes_t(value.size(), Equality)),
+                              vectorIn_t value) :
+      Implicit (explicit_::Function::create
+                (dev->configSpace (),
+                 makeFunction (LiegroupElement
+                               (value, LiegroupSpace::Rn (value.size ())),
+                               dev->name() + "_extraDof" + numToStr (index)),
+                 segments_t(), // input conf
+                 segments_t(), // input vel
+                 list_of(segment_t (dev->configSize () -
+                                    dev->extraConfigSpace().dimension() + index,
+                                    value.size())), // output conf
+                 list_of(segment_t (dev->numberDof ()  -
+                                    dev->extraConfigSpace().dimension() + index,
+                                    value.size()))), // output vel
+                ComparisonTypes_t(value.size(), Equality)),
+      Explicit (dev->configSpace (), HPP_STATIC_PTR_CAST
+                (explicit_::Function, functionPtr ())->inputToOutput (),
+                segments_t(), // input conf
+                segments_t(), // input vel
+                list_of(segment_t (dev->configSize () -
+                                   dev->extraConfigSpace().dimension() + index,
+                                   value.size())), // output conf
+                list_of(segment_t (dev->numberDof ()  -
+                                   dev->extraConfigSpace().dimension() + index,
+                                   value.size())), // output vel
+                ComparisonTypes_t(value.size(), Equality)),
       jointName_ (dev->name() + "_extraDof" + numToStr (index)),
       joint_ (JointPtr_t ()), configSpace_ (LiegroupSpace::Rn (value.size ()))
     {
+      assert (HPP_DYNAMIC_PTR_CAST (explicit_::Function, functionPtr ()));
       assert (value.size() > 0);
       assert (rankInConfiguration() + value.size() <= dev->configSize());
       // rightHandSide (value);
@@ -218,6 +256,7 @@ namespace hpp {
     }
 
     LockedJoint::LockedJoint (const LockedJoint& other) :
+      Implicit (other),
       Explicit (other), jointName_ (other.jointName_),
       joint_ (other.joint_), configSpace_ (other.configSpace_), weak_ ()
     {
