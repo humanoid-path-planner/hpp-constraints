@@ -29,7 +29,7 @@ SET (${LIBRARY_NAME}_SOURCES
   explicit-constraint-set.cc
   implicit.cc
   explicit.cc
-  explicit/function.cc
+  explicit/implicit-function.cc
   explicit/relative-transformation.cc
   explicit/relative-pose.cc
   locked-joint.cc

@@ -24,7 +24,7 @@
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/tools.hh>
 
-#include <hpp/constraints/explicit/function.hh>
+#include <hpp/constraints/explicit/implicit-function.hh>
 
 namespace hpp {
   namespace constraints {
@@ -137,36 +137,36 @@ namespace hpp {
       }
 
       // Deprecated
-      Function::Ptr_t Function::create
+      ImplicitFunctionPtr_t ImplicitFunction::create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
        const segments_t& inputConf, const segments_t& inputVelocity,
        const segments_t& outputConf, const segments_t& outputVelocity)
       {
-	Function* ptr = new Function
+	ImplicitFunction* ptr = new ImplicitFunction
 	  (robot, function, DifferentiableFunctionPtr_t(), inputConf,
            inputVelocity, outputConf, outputVelocity);
-	return Function::Ptr_t (ptr);
+	return ImplicitFunctionPtr_t (ptr);
       }
 
-      Function::Ptr_t Function::create
+      ImplicitFunctionPtr_t ImplicitFunction::create
       (const LiegroupSpacePtr_t& configSpace,
        const DifferentiableFunctionPtr_t& function,
        const segments_t& inputConf, const segments_t& inputVelocity,
        const segments_t& outputConf, const segments_t& outputVelocity)
       {
-        Function* ptr = new Function
+        ImplicitFunction* ptr = new ImplicitFunction
           (configSpace, function, DifferentiableFunctionPtr_t(), inputConf,
            inputVelocity, outputConf, outputVelocity);
-        return Function::Ptr_t (ptr);
+        return ImplicitFunctionPtr_t (ptr);
       }
 
 
-      const DifferentiableFunctionPtr_t& Function::inputToOutput () const
+      const DifferentiableFunctionPtr_t& ImplicitFunction::inputToOutput () const
       {
         return inputToOutput_;
       }
 
-      Function::Function (const DevicePtr_t& robot,
+      ImplicitFunction::ImplicitFunction (const DevicePtr_t& robot,
                           const DifferentiableFunctionPtr_t& function,
                           const DifferentiableFunctionPtr_t& g,
                           const segments_t& inputConf,
@@ -214,7 +214,7 @@ namespace hpp {
           (activeDerivativeParameters_.matrix()).setConstant(true);
       }
 
-      Function::Function (const LiegroupSpacePtr_t& configSpace,
+      ImplicitFunction::ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                           const DifferentiableFunctionPtr_t& function,
                           const DifferentiableFunctionPtr_t& g,
                           const segments_t& inputConf,
@@ -263,7 +263,7 @@ namespace hpp {
           (activeDerivativeParameters_.matrix()).setConstant(true);
       }
 
-      void Function::impl_compute (LiegroupElement& result,
+      void ImplicitFunction::impl_compute (LiegroupElement& result,
                                    vectorIn_t argument) const
       {
         using Eigen::MatrixBlocks;
@@ -281,7 +281,7 @@ namespace hpp {
         hppDout (info, "result=" << result);
       }
 
-      void Function::impl_jacobian (matrixOut_t jacobian,
+      void ImplicitFunction::impl_jacobian (matrixOut_t jacobian,
                                     vectorIn_t arg) const
       {
 	jacobian.setZero ();
@@ -309,7 +309,7 @@ namespace hpp {
         }
       }
 
-      void Function::computeJacobianBlocks ()
+      void ImplicitFunction::computeJacobianBlocks ()
       {
         segments_t remainingCols (outputDerivIntervals_.indices());
         segments_t cols;

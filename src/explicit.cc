@@ -18,7 +18,7 @@
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/explicit.hh>
-#include <hpp/constraints/explicit/function.hh>
+#include <hpp/constraints/explicit/implicit-function.hh>
 
 namespace hpp {
   namespace constraints {
@@ -121,7 +121,7 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& outputVelocity,
      const ComparisonTypes_t& comp) :
-      Implicit (explicit_::Function::create
+      Implicit (explicit_::ImplicitFunction::create
                 (robot, explicitFunction, inputConf, inputVelocity,
                  outputConf, outputVelocity),
                 comp),
@@ -141,7 +141,7 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& outputVelocity,
      const ComparisonTypes_t& comp) :
-      Implicit (explicit_::Function::create
+      Implicit (explicit_::ImplicitFunction::create
                 (configSpace, explicitFunction, inputConf, inputVelocity,
                  outputConf, outputVelocity),
                 comp),

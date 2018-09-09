@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
-# define HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
+#ifndef HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH
+# define HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH
 
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/matrix-view.hh>
@@ -34,13 +34,13 @@ namespace hpp {
     ///
     ///  This class is mainly used to create hpp::constraints::Explicit
     ///  instances.
-    class Function : public DifferentiableFunction
+    class ImplicitFunction : public DifferentiableFunction
     {
     public:
       /// create instance and return shared pointer
       /// \deprecated used create method that takes a LiegroupSpace instead
       ///             of a robot as input.
-      typedef boost::shared_ptr <Function> Ptr_t;
+      typedef boost::shared_ptr <ImplicitFunction> Ptr_t;
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
        const segments_t& inputConf, const segments_t& inputVelocity,
@@ -67,7 +67,6 @@ namespace hpp {
       /// \param outputConf set of indices defining q_out
       /// \param outputVel set of indices defining q_out derivative
       ///
-      /// Function g is set to identity.
 
       static Ptr_t create
       (const LiegroupSpacePtr_t& configSpace,
@@ -99,7 +98,7 @@ namespace hpp {
       /// Constructor
       /// \deprecated used constructor that takes a LiegroupSpace instead
       ///             of a robot as input.
-      Function (const DevicePtr_t& robot,
+      ImplicitFunction (const DevicePtr_t& robot,
 			const DifferentiableFunctionPtr_t& function,
 			const segments_t& inputConf,
 			const segments_t& inputVelocity,
@@ -115,7 +114,7 @@ namespace hpp {
       /// \param inputVelocity set of indices defining q_in derivative,
       /// \param outputConf set of indices defining q_out
       /// \param outputVel set of indices defining q_out derivative
-      Function (const LiegroupSpacePtr_t& configSpace,
+      ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                 const DifferentiableFunctionPtr_t& function,
                 const segments_t& inputConf,
                 const segments_t& inputVelocity,
@@ -143,10 +142,10 @@ namespace hpp {
       mutable LiegroupElement result_;
       // Jacobian of explicit function
       mutable matrix_t Jf_;
-    }; // class Function
+    }; // class ImplicitFunction
 
     } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
+#endif // HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH
