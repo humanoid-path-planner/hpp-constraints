@@ -143,8 +143,8 @@ namespace hpp {
        const segments_t& outputConf, const segments_t& outputVelocity)
       {
 	ImplicitFunction* ptr = new ImplicitFunction
-	  (robot, function, DifferentiableFunctionPtr_t(), inputConf,
-           inputVelocity, outputConf, outputVelocity);
+	  (robot, function, inputConf, inputVelocity, outputConf,
+           outputVelocity);
 	return ImplicitFunctionPtr_t (ptr);
       }
 
@@ -155,8 +155,8 @@ namespace hpp {
        const segments_t& outputConf, const segments_t& outputVelocity)
       {
         ImplicitFunction* ptr = new ImplicitFunction
-          (configSpace, function, DifferentiableFunctionPtr_t(), inputConf,
-           inputVelocity, outputConf, outputVelocity);
+          (configSpace, function, inputConf, inputVelocity, outputConf,
+           outputVelocity);
         return ImplicitFunctionPtr_t (ptr);
       }
 
@@ -168,8 +168,7 @@ namespace hpp {
 
       ImplicitFunction::ImplicitFunction (const DevicePtr_t& robot,
                           const DifferentiableFunctionPtr_t& function,
-                          const DifferentiableFunctionPtr_t& g,
-                          const segments_t& inputConf,
+                                const segments_t& inputConf,
                           const segments_t& inputVelocity,
                           const segments_t& outputConf,
                           const segments_t& outputVelocity)
@@ -182,7 +181,7 @@ namespace hpp {
 	  inputDerivIntervals_ (inputVelocity),
           outputConfIntervals_ (outputConf),
 	  outputDerivIntervals_ (outputVelocity), outJacobian_ (),
-          inJacobian_ (), gData_ (g), f_qIn_ (function->outputSpace ()),
+          inJacobian_ (), f_qIn_ (function->outputSpace ()),
           qOut_ (function->outputSpace ()), result_ (outputSpace ())
       {
 	// Check input consistency
@@ -216,7 +215,6 @@ namespace hpp {
 
       ImplicitFunction::ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                           const DifferentiableFunctionPtr_t& function,
-                          const DifferentiableFunctionPtr_t& g,
                           const segments_t& inputConf,
                           const segments_t& inputVelocity,
                           const segments_t& outputConf,
@@ -231,7 +229,7 @@ namespace hpp {
 	  inputDerivIntervals_ (inputVelocity),
           outputConfIntervals_ (outputConf),
 	  outputDerivIntervals_ (outputVelocity), outJacobian_ (),
-          inJacobian_ (), gData_ (g), f_qIn_ (function->outputSpace ()),
+          inJacobian_ (), f_qIn_ (function->outputSpace ()),
           qOut_ (function->outputSpace ()), result_ (outputSpace ())
       {
 	// Check input consistency
