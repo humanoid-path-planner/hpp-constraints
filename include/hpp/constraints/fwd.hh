@@ -173,6 +173,8 @@ namespace hpp {
 
     namespace explicit_ {
       class Function;
+      HPP_PREDEF_CLASS (RelativePose);
+      typedef boost::shared_ptr <RelativePose> RelativePosePtr_t;
       HPP_PREDEF_CLASS (RelativeTransformation);
       typedef boost::shared_ptr <RelativeTransformation>
       RelativeTransformationPtr_t;
