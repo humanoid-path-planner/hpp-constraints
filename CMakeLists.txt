@@ -56,6 +56,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/explicit-solver.hh
   include/hpp/constraints/explicit.hh
   include/hpp/constraints/explicit/function.hh
+  include/hpp/constraints/explicit/relative-transformation.hh
   include/hpp/constraints/implicit.hh
   include/hpp/constraints/implicit/relative-pose.hh
   include/hpp/constraints/implicit-constraint-set.hh

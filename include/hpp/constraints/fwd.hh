@@ -173,6 +173,9 @@ namespace hpp {
 
     namespace explicit_ {
       class Function;
+      HPP_PREDEF_CLASS (RelativeTransformation);
+      typedef boost::shared_ptr <RelativeTransformation>
+      RelativeTransformationPtr_t;
     } // namespace explicit
 
     HPP_PREDEF_CLASS (LockedJoint);
