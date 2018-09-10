@@ -14,8 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION
-# define HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION
+#ifndef HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION_HH
+# define HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION_HH
 
 # include <hpp/constraints/matrix-view.hh>
 # include <hpp/constraints/generic-transformation.hh>
@@ -142,4 +142,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION
+#endif // HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION_HH
