@@ -50,7 +50,7 @@ namespace hpp {
     ///
     /// When the positions of two joints are constrained by a full
     /// transformation constraint, if the second joint is hold by a freeflyer
-    /// sequence (R3 x SO(3)), the position of this latter joint can be
+    /// joint, the position of this latter joint can be
     /// explicitely expressed with respect to the position of the first joint.
     ///
     /// This class provides this expression. The input configuration variables
