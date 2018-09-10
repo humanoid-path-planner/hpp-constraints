@@ -60,8 +60,6 @@ namespace hpp {
 	 const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
 	 const Transform3f& frame1    , const Transform3f& frame2);
 
-      constraints::ExplicitPtr_t createNumericalConstraint ();
-
       /// Get joint 1
       const JointConstPtr_t& joint1 () const
       {
@@ -127,7 +125,6 @@ namespace hpp {
       RowBlockIndices outConf_ , outVel_;
       Transform3f F1inJ1_invF2inJ2_;
 
-      DifferentiableFunctionPtr_t g_, ginv_;
       RelativeTransformationWkPtr_t weak_;
 
       // Tmp variables
