@@ -36,14 +36,9 @@ namespace hpp {
       /// Append all indices of a set of segments to a queue of indices
       void append (const Eigen::RowBlockIndices& rbi, std::queue<size_type>& q)
       {
-        append (rbi.indices (), q);
-    }
-      /// Append all indices of a set of segments to a queue of indices
-      void append (const segments_t& segments, std::queue<size_type>& q)
-      {
-        for (std::size_t i = 0; i < segments.size(); ++i)
-          for (size_type j = 0; j < segments[i].second; ++j)
-            q.push (segments [i].first + j);
+        for (std::size_t i = 0; i < rbi.indices().size(); ++i)
+          for (size_type j = 0; j < rbi.indices()[i].second; ++j)
+            q.push(rbi.indices()[i].first + j);
       }
     }
 
