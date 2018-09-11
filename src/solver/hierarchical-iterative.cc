@@ -167,6 +167,7 @@ namespace hpp {
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
           stacks_.resize (minSize, ImplicitConstraintSet ());
+          datas_. resize (minSize, Data());
         }
         stacks_ [priority].add (constraint);
         Data& d = datas_[priority];
