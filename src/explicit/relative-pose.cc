@@ -22,6 +22,9 @@
 namespace hpp {
   namespace constraints {
     namespace explicit_ {
+      LiegroupSpacePtr_t RelativePose::SE3 (LiegroupSpace::SE3 ());
+      LiegroupSpacePtr_t RelativePose::R3xSO3 (LiegroupSpace::R3xSO3 ());
+
       namespace {
         using Eigen::BlockIndex;
         BlockIndex::segments_t vectorOfBoolToIntervals (std::vector<bool>& v)
@@ -105,6 +108,26 @@ namespace hpp {
                                    mask, comp, rhs));
       }
 
+      void RelativePose::implicitToExplicitRhs (vectorIn_t implicitRhs,
+                                                vectorOut_t explicitRhs)
+      {
+        assert (implicitRhs.size () == 6);
+        assert (explicitRhs.size () == 6);
+        // p1 = exp_{R^3xSO(3)} (implicitRhs)
+        LiegroupElement p1 (R3xSO3->exp (implicitRhs));
+        // convert p1 to Transform3f M1
+        Transform3f M1 ((Quaternion_t (p1.vector ().tail <4> ()))
+                        .toRotationMatrix (), p1.vector ().head <3> ());
+        // M2 = F_{2/J_2} M1 F_{2/J_2}
+        Transform3f M2 (frame2_ * M2 * frame2_.inverse ());
+        // convert M2 to LiegroupElement p2
+        vector7_t v2;
+        v2.head <3> () = M2.translation ();
+        v2.tail <4> () = Quaternion_t (M2.rotation ()).coeffs ();
+        LiegroupElement p2 (v2, SE3);
+        explicitRhs = p2 - SE3->neutral ();
+      }
+
       RelativePose::RelativePose
       (const std::string& name, const DevicePtr_t& robot,
        const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
@@ -121,7 +144,8 @@ namespace hpp {
                   inputVelocityVariables (robot, joint1, joint2),
                   jointVelInterval (joint2), comp),
         implicit::RelativePose (name, robot, joint1, joint2, frame1, frame2,
-                                mask, comp, rhs)
+                                mask, comp, rhs),
+        frame1_ (frame1), frame2_ (frame2)
         {
         }
 

@@ -50,6 +50,29 @@ namespace hpp {
            ComparisonTypes_t comp = std::vector <ComparisonType> (),
            vectorIn_t rhs = vector_t ());
 
+        /** Convert right hand side
+
+            \param implicitRhs right hand side of implicit formulation,
+            \retval explicitRhs right hand side of explicit formulation.
+
+            For this constraint, the implicit formulation does not derive
+            from  the explicit formulation. The explicit form writes
+
+            \f{eqnarray}
+            rhs_{expl} &=& \log_{SE(3)} \left(F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1}
+            J_2\right)\\
+            rhs_{impl} &=& \log_{\mathbf{R}^3\times SO(3)} \left(F_{1/J_1}^{-1}
+            J_1^{-1}J_2 F_{2/J_2}\right)
+            \f}
+            Thus
+            \f{equation}
+            rhs_{expl} = \log_{SE(3)}\left( F_{2/J_2}\exp_{\mathbf{R}^3\times
+            SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
+            \f}
+        */
+
+        virtual void implicitToExplicitRhs (vectorIn_t implicitRhs,
+                                            vectorOut_t explicitRhs);
       protected:
         /// Constructor
         ///
@@ -72,6 +95,12 @@ namespace hpp {
                       std::vector <bool> mask = std::vector<bool>(6,true),
                       ComparisonTypes_t comp = std::vector <ComparisonType> (),
                       vectorIn_t rhs = vector_t ());
+      private:
+        // Create LiegroupSpace instances to avoid useless allocation.
+        static LiegroupSpacePtr_t SE3;
+        static LiegroupSpacePtr_t R3xSO3;
+        Transform3f frame1_;
+        Transform3f frame2_;
       }; // class RelativePose
     } // namespace explicit_
   } // namespace constraints
