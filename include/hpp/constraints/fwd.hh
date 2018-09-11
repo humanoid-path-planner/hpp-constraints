@@ -58,6 +58,8 @@ namespace hpp {
     } // namespace eigen
     typedef Eigen::Matrix <value_type, 5, 1> vector5_t;
     typedef Eigen::Matrix <value_type, 6, 1> vector6_t;
+    typedef Eigen::Quaternion<value_type> Quaternion_t;
+
     typedef pinocchio::ArrayXb ArrayXb;
     typedef ArrayXb bool_array_t;
 

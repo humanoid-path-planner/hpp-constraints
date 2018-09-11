@@ -29,9 +29,8 @@
 namespace hpp {
   namespace constraints {
     namespace explicit_ {
-      typedef Eigen::Quaternion<value_type> Quat_t;
-      typedef Eigen::Map<Quat_t > QuatMap_t;
-      typedef Eigen::Map<const Quat_t > QuatConstMap_t;
+      typedef Eigen::Map<Quaternion_t > QuatMap_t;
+      typedef Eigen::Map<const Quaternion_t > QuatConstMap_t;
       typedef hpp::pinocchio::liegroup::VectorSpaceOperation <3, false> R3;
       typedef hpp::pinocchio::liegroup::SpecialOrthogonalOperation <3> SO3;
       typedef hpp::pinocchio::liegroup::CartesianProductOperation <R3, SO3>
