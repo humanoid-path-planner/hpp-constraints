@@ -132,8 +132,12 @@ namespace hpp {
       /// \param robot Robot for which the constraint is defined.
       /// \param function relation between input configuration variables and
       ///        output configuration variables,
+      /// \param inputConf set of integer intervals defining indices
+      ///            \f$(ic_{1}, \cdots, ic_{n_{ic}})\f$,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param inputVelocity set of integer defining indices
+      ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
@@ -145,8 +149,8 @@ namespace hpp {
         (const DevicePtr_t& robot,
          const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
-	 const segments_t& inputVelocity,
 	 const segments_t& outputConf,
+	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
          const ComparisonTypes_t& comp = ComparisonTypes_t())
         HPP_CONSTRAINTS_DEPRECATED;
@@ -157,8 +161,12 @@ namespace hpp {
       ///        defined,
       /// \param function relation between input configuration variables and
       ///        output configuration variables,
+      /// \param inputConf set of integer intervals defining indices
+      ///            \f$(ic_{1}, \cdots, ic_{n_{ic}})\f$,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param inputVelocity set of integer defining indices
+      ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
@@ -167,8 +175,8 @@ namespace hpp {
         (const LiegroupSpacePtr_t& configSpace,
          const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
-	 const segments_t& inputVelocity,
 	 const segments_t& outputConf,
+	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
          const ComparisonTypes_t& comp = ComparisonTypes_t());
 
@@ -225,8 +233,12 @@ namespace hpp {
       /// \param robot Robot for which the constraint is defined.
       /// \param function relation between input configuration variables and
       ///        output configuration variables,
+      /// \param inputConf set of integer intervals defining indices
+      ///            \f$(ic_{1}, \cdots, ic_{n_{ic}})\f$,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param inputVelocity set of integer defining indices
+      ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
@@ -237,8 +249,8 @@ namespace hpp {
       Explicit
 	(const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
-	 const segments_t& inputVelocity,
 	 const segments_t& outputConf,
+	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
          const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
 
@@ -248,8 +260,12 @@ namespace hpp {
       ///        defined,
       /// \param function relation between input configuration variables and
       ///        output configuration variables,
+      /// \param inputConf set of integer intervals defining indices
+      ///            \f$(ic_{1}, \cdots, ic_{n_{ic}})\f$,
       /// \param outputConf set of integer intervals defining indices
       ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
+      /// \param inputVelocity set of integer defining indices
+      ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
       /// \param rhs        right hand side.
@@ -258,8 +274,8 @@ namespace hpp {
 	(const LiegroupSpacePtr_t& configSpace,
          const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
-	 const segments_t& inputVelocity,
 	 const segments_t& outputConf,
+	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
          const ComparisonTypes_t& comp);
 
@@ -286,8 +302,8 @@ namespace hpp {
       // Relation between input and output configuration variables
       DifferentiableFunctionPtr_t inputToOutput_;
       segments_t inputConf_;
-      segments_t inputVelocity_;
       segments_t outputConf_;
+      segments_t inputVelocity_;
       segments_t outputVelocity_;
       ExplicitWkPtr_t weak_;
     }; // class Explicit

@@ -43,8 +43,8 @@ namespace hpp {
       typedef boost::shared_ptr <ImplicitFunction> Ptr_t;
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity)
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity)
         HPP_CONSTRAINTS_DEPRECATED;
 
       /// create instance and return shared pointer
@@ -53,8 +53,8 @@ namespace hpp {
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
        const DifferentiableFunctionPtr_t& g,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity)
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity)
         HPP_CONSTRAINTS_DEPRECATED;
 
       /// create instance and return shared pointer
@@ -71,25 +71,8 @@ namespace hpp {
       static Ptr_t create
       (const LiegroupSpacePtr_t& configSpace,
        const DifferentiableFunctionPtr_t& function,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity);
-
-      /// create instance and return shared pointer
-      ///
-      /// \param configSpace input space of this function - usually a robot
-      ///                    configuration space,
-      /// \param function function f,
-      /// \param g function g,
-      /// \param inputConf set of indices defining q_in,
-      /// \param inputVelocity set of indices defining q_in derivative,
-      /// \param outputConf set of indices defining q_out
-      /// \param outputVel set of indices defining q_out derivative
-      static Ptr_t create
-      (const LiegroupSpacePtr_t& configSpace,
-       const DifferentiableFunctionPtr_t& function,
-       const DifferentiableFunctionPtr_t& g,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity);
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity);
 
       /// Get function f that maps input variables to output variables
       const DifferentiableFunctionPtr_t& inputToOutput () const;
@@ -101,8 +84,8 @@ namespace hpp {
       ImplicitFunction (const DevicePtr_t& robot,
 			const DifferentiableFunctionPtr_t& function,
 			const segments_t& inputConf,
-			const segments_t& inputVelocity,
                         const segments_t& outputConf,
+			const segments_t& inputVelocity,
 			const segments_t& outputVelocity)
         HPP_CONSTRAINTS_DEPRECATED;
 
@@ -117,8 +100,8 @@ namespace hpp {
       ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                 const DifferentiableFunctionPtr_t& function,
                 const segments_t& inputConf,
-                const segments_t& inputVelocity,
                 const segments_t& outputConf,
+                const segments_t& inputVelocity,
                 const segments_t& outputVelocity);
       /// Compute g (q_out) - f (q_in)
       void impl_compute (LiegroupElement& result, vectorIn_t argument) const;
@@ -132,8 +115,8 @@ namespace hpp {
       DevicePtr_t robot_;
       DifferentiableFunctionPtr_t inputToOutput_;
       Eigen::RowBlockIndices inputConfIntervals_;
-      Eigen::RowBlockIndices inputDerivIntervals_;
       Eigen::RowBlockIndices outputConfIntervals_;
+      Eigen::RowBlockIndices inputDerivIntervals_;
       Eigen::RowBlockIndices outputDerivIntervals_;
       std::vector <Eigen::MatrixBlocks <false, false> > outJacobian_;
       std::vector <Eigen::MatrixBlocks <false, false> > inJacobian_;

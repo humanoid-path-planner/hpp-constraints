@@ -142,7 +142,7 @@ namespace hpp {
        const segments_t& outputConf, const segments_t& outputVelocity)
       {
 	ImplicitFunction* ptr = new ImplicitFunction
-	  (robot, function, inputConf, inputVelocity, outputConf,
+	  (robot, function, inputConf, outputConf, inputVelocity,
            outputVelocity);
 	return ImplicitFunctionPtr_t (ptr);
       }
@@ -150,15 +150,14 @@ namespace hpp {
       ImplicitFunctionPtr_t ImplicitFunction::create
       (const LiegroupSpacePtr_t& configSpace,
        const DifferentiableFunctionPtr_t& function,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity)
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity)
       {
         ImplicitFunction* ptr = new ImplicitFunction
-          (configSpace, function, inputConf, inputVelocity, outputConf,
+          (configSpace, function, inputConf, outputConf, inputVelocity,
            outputVelocity);
         return ImplicitFunctionPtr_t (ptr);
       }
-
 
       const DifferentiableFunctionPtr_t& ImplicitFunction::inputToOutput () const
       {
@@ -167,9 +166,9 @@ namespace hpp {
 
       ImplicitFunction::ImplicitFunction (const DevicePtr_t& robot,
                           const DifferentiableFunctionPtr_t& function,
-                                const segments_t& inputConf,
-                          const segments_t& inputVelocity,
+                          const segments_t& inputConf,
                           const segments_t& outputConf,
+                          const segments_t& inputVelocity,
                           const segments_t& outputVelocity)
 	: DifferentiableFunction (robot->configSize (), robot->numberDof (),
 				  LiegroupSpace::Rn
@@ -177,8 +176,8 @@ namespace hpp {
                                   "implicit " + function->name()),
 	  robot_ (robot), inputToOutput_ (function),
           inputConfIntervals_ (inputConf),
-	  inputDerivIntervals_ (inputVelocity),
           outputConfIntervals_ (outputConf),
+	  inputDerivIntervals_ (inputVelocity),
 	  outputDerivIntervals_ (outputVelocity), outJacobian_ (),
           inJacobian_ (), f_qIn_ (function->outputSpace ()),
           qOut_ (function->outputSpace ()), result_ (outputSpace ())
@@ -215,8 +214,8 @@ namespace hpp {
       ImplicitFunction::ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                           const DifferentiableFunctionPtr_t& function,
                           const segments_t& inputConf,
-                          const segments_t& inputVelocity,
                           const segments_t& outputConf,
+                          const segments_t& inputVelocity,
                           const segments_t& outputVelocity)
 	: DifferentiableFunction (configSpace->nq (), configSpace->nv (),
 				  LiegroupSpace::Rn
@@ -225,8 +224,8 @@ namespace hpp {
           robot_ (),
 	  inputToOutput_ (function),
           inputConfIntervals_ (inputConf),
-	  inputDerivIntervals_ (inputVelocity),
           outputConfIntervals_ (outputConf),
+	  inputDerivIntervals_ (inputVelocity),
 	  outputDerivIntervals_ (outputVelocity), outJacobian_ (),
           inJacobian_ (), f_qIn_ (function->outputSpace ()),
           qOut_ (function->outputSpace ()), result_ (outputSpace ())

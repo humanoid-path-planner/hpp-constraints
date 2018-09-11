@@ -141,9 +141,9 @@ namespace hpp {
                 (joint->robot()->configSpace (),
                  makeFunction (value, joint->name()),
                  segments_t(), // input conf
-                 segments_t(), // input vel
                  list_of(segment_t (joint->rankInConfiguration(),
                                     joint->configSize())), // output conf
+                 segments_t(), // input vel
                  list_of(segment_t (joint->rankInVelocity     (),
                                     joint->numberDof ()))), // output vel
                 ComparisonTypes_t (joint->numberDof(), Equality)),
@@ -151,9 +151,9 @@ namespace hpp {
                 HPP_STATIC_PTR_CAST
                 (explicit_::ImplicitFunction, functionPtr ())->inputToOutput (),
                 segments_t(), // input conf
-                segments_t(), // input vel
                 list_of(segment_t (joint->rankInConfiguration(),
                                    joint->configSize())), // output conf
+                segments_t(), // input vel
                 list_of(segment_t (joint->rankInVelocity     (),
                                    joint->numberDof ())), // output vel
                 ComparisonTypes_t (joint->numberDof(), Equality)),
