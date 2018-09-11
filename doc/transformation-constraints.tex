@@ -1,0 +1,138 @@
+\documentclass {article}
+
+\usepackage{color}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning}
+\usepackage{multimedia}
+\usepackage{listings}
+\usepackage{import}
+%\usepackage {graphics}
+
+
+\newcommand\trans{\mathbf{t}}
+\newcommand\conf{\mathbf{q}}
+\newcommand\reals{\mathbf{R}}
+\newcommand\logRSO{\log_{\reals^3\times SO(3)}}
+\newcommand\logSE{\log_{SE(3)}}
+
+\title {Representing transformation constraints}
+\author {Florent Lamiraux}
+\date {}
+
+\begin {document}
+
+\maketitle
+
+\section {Implicit representation}\label{sec:implicit}
+
+Let $T_1 = T_{(R_1,\trans_1)}$ and $T_2 = T_{(R_2,\trans_2)}$ be two rigid-body transformations. Let $T_{2/1} = T_{(R_{2/1},\trans_{2/1})}$ be the relative transformation $T_1^{-1}\circ T_2$. Then, we recall that
+\begin{eqnarray*}
+  R_{2/1} &=& R_1^T R_2 \\
+  \trans_{2/1} &=& R_1^T (\trans_2-\trans_1)
+\end{eqnarray*}
+The error function from $SE(3)$ to $\reals^6$ that has good geometric properties is
+\begin{eqnarray*}
+  \logRSO (T_{(R,\trans)}) &=& \left(\begin {array}{c} \trans \\ \log R \end{array}\right),
+\end {eqnarray*}
+The corresponding implicit constraint is
+\begin {eqnarray}\label{eq:error-se3}
+h (\conf) = \logRSO (T_{2/1}) = \left(\begin {array}{c} \trans_{2/1} \\ \log R_{2/1} \end{array}\right)
+\end {eqnarray}
+where $T_1$ and $T_2$ are frames attached to different joints of a kinematic chain. This constraint has several interesting geometrical properties.
+
+\subsection {Pre-grasp}
+
+When manipulating objects, it is convenient to define pre-grasp position. A pre-grasp position is a position where the gripper is aligned with the $x$-axis of the object handle. This position is defined by
+\begin {eqnarray}\label{eq:pregrasp}
+  h (\conf) &=& \left (\begin {array}{cccccc} \lambda & 0 & 0 & 0 & 0 & 0 \end{array}\right)^{T}
+\end {eqnarray}
+where $\lambda > 0$ is the pre-grasp distance.
+\begin{itemize}
+\item $T_1$ is the position of the gripper,
+\item $T_2$ is the position of the handle.
+\end {itemize}
+
+\subsection {Symmetric handle}
+
+When the handle is symmetric around axis $z$, the last component of the constraint can be dropped. The grasp constraint is then
+\begin {eqnarray}\label {eq:symmetric-handle}
+  \left(\begin{array}{cccccc}
+    1 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 1 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 1 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 1 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 1 & 0 \end{array}\right) h (\conf) &=& 0
+\end {eqnarray}
+The corresponding pre-grasp constraint is then
+\begin {eqnarray}\label {eq:symmetric-handle-pregrasp}
+  \left(\begin{array}{cccccc}
+    1 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 1 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 1 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 1 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 1 & 0 \end{array}\right) h (\conf) &=&
+  \left (\begin {array}{cccccc} \lambda & 0 & 0 & 0 & 0 \end{array}\right)^{T}
+\end {eqnarray}
+
+\section {Explicit representation}
+
+When the handle is not symmetric and attached to a freeflying object, the position of the freeflying object can be expressed explicitely with respect to the robot configuration. In manipulation planning, this corresponds to an explicit constraint where some configuration variables (of the object) depend on others.
+\begin {eqnarray}\label{eq:explicit}
+  \conf_{out} + \mathbf{v} = f (\conf_{in})
+\end {eqnarray}
+where
+\begin{itemize}
+  \item $\conf_{out}$ is a member of $SE(3)$ represented by a vector of
+    dimension 7 (translation, unit quaternion),
+  \item $\mathbf{v}$ is an offset aimed at representing the error by comparing the gripper with respect to the handle frame instead of the object pose with respect to the desired pose,
+  \item and $\conf_{in}$ are the configuration variables of the kinematic chain holding the gripper.
+\end {itemize}
+We can rewrite~(\ref{eq:explicit}) as
+\begin {eqnarray}\label{eq:explicit-se3}
+  \conf_{out} \conf_{h} = f_{g} (\conf_{in})
+\end {eqnarray}
+where
+\begin {itemize}
+\item $\conf_{h} = \exp \mathbf{v}\in SE(3)$ is the position of the handle in the object frame,
+\item $f_{g}$ is the mapping from the robot configuration to $SE(3)$ that maps to $\conf_{in}$ the position of the gripper in the world frame when the kinematic chain holding the gripper is in configuration $\conf_{in}$.
+\end{itemize}
+
+\subsection {Implicit representation of an explicit constraint}
+
+In the general case, explicit constraint~(\ref{eq:explicit}) can be represented implicitly as
+$$
+h (\conf) = (\conf_{out} + \mathbf{v}) - f (\conf_{in}) = \log (f (\conf_{in})^{-1} \conf_{out} \exp \mathbf{v})
+$$
+In the case of explicit constraint~(\ref{eq:explicit-se3}), this writes
+\begin{eqnarray}\label{eq:explicit-se3-2}
+h (\conf) = \logSE \left(f_{g} (\conf_{in})^{-1}\conf_{out}\conf_{h})\right),
+\end{eqnarray}
+while~(\ref{eq:error-se3}) writes
+$$
+h (\conf) = \logRSO \left(f_{g} (\conf_{in})^{-1}\conf_{out}\conf_{h}\right).
+$$
+
+\paragraph {Symmetric handle} (\ref {eq:symmetric-handle}) with expression~(\ref{eq:explicit-se3-2}) of $h$ still represents the grasp constraint of a symmetric handle around $z$-axis, but unfortunately, (\ref {eq:symmetric-handle-pregrasp}) does not represent a correct pregrasp position.
+
+\section {Summary}
+
+\begin {tabular}{|l|c|c|}
+  \hline
+  &&\\
+  & $h (\conf) = \logSE \left(f_{g} (\conf_{in})^{-1}\conf_{out}\conf_{h})\right),$ & $h (\conf) = \logRSO \left(f_{g} (\conf_{in})^{-1}\conf_{out}\conf_{h}\right)$ \\
+  &&\\
+  \hline
+  non symmetric grasp & yes & yes \\
+  \hline
+  non symmetric pre-grasp & yes & yes \\
+  \hline
+  symmetric grasp & yes & yes \\
+  \hline
+  symmetric pre-grasp &    \def\svgwidth {3cm}
+                    \graphicspath{{./figures/}}
+                    \input {figures/symmetric-pregrasp.pdf_tex}
+& yes \\
+  \hline
+\end {tabular}
+\end {document}
+

@@ -1,0 +1,69 @@
+\documentclass {article}
+
+\newcommand\conf{\mathbf{q}}
+\newcommand\fr{\mathcal{F}}
+\newcommand\reals{\mathbf{R}}
+
+\title {Explicit and implicit relative pose constraints}
+\author {Florent Lamiraux}
+\date {}
+
+\begin {document}
+\maketitle
+
+\section {Introduction}
+
+We wish to represent relative pose constraints between two given frames $\fr_1$ and $\fr_2$ with the following properties:
+\begin{enumerate}
+\item setting Boolean masks should enable the user to define constraints with
+  symmetries : only orientation is constrained, only the position of the origin of $\fr_2$ in $\fr_1$ is constrained, rotation around an axis is free ...
+\item when the relative pose is fully constrained, and $\fr_2$ is hold by a free-floating joint, if should be possible to expresse the position of this joint with respect to the position of $\fr_1$.
+\end{enumerate}
+
+\section {Explicit representation}
+
+To satisfy item 2 above, we define an explicit constraint as follows. We use the following notation.
+\begin {itemize}
+\item $J_1\in SE(3)$ the position of Joint 1 in global frame,
+\item $J_2\in SE(3)$ the position of Joint 2 in global frame,
+\item $F_{1/J_1}$ the constant position of $\fr_1$ with respect to Joint 1,
+\item $F_{2/J_2}$ the constant position of $\fr_2$ with respect to Joint 2,
+\item $\conf_{out}$ the vector representation of $J_2$.
+\end {itemize}
+When the constraint is satisfied, we have
+\begin {eqnarray*}
+  J_1 F_{1/J_1} &=& J_2 F_{2/J_2} \\
+  J_2 &=& J_1 F_{1/J_1} F_{2/J_2}^{-1}
+\end {eqnarray*}
+This gives rise to the following explicit constraint:
+\begin {eqnarray*}
+  \conf_{out} &=& {J_1} (\conf_{in}) F_{1/J_1} F_{2/J_2}^{-1}
+\end {eqnarray*}
+
+The right hand side of this constraint is
+\begin {eqnarray}
+  rhs_{expl} &=& \conf_{out} - ({J_1} (\conf_{in})F_{1/J_1} F_{2/J_2}^{-1})\\
+  \label{explicit-rhs}
+  &=& \log_{SE(3)} \left(F_{2/J_2} F_{1/J_1}^{-1} {J_1} (\conf_{in})^{-1} \conf_{out}\right)
+\end {eqnarray}
+
+\section {Implicit Representation}
+
+To satisfy item 1 in the introduction, we define the following implicit constraint:
+\begin {eqnarray}
+  rhs_{impl} &=& \log_{\reals^3\times SO(3)} \left((J_1 F_{1/J_1})^{-1}J_2 F_{2/J_2}\right)\\
+  &=&\log_{\reals^3\times SO(3)} \left((J_1 F_{1/J_1})^{-1}\conf_{out} F_{2/J_2}\right)
+\end {eqnarray}
+
+\section {Conversion between right hand sides}
+
+\begin {eqnarray*}
+rhs_{expl} &=& \log_{SE(3)} \left(F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1} J_2\right)\\
+rhs_{impl} &=& \log_{\reals^3\times SO(3)} \left(F_{1/J_1}^{-1} J_1^{-1}J_2 F_{2/J_2}\right)\\
+%\exp_{SE(3)} rhs_{expl} &=& F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1} J_2\\
+\exp_{\reals^3\times SO(3)} (rhs_{impl}) &=&  F_{1/J_1}^{-1} J_1^{-1}J_2 F_{2/J_2} \\
+F_{2/J_2}\exp_{\reals^3\times SO(3)} (rhs_{impl})  F_{2/J_2}^{-1} &=&  F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1}J_2\\
+rhs_{expl} &=& \log_{SE(3)}\left(F_{2/J_2}\exp_{\reals^3\times SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
+\end {eqnarray*}
+\end {document}
+
