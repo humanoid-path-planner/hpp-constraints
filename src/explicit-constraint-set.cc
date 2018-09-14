@@ -69,9 +69,9 @@ namespace hpp {
       size_type row = 0;
       for(std::size_t i = 0; i < data_.size(); ++i) {
         const Data& d (data_[i]);
-        const DifferentiableFunction& f (d.constraint->function ());
-        f.value (d.h_value, arg);
-        size_type nRows (f.outputSpace ()->nv ());
+        const DifferentiableFunction& h (d.constraint->function ());
+        h.value (d.h_value, arg);
+        size_type nRows (h.outputSpace ()->nv ());
         assert (*(d.h_value.space ()) == *(LiegroupSpace::Rn
                                            (d.rhs_implicit.size ())));
         error.segment (row, nRows) = d.h_value.vector () - d.rhs_implicit;
@@ -99,8 +99,8 @@ namespace hpp {
       f_value (_constraint->explicitFunction()->outputSpace ()),
       res_qout (_constraint->explicitFunction ()->outputSpace ())
     {
-      jacobian.resize(_constraint->functionPtr ()->outputDerivativeSize(),
-                      _constraint->functionPtr ()->inputDerivativeSize());
+      jacobian.resize(_constraint->explicitFunction ()->outputDerivativeSize(),
+                      _constraint->explicitFunction ()->inputDerivativeSize());
       for (std::size_t i = 0; i < constraint->comparisonType ().size(); ++i) {
         switch (constraint->comparisonType ()[i]) {
           case Equality:
