@@ -479,7 +479,8 @@ namespace hpp {
           // explicit formulation
           mutable vector_t qin, qout;
           mutable LiegroupElement f_value, res_qout;
-          mutable matrix_t jacobian, jGinv;
+          // jacobian of f
+          mutable matrix_t jacobian;
         }; // struct Data
 
         RowBlockIndices inArgs_, notOutArgs_;
