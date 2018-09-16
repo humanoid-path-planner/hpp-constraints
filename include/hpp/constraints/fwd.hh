@@ -146,6 +146,7 @@ namespace hpp {
 
     HPP_PREDEF_CLASS (Implicit);
     typedef boost::shared_ptr <Implicit> ImplicitPtr_t;
+    typedef boost::shared_ptr <const Implicit> ImplicitConstPtr_t;
     typedef std::vector < constraints::ImplicitPtr_t > NumericalConstraints_t;
     HPP_PREDEF_CLASS (ImplicitConstraintSet);
     typedef boost::shared_ptr <ImplicitConstraintSet>
@@ -161,6 +162,7 @@ namespace hpp {
 
     HPP_PREDEF_CLASS (Explicit);
     typedef boost::shared_ptr <Explicit> ExplicitPtr_t;
+    typedef boost::shared_ptr <const Explicit> ExplicitConstPtr_t;
 
     class ExplicitConstraintSet;
     namespace solver {
