@@ -184,6 +184,8 @@ namespace hpp {
       static ExplicitPtr_t createCopy
 	(const ExplicitPtr_t& other);
 
+      /// Function that maps input to output
+      /// \return function \f$f\f$.
       virtual DifferentiableFunctionPtr_t explicitFunction() const
       {
         return inputToOutput_;
