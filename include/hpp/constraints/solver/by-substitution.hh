@@ -145,6 +145,12 @@ namespace hpp {
           return explicit_;
         }
 
+        /// Return the number of free variables
+        size_type numberFreeVariables () const
+        {
+          return explicitConstraintSet().notOutDers().nbIndices();
+        }
+
         /// Should be called whenever explicit solver is modified
         void explicitConstraintSetHasChanged();
 
