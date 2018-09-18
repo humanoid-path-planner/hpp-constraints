@@ -1,4 +1,8 @@
                                                                 -*- outline -*-
+* Move ExplicitRelativeTransformation from hpp-core and refactor
+  - explicit_::RelativePose now derive from Explicit and from
+    implicit::RelativePose,
+  - only implicit formulation is used to evaluate error.
 * Rename LieGroupTpl -> LieGroupMap,
 * Rename a few classes and make old names deprecated:
   - DifferentiableFunctionStack -> DifferentiableFunctionSet,
@@ -7,7 +11,9 @@
   - HybridSolver -> solver::BySubstitution.
 * Move and rename some classes from hpp-core:
   - core::Equation and core::NumericalConstraints -> constraints::Implicit,
-  - core::ExplicitNumericalConstraints -> constraints::Explicit.
+  - core::ExplicitNumericalConstraints -> constraints::Explicit,
+  - constraints::Explicit now derive from constraints::Implicit,
+  - warning: default comparison type is now equality for all constraints.
 * Refactor ExplicitConstraintSet: rename members and methods to better fit RSS
   paper notation and pinocchio convention:
   - argSize -> nq,
