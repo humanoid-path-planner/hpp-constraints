@@ -530,16 +530,16 @@ namespace hpp {
         os << "HierarchicalIterative, " << stacks_.size() << " level." << iendl
            << "dimension " << dimension() << iendl
            << "reduced dimension " << reducedDimension() << iendl
-           << "reduction: " << freeVariables_ << incendl;
+           << "reduction: " << freeVariables_ << incindent;
         const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 :
                                  stacks_.size());
         for (std::size_t i = 0; i < stacks_.size(); ++i) {
           const DifferentiableFunctionStack::Functions_t& fs =
             stacks_[i].functions();
           const Data& d = datas_[i];
-          os << "Level";
-          if (lastIsOptional_ && i == end) os << '*';
-          os << ' ' << i << ": Stack of " << fs.size() << " functions" << incindent;
+          os << iendl << "Level " << i;
+          if (lastIsOptional_ && i == end) os << " (optional)";
+          os << ": Stack of " << fs.size() << " functions" << incindent;
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
             const DifferentiableFunctionPtr_t& f = fs[j];
