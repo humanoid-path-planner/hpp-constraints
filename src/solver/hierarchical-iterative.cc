@@ -509,7 +509,7 @@ namespace hpp {
               sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
 
             if (last) break; // No need to compute projector for next step.
-            if (!(d.reducedJ * dqSmall_ - err).isZero ()) break;
+
             /// compute projector for next step.
             projectorOnSpan <SVD_t> (d.svd, d.PK);
             projector_ -= d.PK;
