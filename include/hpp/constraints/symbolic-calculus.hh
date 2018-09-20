@@ -770,7 +770,9 @@ namespace hpp {
         ///
         /// \param function the inner function
         FunctionExp (const FunctionTypePtr_t& func) :
-          Parent_t (), f_ (func), lge_ (func->outputSpace())
+          Parent_t (vector_t::Zero(func->outputSize()),
+                    matrix_t::Zero(func->outputDerivativeSize(), func->inputDerivativeSize())),
+          f_ (func), lge_ (func->outputSpace())
         {}
 
         void impl_value (const ConfigurationIn_t arg)
