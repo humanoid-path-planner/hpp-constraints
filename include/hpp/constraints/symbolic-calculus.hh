@@ -74,6 +74,7 @@
 
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/center-of-mass-computation.hh>
+#include <hpp/pinocchio/liegroup-element.hh>
 
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/svd.hh>
@@ -743,6 +744,45 @@ namespace hpp {
 
       public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
+
+    /// Basic expression mapping a function as an expression
+    template <typename FunctionType>
+    class FunctionExp : public CalculusBase <FunctionExp<FunctionType>, vector_t, matrix_t>
+    {
+      public:
+        typedef CalculusBase <FunctionExp<FunctionType>, vector_t, matrix_t> Parent_t;
+        typedef boost::shared_ptr<FunctionType> FunctionTypePtr_t;
+
+        HPP_CONSTRAINTS_CB_CREATE1 (FunctionExp<FunctionType>, const FunctionTypePtr_t&)
+
+        FunctionExp () {}
+
+        FunctionExp (const Parent_t& other) :
+          Parent_t (other), f_ (other.f_), lge_ (other.lge_)
+        {}
+
+        FunctionExp (const FunctionExp& other) :
+          Parent_t (other), f_ (other.f_), lge_ (other.lge_)
+        {}
+
+        /// Constructor
+        ///
+        /// \param function the inner function
+        FunctionExp (const FunctionTypePtr_t& func) :
+          Parent_t (), f_ (func), lge_ (func->outputSpace())
+        {}
+
+        void impl_value (const ConfigurationIn_t arg)
+        {
+          f_->value (lge_, arg);
+          this->value_ = lge_.vector();
+        }
+        void impl_jacobian (const ConfigurationIn_t arg) { f_->jacobian (this->jacobian_, arg); }
+
+      private:
+        FunctionTypePtr_t f_;
+        LiegroupElement lge_;
     };
 
     /// Basic expression representing a static point
