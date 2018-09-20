@@ -85,15 +85,10 @@ namespace hpp {
           }
         }
 
-        if (!addedAsExplicit) {
-          ImplicitPtr_t constraint
-            (Implicit::create (activeSetFunction(nm->functionPtr(),
-                                                 passiveDofs), types));
-          HierarchicalIterative::add (constraint, priority);
-          // add (Implicit::create
-          //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
-          //      segments_t (0), priority);
-        } else {
+        if (addedAsExplicit) {
+          // If added as explicit, add to the list of constraint of Hierarchical
+          // iterative
+          constraints_.push_back (nm);
           hppDout (info, "Numerical constraint added as explicit function: "
                    << enm->explicitFunction()->name() << "with "
                    << "input conf " << Eigen::RowBlockIndices(enm->inputConf())
@@ -104,11 +99,18 @@ namespace hpp {
                    << "output vel " << Eigen::RowBlockIndices
                    (enm->outputVelocity()));
           explicitConstraintSetHasChanged();
+        } else {
+          ImplicitPtr_t constraint
+            (Implicit::create (activeSetFunction(nm->functionPtr(),
+                                                 passiveDofs), types));
+          HierarchicalIterative::add (constraint, priority);
+          // add (Implicit::create
+          //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
+          //      segments_t (0), priority);
         }
         hppDout (info, "Constraints " << name() << " has dimension "
                  << dimension());
 
-        constraints_.push_back (nm);
         return true;
       }
 

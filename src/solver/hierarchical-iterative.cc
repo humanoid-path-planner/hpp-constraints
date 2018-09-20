@@ -186,6 +186,7 @@ namespace hpp {
           d.comparison.push_back (comp[i]);
         }
         d.equalityIndices.updateRows<true, true, true>();
+        constraints_.push_back (constraint);
         update();
 
       }
