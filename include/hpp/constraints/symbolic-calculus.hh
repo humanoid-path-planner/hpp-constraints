@@ -146,8 +146,8 @@ namespace hpp {
 
         virtual const ValueType& value () const = 0;
         virtual const JacobianType& jacobian () const = 0;
-        virtual void computeValue () = 0;
-        virtual void computeJacobian () = 0;
+        virtual void computeValue (const ConfigurationIn_t arg) = 0;
+        virtual void computeJacobian (const ConfigurationIn_t arg) = 0;
         virtual void invalidate () = 0;
     };
 
@@ -187,14 +187,14 @@ namespace hpp {
         inline const JacobianType& jacobian () const {
           return jacobian_;
         }
-        void computeValue () {
+        void computeValue (const ConfigurationIn_t arg) {
           if (vValid_) return;
-          static_cast<T*>(this)->impl_value ();
+          static_cast<T*>(this)->impl_value (arg);
           vValid_ = true;
         }
-        void computeJacobian () {
+        void computeJacobian (const ConfigurationIn_t arg) {
           if (jValid_) return;
-          static_cast<T*>(this)->impl_jacobian ();
+          static_cast<T*>(this)->impl_jacobian (arg);
           jValid_ = true;
         }
         void invalidate () {
@@ -205,9 +205,9 @@ namespace hpp {
         inline const CrossType& cross () const {
           return cross_;
         }
-        void computeCrossValue () {
+        void computeCrossValue (const ConfigurationIn_t arg) {
           if (cValid_) return;
-          computeValue ();
+          computeValue (arg);
           computeCrossMatrix (value_, cross_);
           cValid_ = true;
         }
@@ -317,16 +317,16 @@ namespace hpp {
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
-        void impl_value () {
-          e_->lhs_->computeCrossValue ();
-          e_->rhs_->computeValue ();
+        void impl_value (const ConfigurationIn_t arg) {
+          e_->lhs_->computeCrossValue (arg);
+          e_->rhs_->computeValue (arg);
           this->value_ = e_->lhs_->cross () * e_->rhs_->value ();
         }
-        void impl_jacobian () {
-          e_->lhs_->computeCrossValue ();
-          e_->rhs_->computeCrossValue ();
-          e_->lhs_->computeJacobian ();
-          e_->rhs_->computeJacobian ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          e_->lhs_->computeCrossValue (arg);
+          e_->rhs_->computeCrossValue (arg);
+          e_->lhs_->computeJacobian (arg);
+          e_->rhs_->computeJacobian (arg);
           this->jacobian_ = e_->lhs_->cross () * e_->rhs_->jacobian ()
                           - e_->rhs_->cross () * e_->lhs_->jacobian ();
         }
@@ -364,16 +364,16 @@ namespace hpp {
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
-        void impl_value () {
-          e_->lhs_->computeValue ();
-          e_->rhs_->computeValue ();
+        void impl_value (const ConfigurationIn_t arg) {
+          e_->lhs_->computeValue (arg);
+          e_->rhs_->computeValue (arg);
           this->value_ = e_->lhs_->value ().dot (e_->rhs_->value ());
         }
-        void impl_jacobian () {
-          e_->lhs_->computeValue ();
-          e_->rhs_->computeValue ();
-          e_->lhs_->computeJacobian ();
-          e_->rhs_->computeJacobian ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          e_->lhs_->computeValue (arg);
+          e_->rhs_->computeValue (arg);
+          e_->lhs_->computeJacobian (arg);
+          e_->rhs_->computeJacobian (arg);
           this->jacobian_ = e_->lhs_->value ().transpose () * e_->rhs_->jacobian ()
                           + e_->rhs_->value ().transpose () * e_->lhs_->jacobian ();
         }
@@ -411,14 +411,14 @@ namespace hpp {
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
-        void impl_value () {
-          e_->lhs_->computeValue ();
-          e_->rhs_->computeValue ();
+        void impl_value (const ConfigurationIn_t arg) {
+          e_->lhs_->computeValue (arg);
+          e_->rhs_->computeValue (arg);
           this->value_ = e_->lhs_->value () - e_->rhs_->value ();
         }
-        void impl_jacobian () {
-          e_->lhs_->computeJacobian ();
-          e_->rhs_->computeJacobian ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          e_->lhs_->computeJacobian (arg);
+          e_->rhs_->computeJacobian (arg);
           this->jacobian_ = e_->lhs_->jacobian () - e_->rhs_->jacobian ();
         }
         void invalidate () {
@@ -455,14 +455,14 @@ namespace hpp {
           e_ (Expression < LhsValue, RhsValue >::create (lhs, rhs))
         {}
 
-        void impl_value () {
-          e_->lhs_->computeValue ();
-          e_->rhs_->computeValue ();
+        void impl_value (const ConfigurationIn_t arg) {
+          e_->lhs_->computeValue (arg);
+          e_->rhs_->computeValue (arg);
           this->value_ = e_->lhs_->value () + e_->rhs_->value ();
         }
-        void impl_jacobian () {
-          e_->lhs_->computeJacobian ();
-          e_->rhs_->computeJacobian ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          e_->lhs_->computeJacobian (arg);
+          e_->rhs_->computeJacobian (arg);
           this->jacobian_ = e_->lhs_->jacobian () + e_->rhs_->jacobian ();
         }
         void invalidate () {
@@ -499,12 +499,12 @@ namespace hpp {
           e_ (Expression < value_type, RhsValue >::create (scalar, rhs))
         {}
 
-        void impl_value () {
-          e_->rhs_->computeValue ();
+        void impl_value (const ConfigurationIn_t arg) {
+          e_->rhs_->computeValue (arg);
           this->value_ = e_->lhs_ * e_->rhs_->value ();
         }
-        void impl_jacobian () {
-          e_->rhs_->computeJacobian ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          e_->rhs_->computeJacobian (arg);
           this->jacobian_ = e_->lhs_ * e_->rhs_->jacobian ();
         }
         void invalidate () {
@@ -550,17 +550,17 @@ namespace hpp {
           transpose_ (transpose)
         {}
 
-        void impl_value () {
-          e_->rhs_->computeValue ();
+        void impl_value (const ConfigurationIn_t arg) {
+          e_->rhs_->computeValue (arg);
           const matrix3_t& R = e_->lhs_->currentTransformation ().rotation ();
           if (transpose_)
             this->value_ = R.transpose() * e_->rhs_->value ();
           else
             this->value_ = R             * e_->rhs_->value ();
         }
-        void impl_jacobian () {
-          e_->rhs_->computeJacobian ();
-          e_->rhs_->computeCrossValue ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          e_->rhs_->computeJacobian (arg);
+          e_->rhs_->computeCrossValue (arg);
           const JointJacobian_t& J = e_->lhs_->jacobian ();
           const matrix3_t& R = e_->lhs_->currentTransformation ().rotation ();
           if (transpose_)
@@ -639,11 +639,11 @@ namespace hpp {
         const vector3_t& local () const {
           return local_;
         }
-        void impl_value () {
+        void impl_value (const ConfigurationIn_t ) {
           if (joint_ == NULL) return;
           this->value_ = joint_->currentTransformation ().act (local_);
         }
-        void impl_jacobian () {
+        void impl_jacobian (const ConfigurationIn_t ) {
           if (joint_ == NULL) return;
           const JointJacobian_t& J (joint_->jacobian ());
           const matrix3_t& R = joint_->currentTransformation ().rotation ();
@@ -719,11 +719,11 @@ namespace hpp {
         const vector3_t& vector () const {
           return vector_;
         }
-        void impl_value () {
+        void impl_value (const ConfigurationIn_t ) {
           if (joint_ == NULL) return;
           this->value_ = joint_->currentTransformation ().rotation () * vector_;
         }
-        void impl_jacobian () {
+        void impl_jacobian (const ConfigurationIn_t ) {
           if (joint_ == NULL) return;
           const JointJacobian_t& J (joint_->jacobian ());
           const matrix3_t& R = joint_->currentTransformation ().rotation ();
@@ -775,8 +775,8 @@ namespace hpp {
         {
         }
 
-        void impl_value () {}
-        void impl_jacobian () {}
+        void impl_value (const ConfigurationIn_t ) {}
+        void impl_jacobian (const ConfigurationIn_t ) {}
     };
 
     /// Basic expression representing a COM.
@@ -807,10 +807,10 @@ namespace hpp {
         const CenterOfMassComputationPtr_t& centerOfMassComputation () const {
           return comc_;
         }
-        void impl_value () {
+        void impl_value (const ConfigurationIn_t ) {
           comc_->compute (Device::COM);
         }
-        void impl_jacobian () {
+        void impl_jacobian (const ConfigurationIn_t ) {
           comc_->compute (Device::ALL);
           // TODO: there is memory and time to be saved here as this copy is
           // not important.
@@ -849,13 +849,13 @@ namespace hpp {
         const JointPtr_t& joint () const {
           return joint_;
         }
-        void impl_value () {
+        void impl_value (const ConfigurationIn_t ) {
           const Transform3f& M = joint_->currentTransformation ();
           this->value_.head<3>() = M.translation ();
           logSO3 (M.rotation(), theta_, this->value_.tail<3>());
         }
-        void impl_jacobian () {
-          computeValue ();
+        void impl_jacobian (const ConfigurationIn_t arg) {
+          computeValue (arg);
           const JointJacobian_t& J (joint_->jacobian ());
           const matrix3_t& R (joint_->currentTransformation ().rotation ());
           // Compute vector r
@@ -942,13 +942,13 @@ namespace hpp {
           elements_[i][j] = ptr;
         }
 
-        void impl_value () {
+        void impl_value (const ConfigurationIn_t arg) {
           size_type r = 0, c = 0, nr = 0, nc = 0;
           for (std::size_t i = 0; i < nRows_; ++i) {
             c = 0;
             nr = elements_[i][0]->value().rows();
             for (std::size_t j = 0; j < nCols_; ++j) {
-              elements_[i][j]->computeValue ();
+              elements_[i][j]->computeValue (arg);
               assert (nr == elements_[i][j]->value().rows());
               nc = elements_[i][j]->value().cols();
               this->value_.block (r, c, nr, nc)
@@ -958,13 +958,13 @@ namespace hpp {
             r += nr;
           }
         }
-        void impl_jacobian () {
+        void impl_jacobian (const ConfigurationIn_t arg) {
           size_type r = 0, c = 0, nr = 0, nc = 0;
           for (std::size_t i = 0; i < nRows_; ++i) {
             c = 0;
             nr = elements_[i][0]->jacobian().rows();
             for (std::size_t j = 0; j < nCols_; ++j) {
-              elements_[i][j]->computeJacobian ();
+              elements_[i][j]->computeJacobian (arg);
               assert (nr == elements_[i][j]->jacobian().rows());
               nc = elements_[i][j]->jacobian().cols();
               this->jacobian_.block (r, c, nr, nc)
@@ -981,53 +981,53 @@ namespace hpp {
         inline const PseudoInvJacobian_t& pinvJacobian () const {
           return pij_;
         }
-        void computeSVD () {
+        void computeSVD (const ConfigurationIn_t arg) {
           if (svdValid_) return;
-          this->computeValue ();
+          this->computeValue (arg);
           svd_.compute (this->value_);
           HPP_DEBUG_SVDCHECK(svd_);
           svdValid_ = true;
         }
-        void computePseudoInverse () {
+        void computePseudoInverse (const ConfigurationIn_t arg) {
           if (piValid_) return;
-          this->computeValue ();
-          this->computeSVD();
+          this->computeValue (arg);
+          this->computeSVD(arg);
           pi_.resize (this->value_.cols(), this->value_.rows());
           pseudoInverse <SVD_t> (svd_, pi_);
           piValid_ = true;
         }
-        void computePseudoInverseJacobian (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
-          this->computeJacobian ();
-          computePseudoInverse ();
+        void computePseudoInverseJacobian (const ConfigurationIn_t arg, const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs) {
+          this->computeJacobian (arg);
+          computePseudoInverse (arg);
           const std::size_t nbDof = elements_[0][0]->jacobian().cols();
           const std::size_t inSize = this->value_.cols();
           const vector_t piTrhs = svd_.solve (rhs);
           assert (pi_.rows () == (size_type)inSize);
 
           Jacobian_t cache (this->jacobian_.rows(), nbDof);
-          jacobianTimes (piTrhs, cache);
+          jacobianTimes (arg, piTrhs, cache);
           pij_.noalias() = - pi_ * cache;
           cache.resize (inSize, nbDof);
 
           pkInv_.resize (pi_.cols(), pi_.cols());
           projectorOnKernelOfInv <SVD_t> (svd_, pkInv_, true);
-          jacobianTransposeTimes (pkInv_ * rhs, cache);
+          jacobianTransposeTimes (arg, pkInv_ * rhs, cache);
           pij_.noalias() += (pi_ * pi_.transpose()) * cache;
 
-          jacobianTransposeTimes (pi_.transpose() * piTrhs , cache);
+          jacobianTransposeTimes (arg, pi_.transpose() * piTrhs , cache);
           pk_.resize (inSize, inSize);
           projectorOnKernel <SVD_t> (svd_, pk_, true);
           pij_.noalias() += pk_ * cache;
         }
 
-        void jacobianTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
+        void jacobianTimes (const ConfigurationIn_t arg, const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
           size_type r = 0, c = 0, nr = 0, nc = 0;
           cache.setZero();
           for (std::size_t i = 0; i < nRows_; ++i) {
             c = 0;
             nr = elements_[i][0]->jacobian().rows();
             for (std::size_t j = 0; j < nCols_; ++j) {
-              elements_[i][j]->computeJacobian ();
+              elements_[i][j]->computeJacobian (arg);
               assert (nr == elements_[i][j]->jacobian().rows());
               nc = elements_[i][j]->jacobian().cols();
               cache.middleRows (r,nr).noalias() +=
@@ -1038,14 +1038,14 @@ namespace hpp {
           }
         }
 
-        void jacobianTransposeTimes (const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
+        void jacobianTransposeTimes (const ConfigurationIn_t arg, const Eigen::Ref <const Eigen::Matrix<value_type, Eigen::Dynamic, 1> >& rhs, Eigen::Ref<Jacobian_t> cache) const {
           size_type r = 0, c = 0, nr = 0, nc = 0;
           cache.setZero();
           for (std::size_t i = 0; i < nRows_; ++i) {
             c = 0;
             nr = elements_[i][0]->jacobian().rows();
             for (std::size_t j = 0; j < nCols_; ++j) {
-              elements_[i][j]->computeJacobian ();
+              elements_[i][j]->computeJacobian (arg);
               assert (nr == elements_[i][j]->jacobian().rows());
               nc = elements_[i][j]->jacobian().cols();
               cache.row (j) += rhs.segment (r, nr).transpose() * this->jacobian_.block (r, c, nr, nc);

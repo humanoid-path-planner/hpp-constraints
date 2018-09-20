@@ -81,7 +81,7 @@ namespace hpp {
           robot_->currentConfiguration (argument);
           robot_->computeForwardKinematics ();
           expr_->invalidate ();
-          expr_->computeValue ();
+          expr_->computeValue (argument);
           size_t index = 0;
           for (std::size_t i = 0; i < mask_.size (); i++) {
             if (mask_[i])
@@ -95,7 +95,7 @@ namespace hpp {
           robot_->currentConfiguration (arg);
           robot_->computeForwardKinematics ();
           expr_->invalidate ();
-          expr_->computeJacobian ();
+          expr_->computeJacobian (arg);
           size_t index = 0;
           for (std::size_t i = 0; i < mask_.size (); i++) {
             if (mask_[i])
