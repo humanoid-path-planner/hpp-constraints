@@ -196,6 +196,11 @@ namespace hpp {
         /// \name Problem definition
         /// \{
 
+        /// Get configuration space on which constraints are defined
+        const LiegroupSpacePtr_t& configSpace () const
+        {
+          return configSpace_;
+        }
         /// Check whether a numerical constraint has been added
         /// \param numericalConstraint numerical constraint
         /// \return true if numerical constraint is already in the solver
