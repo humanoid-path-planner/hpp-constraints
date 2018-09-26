@@ -131,8 +131,8 @@ namespace hpp {
         saturation_ (other.saturation_),
         reducedSaturation_ (other.reducedSaturation_), qSat_ (other.qSat_),
         tmpSat_ (other.tmpSat_), squaredNorm_ (other.squaredNorm_),
-        datas_ (other.datas_), svd_ (other.svd_),
-        statistics_ (other.statistics_)
+        datas_ (other.datas_), svd_ (other.svd_), OM_ (other.OM_),
+	OP_ (other.OP_), statistics_ (other.statistics_)
       {
       }
 
