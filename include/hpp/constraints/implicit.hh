@@ -45,21 +45,22 @@ namespace hpp {
         virtual ImplicitPtr_t copy () const;
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create (const DifferentiableFunctionPtr_t& function);
+        static ImplicitPtr_t create
+          (const DifferentiableFunctionPtr_t& function);
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp);
+        static ImplicitPtr_t create
+          (const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp);
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp, vectorIn_t rhs);
+        static ImplicitPtr_t create
+          (const DifferentiableFunctionPtr_t& function,
+           ComparisonTypes_t comp, vectorIn_t rhs);
 
 	/// Create a copy and return shared pointer
-	static ImplicitPtr_t createCopy
-	  (const ImplicitPtr_t& other);
+	static ImplicitPtr_t createCopy (const ImplicitPtr_t& other);
 
         virtual ~Implicit () {};
 

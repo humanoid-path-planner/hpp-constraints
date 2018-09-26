@@ -147,8 +147,7 @@ namespace hpp {
       return shPtr;
     }
 
-    ImplicitPtr_t Implicit::createCopy
-    (const ImplicitPtr_t& other)
+    ImplicitPtr_t Implicit::createCopy (const ImplicitPtr_t& other)
     {
       Implicit* ptr = new Implicit (*other);
       ImplicitPtr_t shPtr (ptr);

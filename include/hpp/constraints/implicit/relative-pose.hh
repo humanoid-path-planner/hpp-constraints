@@ -89,7 +89,7 @@ namespace hpp {
                       ComparisonTypes_t comp = std::vector <ComparisonType> (),
                       vectorIn_t rhs = vector_t ()) :
           Implicit (GenericTransformation
-                    <RelativeBit | PositionBit | PositionBit>::create
+                    <RelativeBit | PositionBit | OrientationBit>::create
                     (name, robot, joint1, joint2, frame1, frame2, mask),
                     comp, rhs), joint1_ (joint1), joint2_ (joint2)
           {
