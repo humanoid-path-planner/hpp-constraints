@@ -295,7 +295,7 @@ namespace hpp {
       }
 
       vector_t HierarchicalIterative::rightHandSideFromConfig
-      (vectorIn_t config)
+      (ConfigurationIn_t config)
       {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           ImplicitConstraintSet& ics = stacks_[i];
@@ -308,7 +308,7 @@ namespace hpp {
       }
 
       bool HierarchicalIterative::rightHandSideFromConfig
-      (const ImplicitPtr_t& constraint, vectorIn_t config)
+      (const ImplicitPtr_t& constraint, ConfigurationIn_t config)
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
         for (std::size_t i = 0; i < stacks_.size (); ++i) {

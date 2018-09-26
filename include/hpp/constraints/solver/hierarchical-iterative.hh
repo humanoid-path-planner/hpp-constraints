@@ -436,7 +436,7 @@ namespace hpp {
         /// for each constraint of type Equality, set right hand side as
         /// \f$rhs = f(\mathbf{q})\f$.
         /// \note Only parameterizable constraints (type Equality) are set
-        vector_t rightHandSideFromConfig (vectorIn_t config);
+        vector_t rightHandSideFromConfig (ConfigurationIn_t config);
 
         /// Compute right hand side of a constraint from a configuration
         /// \param constraint the constraint,
@@ -445,13 +445,14 @@ namespace hpp {
         /// Set right hand side as \f$rhs = f(\mathbf{q})\f$.
         /// \note Only parameterizable constraints (type Equality) are set
         bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
-                                      vectorIn_t config);
+                                              ConfigurationIn_t config);
         /// Set right hand side of a constraints
         /// \param constraint the constraint,
         /// \param rhs right hand side.
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality) .
-        bool rightHandSide (const ImplicitPtr_t& constraint, vectorIn_t rhs);
+        bool rightHandSide (const ImplicitPtr_t& constraint,
+                                    vectorIn_t rhs);
         /// Set the right hand side
         /// \param rhs the right hand side
         /// \note Size of rhs should be equal to the total dimension of

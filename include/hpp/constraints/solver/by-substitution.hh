@@ -198,6 +198,51 @@ namespace hpp {
           return solve(arg, DefaultLineSearch());
         }
 
+        /// \name Right hand side accessors
+        /// \{
+
+        /// Compute right hand side of equality constraints from a configuration
+        /// \param config a configuration.
+        ///
+        /// for each constraint of type Equality, set right hand side as
+        /// \f$rhs = f(\mathbf{q})\f$.
+        /// \note Only parameterizable constraints (type Equality) are set
+        vector_t rightHandSideFromConfig (ConfigurationIn_t config);
+
+        /// Compute right hand side of a constraint from a configuration
+        /// \param constraint the constraint,
+        /// \param config a configuration.
+        ///
+        /// Set right hand side as \f$rhs = f(\mathbf{q})\f$.
+        /// \note Only parameterizable constraints (type Equality) are set
+        bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
+                                      ConfigurationIn_t config);
+        /// Set right hand side of a constraints
+        /// \param constraint the constraint,
+        /// \param rhs right hand side.
+        /// \note Size of rhs should be equal to the total dimension of
+        ///       parameterizable constraints (type Equality) .
+        bool rightHandSide (const ImplicitPtr_t& constraint,
+                            vectorIn_t rhs);
+        /// Set the right hand side
+        /// \param rhs the right hand side
+        /// \note Size of rhs should be equal to the total dimension of
+        ///       parameterizable constraints (type Equality).
+        void rightHandSide (vectorIn_t rhs);
+
+        /// Get the right hand side
+        /// \return the right hand side
+        /// \note size of result is equal to total dimension of parameterizable
+        ///       constraints (type Equality).
+        vector_t rightHandSide () const;
+
+        /// Get size of the right hand side
+        /// \return sum of dimensions of parameterizable constraints
+        ///         (type Equality)
+        size_type rightHandSideSize () const;
+
+        /// \}
+
         bool isSatisfied (vectorIn_t arg) const
         {
           return

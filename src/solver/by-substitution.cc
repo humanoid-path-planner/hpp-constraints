@@ -277,6 +277,68 @@ namespace hpp {
         return os;
       }
 
+      vector_t BySubstitution::rightHandSideFromConfig
+      (ConfigurationIn_t config)
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        vector_t rhs (top + bot);
+        rhs.head(top) = parent_t::rightHandSideFromConfig (config);
+        rhs.tail(bot) = explicit_.rightHandSideFromInput (config);
+        return rhs;
+      }
+
+      bool BySubstitution::rightHandSideFromConfig
+      (const ImplicitPtr_t& constraint, ConfigurationIn_t config)
+      {
+        if (parent_t::rightHandSideFromConfig (constraint, config))
+          return true;
+        ExplicitPtr_t exp (HPP_DYNAMIC_PTR_CAST (Explicit, constraint));
+        if (exp) {
+          return explicit_.rightHandSideFromInput (exp, config);
+        }
+        return false;
+      }
+
+      bool BySubstitution::rightHandSide (const ImplicitPtr_t& constraint,
+                                          vectorIn_t rhs)
+      {
+        if (parent_t::rightHandSide (constraint, rhs))
+          return true;
+        ExplicitPtr_t exp (HPP_DYNAMIC_PTR_CAST (Explicit, constraint));
+        if (exp) {
+          return explicit_.rightHandSide (exp, rhs);
+        }
+        return false;
+      }
+
+      void BySubstitution::rightHandSide (vectorIn_t rhs)
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        parent_t::rightHandSide (rhs.head(top));
+        explicit_.rightHandSide (rhs.head(bot));
+      }
+
+      vector_t BySubstitution::rightHandSide () const
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        vector_t rhs (top + bot);
+        rhs.head(top) = parent_t::rightHandSide ();
+        rhs.tail(bot) = explicit_.rightHandSide ();
+        return rhs;
+      }
+
+      size_type BySubstitution::rightHandSideSize () const
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        return top + bot;
+      }
+
+        /// \}
+
       template BySubstitution::Status BySubstitution::impl_solve
       (vectorOut_t arg, lineSearch::Constant       lineSearch) const;
       template BySubstitution::Status BySubstitution::impl_solve
