@@ -103,9 +103,28 @@ namespace hpp {
          const Transform3f& frame1, const Transform3f& frame2,
          std::vector <bool> mask, ComparisonTypes_t comp, vectorIn_t rhs)
       {
-        return RelativePosePtr_t (new RelativePose
-                                  (name, robot, joint1, joint2, frame1, frame2,
-                                   mask, comp, rhs));
+        RelativePose* ptr (new RelativePose
+                           (name, robot, joint1, joint2, frame1, frame2,
+                            mask, comp, rhs));
+        RelativePosePtr_t shPtr (ptr);
+        RelativePoseWkPtr_t wkPtr (shPtr);
+        ptr->init (wkPtr);
+        return shPtr;
+      }
+
+      RelativePosePtr_t RelativePose::createCopy
+      (const RelativePosePtr_t& other)
+      {
+        RelativePose* ptr (new RelativePose (*other));
+        RelativePosePtr_t shPtr (ptr);
+        RelativePoseWkPtr_t wkPtr (shPtr);
+        ptr->init (wkPtr);
+        return shPtr;
+      }
+
+      ImplicitPtr_t RelativePose::copy () const
+      {
+        return createCopy (weak_.lock ());
       }
 
       void RelativePose::implicitToExplicitRhs (vectorIn_t implicitRhs,
@@ -149,6 +168,19 @@ namespace hpp {
         {
         }
 
+      RelativePose::RelativePose (const RelativePose& other) :
+        Implicit (other), Explicit (other), implicit::RelativePose (other),
+        frame1_ (other.frame1_), frame2_ (other.frame2_)
+      {
+      }
+
+      void RelativePose::init (RelativePoseWkPtr_t weak)
+      {
+        Implicit::init (weak);
+        Explicit::init (weak);
+        implicit::RelativePose::init (weak);
+        weak_ = weak;
+      }
   } // namespace explicit_
   } // namespace constraints
 } // namespace hpp

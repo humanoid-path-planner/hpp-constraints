@@ -19,6 +19,7 @@
 
 # include <hpp/constraints/explicit.hh>
 # include <hpp/constraints/implicit/relative-pose.hh>
+# include <pinocchio/spatial/se3.hpp>
 
 namespace hpp {
   namespace constraints {
@@ -28,6 +29,8 @@ namespace hpp {
         public Explicit, public implicit::RelativePose
       {
       public:
+        /// Copy object and return shared pointer to copy
+        virtual ImplicitPtr_t copy () const;
         /// Create instance and return shared pointer
         ///
         /// \param name the name of the constraints,
@@ -49,6 +52,8 @@ namespace hpp {
            std::vector <bool> mask = std::vector<bool>(6,true),
            ComparisonTypes_t comp = std::vector <ComparisonType> (),
            vectorIn_t rhs = vector_t ());
+
+        static RelativePosePtr_t createCopy (const RelativePosePtr_t& other);
 
         /** Convert right hand side
 
@@ -95,12 +100,19 @@ namespace hpp {
                       std::vector <bool> mask = std::vector<bool>(6,true),
                       ComparisonTypes_t comp = std::vector <ComparisonType> (),
                       vectorIn_t rhs = vector_t ());
+
+        /// Copy constructor
+        RelativePose (const RelativePose& other);
+
+        /// Store weak pointer to itself
+        void init (RelativePoseWkPtr_t weak);
       private:
         // Create LiegroupSpace instances to avoid useless allocation.
         static LiegroupSpacePtr_t SE3;
         static LiegroupSpacePtr_t R3xSO3;
         Transform3f frame1_;
         Transform3f frame2_;
+        RelativePoseWkPtr_t weak_;
       }; // class RelativePose
     } // namespace explicit_
   } // namespace constraints
