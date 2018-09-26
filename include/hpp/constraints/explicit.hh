@@ -181,8 +181,7 @@ namespace hpp {
          const ComparisonTypes_t& comp = ComparisonTypes_t());
 
       /// Create a copy and return shared pointer
-      static ExplicitPtr_t createCopy
-	(const ExplicitPtr_t& other);
+      static ExplicitPtr_t createCopy (const ExplicitPtr_t& other);
 
       /// Function that maps input to output
       /// \return function \f$f\f$.
@@ -295,11 +294,7 @@ namespace hpp {
       Explicit (const Explicit& other);
 
       // Store weak pointer to itself
-      void init (const ExplicitWkPtr_t& weak)
-	{
-	  Implicit::init (weak);
-	  weak_ = weak;
-	}
+      void init (const ExplicitWkPtr_t& weak);
     protected:
       // Relation between input and output configuration variables
       DifferentiableFunctionPtr_t inputToOutput_;
@@ -307,6 +302,7 @@ namespace hpp {
       segments_t outputConf_;
       segments_t inputVelocity_;
       segments_t outputVelocity_;
+    private:
       ExplicitWkPtr_t weak_;
     }; // class Explicit
     /// \}

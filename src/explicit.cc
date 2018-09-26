@@ -161,5 +161,10 @@ namespace hpp {
       outputVelocity_ (other.outputVelocity_)
     {
     }
+    void Explicit::init (const ExplicitWkPtr_t& weak)
+    {
+      Implicit::init (weak);
+      weak_ = weak;
+    }
   } // namespace constraints
 } // namespace hpp
