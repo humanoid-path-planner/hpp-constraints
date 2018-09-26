@@ -18,7 +18,6 @@
 # define HPP_CONSTRAINTS_IMPLICIT_RELATIVE_POSE_HH
 
 # include <hpp/constraints/implicit.hh>
-# include <hpp/constraints/generic-transformation.hh>
 
 namespace hpp {
   namespace constraints {
@@ -27,6 +26,8 @@ namespace hpp {
       class HPP_CONSTRAINTS_DLLAPI RelativePose : public virtual Implicit
       {
       public:
+        /// Copy object and return shared pointer to copy
+        virtual ImplicitPtr_t copy () const;
         /// Create instance and return shared pointer
         ///
         /// \param name the name of the constraints,
@@ -47,12 +48,9 @@ namespace hpp {
            const Transform3f& frame1, const Transform3f& frame2,
            std::vector <bool> mask = std::vector<bool>(6,true),
            ComparisonTypes_t comp = std::vector <ComparisonType> (),
-           vectorIn_t rhs = vector_t ())
-        {
-          return RelativePosePtr_t (new RelativePose
-                                    (name, robot, joint1, joint2, frame1,
-                                     frame2, mask, comp, rhs));
-        }
+           vectorIn_t rhs = vector_t ());
+
+        static RelativePosePtr_t createCopy (const RelativePosePtr_t& other);
 
         /// Get joint1
         const JointConstPtr_t& joint1 () const
@@ -87,15 +85,15 @@ namespace hpp {
                       const Transform3f& frame1, const Transform3f& frame2,
                       std::vector <bool> mask = std::vector<bool>(6,true),
                       ComparisonTypes_t comp = std::vector <ComparisonType> (),
-                      vectorIn_t rhs = vector_t ()) :
-          Implicit (GenericTransformation
-                    <RelativeBit | PositionBit | OrientationBit>::create
-                    (name, robot, joint1, joint2, frame1, frame2, mask),
-                    comp, rhs), joint1_ (joint1), joint2_ (joint2)
-          {
-          }
+                      vectorIn_t rhs = vector_t ());
+
+        /// Copy constructor
+        RelativePose (const RelativePose& other);
+        /// Store shared pointer to itself
+        void init (RelativePoseWkPtr_t weak);
       private:
         JointConstPtr_t joint1_, joint2_;
+        RelativePoseWkPtr_t weak_;
       }; // class RelativePose
     } // namespace implicit
   } // namespace constraints

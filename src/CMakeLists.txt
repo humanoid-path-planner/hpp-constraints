@@ -32,6 +32,7 @@ SET (${LIBRARY_NAME}_SOURCES
   explicit/implicit-function.cc
   explicit/relative-transformation.cc
   explicit/relative-pose.cc
+  implicit/relative-pose.cc
   locked-joint.cc
   solver/by-substitution.cc
   solver/hierarchical-iterative.cc
