@@ -146,6 +146,9 @@ namespace hpp {
         /// Compute the contact points in the last configuration.
         std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
 
+      /// Display object in a stream
+      std::ostream& print (std::ostream& o) const;
+
       private:
         void impl_compute (LiegroupElement& result, ConfigurationIn_t argument)
           const;

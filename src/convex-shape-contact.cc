@@ -21,6 +21,8 @@
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 
+#include <hpp/constraints/matrix-view.hh>
+
 namespace hpp {
   namespace constraints {
 
@@ -309,6 +311,26 @@ namespace hpp {
 	jacobian.row (1).setZero ();
       }
       jacobian.row (2) = sibling_->jacobian_.row (3);
+    }
+
+    std::ostream& ConvexShapeContact::print (std::ostream& o) const
+    {
+      o << "ConvexShapeContact: " << name () << ", active dof "
+        << pretty_print (BlockIndex::fromLogicalExpression (activeParameters_)) << incindent;
+
+      o << iendl << "Object shapes:" << incindent;
+      for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
+          o_it != objectConvexShapes_.end (); ++o_it) {
+        if (o_it->joint_) o << iendl << "- universe";
+        else              o << iendl << "- " << o_it->joint_->name();
+      }
+      o << decendl << "Floor shapes:" << incindent;
+      for (ConvexShapes_t::const_iterator o_it = floorConvexShapes_.begin ();
+          o_it != floorConvexShapes_.end (); ++o_it) {
+        if (o_it->joint_) o << iendl << "- universe";
+        else              o << iendl << "- " << o_it->joint_->name();
+      }
+      return o << decindent;
     }
   } // namespace constraints
 } // namespace hpp

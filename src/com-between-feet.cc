@@ -105,22 +105,22 @@ namespace hpp {
       size_t index = 0;
       if (mask_[0]) {
         com_->invalidate ();
-        com_->computeValue ();
+        com_->computeValue (argument);
         result.vector () [index++] = (com_->value () - pointRef_)[2];
       }
       if (mask_[1]) {
         expr_->invalidate ();
-        expr_->computeValue ();
+        expr_->computeValue (argument);
         result.vector () [index++] = expr_->value ()[2];
       }
       if (mask_[2]) {
         xmxlDotu_->invalidate ();
-        xmxlDotu_->computeValue ();
+        xmxlDotu_->computeValue (argument);
         result.vector () [index++] =   xmxlDotu_->value();
       }
       if (mask_[3]) {
         xmxrDotu_->invalidate ();
-        xmxrDotu_->computeValue ();
+        xmxrDotu_->computeValue (argument);
         result.vector () [index  ] =   xmxrDotu_->value();
       }
     }
@@ -133,25 +133,25 @@ namespace hpp {
       size_t index = 0;
       if (mask_[0]) {
         com_->invalidate ();
-        com_->computeJacobian ();
+        com_->computeJacobian (arg);
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = com_->jacobian ().row (2);
       }
       if (mask_[1]) {
         expr_->invalidate ();
-        expr_->computeJacobian ();
+        expr_->computeJacobian (arg);
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = expr_->jacobian ().row (2);
       }
       if (mask_[2]) {
         xmxlDotu_->invalidate ();
-        xmxlDotu_->computeJacobian ();
+        xmxlDotu_->computeJacobian (arg);
         jacobian.row (index++).leftCols (jointRef_->jacobian ().cols ())
           = xmxlDotu_->jacobian ();
       }
       if (mask_[3]) {
         xmxrDotu_->invalidate ();
-        xmxrDotu_->computeJacobian ();
+        xmxrDotu_->computeJacobian (arg);
         jacobian.row (index  ).leftCols (jointRef_->jacobian ().cols ())
           = xmxrDotu_->jacobian ();
       }
