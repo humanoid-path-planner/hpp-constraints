@@ -23,9 +23,10 @@
 
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
+#include <hpp/constraints/deprecated.hh>
 
 #include <hpp/constraints/matrix-view.hh>
-#include <hpp/constraints/differentiable-function-stack.hh>
+#include <hpp/constraints/implicit-constraint-set.hh>
 
 namespace hpp {
   namespace constraints {
@@ -195,6 +196,11 @@ namespace hpp {
         /// \name Problem definition
         /// \{
 
+        /// Get configuration space on which constraints are defined
+        const LiegroupSpacePtr_t& configSpace () const
+        {
+          return configSpace_;
+        }
         /// Check whether a numerical constraint has been added
         /// \param numericalConstraint numerical constraint
         /// \return true if numerical constraint is already in the solver
@@ -209,10 +215,7 @@ namespace hpp {
         ///        in decreasing order: 0 is the highest priority level.
         ///
         /// Constraint is defined by \f$f (\mathbf{q}) = 0\f$.
-        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority)
-        {
-          add (f, priority, ComparisonTypes_t(f->outputSize(), EqualToZero));
-        }
+        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Add an implicit constraint
         ///
@@ -222,7 +225,14 @@ namespace hpp {
         ///        in decreasing order: 0 is the highest priority level,
         /// \param comp comparison type. See class documentation for details.
         void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority,
-                  const ComparisonTypes_t& comp);
+                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
+
+        /// Add an implicit constraint
+        ///
+        /// \param constraint implicit constraint
+        /// \param priority level of priority of the constraint: priority are
+        ///        in decreasing order: 0 is the highest priority level,
+        void add (const ImplicitPtr_t& constraint, const std::size_t& priority);
 
         /// Set the saturation function
         void saturation (const Saturation_t& saturate)
@@ -376,7 +386,8 @@ namespace hpp {
         /// \name Stack
         /// \{
 
-        const DifferentiableFunctionStack& stack(const std::size_t priority)
+        /// Get set of constraints for a give priority level.
+        const ImplicitConstraintSet& constraints (const std::size_t priority)
         {
           assert(priority < stacks_.size());
           return stacks_[priority];
@@ -420,29 +431,28 @@ namespace hpp {
         /// \{
 
         /// Compute right hand side of equality constraints from a configuration
-        /// \param q a configuration.
+        /// \param config a configuration.
         ///
         /// for each constraint of type Equality, set right hand side as
         /// \f$rhs = f(\mathbf{q})\f$.
         /// \note Only parameterizable constraints (type Equality) are set
-        vector_t rightHandSideFromInput (vectorIn_t q);
+        vector_t rightHandSideFromConfig (ConfigurationIn_t config);
 
         /// Compute right hand side of a constraint from a configuration
-        /// \param f differentiable function of the constraint,
-        /// \param q a configuration.
+        /// \param constraint the constraint,
+        /// \param config a configuration.
         ///
         /// Set right hand side as \f$rhs = f(\mathbf{q})\f$.
         /// \note Only parameterizable constraints (type Equality) are set
-        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f,
-                                     vectorIn_t q);
-
+        bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
+                                              ConfigurationIn_t config);
         /// Set right hand side of a constraints
-        /// \param f differentiable function of the constraint,
+        /// \param constraint the constraint,
         /// \param rhs right hand side.
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality) .
-        bool rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs);
-
+        bool rightHandSide (const ImplicitPtr_t& constraint,
+                                    vectorIn_t rhs);
         /// Set the right hand side
         /// \param rhs the right hand side
         /// \note Size of rhs should be equal to the total dimension of
@@ -533,7 +543,7 @@ namespace hpp {
         value_type squaredErrorThreshold_, inequalityThreshold_;
         size_type maxIterations_;
 
-        std::vector<DifferentiableFunctionStack> stacks_;
+        std::vector<ImplicitConstraintSet> stacks_;
         LiegroupSpacePtr_t configSpace_;
         size_type dimension_, reducedDimension_;
         bool lastIsOptional_;
@@ -541,8 +551,7 @@ namespace hpp {
         Indices_t freeVariables_;
         Saturation_t saturate_;
         /// Members moved from core::ConfigProjector
-        NumericalConstraints_t functions_;
-        LockedJoints_t lockedJoints_;
+        NumericalConstraints_t constraints_;
 
         /// The smallest non-zero singular value
         mutable value_type sigma_;

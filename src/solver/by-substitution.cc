@@ -53,7 +53,7 @@ namespace hpp {
 
       BySubstitution::BySubstitution (const LiegroupSpacePtr_t& configSpace) :
         HierarchicalIterative(configSpace),
-        explicit_ (configSpace->nq (), configSpace->nv ()),
+        explicit_ (configSpace),
         JeExpanded_ (configSpace->nv (), configSpace->nv ())
       {}
 
@@ -61,16 +61,6 @@ namespace hpp {
         HierarchicalIterative (other), explicit_ (other.explicit_),
         Je_ (other.Je_), JeExpanded_ (other.JeExpanded_)
       {
-        // TODO remove me
-        for (LockedJoints_t::const_iterator it = lockedJoints_.begin ();
-             it != lockedJoints_.end (); ++it) {
-          LockedJointPtr_t lj = HPP_STATIC_PTR_CAST
-            (LockedJoint, (*it)->copy ());
-          if (!explicitConstraintSet().replace
-              ((*it)->explicitFunction(), lj->explicitFunction()))
-            throw std::runtime_error
-              ("Could not replace lockedJoint function");
-        }
       }
 
       bool BySubstitution::add (const ImplicitPtr_t& nm,
@@ -84,26 +74,10 @@ namespace hpp {
         }
         ComparisonTypes_t types = nm->comparisonType();
 
-        LockedJointPtr_t lj = HPP_DYNAMIC_PTR_CAST (LockedJoint, nm);
-        assert (!lj);
-
         bool addedAsExplicit = false;
         ExplicitPtr_t enm (HPP_DYNAMIC_PTR_CAST (Explicit, nm));
         if (enm) {
-          addedAsExplicit = explicitConstraintSet().add
-            (enm->explicitFunction(),
-             Eigen::RowBlockIndices(enm->inputConf()),
-             Eigen::RowBlockIndices(enm->outputConf()),
-             Eigen::ColBlockIndices(enm->inputVelocity()),
-             Eigen::RowBlockIndices(enm->outputVelocity()),
-             types) >= 0;
-          if (addedAsExplicit && enm->outputFunction() &&
-              enm->outputFunctionInverse()) {
-            bool ok = explicitConstraintSet().setG
-              (enm->explicitFunction(),
-               enm->outputFunction(), enm->outputFunctionInverse());
-            assert (ok);
-          }
+          addedAsExplicit = explicitConstraintSet().add (enm) >= 0;
           if (!addedAsExplicit) {
             hppDout (info, "Could not treat " <<
                      enm->explicitFunction()->name()
@@ -111,14 +85,10 @@ namespace hpp {
           }
         }
 
-        if (!addedAsExplicit) {
-          HierarchicalIterative::add (activeSetFunction(nm->functionPtr(),
-                                                        passiveDofs), priority,
-                                      types);
-          // add (Implicit::create
-          //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
-          //      segments_t (0), priority);
-        } else {
+        if (addedAsExplicit) {
+          // If added as explicit, add to the list of constraint of Hierarchical
+          // iterative
+          constraints_.push_back (nm);
           hppDout (info, "Numerical constraint added as explicit function: "
                    << enm->explicitFunction()->name() << "with "
                    << "input conf " << Eigen::RowBlockIndices(enm->inputConf())
@@ -129,62 +99,26 @@ namespace hpp {
                    << "output vel " << Eigen::RowBlockIndices
                    (enm->outputVelocity()));
           explicitConstraintSetHasChanged();
+        } else {
+          ImplicitPtr_t constraint
+            (Implicit::create (activeSetFunction(nm->functionPtr(),
+                                                 passiveDofs), types));
+          HierarchicalIterative::add (constraint, priority);
+          // add (Implicit::create
+          //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
+          //      segments_t (0), priority);
         }
         hppDout (info, "Constraints " << name() << " has dimension "
                  << dimension());
 
-        functions_.push_back (nm);
         return true;
       }
 
-      void BySubstitution::add (const LockedJointPtr_t& lockedJoint)
+      void BySubstitution::add (const DifferentiableFunctionPtr_t& f,
+                                const std::size_t& priority,
+                                const ComparisonTypes_t& comp)
       {
-        if (lockedJoint->numberDof () == 0) return;
-        // If the same dof is already locked, replace by new value
-        for (LockedJoints_t::iterator itLock = lockedJoints_.begin ();
-             itLock != lockedJoints_.end (); ++itLock) {
-          if (lockedJoint->rankInVelocity () == (*itLock)->rankInVelocity ()) {
-            if (!explicitConstraintSet().replace
-                ((*itLock)->explicitFunction(),
-                 lockedJoint->explicitFunction ()))
-              {
-                throw std::runtime_error
-                  ("Could not replace lockedJoint function " +
-                   lockedJoint->jointName ());
-              }
-            *itLock = lockedJoint;
-            return;
-          }
-        }
-
-        ComparisonTypes_t types = lockedJoint->comparisonType();
-
-        bool added = explicitConstraintSet().add
-          (lockedJoint->explicitFunction(),
-           Eigen::RowBlockIndices(lockedJoint->inputConf()),
-           Eigen::RowBlockIndices(lockedJoint->outputConf()),
-           Eigen::ColBlockIndices(lockedJoint->inputVelocity()),
-           Eigen::RowBlockIndices(lockedJoint->outputVelocity()),
-           types) >= 0;
-
-        if (!added) {
-          throw std::runtime_error("Could not add lockedJoint function " +
-                                   lockedJoint->jointName ());
-        }
-        if (added) {
-          explicitConstraintSet().rightHandSide
-            (lockedJoint->explicitFunction(), lockedJoint->rightHandSide());
-        }
-        explicitConstraintSetHasChanged();
-
-        lockedJoints_.push_back (lockedJoint);
-        hppDout (info, "add locked joint " << lockedJoint->jointName ()
-                 << " rank in velocity: " << lockedJoint->rankInVelocity ()
-                 << ", size: " << lockedJoint->numberDof ());
-        hppDout (info, "Intervals: "
-                 << explicitConstraintSet().outDers());
-        hppDout (info, "Constraints " << name() << " has dimension "
-                 << dimension());
+        HierarchicalIterative::add (f, priority, comp);
       }
 
       void BySubstitution::explicitConstraintSetHasChanged()
@@ -252,8 +186,8 @@ namespace hpp {
       void BySubstitution::computeActiveRowsOfJ (std::size_t iStack)
       {
         Data& d = datas_[iStack];
-        const DifferentiableFunctionStack& f = stacks_[iStack];
-        const DifferentiableFunctionStack::Functions_t& fs = f.functions();
+        const ImplicitConstraintSet::Implicits_t constraints
+          (stacks_ [iStack].constraints ());
         std::size_t row = 0;
 
         /// ADP: Active Derivative Param
@@ -264,25 +198,28 @@ namespace hpp {
 
         ArrayXb adpF, adpC;
         BlockIndices::segments_t rows;
-        for (std::size_t i = 0; i < fs.size (); ++i) {
+        for (std::size_t i = 0; i < constraints.size (); ++i) {
           bool active;
 
           // Test on the variable left free by the explicit solver.
           adpF = freeVariables_.rview
-            (fs[i]->activeDerivativeParameters().matrix()).eval().array();
+            (constraints [i]->function ().activeDerivativeParameters().
+             matrix()).eval().array();
           active = adpF.any();
           if (!active && explicitIOdep.size() > 0) {
             // Test on the variable constrained by the explicit solver.
             adpC = explicit_.outDers().rview
-              (fs[i]->activeDerivativeParameters().matrix()).eval().array();
+              (constraints [i]->function ().activeDerivativeParameters().
+               matrix()).eval().array();
             adpF = (explicitIOdep.transpose() * adpC.cast<int>().matrix()).
               array().cast<bool>();
             active = adpF.any();
           }
           if (active) // If at least one element of adp is true
             rows.push_back (BlockIndices::segment_t
-                            (row, fs[i]->outputDerivativeSize()));
-          row += fs[i]->outputDerivativeSize();
+                            (row, constraints [i]->function ().
+                             outputDerivativeSize()));
+          row += constraints [i]->function ().outputDerivativeSize();
         }
         d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
           (rows, freeVariables_.m_rows);
@@ -292,7 +229,7 @@ namespace hpp {
       void BySubstitution::projectVectorOnKernel
       (ConfigurationIn_t arg, vectorIn_t darg, ConfigurationOut_t result) const
       {
-        if (functions_.empty ()) {
+        if (constraints_.empty ()) {
           result = darg;
           return;
         }
@@ -316,7 +253,7 @@ namespace hpp {
                                             ConfigurationOut_t result)
       {
         // TODO equivalent
-        if (functions_.empty ()) {
+        if (constraints_.empty ()) {
           result = to;
           return;
         }
@@ -339,6 +276,68 @@ namespace hpp {
         explicit_.print (os) << decindent;
         return os;
       }
+
+      vector_t BySubstitution::rightHandSideFromConfig
+      (ConfigurationIn_t config)
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        vector_t rhs (top + bot);
+        rhs.head(top) = parent_t::rightHandSideFromConfig (config);
+        rhs.tail(bot) = explicit_.rightHandSideFromInput (config);
+        return rhs;
+      }
+
+      bool BySubstitution::rightHandSideFromConfig
+      (const ImplicitPtr_t& constraint, ConfigurationIn_t config)
+      {
+        if (parent_t::rightHandSideFromConfig (constraint, config))
+          return true;
+        ExplicitPtr_t exp (HPP_DYNAMIC_PTR_CAST (Explicit, constraint));
+        if (exp) {
+          return explicit_.rightHandSideFromInput (exp, config);
+        }
+        return false;
+      }
+
+      bool BySubstitution::rightHandSide (const ImplicitPtr_t& constraint,
+                                          vectorIn_t rhs)
+      {
+        if (parent_t::rightHandSide (constraint, rhs))
+          return true;
+        ExplicitPtr_t exp (HPP_DYNAMIC_PTR_CAST (Explicit, constraint));
+        if (exp) {
+          return explicit_.rightHandSide (exp, rhs);
+        }
+        return false;
+      }
+
+      void BySubstitution::rightHandSide (vectorIn_t rhs)
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        parent_t::rightHandSide (rhs.head(top));
+        explicit_.rightHandSide (rhs.head(bot));
+      }
+
+      vector_t BySubstitution::rightHandSide () const
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        vector_t rhs (top + bot);
+        rhs.head(top) = parent_t::rightHandSide ();
+        rhs.tail(bot) = explicit_.rightHandSide ();
+        return rhs;
+      }
+
+      size_type BySubstitution::rightHandSideSize () const
+      {
+        const size_type top = parent_t::rightHandSideSize();
+        const size_type bot = explicit_.rightHandSideSize();
+        return top + bot;
+      }
+
+        /// \}
 
       template BySubstitution::Status BySubstitution::impl_solve
       (vectorOut_t arg, lineSearch::Constant       lineSearch) const;

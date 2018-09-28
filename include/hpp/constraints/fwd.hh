@@ -30,7 +30,7 @@ namespace Eigen {
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (DifferentiableFunction);
-    HPP_PREDEF_CLASS (DifferentiableFunctionStack);
+    HPP_PREDEF_CLASS (DifferentiableFunctionSet);
     HPP_PREDEF_CLASS (ActiveSetDifferentiableFunction);
     typedef pinocchio::size_type size_type;
     typedef pinocchio::value_type value_type;
@@ -58,6 +58,9 @@ namespace hpp {
     } // namespace eigen
     typedef Eigen::Matrix <value_type, 5, 1> vector5_t;
     typedef Eigen::Matrix <value_type, 6, 1> vector6_t;
+    typedef Eigen::Matrix <value_type, 7, 1> vector7_t;
+    typedef Eigen::Quaternion<value_type> Quaternion_t;
+
     typedef pinocchio::ArrayXb ArrayXb;
     typedef ArrayXb bool_array_t;
 
@@ -88,8 +91,10 @@ namespace hpp {
     typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
     typedef boost::shared_ptr <DifferentiableFunction>
     DifferentiableFunctionPtr_t;
-    typedef boost::shared_ptr <DifferentiableFunctionStack>
-    DifferentiableFunctionStackPtr_t;
+    typedef boost::shared_ptr <DifferentiableFunctionSet>
+    DifferentiableFunctionSetPtr_t;
+    typedef DifferentiableFunctionSet DifferentiableFunctionStack
+    HPP_CONSTRAINTS_DEPRECATED;
     typedef boost::shared_ptr <ActiveSetDifferentiableFunction>
     ActiveSetDifferentiableFunctionPtr_t;
     typedef boost::shared_ptr <DistanceBetweenBodies>
@@ -141,7 +146,11 @@ namespace hpp {
 
     HPP_PREDEF_CLASS (Implicit);
     typedef boost::shared_ptr <Implicit> ImplicitPtr_t;
+    typedef boost::shared_ptr <const Implicit> ImplicitConstPtr_t;
     typedef std::vector < constraints::ImplicitPtr_t > NumericalConstraints_t;
+    HPP_PREDEF_CLASS (ImplicitConstraintSet);
+    typedef boost::shared_ptr <ImplicitConstraintSet>
+    ImplicitConstraintSetPtr_t;
 
     enum ComparisonType {
       Equality,
@@ -153,6 +162,7 @@ namespace hpp {
 
     HPP_PREDEF_CLASS (Explicit);
     typedef boost::shared_ptr <Explicit> ExplicitPtr_t;
+    typedef boost::shared_ptr <const Explicit> ExplicitConstPtr_t;
 
     class ExplicitConstraintSet;
     namespace solver {
@@ -160,8 +170,21 @@ namespace hpp {
       class BySubstitution;
     } // namespace solver
 
+    namespace implicit {
+      HPP_PREDEF_CLASS (RelativePose);
+      typedef boost::shared_ptr <RelativePose> RelativePosePtr_t;
+      typedef boost::shared_ptr <const RelativePose> RelativePoseConstPtr_t;
+    } // namespace implicit
+
     namespace explicit_ {
-      template <bool GisIdentity> class Function;
+      class Function;
+      HPP_PREDEF_CLASS (RelativePose);
+      typedef boost::shared_ptr <RelativePose> RelativePosePtr_t;
+      HPP_PREDEF_CLASS (RelativeTransformation);
+      typedef boost::shared_ptr <RelativeTransformation>
+      RelativeTransformationPtr_t;
+      HPP_PREDEF_CLASS (ImplicitFunction);
+      typedef boost::shared_ptr <ImplicitFunction> ImplicitFunctionPtr_t;
     } // namespace explicit
 
     HPP_PREDEF_CLASS (LockedJoint);
@@ -169,6 +192,10 @@ namespace hpp {
     typedef boost::shared_ptr <const LockedJoint> LockedJointConstPtr_t;
     typedef std::vector <LockedJointPtr_t> LockedJoints_t;
 
+    namespace function {
+      HPP_PREDEF_CLASS (OfParameterSubset);
+      typedef boost::shared_ptr <OfParameterSubset> OfParameterSubsetPtr_t;
+    } // namespace function
     typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
     typedef solver::HierarchicalIterative HierarchicalIterativeSolver
     HPP_CONSTRAINTS_DEPRECATED;

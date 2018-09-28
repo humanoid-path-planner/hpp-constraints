@@ -29,6 +29,7 @@
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/constraints/generic-transformation.hh>
+#include <hpp/constraints/implicit.hh>
 #include <hpp/constraints/affine-function.hh>
 
 #include <../tests/util.hh>
@@ -83,7 +84,9 @@ struct test_quadratic : test_base <LineSearch>
     BOOST_TEST_MESSAGE(A);
     Quadratic::Ptr_t f (new Quadratic (A, -1));
 
-    this->solver.add(f, 0);
+    this->solver.add (Implicit::create
+                      (f, ComparisonTypes_t (f->outputDerivativeSize (),
+                                             Equality)), 0);
     BOOST_CHECK(this->solver.numberStacks() == 1);
   }
 };
@@ -154,8 +157,12 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
 
-  solver.add(Orientation::create ("Orientation", device, ee2, tf2), 0);
-  solver.add(Position::create    ("Position"   , device, ee2, tf2), 0);
+  solver.add(Implicit::create
+             (Orientation::create ("Orientation", device, ee2, tf2),
+              ComparisonTypes_t (6, Equality)), 0);
+  solver.add(Implicit::create
+             (Position::create    ("Position"   , device, ee2, tf2),
+              ComparisonTypes_t (6, Equality)), 0);
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
@@ -184,9 +191,14 @@ struct test_affine_opt : test_base <LineSearch>
     BOOST_TEST_MESSAGE(B);
     AffineFunctionPtr_t f (new AffineFunction (A, vector_t::Constant(1,-1)));
     Quadratic::Ptr_t cost (new Quadratic (B));
-
-    this->solver.add(f   , 0);
-    this->solver.add(cost, 1);
+    ImplicitPtr_t f_constraint
+      (Implicit::create (f, ComparisonTypes_t
+                         (f->outputDerivativeSize (), Equality)));
+    ImplicitPtr_t cost_constraint
+      (Implicit::create (cost, ComparisonTypes_t
+                         (f->outputDerivativeSize (), Equality)));
+    this->solver.add(f_constraint, 0);
+    this->solver.add(cost_constraint, 1);
     // this->solver.add(cost, 0);
     this->solver.lastIsOptional(true);
     BOOST_CHECK(this->solver.numberStacks() == 2);

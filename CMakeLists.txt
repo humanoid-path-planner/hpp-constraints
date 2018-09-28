@@ -34,6 +34,7 @@ set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
+  include/hpp/constraints/differentiable-function-set.hh
   include/hpp/constraints/differentiable-function-stack.hh
   include/hpp/constraints/active-set-differentiable-function.hh
   include/hpp/constraints/affine-function.hh
@@ -54,13 +55,19 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/explicit-constraint-set.hh
   include/hpp/constraints/explicit-solver.hh
   include/hpp/constraints/explicit.hh
-  include/hpp/constraints/explicit/function.hh
+  include/hpp/constraints/explicit/implicit-function.hh
+  include/hpp/constraints/explicit/relative-pose.hh
+  include/hpp/constraints/explicit/relative-transformation.hh
   include/hpp/constraints/implicit.hh
+  include/hpp/constraints/implicit/relative-pose.hh
+  include/hpp/constraints/implicit-constraint-set.hh
   include/hpp/constraints/hybrid-solver.hh
   include/hpp/constraints/iterative-solver.hh
   include/hpp/constraints/locked-joint.hh
   include/hpp/constraints/solver/hierarchical-iterative.hh
   include/hpp/constraints/solver/by-substitution.hh
+
+  include/hpp/constraints/function/of-parameter-subset.hh
 
   include/hpp/constraints/solver/impl/by-substitution.hh
   include/hpp/constraints/solver/impl/hierarchical-iterative.hh

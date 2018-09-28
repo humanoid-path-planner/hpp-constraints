@@ -14,10 +14,11 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
-# define HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
+#ifndef HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH
+# define HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH
 
 # include <hpp/constraints/differentiable-function.hh>
+# include <hpp/constraints/matrix-view.hh>
 
 namespace hpp {
   namespace constraints {
@@ -33,18 +34,17 @@ namespace hpp {
     ///
     ///  This class is mainly used to create hpp::constraints::Explicit
     ///  instances.
-    template <bool GisIdentity>
-    class Function : public DifferentiableFunction
+    class ImplicitFunction : public DifferentiableFunction
     {
     public:
       /// create instance and return shared pointer
       /// \deprecated used create method that takes a LiegroupSpace instead
       ///             of a robot as input.
-      typedef boost::shared_ptr <Function> Ptr_t;
+      typedef boost::shared_ptr <ImplicitFunction> Ptr_t;
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity)
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity)
         HPP_CONSTRAINTS_DEPRECATED;
 
       /// create instance and return shared pointer
@@ -53,8 +53,8 @@ namespace hpp {
       static Ptr_t create
       (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
        const DifferentiableFunctionPtr_t& g,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity)
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity)
         HPP_CONSTRAINTS_DEPRECATED;
 
       /// create instance and return shared pointer
@@ -67,30 +67,12 @@ namespace hpp {
       /// \param outputConf set of indices defining q_out
       /// \param outputVel set of indices defining q_out derivative
       ///
-      /// Function g is set to identity.
 
       static Ptr_t create
       (const LiegroupSpacePtr_t& configSpace,
        const DifferentiableFunctionPtr_t& function,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity);
-
-      /// create instance and return shared pointer
-      ///
-      /// \param configSpace input space of this function - usually a robot
-      ///                    configuration space,
-      /// \param function function f,
-      /// \param g function g,
-      /// \param inputConf set of indices defining q_in,
-      /// \param inputVelocity set of indices defining q_in derivative,
-      /// \param outputConf set of indices defining q_out
-      /// \param outputVel set of indices defining q_out derivative
-      static Ptr_t create
-      (const LiegroupSpacePtr_t& configSpace,
-       const DifferentiableFunctionPtr_t& function,
-       const DifferentiableFunctionPtr_t& g,
-       const segments_t& inputConf, const segments_t& inputVelocity,
-       const segments_t& outputConf, const segments_t& outputVelocity);
+       const segments_t& inputConf, const segments_t& outputConf,
+       const segments_t& inputVelocity, const segments_t& outputVelocity);
 
       /// Get function f that maps input variables to output variables
       const DifferentiableFunctionPtr_t& inputToOutput () const;
@@ -99,12 +81,11 @@ namespace hpp {
       /// Constructor
       /// \deprecated used constructor that takes a LiegroupSpace instead
       ///             of a robot as input.
-      Function (const DevicePtr_t& robot,
+      ImplicitFunction (const DevicePtr_t& robot,
 			const DifferentiableFunctionPtr_t& function,
-                        const DifferentiableFunctionPtr_t& g,
 			const segments_t& inputConf,
-			const segments_t& inputVelocity,
                         const segments_t& outputConf,
+			const segments_t& inputVelocity,
 			const segments_t& outputVelocity)
         HPP_CONSTRAINTS_DEPRECATED;
 
@@ -112,17 +93,15 @@ namespace hpp {
       /// \param configSpace input space of this function - usually a robot
       ///                    configuration space,
       /// \param function function f,
-      /// \param g function g,
       /// \param inputConf set of indices defining q_in,
       /// \param inputVelocity set of indices defining q_in derivative,
       /// \param outputConf set of indices defining q_out
       /// \param outputVel set of indices defining q_out derivative
-      Function (const LiegroupSpacePtr_t& configSpace,
+      ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                 const DifferentiableFunctionPtr_t& function,
-                const DifferentiableFunctionPtr_t& g,
                 const segments_t& inputConf,
-                const segments_t& inputVelocity,
                 const segments_t& outputConf,
+                const segments_t& inputVelocity,
                 const segments_t& outputVelocity);
       /// Compute g (q_out) - f (q_in)
       void impl_compute (LiegroupElement& result, vectorIn_t argument) const;
@@ -133,61 +112,23 @@ namespace hpp {
     private:
       void computeJacobianBlocks ();
 
-      struct GenericGData {
-        DifferentiableFunctionPtr_t g_;
-        mutable LiegroupElement g_qOut_;
-        mutable matrix_t Jg_;
-
-        GenericGData (const DifferentiableFunctionPtr_t& g)
-          : g_ (g), g_qOut_ (g->outputSpace()),
-          Jg_ (g->outputSpace()->nv(), g->inputDerivativeSize())
-        {}
-        void computeValue (const LiegroupElement& qOut) const
-        {
-          g_->value (g_qOut_, qOut.vector());
-        }
-        const LiegroupElement& value (const LiegroupElement&) const
-        {
-          return g_qOut_;
-        }
-        matrix_t& jacobian (const LiegroupElement& qOut) const
-        {
-          g_->jacobian (Jg_, qOut.vector());
-          return Jg_;
-        }
-      };
-
-      struct IdentityData {
-        mutable matrix_t Jg_;
-        IdentityData (const DifferentiableFunctionPtr_t&) {}
-        void computeValue (const LiegroupElement&) const {}
-        const LiegroupElement& value (const LiegroupElement& qOut) const { return qOut; }
-        const matrix_t& jacobian (const LiegroupElement&) const { return Jg_; }
-      };
-
-      typedef typename boost::conditional<GisIdentity, IdentityData, GenericGData>::type GData;
-
       DevicePtr_t robot_;
       DifferentiableFunctionPtr_t inputToOutput_;
       Eigen::RowBlockIndices inputConfIntervals_;
-      Eigen::RowBlockIndices inputDerivIntervals_;
       Eigen::RowBlockIndices outputConfIntervals_;
+      Eigen::RowBlockIndices inputDerivIntervals_;
       Eigen::RowBlockIndices outputDerivIntervals_;
       std::vector <Eigen::MatrixBlocks <false, false> > outJacobian_;
       std::vector <Eigen::MatrixBlocks <false, false> > inJacobian_;
-      GData gData_;
       mutable vector_t qIn_;
       mutable LiegroupElement f_qIn_, qOut_;
       mutable LiegroupElement result_;
       // Jacobian of explicit function
       mutable matrix_t Jf_;
-    }; // class Function
+    }; // class ImplicitFunction
 
-    typedef Function<true > BasicFunction;
-    typedef Function<false> GenericFunction;
-
-  } // namespace explicit_
+    } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
 
-#endif // HPP_CONSTRAINTS_EXPLICIT_FUNCTION_HH
+#endif // HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH

@@ -138,8 +138,8 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       phi_.invalidate ();
-      phi_.computeValue ();
-      // phi_.computeSVD ();
+      phi_.computeValue (argument);
+      // phi_.computeSVD (argument);
 
       qpOASES::returnValue ret = solveQP (result.vector ());
       if (ret != qpOASES::SUCCESSFUL_RETURN) {
@@ -156,8 +156,8 @@ namespace hpp {
       robot_->computeForwardKinematics ();
 
       phi_.invalidate ();
-      // phi_.computeSVD ();
-      phi_.computeJacobian ();
+      // phi_.computeSVD (argument);
+      phi_.computeJacobian (argument);
 
       vector_t res(1);
       qpOASES::returnValue ret = solveQP (res);
@@ -175,8 +175,8 @@ namespace hpp {
       // TODO preallocate this.
       matrix_t JT_phi_F (nbContacts_, robot_->numberDof());
       matrix_t J_F (6, robot_->numberDof());
-      phi_.jacobianTransposeTimes (phi_.value () * primal_, JT_phi_F);
-      phi_.jacobianTimes (primal_, J_F);
+      phi_.jacobianTransposeTimes (argument, phi_.value () * primal_, JT_phi_F);
+      phi_.jacobianTimes (argument, primal_, J_F);
 
       jacobian = 0.5 * primal_.transpose() * JT_phi_F
         + (0.5 * phi_.value() * primal_ + Gravity).transpose() * J_F;

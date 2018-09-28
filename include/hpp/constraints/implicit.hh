@@ -27,8 +27,8 @@ namespace hpp {
     /// \{
 
     /// This class represents a numerical constraint  with the following format
-    /// \f{equation} f(q) comp rhs \f},
-    /// where \f$comp\f$ is one of the following comparison operators:
+    /// \f{equation} f(q) \bowtie rhs \f},
+    /// where \f$\bowtie\f$ is one of the following comparison operators:
     /// \li Equality: \f$f(\mathbf{q}) = rhs\f$, where \f$rhs\f$ is a
     /// parameterizable right hand side,
     /// \li EqualToZero: \f$f(\mathbf{q}) = 0\f$,
@@ -45,21 +45,22 @@ namespace hpp {
         virtual ImplicitPtr_t copy () const;
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create (const DifferentiableFunctionPtr_t& function);
+        static ImplicitPtr_t create
+          (const DifferentiableFunctionPtr_t& function);
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp);
+        static ImplicitPtr_t create
+          (const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp);
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp, vectorIn_t rhs);
+        static ImplicitPtr_t create
+          (const DifferentiableFunctionPtr_t& function,
+           ComparisonTypes_t comp, vectorIn_t rhs);
 
 	/// Create a copy and return shared pointer
-	static ImplicitPtr_t createCopy
-	  (const ImplicitPtr_t& other);
+	static ImplicitPtr_t createCopy (const ImplicitPtr_t& other);
 
         virtual ~Implicit () {};
 
@@ -159,6 +160,7 @@ namespace hpp {
 	  weak_ = weak;
 	}
 
+        friend class ImplicitConstraintSet;
       private:
         ComparisonTypes_t comparison_;
         vector_t rhs_;

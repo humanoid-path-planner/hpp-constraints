@@ -69,8 +69,14 @@ namespace hpp {
       jacobian_ (function->outputDerivativeSize (),
                  function->inputDerivativeSize ())
     {
+      if (comp.size () == 0) {
+        // Argument was probably not provided, set to Equality
+        comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
+                                         Equality);
+      }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
+      assert (function_->outputSize () == comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
@@ -80,8 +86,17 @@ namespace hpp {
       jacobian_ (matrix_t (function->outputSize (),
                            function->inputDerivativeSize ()))
     {
+      if (comp.size () == 0) {
+        // Argument was probably not provided, set to Equality
+        comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
+                                         Equality);
+      }
+      if (rhs.size () == 0) {
+        rhs_.resize (function->outputDerivativeSize ());
+      }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
+      assert (function_->outputSize () == comparison_.size ());
     }
 
     Implicit::Implicit (const Implicit& other):
@@ -134,8 +149,7 @@ namespace hpp {
       return shPtr;
     }
 
-    ImplicitPtr_t Implicit::createCopy
-    (const ImplicitPtr_t& other)
+    ImplicitPtr_t Implicit::createCopy (const ImplicitPtr_t& other)
     {
       Implicit* ptr = new Implicit (*other);
       ImplicitPtr_t shPtr (ptr);

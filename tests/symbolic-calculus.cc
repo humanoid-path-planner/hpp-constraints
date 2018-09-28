@@ -25,6 +25,7 @@
 
 #include <hpp/constraints/symbolic-calculus.hh>
 #include <hpp/constraints/symbolic-function.hh>
+#include <hpp/constraints/affine-function.hh>
 
 using namespace hpp::constraints;
 
@@ -55,10 +56,10 @@ class PointTesterT : public CalculusBase <PointTesterT<ValueType, JacobianType>,
     {
     }
 
-    void impl_value () {
+    void impl_value (const ConfigurationIn_t) {
       this->value_ = datas->value;
     }
-    void impl_jacobian () {
+    void impl_jacobian (const ConfigurationIn_t) {
       this->jacobian_ = datas->jacobian;
     }
 
@@ -107,15 +108,16 @@ BOOST_AUTO_TEST_CASE (CrossProductTest) {
   Traits<CP_t>::Ptr_t cp = p1 ^ p2;
   Value v;
   Jacobian j;
+  vector_t unused;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp->computeValue ();
+    cp->computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
     BOOST_CHECK (cp->value ().isApprox (v));
-    cp->computeJacobian ();
+    cp->computeJacobian (unused);
     BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
@@ -160,15 +162,16 @@ BOOST_AUTO_TEST_CASE (DifferenceTest) {
   Traits<D_t>::Ptr_t cp = p1 - p2;
   Value v;
   Jacobian j;
+  vector_t unused;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp->computeValue ();
+    cp->computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
     BOOST_CHECK (cp->value ().isApprox (v));
-    cp->computeJacobian ();
+    cp->computeJacobian (unused);
     BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
@@ -212,15 +215,16 @@ BOOST_AUTO_TEST_CASE (SumTest) {
   Traits<D_t>::Ptr_t cp = p1 + p2;
   Value v;
   Jacobian j;
+  vector_t unused;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp->computeValue ();
+    cp->computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
     BOOST_CHECK (cp->value ().isApprox (v));
-    cp->computeJacobian ();
+    cp->computeJacobian (unused);
     BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
@@ -262,16 +266,17 @@ BOOST_AUTO_TEST_CASE (ScalarMultiplyTest) {
   Traits<D_t>::Ptr_t cp = scalar * p1;
   Value v;
   Jacobian j;
+  vector_t unused;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     cfg[3] = scalar;
     cp->invalidate ();
     setWrappers (cfg, d1, d2);
-    cp->computeValue ();
+    cp->computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
     BOOST_CHECK (cp->value ().isApprox (v));
-    cp->computeJacobian ();
+    cp->computeJacobian (unused);
     BOOST_CHECK (cp->jacobian ().isApprox (j));
   }
   delete d1;
@@ -317,15 +322,16 @@ BOOST_AUTO_TEST_CASE (ScalarProductTest) {
   Traits<SP_t>::Ptr_t sp = p1 * p2;
   OutputValue v;
   OutputJacobian j;
+  vector_t unused;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     sp->invalidate ();
     setWrappers (cfg, d1, d2);
-    sp->computeValue ();
+    sp->computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
     BOOST_CHECK (v.isApproxToConstant (sp->value ()));
-    sp->computeJacobian ();
+    sp->computeJacobian (unused);
     BOOST_CHECK (sp->jacobian ().isApprox (j));
   }
   delete d1;
@@ -403,23 +409,39 @@ BOOST_AUTO_TEST_CASE (MatrixOfExpTest) {
   moe.set(1,0,p1 ^ p2);
   moe.set(0,1,p1 - p2);
   moe.set(1,1,p1 + p2);
+  vector_t unused;
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();
     moe.invalidate ();
     setWrappers (cfg, d1, d2);
-    moe.computeValue ();
+    moe.computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
     BOOST_CHECK (moe.value().isApprox (v));
-    moe.computeJacobian ();
+    moe.computeJacobian (unused);
     BOOST_CHECK (moe.jacobian ().isApprox (j));
     for (size_t l = 0; l < 100; l++) {
       rvalue = RValue::Random ();
-      moe.jacobianTimes (rvalue, cache);
+      moe.jacobianTimes (unused, rvalue, cache);
       jacobianTimes (j, rvalue, jout);
       BOOST_CHECK (cache.isApprox (jout));
     }
   }
   delete d1;
   delete d2;
+}
+
+BOOST_AUTO_TEST_CASE (FunctionExpTest) {
+  typedef Eigen::Matrix <value_type, 3, 1> Config;
+  AffineFunctionPtr_t func (new AffineFunction(matrix3_t::Identity()));
+  boost::shared_ptr<FunctionExp<AffineFunction> > funcExp = FunctionExp<AffineFunction>::create(func);
+  for (size_t i = 0; i < 100; i++) {
+    Config cfg = Config::Random ();
+
+    funcExp->invalidate ();
+    funcExp->computeValue (cfg);
+    BOOST_CHECK (funcExp->value ().isApprox (cfg));
+    funcExp->computeJacobian (cfg);
+    BOOST_CHECK (funcExp->jacobian ().isIdentity ());
+  }
 }

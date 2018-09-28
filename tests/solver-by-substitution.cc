@@ -47,6 +47,8 @@ using hpp::constraints::AffineFunctionPtr_t;
 using hpp::constraints::ConstantFunction;
 using hpp::constraints::ConstantFunctionPtr_t;
 using hpp::constraints::ExplicitConstraintSet;
+using hpp::constraints::Explicit;
+using hpp::constraints::ExplicitPtr_t;
 using hpp::constraints::Implicit;
 using hpp::constraints::matrix3_t;
 using hpp::constraints::LiegroupSpace;
@@ -96,8 +98,11 @@ void test_quadratic ()
   matrix_t B (matrix_t::Random (N2, N3));
   const int Ninf = std::min(N2,N3);
   B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
-  segment_t in (N1 + N2, N3), out (N1, N2);
-  AffineFunctionPtr_t expl (new AffineFunction (B));
+  segments_t in; in.push_back (segment_t (N1 + N2, N3));
+  segments_t out; out.push_back (segment_t (N1, N2));
+  AffineFunctionPtr_t affine (new AffineFunction (B));
+  ExplicitPtr_t expl (Explicit::create (LiegroupSpace::Rn (N),
+                                        affine, in, out, in, out));
 
   // Make solver
   BySubstitution solver (LiegroupSpace::Rn (N));
@@ -106,8 +111,7 @@ void test_quadratic ()
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (Implicit::create (quad));
-  solver.explicitConstraintSet().add (expl, in, out, in, out);
-  solver.explicitConstraintSetHasChanged();
+  solver.add (expl);
 
   matrix_t M (N, N1 + N3);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N3),
@@ -156,15 +160,22 @@ void test_quadratic2 ()
   matrix_t B (matrix_t::Random (N2, N3));
   const int Ninf = std::min(N2,N3);
   B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
-  segment_t in1 (N1 + N2, N3), out1 (N1, N2);
-  AffineFunctionPtr_t expl1 (new AffineFunction (B));
+  segments_t in1;  in1.push_back (segment_t (N1 + N2, N3));
+  segments_t out1; out1.push_back (segment_t (N1, N2));
+  AffineFunctionPtr_t affine1 (new AffineFunction (B));
+  ExplicitPtr_t expl1 (Explicit::create (LiegroupSpace::Rn (N),
+                                         affine1, in1, out1, in1, out1));
 
   // y = C * z
   matrix_t C (matrix_t::Random (N3, N4));
   const int Ninf2 = std::min(N3,N4);
   C.topLeftCorner (Ninf2, Ninf2) = randomPositiveDefiniteMatrix(Ninf2);
-  segment_t in2 (N1 + N2 + N3, N4), out2 (N1 + N2, N3);
-  AffineFunctionPtr_t expl2 (new AffineFunction (C));
+  segments_t in2; in2.push_back (segment_t (N1 + N2 + N3, N4));
+  segments_t out2; out2.push_back (segment_t (N1 + N2, N3));
+  AffineFunctionPtr_t affine2 (new AffineFunction (C));
+  ExplicitPtr_t expl2 (Explicit::create (LiegroupSpace::Rn (N),
+                                         affine2, in2, out2, in2, out2));
+  
 
   // Make solver
   BySubstitution solver (LiegroupSpace::Rn (N));
@@ -173,8 +184,8 @@ void test_quadratic2 ()
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (Implicit::create (quad));
-  solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
-  solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
+  solver.add (expl1);
+  solver.add (expl2);
   solver.explicitConstraintSetHasChanged();
 
   matrix_t M (N, N1 + N4);
@@ -224,20 +235,28 @@ void test_quadratic3 ()
   matrix_t B (matrix_t::Random (N2, N3 + N4));
   const int Ninf = std::min(N2,N3+N4);
   B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
-  segment_t in1 (N1 + N2, N3 + N4), out1 (N1, N2);
-  AffineFunctionPtr_t expl1 (new AffineFunction (B));
+  segments_t in1; in1.push_back (segment_t (N1 + N2, N3 + N4));
+  segments_t out1; out1.push_back (segment_t (N1, N2));
+  AffineFunctionPtr_t affine1 (new AffineFunction (B));
+  ExplicitPtr_t expl1 (Explicit::create (LiegroupSpace::Rn (N),
+                                         affine1, in1, out1, in1, out1));
 
   // y = C * z
   matrix_t C (matrix_t::Random (N3, N4));
   const int Ninf2 = std::min(N3,N4);
   C.topLeftCorner (Ninf2, Ninf2) = randomPositiveDefiniteMatrix(Ninf2);
-  segment_t in2 (N1 + N2 + N3, N4), out2 (N1 + N2, N3);
-  AffineFunctionPtr_t expl2 (new AffineFunction (C));
+  segments_t in2; in2.push_back (segment_t (N1 + N2 + N3, N4));
+  segments_t out2; out2.push_back (segment_t (N1 + N2, N3));
+  AffineFunctionPtr_t affine2 (new AffineFunction (C));
+  ExplicitPtr_t expl2 (Explicit::create (LiegroupSpace::Rn (N),
+                                         affine2, in2, out2, in2, out2));
 
   // z[0] = d
   vector_t d (vector_t::Random (1));
-  segments_t in3; segment_t out3 (N1 + N2 + N3, 1);
-  ConstantFunctionPtr_t expl3 (new ConstantFunction (d, 0, 0));
+  segments_t in3; segments_t out3; out3.push_back (segment_t (N1 + N2 + N3, 1));
+  ConstantFunctionPtr_t constant3 (new ConstantFunction (d, 0, 0));
+  ExplicitPtr_t expl3 (Explicit::create (LiegroupSpace::Rn (N),
+                       constant3 , in3, out3, in3, out3));
 
   // (w x y z) A (w x y z)
   matrix_t A (randomPositiveDefiniteMatrix(N));
@@ -250,10 +269,9 @@ void test_quadratic3 ()
   solver.saturation(simpleSaturation<-1,1>);
 
   solver.add (Implicit::create (quad));
-  solver.explicitConstraintSet().add (expl1, in1, out1, in1, out1);
-  solver.explicitConstraintSet().add (expl2, in2, out2, in2, out2);
-  solver.explicitConstraintSet().add (expl3, in3, out3, in3, out3);
-  solver.explicitConstraintSetHasChanged();
+  solver.add (expl1);
+  solver.add (expl2);
+  solver.add (expl3);
 
   matrix_t M (N, N1 + N4);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
@@ -487,15 +505,20 @@ BOOST_AUTO_TEST_CASE(functions1)
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
   Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
   Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
-  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (matrix_t::Ones(1,1))),
-      segment_t (2,1), segment_t(0,1),
-      segment_t (2,1), segment_t(0,1));
+  segments_t in; in.push_back (segment_t (2, 1));
+  segments_t out; out.push_back (segment_t (0, 1));
+  AffineFunctionPtr_t affine (new AffineFunction (matrix_t::Ones(1,1)));
+  ExplicitPtr_t expl (Explicit::create (LiegroupSpace::R3 (),affine ,
+                                        in, out, in, out));
+  solver.add(expl);
   // q2 = C
-  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (matrix_t(1,0), vector_t::Zero(1))),
-      segment_t (), segment_t(1,1),
-      segment_t (), segment_t(1,1));
-
-  solver.explicitConstraintSetHasChanged();
+  affine = AffineFunctionPtr_t (new AffineFunction
+                                (matrix_t(1,0), vector_t::Zero(1)));
+  in.clear (); out.clear ();
+  out.push_back (segment_t(1,1));
+  expl = Explicit::create (LiegroupSpace::R3 (), affine,
+                           in, out, in, out);
+  solver.add(expl);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
 
   // h
@@ -524,10 +547,12 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
   Eigen::ColBlockIndices inDer; inDer.addCol (2,1);
   Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
-  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (Jg)),
-      inArg, outArg, inDer, outArg);
-
-  solver.explicitConstraintSetHasChanged();
+  ExplicitPtr_t expl (Explicit::create
+                      (LiegroupSpace::R3 (),
+                       AffineFunctionPtr_t (new AffineFunction (Jg)),
+                       inArg.indices (), outArg.indices (),
+                       inDer.indices (), outArg.indices ()));
+  solver.add (expl);
   BOOST_CHECK_EQUAL(solver.dimension(), 2);
 
   // We add to the system h(q3) = 0
@@ -542,10 +567,13 @@ BOOST_AUTO_TEST_CASE(functions2)
   // We add to the system q3 = C
   // Function h should be removed, f should not.
   vector_t C (1); C(0) = 0;
-  solver.explicitConstraintSet().add(AffineFunctionPtr_t(new AffineFunction (matrix_t (1, 0), C)),
-      segments_t(), segment_t (2, 1),
-      segments_t(), segment_t (2, 1));
-  solver.explicitConstraintSetHasChanged();
+  segments_t out; out.push_back (segment_t (2, 1));
+  expl = Explicit::create
+    (LiegroupSpace::R3 (),
+     AffineFunctionPtr_t (new AffineFunction (matrix_t (1, 0), C)),
+     segments_t(), out, segments_t(), out);
+                         
+  solver.add (expl);
 
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
@@ -608,7 +636,12 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
           parent->rankInVelocity()      + parent->numberDof () - 6));
   }
 
-  BOOST_CHECK(solver.explicitConstraintSet().add (et, et->inArg(), et->outArg(), et->inDer(), et->outDer()) >= 0);
+  BOOST_CHECK(solver.explicitConstraintSet().add
+              (Explicit::create (device->configSpace (),
+                                 et, et->inArg().indices (),
+                                 et->outArg().indices (),
+                                 et->inDer().indices (),
+                                 et->outDer().indices ())) >= 0);
   solver.explicitConstraintSetHasChanged();
   solver.print(std::cout);
 

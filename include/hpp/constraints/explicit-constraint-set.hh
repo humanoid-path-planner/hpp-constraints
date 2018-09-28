@@ -25,7 +25,7 @@
 #include <hpp/constraints/config.hh>
 
 #include <hpp/constraints/matrix-view.hh>
-#include <hpp/constraints/differentiable-function-stack.hh>
+#include <hpp/constraints/differentiable-function-set.hh>
 
 namespace hpp {
   namespace constraints {
@@ -119,69 +119,29 @@ namespace hpp {
 
         /// Attempt to add an explicit constraint
         ///
-        /// \param f differentiable function,
-        /// \param inArg subset of input indices,
-        /// \param outArg subset of output indices,
-        /// \param inDer subset of input indices for the velocity,
-        /// \param outDer subset of output indices for the velocity,
-        /// \return the index of the function if the function was added,
-        /// -1 if the input explicit constraint is not compatible with the
-        ///       current set.
-        /// \note A function can be added iff it is compatible with the
-        ///       previously added functions.
-        size_type add (const DifferentiableFunctionPtr_t& f,
-            const RowBlockIndices& inArg,
-            const RowBlockIndices& outArg,
-            const ColBlockIndices& inDer,
-            const RowBlockIndices& outDer);
-
-        /// Attempt to add an explicit constraint
-        ///
-        /// \param f differentiable function,
-        /// \param inArg subset of input indices,
-        /// \param outArg subset of output indices,
-        /// \param inDer subset of input indices for the velocity,
-        /// \param outDer subset of output indices for the velocity,
-        /// \param comp Comparison type,
+        /// \param constraint explicit constraint
         /// \return the index of the function if the function was added,
         /// -1 otherwise.
         /// \note A function can be added iff it is compatible with the
         ///       previously added functions.
-        size_type add (const DifferentiableFunctionPtr_t& f,
-            const RowBlockIndices& inArg,
-            const RowBlockIndices& outArg,
-            const ColBlockIndices& inDer,
-            const RowBlockIndices& outDer,
-            const ComparisonTypes_t& comp);
-
-        /// Set \f$g\f$  and \f$g^{-1}\f$ functions
-        bool setG (const DifferentiableFunctionPtr_t& f,
-                   const DifferentiableFunctionPtr_t& g,
-                   const DifferentiableFunctionPtr_t& ginv);
-
-        /// \warning the two functions must have the same input and output
-        /// indices.
-        bool replace (const DifferentiableFunctionPtr_t& oldf,
-                      const DifferentiableFunctionPtr_t& newd);
+        size_type add (const ExplicitPtr_t& constraint);
 
         /// Constructor
         ///
-        /// \param nq dimension of vector space in which the robot
-        ///                configuration space is immersed.
-        /// \param nv dimension of tangent space to configuration space.
-        ExplicitConstraintSet (const std::size_t& nq, const std::size_t nv)
-          : nq_ (nq), nv_ (nv)
+        /// \param space Lie group on which constraints are defined.
+        ExplicitConstraintSet (const LiegroupSpacePtr_t& space)
+          : configSpace_ (space)
           ,   inArgs_ (), notOutArgs_ ()
           ,   inDers_ (), notOutDers_ ()
           ,  outArgs_ (),  outDers_ ()
-          , argFunction_ (Eigen::VectorXi::Constant(nq, -1))
-          , derFunction_ (Eigen::VectorXi::Constant(nv, -1))
+          , argFunction_ (Eigen::VectorXi::Constant(space->nq (), -1))
+          , derFunction_ (Eigen::VectorXi::Constant(space->nv (), -1))
           , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
           // , Jg (nv, nv)
-          , arg_ (nq), diff_(nv), diffSmall_()
+          , arg_ (space->nq ()), diff_(space->nv ()), diffSmall_()
         {
-          notOutArgs_.addRow(0, nq);
-          notOutDers_.addCol(0, nv);
+          notOutArgs_.addRow(0, space->nq ());
+          notOutDers_.addCol(0, space->nv ());
         }
 
         /// \}
@@ -300,28 +260,34 @@ namespace hpp {
 
         /// The number of configuration variables
         /// \deprecated use \ref nq instead.
-        const std::size_t& argSize () const HPP_CONSTRAINTS_DEPRECATED
+        std::size_t argSize () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return nq_;
+          return configSpace_->nq ();
         }
 
         /// The number of derivative variables
         /// \deprecated use \ref nv instead.
-        const std::size_t& derSize () const HPP_CONSTRAINTS_DEPRECATED
+        std::size_t derSize () const HPP_CONSTRAINTS_DEPRECATED
         {
-          return nv_;
+          return configSpace_->nv ();
+        }
+
+        /// The Lie group on which constraints are defined
+        LiegroupSpacePtr_t configSpace () const
+        {
+          return configSpace_;
         }
 
         /// The number of variables
-        const std::size_t& nq () const
+        std::size_t nq () const
         {
-          return nq_;
+          return configSpace_->nq ();
         }
 
         /// The number of derivative variables
-        const std::size_t& nv () const
+        std::size_t nv () const
         {
-          return nv_;
+          return configSpace_->nv ();
         }
 
         /// \}
@@ -356,11 +322,11 @@ namespace hpp {
         }
 
         /** Compute the Jacobian of the explicit constraint resolution
-        
+
             \param q input configuration
             \param jacobian square Jacobian matrix of same size as velocity
                             i.e. given by \ref nv method.
-        
+
             The result is the Jacobian of the explicit constraint set considered
             as a projector that maps to any \f$\mathbf{p}\in\mathcal{C}\f$,
             \f$\mathbf{q} = E(\mathbf{p})\f$ defined by
@@ -368,7 +334,7 @@ namespace hpp {
             \mathbf{q}_{\bar{out}} &=& \mathbf{p}_{out} \\
             \mathbf{q}_{out} &=& g^{-1} (f (\mathbf{p}_{in}) + rhs)
             \f}
-        
+
             \warning it is assumed solve(q) has been called before.
         */
         void jacobian(matrixOut_t jacobian, vectorIn_t q) const;
@@ -376,46 +342,71 @@ namespace hpp {
         /// \name Right hand side accessors
         /// \{
 
-        /// Compute right hand side of explicit constraints using input configuration.
+        /// Compute right hand side of constraints using input configuration.
         ///
         /// \param p vector in \f$\mathcal{C}\f$.
         ///
         /// For each explicit constraint \f$E=(in,out,f)\f$, compute the right
         /// hand side as follows:
         /// \f{equation}
-        /// rhs = g (\mathbf{p}_{out}) - f(\mathbf{q}_{in})
+        /// rhs = f (\mathbf{q}),
         /// \f}
-        /// in such a way that all \f$\mathbf{q}\f$ satisfies all the explicit
-        /// constraints.
+        /// where in general
+        ///\f{equation}
+        /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in),
+        /// \f}
+        /// in such a way that all \f$\mathbf{q}\f$ satisfies the explicit
+        /// constraint.
+        /// \note For hpp::constraints::explicit_::RelativePose, the implicit
+        ///       formulation does not derive from the explicit one. The
+        ///       right hand side considered is the right hand side of the
+        ///       implicit formulation.
         vector_t rightHandSideFromInput (vectorIn_t p);
 
-        /// Compute right hand side of explicit constraint using input configuration.
+        /// Compute right hand side of constraint using input configuration.
         ///
-        /// \param f differentiable function associated to the explicit constraints
+        /// \param constraint explicit constraint,
         /// \param p vector in \f$\mathcal{C}\f$.
         ///
         /// Let \f$E=(in,out,f)\f$ be the explicit constraint, compute the right
         /// hand side as follows:
         /// \f{equation}
-        /// rhs = g (\mathbf{p}_{out}) - f(\mathbf{q}_{in})
+        /// rhs = f (\mathbf{q}),
+        /// \f}
+        /// where in general
+        ///\f{equation}
+        /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in),
         /// \f}
         /// in such a way that all \f$\mathbf{q}\f$ satisfies the explicit
         /// constraint.
-        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& f, vectorIn_t p);
+        /// \note For hpp::constraints::explicit_::RelativePose, the implicit
+        ///       formulation does not derive from the explicit one. The
+        ///       right hand side considered is the right hand side of the
+        ///       implicit formulation.
+        bool rightHandSideFromInput (const ExplicitPtr_t& constraint,
+                                     vectorIn_t p);
 
-        /// Compute right hand side of explicit constraint using input configuration.
+        /// Compute right hand side of constraint using input configuration.
         ///
-        /// \param fidx order of the explicit constraint,
+        /// \param i index of the explicit constraint,
         /// \param p vector in \f$\mathcal{C}\f$.
         ///
         /// Let \f$E=(in,out,f)\f$ be the explicit constraint, compute the right
         /// hand side as follows:
         /// \f{equation}
-        /// rhs = g (\mathbf{p}_{out}) - f(\mathbf{q}_{in})
+        /// rhs = f (\mathbf{q}),
+        /// \f}
+        /// where in general
+        ///\f{equation}
+        /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in),
         /// \f}
         /// in such a way that all \f$\mathbf{q}\f$ satisfies the explicit
         /// constraint.
-        void rightHandSideFromInput (const size_type& fidx, vectorIn_t p);
+        /// \note For hpp::constraints::explicit_::RelativePose, the implicit
+        ///       formulation does not derive from the explicit one. The
+        ///       right hand side considered is the right hand side of the
+        ///       implicit formulation.
+        void rightHandSideFromInput (const size_type& i, vectorIn_t p);
 
         /// Set the right hand sides of the explicit constraints.
         ///
@@ -427,15 +418,15 @@ namespace hpp {
 
         /// Set the right hand side for a given explicit constraint
         ///
-        /// \param f the differentiable function of the explicit constraint,
+        /// \param constraint the explicit constraint,
         /// \param rhs right hand side.
-        bool rightHandSide (const DifferentiableFunctionPtr_t& f, vectorIn_t rhs);
+        bool rightHandSide (const ExplicitPtr_t& constraint, vectorIn_t rhs);
 
         /// Set the right hand side for a given explicit constraint
         ///
         /// \param fidx order of the explicit constraint,
         /// \param rhs right hand side.
-        void rightHandSide (const size_type& fidx, vectorIn_t rhs);
+        void rightHandSide (const size_type& i, vectorIn_t rhs);
 
         /// Get the right hand sides
         /// \return the right hand sides of the explicit constraints stacked
@@ -452,7 +443,12 @@ namespace hpp {
       private:
         typedef std::vector<bool> Computed_t;
 
-        void computeFunction(const std::size_t& i, vectorOut_t arg) const;
+        /// Compute output variables with respect to input variables
+        /// \param i index of explicit constraint,
+        /// \retval arg configuration of the system in which output variables
+        ///             are set to their values.
+        void solveExplicitConstraint(const std::size_t& i, vectorOut_t arg)
+          const;
         /// Compute rows of Jacobian corresponding to output of function
         ///
         /// \param i index of the explicit constraint,
@@ -470,26 +466,22 @@ namespace hpp {
         void computeJacobian(const std::size_t& i, matrixOut_t J) const;
         void computeOrder(const std::size_t& iF, std::size_t& iOrder, Computed_t& computed);
 
-        const std::size_t nq_, nv_;
+        LiegroupSpacePtr_t configSpace_;
 
-        struct Function {
-          Function (DifferentiableFunctionPtr_t _f, RowBlockIndices ia,
-                    RowBlockIndices oa, ColBlockIndices id, RowBlockIndices od,
-                    const ComparisonTypes_t& comp);
-          void setG (const DifferentiableFunctionPtr_t& _g, const DifferentiableFunctionPtr_t& _ginv);
-          DifferentiableFunctionPtr_t f;
-          DifferentiableFunctionPtr_t g, ginv;
-          RowBlockIndices inArg, outArg;
-          ColBlockIndices inDer;
-          RowBlockIndices outDer;
-          ComparisonTypes_t comparison;
+        struct Data {
+          Data (const ExplicitPtr_t& constraint);
+          ExplicitPtr_t constraint;
           RowBlockIndices equalityIndices;
-          vector_t rightHandSide;
-
+          vector_t rhs_implicit;
+          vector_t rhs_explicit;
+          // implicit formulation
+          mutable LiegroupElement h_value;
+          // explicit formulation
           mutable vector_t qin, qout;
-          mutable LiegroupElement value, expected;
-          mutable matrix_t jacobian, jGinv;
-        }; // struct Function
+          mutable LiegroupElement f_value, res_qout;
+          // jacobian of f
+          mutable matrix_t jacobian;
+        }; // struct Data
 
         RowBlockIndices inArgs_, notOutArgs_;
         ColBlockIndices inDers_, notOutDers_;
@@ -498,13 +490,13 @@ namespace hpp {
 
         Eigen::MatrixXi inOutDependencies_;
 
-        std::vector<Function> functions_;
+        std::vector<Data> data_;
         std::vector<std::size_t> computationOrder_;
         /// For each configuration variable i, argFunction_[i] is the index in
-        /// functions_ of the function that computes this configuration
+        /// data_ of the function that computes this configuration
         /// variable.
         /// -1 means that the configuration variable is not ouput of any
-        /// function in functions_.
+        /// function in data_.
         Eigen::VectorXi argFunction_, derFunction_;
         value_type squaredErrorThreshold_;
         // mutable matrix_t Jg;

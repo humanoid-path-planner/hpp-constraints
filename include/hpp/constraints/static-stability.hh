@@ -81,7 +81,7 @@ namespace hpp {
         bool computeUminusAndV (vectorIn_t u, vectorOut_t uMinus,
             vectorOut_t v) const;
 
-        void computeVDot (vectorIn_t uMinus, vectorIn_t S,
+        void computeVDot (const ConfigurationIn_t arg, vectorIn_t uMinus, vectorIn_t S,
             matrixIn_t uDot, matrixOut_t uMinusDot, matrixOut_t vDot) const;
 
         void computeLambdaDot (vectorIn_t u, vectorIn_t v, const std::size_t i0,

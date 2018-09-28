@@ -125,21 +125,12 @@ namespace hpp {
         ///          std::size_t priority = 0) instead.
         void add (const DifferentiableFunctionPtr_t& f,
                   const std::size_t& priority,
-                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED
-        {
-          HierarchicalIterative::add (f, priority, comp);
-        }
-
-        void add (const LockedJointPtr_t& lockedJoint);
+                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Get the numerical constraints implicit and explicit
         const NumericalConstraints_t& numericalConstraints () const
         {
-          return functions_;
-        }
-
-        LockedJoints_t lockedJoints () const {
-          return lockedJoints_;
+          return constraints_;
         }
 
         /// Get explicit constraint set
@@ -152,6 +143,12 @@ namespace hpp {
         const ExplicitConstraintSet& explicitConstraintSet () const
         {
           return explicit_;
+        }
+
+        /// Return the number of free variables
+        size_type numberFreeVariables () const
+        {
+          return explicitConstraintSet().notOutDers().nbIndices();
         }
 
         /// Should be called whenever explicit solver is modified
@@ -200,6 +197,51 @@ namespace hpp {
         {
           return solve(arg, DefaultLineSearch());
         }
+
+        /// \name Right hand side accessors
+        /// \{
+
+        /// Compute right hand side of equality constraints from a configuration
+        /// \param config a configuration.
+        ///
+        /// for each constraint of type Equality, set right hand side as
+        /// \f$rhs = f(\mathbf{q})\f$.
+        /// \note Only parameterizable constraints (type Equality) are set
+        vector_t rightHandSideFromConfig (ConfigurationIn_t config);
+
+        /// Compute right hand side of a constraint from a configuration
+        /// \param constraint the constraint,
+        /// \param config a configuration.
+        ///
+        /// Set right hand side as \f$rhs = f(\mathbf{q})\f$.
+        /// \note Only parameterizable constraints (type Equality) are set
+        bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
+                                      ConfigurationIn_t config);
+        /// Set right hand side of a constraints
+        /// \param constraint the constraint,
+        /// \param rhs right hand side.
+        /// \note Size of rhs should be equal to the total dimension of
+        ///       parameterizable constraints (type Equality) .
+        bool rightHandSide (const ImplicitPtr_t& constraint,
+                            vectorIn_t rhs);
+        /// Set the right hand side
+        /// \param rhs the right hand side
+        /// \note Size of rhs should be equal to the total dimension of
+        ///       parameterizable constraints (type Equality).
+        void rightHandSide (vectorIn_t rhs);
+
+        /// Get the right hand side
+        /// \return the right hand side
+        /// \note size of result is equal to total dimension of parameterizable
+        ///       constraints (type Equality).
+        vector_t rightHandSide () const;
+
+        /// Get size of the right hand side
+        /// \return sum of dimensions of parameterizable constraints
+        ///         (type Equality)
+        size_type rightHandSideSize () const;
+
+        /// \}
 
         bool isSatisfied (vectorIn_t arg) const
         {
@@ -250,86 +292,6 @@ namespace hpp {
         ///
         /// The other dof which are modified are solved explicitely.
         segments_t implicitDof () const;
-
-        /// \name Right hand side accessors
-        /// \{
-
-        /// Compute a right hand side using the input arg.
-        vector_t rightHandSideFromInput (vectorIn_t arg)
-        {
-          const size_type top = parent_t::rightHandSideSize();
-          const size_type bot = explicit_.rightHandSideSize();
-          vector_t rhs (top + bot);
-          rhs.head(top) = parent_t::rightHandSideFromInput (arg);
-          rhs.tail(bot) = explicit_.rightHandSideFromInput (arg);
-          return rhs;
-        }
-
-        /// Set the right hand side for a given constraint.
-        /// \param fImplicit implicit formulation of the constraint. Can be NULL
-        /// \param fExplicit explicit formulation of the constraint. Can be NULL
-        /// \param arg a vector of size configSpace->nq ()
-        /// \warning At least one of fImplicit and fExplicit must be non-NULL.
-        bool rightHandSideFromInput (const DifferentiableFunctionPtr_t& fImplicit,
-                                     const DifferentiableFunctionPtr_t& fExplicit,
-                                     vectorIn_t arg)
-        {
-          assert (fImplicit || fExplicit);
-          if (fExplicit && explicit_.rightHandSideFromInput (fExplicit, arg))
-            return true;
-          if (fImplicit && parent_t::rightHandSideFromInput (fImplicit, arg))
-            return true;
-          return false;
-        }
-
-        /// Set the right hand side for a given constraint.
-        /// \param fImplicit implicit formulation of the constraint. Can be NULL
-        /// \param fExplicit explicit formulation of the constraint. Can be NULL
-        /// \param rhs the desired right hand side
-        /// \warning At least one of fImplicit and fExplicit must be non-NULL.
-        bool rightHandSide (const DifferentiableFunctionPtr_t& fImplicit,
-                            const DifferentiableFunctionPtr_t& fExplicit,
-                            vectorIn_t rhs)
-        {
-          assert (fImplicit || fExplicit);
-          if (fExplicit && explicit_.rightHandSide (fExplicit, rhs))
-            return true;
-          if (fImplicit && parent_t::rightHandSide (fImplicit, rhs))
-            return true;
-          return false;
-        }
-
-        /// Set the level set parameter.
-        /// \param rhs the level set parameter.
-        void rightHandSide (vectorIn_t rhs)
-        {
-          const size_type top = parent_t::rightHandSideSize();
-          const size_type bot = explicit_.rightHandSideSize();
-          parent_t::rightHandSide (rhs.head(top));
-          explicit_.rightHandSideFromInput (rhs.head(bot));
-        }
-
-        /// Get the level set parameter.
-        /// \return the parameter.
-        vector_t rightHandSide () const
-        {
-          const size_type top = parent_t::rightHandSideSize();
-          const size_type bot = explicit_.rightHandSideSize();
-          vector_t rhs (top + bot);
-          rhs.head(top) = parent_t::rightHandSide ();
-          rhs.tail(bot) = explicit_.rightHandSide ();
-          return rhs;
-        }
-
-        /// Get size of the level set parameter.
-        size_type rightHandSideSize () const
-        {
-          const size_type top = parent_t::rightHandSideSize();
-          const size_type bot = explicit_.rightHandSideSize();
-          return top + bot;
-        }
-
-        /// \}
 
         virtual std::ostream& print (std::ostream& os) const;
 
