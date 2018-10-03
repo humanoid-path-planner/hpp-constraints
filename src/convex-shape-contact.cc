@@ -321,14 +321,17 @@ namespace hpp {
       o << iendl << "Object shapes:" << incindent;
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
-        if (o_it->joint_) o << iendl << "- universe";
-        else              o << iendl << "- " << o_it->joint_->name();
+        if (o_it->joint_)
+          o << "object on " << o_it->joint_->name() << iendl;
+        else
+          o << "object on universe" << iendl;
       }
-      o << decendl << "Floor shapes:" << incindent;
-      for (ConvexShapes_t::const_iterator o_it = floorConvexShapes_.begin ();
-          o_it != floorConvexShapes_.end (); ++o_it) {
-        if (o_it->joint_) o << iendl << "- universe";
-        else              o << iendl << "- " << o_it->joint_->name();
+      for (ConvexShapes_t::const_iterator fl_it = floorConvexShapes_.begin ();
+          fl_it != floorConvexShapes_.end (); ++fl_it) {
+        if (fl_it->joint_)
+          o << "floor on " << fl_it->joint_->name() << iendl;
+        else
+          o << "floor on universe" << iendl;
       }
       return o << decindent;
     }
