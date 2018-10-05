@@ -69,7 +69,7 @@ namespace hpp {
       {
         if (contains (nm)) {
           hppDout (error, "Constraint " << nm->functionPtr()->name ()
-                   << " already in " << this->name () << "." << std::endl);
+                   << " already in BySubstitution solver." << std::endl);
           return false;
         }
         ComparisonTypes_t types = nm->comparisonType();
@@ -108,7 +108,7 @@ namespace hpp {
           //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
           //      segments_t (0), priority);
         }
-        hppDout (info, "Constraints " << name() << " has dimension "
+        hppDout (info, "Constraint has dimension "
                  << dimension());
 
         return true;

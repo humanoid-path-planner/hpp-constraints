@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_CASE(one_layer)
 
   solver.add(Implicit::create
              (Orientation::create ("Orientation", device, ee2, tf2),
-              ComparisonTypes_t (6, Equality)), 0);
+              ComparisonTypes_t (3, Equality)), 0);
   solver.add(Implicit::create
              (Position::create    ("Position"   , device, ee2, tf2),
-              ComparisonTypes_t (6, Equality)), 0);
+              ComparisonTypes_t (3, Equality)), 0);
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
