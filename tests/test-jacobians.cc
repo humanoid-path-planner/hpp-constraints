@@ -358,19 +358,19 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
 
       /// Position
       LiegroupElement value = (*pos) (*q1);
-      pij->computeValue ();
+      pij->computeValue (*q1);
       BOOST_CHECK (pij->value ().isApprox (value.vector()));
       jacobian.setZero ();
       pos->jacobian (jacobian, *q1);
-      pij->computeJacobian ();
+      pij->computeJacobian (*q1);
       BOOST_CHECK (pij->jacobian ().isApprox (jacobian));
       // Relative position
       value = (*relpos) (*q1);
-      relpos_sb_ptr->computeValue ();
+      relpos_sb_ptr->computeValue (*q1);
       BOOST_CHECK (relpos_sb_ptr->value ().isApprox (value.vector()));
       jacobian.setZero ();
       relpos->jacobian (jacobian, *q1);
-      relpos_sb_ptr->computeJacobian ();
+      relpos_sb_ptr->computeJacobian (*q1);
       BOOST_CHECK (relpos_sb_ptr->jacobian ().isApprox (jacobian));
   }
 }
