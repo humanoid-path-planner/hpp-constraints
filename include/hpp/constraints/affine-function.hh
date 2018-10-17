@@ -28,8 +28,39 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
+    /// Identity function
+    /// \f$ q_{out} = q_{in} \f$
+    ///
+    /// \todo should we handle specifically this function is the solvers ?
+    class HPP_CONSTRAINTS_DLLAPI Identity
+      : public constraints::DifferentiableFunction
+    {
+      public:
+        static IdentityPtr_t create (const LiegroupSpacePtr_t space, const std::string& name)
+        {
+          IdentityPtr_t ptr (new Identity (space, name));
+          return ptr;
+        }
+
+        Identity (const LiegroupSpacePtr_t space, const std::string& name) :
+          DifferentiableFunction (space->nq(), space->nv(), space, name) {}
+
+      protected:
+        void impl_compute (LiegroupElement& y, vectorIn_t arg) const
+        {
+          y.vector() = arg;
+        }
+
+        void impl_jacobian (matrixOut_t J, vectorIn_t) const
+        {
+          J.setIdentity();
+        }
+    }; // class Identity
+
     /// Affine function
     /// \f$ f(q) = J * q + b \f$
+    ///
+    /// \todo should we handle specifically this function is the solvers ?
     class HPP_CONSTRAINTS_DLLAPI AffineFunction
       : public DifferentiableFunction
     {
@@ -77,6 +108,8 @@ namespace hpp {
 
     /// Constant function
     /// \f$ f(q) = C \f$
+    ///
+    /// \todo should we handle specifically this function is the solvers ?
     struct HPP_CONSTRAINTS_DLLAPI ConstantFunction
       : public DifferentiableFunction
     {

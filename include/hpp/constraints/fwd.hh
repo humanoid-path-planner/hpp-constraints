@@ -76,6 +76,7 @@ namespace hpp {
     HPP_PREDEF_CLASS (ConvexShapeContact);
     HPP_PREDEF_CLASS (ConvexShapeContactComplement);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
+    HPP_PREDEF_CLASS (Identity);
     HPP_PREDEF_CLASS (AffineFunction);
     HPP_PREDEF_CLASS (ConstantFunction);
 
@@ -111,6 +112,7 @@ namespace hpp {
     typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
     typedef boost::shared_ptr<ConfigurationConstraint>
       ConfigurationConstraintPtr_t;
+    typedef boost::shared_ptr<Identity> IdentityPtr_t;
     typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
     typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
