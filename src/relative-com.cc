@@ -96,7 +96,7 @@ namespace hpp {
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      comc_->compute (Device::COM);
+      comc_->compute (hpp::pinocchio::COM);
       const Transform3f& M = joint_->currentTransformation ();
       const vector3_t& x = comc_->com ();
       const matrix3_t& R = M.rotation ();
@@ -120,7 +120,7 @@ namespace hpp {
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();
-      comc_->compute (Device::ALL);
+      comc_->compute (hpp::pinocchio::COMPUTE_ALL);
       const ComJacobian_t& Jcom = comc_->jacobian ();
       const JointJacobian_t& Jjoint (joint_->jacobian ());
       const Transform3f& M = joint_->currentTransformation ();

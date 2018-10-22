@@ -850,10 +850,10 @@ namespace hpp {
           return comc_;
         }
         void impl_value (const ConfigurationIn_t ) {
-          comc_->compute (Device::COM);
+          comc_->compute (hpp::pinocchio::COM);
         }
         void impl_jacobian (const ConfigurationIn_t ) {
-          comc_->compute (Device::ALL);
+          comc_->compute (hpp::pinocchio::COMPUTE_ALL);
           // TODO: there is memory and time to be saved here as this copy is
           // not important.
           //this->jacobian_ = comc_->jacobian ();

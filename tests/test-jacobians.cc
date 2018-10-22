@@ -89,9 +89,8 @@ private:
 
 DevicePtr_t createRobot ()
 {
-  DevicePtr_t robot =
-    hpp::pinocchio::humanoidSimple("test", true,
-        (Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
+  using namespace hpp::pinocchio;
+  DevicePtr_t robot = humanoidSimple("test", true, Computation_t (JOINT_POSITION | JACOBIAN));
   robot->rootJoint()->lowerBound(0, -1);
   robot->rootJoint()->lowerBound(1, -1);
   robot->rootJoint()->lowerBound(2, -1);
