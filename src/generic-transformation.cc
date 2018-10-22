@@ -561,6 +561,10 @@ namespace hpp {
     void GenericTransformation<_Options>::impl_jacobian
     (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
     {
+      // TODO there is still a little bit a memory which is dynamically
+      // allocated in GTDataJ. At the moment, this allocation is necessary to
+      // support multithreadind. To avoid it, DeviceData should provide some
+      // a temporary buffer to pass to an Eigen::Map
       GTDataJ<IsRelative, ComputePosition, ComputeOrientation> data (m_, robot_);
 
       data.device.currentConfiguration (arg);
