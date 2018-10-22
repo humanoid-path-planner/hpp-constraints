@@ -77,6 +77,8 @@ private:
 
 BOOST_AUTO_TEST_CASE (print) {
   DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
+  device->model().upperPositionLimit.head<3>().setOnes();
+  device->model().lowerPositionLimit.head<3>().setZero();
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
