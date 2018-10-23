@@ -135,3 +135,46 @@ BOOST_AUTO_TEST_CASE (print) {
   not_ap2 = (ap2 == false);
   BOOST_CHECK ((ap12 == ((not_ap1 && ap2) || (ap1 && not_ap2))).all());
 }
+
+BOOST_AUTO_TEST_CASE (multithread) {
+  DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
+  device->numberDeviceData (4);
+  device->model().upperPositionLimit.head<3>().setOnes();
+  device->model().lowerPositionLimit.head<3>().setZero();
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
+  BOOST_REQUIRE (device);
+  BasicConfigurationShooter cs (device);
+
+  device->currentConfiguration (*cs.shoot ());
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
+
+  std::vector<DifferentiableFunctionPtr_t> functions;
+  functions.push_back(Orientation::create            ("Orientation"           , device, ee2, tf2)          );
+  functions.push_back(Position::create               ("Position"              , device, ee2, tf2, tf1)     );
+  functions.push_back(Transformation::create         ("Transformation"        , device, ee1, tf1)          );
+  functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)     );
+  functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+
+  const int N = 10;
+  Configuration_t q = *cs.shoot();
+  for (std::size_t i = 0; i < functions.size(); ++i) {
+    DifferentiableFunctionPtr_t f = functions[i];
+
+    std::vector <LiegroupElement> vs (N, LiegroupElement (f->outputSpace()));
+    std::vector <matrix_t> Js (N, matrix_t(f->outputDerivativeSize(), f->inputDerivativeSize()));
+#pragma omp parallel for
+    for (int j = 0; j < 10; ++j) {
+      f->value    (vs[j], q);
+      f->jacobian (Js[j], q);
+    }
+
+    for (int j = 1; j < N; ++j) {
+      BOOST_CHECK_EQUAL (vs[0].vector(), vs[j].vector());
+      BOOST_CHECK_EQUAL (Js[0]         , Js[j]);
+    }
+  }
+}
