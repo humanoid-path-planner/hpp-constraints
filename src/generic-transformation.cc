@@ -89,12 +89,17 @@ namespace hpp {
           RowOri = (ori?(pos?3:0):-1)
         };
         typedef Eigen::Matrix<value_type, NbRows, Eigen::Dynamic> JacobianType;
+        typedef Eigen::Matrix<value_type,      3, Eigen::Dynamic> matrix3x_t;
         JacobianType jacobian;
-        Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmpJac;
+        matrix3x_t tmpJac;
         eigen::vector3_t cross1, cross2;
 
         GTDataJ (const GenericTransformationModel<rel>& m, const DevicePtr_t& d)
           : GTDataV<rel,pos,ori> (m, d)
+          // TODO the two following matrices should be of type Eigen::Map<...>
+          // and they should point to some buffer in m.device
+          // , jacobian (buffer1, NbRows, m.cols)
+          // , tmpJac   (buffer2,      3, m.cols)
         {
           if (!m.fullPos || !m.fullOri) jacobian.resize ((int)NbRows, m.cols);
           cross1.setZero();
