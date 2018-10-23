@@ -143,8 +143,9 @@ namespace hpp {
         /// Default to 0
         void setNormalMargin (const value_type& margin);
 
-        /// Compute the contact points in the last configuration.
-        std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
+        /// Compute the contact points
+        std::vector <ForceData> computeContactPoints (ConfigurationIn_t q,
+            const value_type& normalMargin) const;
 
       /// Display object in a stream
       std::ostream& print (std::ostream& o) const;
@@ -152,27 +153,28 @@ namespace hpp {
       private:
         void impl_compute (LiegroupElement& result, ConfigurationIn_t argument)
           const;
+        void computeInternalValue (const ConfigurationIn_t& argument,
+            bool& isInside, ContactType& type, vector6_t& value) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
-        void computeInternalJacobian (ConfigurationIn_t argument) const;
+        void computeInternalJacobian (const ConfigurationIn_t& argument,
+            bool& isInside, ContactType& type, matrix_t& jacobian) const;
 
-        void selectConvexShapes () const;
+        typedef std::vector <ConvexShape> ConvexShapes_t;
+        /// \return true if the contact is created.
+        bool selectConvexShapes (const pinocchio::DeviceData& data,
+            ConvexShapes_t::const_iterator& object,
+            ConvexShapes_t::const_iterator& floor) const;
         ContactType contactType (const ConvexShape& object,
             const ConvexShape& floor) const;
 
         DevicePtr_t robot_;
-        mutable RelativeTransformation relativeTransformation_;
+        mutable GenericTransformationModel<true> relativeTransformationModel_;
 
-        typedef std::vector <ConvexShape> ConvexShapes_t;
         ConvexShapes_t objectConvexShapes_;
         ConvexShapes_t floorConvexShapes_;
 
         value_type normalMargin_;
-
-        mutable bool isInside_;
-        mutable ContactType contactType_;
-        mutable LiegroupElement result_;
-        mutable matrix_t jacobian_;
     };
 
     /** Complement to full transformation constraint of ConvexShapeContact
