@@ -26,6 +26,7 @@
 #include <hpp/pinocchio/simple-device.hh>
 
 #include <../tests/util.hh>
+#include <../tests/convex-shape-contact-function.hh>
 
 using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
@@ -59,6 +60,9 @@ BOOST_AUTO_TEST_CASE (multithread) {
   functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)     );
   functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2));
   functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back(createConvexShapeContact_triangles (device, ee1, "ConvexShapeContact triangle"));
+  functions.push_back(createConvexShapeContact_punctual  (device, ee1, "ConvexShapeContact punctual"));
+  functions.push_back(createConvexShapeContact_convex    (device, ee1, "ConvexShapeContact convex"));
 
   const int N = 10;
   randomConfig (device, q);

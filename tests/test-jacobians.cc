@@ -30,14 +30,6 @@
 #include "hpp/constraints/differentiable-function-set.hh"
 #include "hpp/constraints/tools.hh"
 
-// The following 6 includes are deprecated and will be removed
-// #include "hpp/constraints/position.hh"
-// #include "hpp/constraints/orientation.hh"
-// #include "hpp/constraints/transformation.hh"
-// #include "hpp/constraints/relative-position.hh"
-// #include "hpp/constraints/relative-orientation.hh"
-// #include "hpp/constraints/relative-transformation.hh"
-
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
 
@@ -46,6 +38,7 @@
 #include <math.h>
 
 #include <../tests/util.hh>
+#include <../tests/convex-shape-contact-function.hh>
 
 using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
@@ -84,102 +77,6 @@ DevicePtr_t createRobot ()
   robot->rootJoint()->upperBound(1,  1);
   robot->rootJoint()->upperBound(2,  1);
   return robot;
-}
-
-ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointPtr_t j, std::string name)
-{
-  /** Floor = penta + square
-   *     +
-   *    / \
-   *   /   +-----+
-   *  +    |     |
-   *   \   +-----+
-   *    \ /
-   *     +
-   *
-   *  Object = point
-  **/
-  std::vector <vector3_t> square(4);
-  square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
-  square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
-
-  std::vector <vector3_t> penta(5);
-  penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
-  penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
-  penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
-
-  std::vector <vector3_t> point(1, vector3_t (0,0,0));
-  ConvexShape pointCs (point, j);
-
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (pointCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
-  return fptr;
-}
-
-ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr_t j, std::string name)
-{
-  /** Floor = penta + square
-   *     +
-   *    / \
-   *   /   +-----+
-   *  +    |     |
-   *   \   +-----+
-   *    \ /
-   *     +
-   *
-   *  Object = point
-   *  +--+
-   *  |   \
-   *  +----+
-  **/
-  std::vector <vector3_t> square(4);
-  square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
-  square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
-
-  std::vector <vector3_t> penta(5);
-  penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
-  penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
-  penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
-
-  std::vector <vector3_t> trapeze(4);
-  trapeze[0] = vector3_t (-0.1, 0.1,0); trapeze[1] = vector3_t ( 0.1, 0.1,0);
-  trapeze[2] = vector3_t ( 0.2,-0.1,0); trapeze[3] = vector3_t (-0.1,-0.1,0);
-  ConvexShape tCs (trapeze, j);
-
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (tCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
-  return fptr;
-}
-
-ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, JointPtr_t j, std::string name)
-{
-  vector3_t x (1,0,0), y (0,1,0), z (0,0,1);
-  vector3_t p[12];
-  p[0] = vector3_t (-5,-5,0); p[1] = vector3_t (-5, 5,0); p[2] = vector3_t ( 5,-5,0);
-  p[3] = vector3_t ( 5, 5,0); p[4] = vector3_t (-5, 5,0); p[5] = vector3_t ( 5,-5,0);
-  p[6] = vector3_t ( 0, 0,1); p[7] = vector3_t (  1,0,1); p[8] = vector3_t (0,  1,1);
-  p[9] = vector3_t ( 0, 0,0); p[10] = vector3_t (0.1,0,0); p[11] = vector3_t (0,0.1,0);
-  std::vector<vector3_t> f1 = list_of (p[0])(p[1])(p[2]),
-                         f2 = list_of (p[3])(p[4])(p[5]),
-                         th = list_of (p[6])(p[7])(p[8]),
-                         o  = list_of (p[9])(p[10])(p[11]);
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (ConvexShape (o, j));
-  f.addFloor (ConvexShape (th, JointPtr_t()));
-  f.addFloor (ConvexShape (f1, JointPtr_t()));
-  f.addFloor (ConvexShape (f2, JointPtr_t()));
-  return fptr;
 }
 
 BOOST_AUTO_TEST_CASE (triangle) {
