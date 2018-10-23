@@ -271,7 +271,7 @@ namespace hpp {
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
       GenericTransformation (const std::string& name,
-                              const DevicePtr_t&,
+                              const DevicePtr_t& robot,
                               std::vector <bool> mask);
 
     protected:
