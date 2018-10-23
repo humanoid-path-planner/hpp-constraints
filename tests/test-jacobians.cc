@@ -45,6 +45,8 @@
 #include <limits>
 #include <math.h>
 
+#include <../tests/util.hh>
+
 using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
 using hpp::pinocchio::Device;
@@ -70,22 +72,6 @@ static vector3_t zero = vector3_t::Identity();
 static se3::SE3 MId = se3::SE3::Identity();
 se3::SE3 toSE3(const matrix3_t& R) { return se3::SE3(R, zero); }
 se3::SE3 toSE3(const vector3_t& t) { return se3::SE3(I3, t); }
-
-class BasicConfigurationShooter
-{
-public:
-  BasicConfigurationShooter (const DevicePtr_t& robot) : robot_ (robot)
-  {
-  }
-  virtual ConfigurationPtr_t shoot () const
-  {
-    ConfigurationPtr_t config (new Configuration_t (robot_->configSize ()));
-    *config = se3::randomConfiguration(robot_->model());
-    return config;
-  }
-private:
-  const DevicePtr_t& robot_;
-}; // class BasicConfigurationShooter
 
 DevicePtr_t createRobot ()
 {
@@ -243,9 +229,10 @@ BOOST_AUTO_TEST_CASE (jacobian) {
              ee2 = device->getJointByName ("rleg5_joint");
   Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
-  BasicConfigurationShooter cs (device);
 
-  device->currentConfiguration (*cs.shoot ());
+  Configuration_t q1;
+  randomConfig (device, q1);
+  device->currentConfiguration (q1);
   device->computeForwardKinematics ();
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
@@ -274,7 +261,8 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       RelativePosition::create ("RelativePosition with mask (0,1,1)", device, ee1, ee2, tf1, tf2, mask011));
 
-  device->currentConfiguration (*cs.shoot ());
+  randomConfig (device, q1);
+  device->currentConfiguration (q1);
   device->computeForwardKinematics ();
   tf1 = ee1->currentTransformation ();
   tf2 = ee2->currentTransformation ();
@@ -300,9 +288,9 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (stack);
   //*/
 
-  std::vector<ConfigurationPtr_t> cfgs (NUMBER_JACOBIAN_CALCULUS);
-  for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) cfgs[i] = cs.shoot();
-  Configuration_t q1(device->currentConfiguration());
+  std::vector<Configuration_t> cfgs (NUMBER_JACOBIAN_CALCULUS);
+  for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++)
+    randomConfig (device, cfgs[i]);
   matrix_t jacobian, fdCentral, fdForward, errorJacobian;
   for (DFs::iterator fit = functions.begin(); fit != functions.end(); ++fit) {
     DifferentiableFunction& f = **fit;
@@ -311,7 +299,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
     fdCentral.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
 
     for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) {
-      q1 = *cfgs[i];
+      q1 = cfgs[i];
       jacobian.setZero ();
       f.jacobian (jacobian, q1);
 
@@ -336,7 +324,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
-  BasicConfigurationShooter cs (device);
 
   /// Create the constraints
   typedef DifferentiableFunctionPtr_t DFptr;
@@ -347,31 +334,32 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
     JointTranspose (ee1) * (pij2 - pij);
   DFptr relpos = RelativePosition::create ("RelPos", device, ee1, ee2, MId, MId);
 
-  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  Configuration_t q1, q2;
+  randomConfig (device, q2);
   matrix_t jacobian = matrix_t (pos->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
-      q1 = cs.shoot ();
-      device->currentConfiguration (*q1);
+      randomConfig (device, q1);
+      device->currentConfiguration (q1);
       device->computeForwardKinematics ();
 
       pij->invalidate ();
       relpos_sb_ptr->invalidate ();
 
       /// Position
-      LiegroupElement value = (*pos) (*q1);
-      pij->computeValue (*q1);
+      LiegroupElement value = (*pos) (q1);
+      pij->computeValue (q1);
       BOOST_CHECK (pij->value ().isApprox (value.vector()));
       jacobian.setZero ();
-      pos->jacobian (jacobian, *q1);
-      pij->computeJacobian (*q1);
+      pos->jacobian (jacobian, q1);
+      pij->computeJacobian (q1);
       BOOST_CHECK (pij->jacobian ().isApprox (jacobian));
       // Relative position
-      value = (*relpos) (*q1);
-      relpos_sb_ptr->computeValue (*q1);
+      value = (*relpos) (q1);
+      relpos_sb_ptr->computeValue (q1);
       BOOST_CHECK (relpos_sb_ptr->value ().isApprox (value.vector()));
       jacobian.setZero ();
-      relpos->jacobian (jacobian, *q1);
-      relpos_sb_ptr->computeJacobian (*q1);
+      relpos->jacobian (jacobian, q1);
+      relpos_sb_ptr->computeJacobian (q1);
       BOOST_CHECK (relpos_sb_ptr->jacobian ().isApprox (jacobian));
   }
 }
@@ -381,7 +369,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
-  BasicConfigurationShooter cs (device);
 
   /// Create the constraints
   typedef DifferentiableFunctionPtr_t DFptr;
@@ -389,21 +376,22 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   Traits<JointFrame>::Ptr_t jf  = JointFrame::create (ee1);
   DFptr sf = SymbolicFunction<JointFrame>::create ("SymbolicFunctionTest", device, jf);
 
-  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  Configuration_t q1, q2;
+  randomConfig (device, q2);
   matrix_t jacobian1 = matrix_t (trans->outputSize (), device->numberDof ());
   matrix_t jacobian2 = matrix_t (trans->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
-      q1 = cs.shoot ();
-      device->currentConfiguration (*q1);
+      randomConfig (device, q1);
+      device->currentConfiguration (q1);
       device->computeForwardKinematics ();
 
-      LiegroupElement value1 = (*trans) (*q1);
-      LiegroupElement value2 = (*sf) (*q1);
+      LiegroupElement value1 = (*trans) (q1);
+      LiegroupElement value2 = (*sf) (q1);
       BOOST_CHECK (value1.vector().isApprox ( value2.vector()));
       jacobian1.setZero ();
       jacobian2.setZero ();
-      trans->jacobian (jacobian1, *q1);
-      sf->jacobian (jacobian2, *q1);
+      trans->jacobian (jacobian1, q1);
+      sf->jacobian (jacobian2, q1);
       BOOST_CHECK (jacobian1.isApprox ( jacobian2));
   }
 }
