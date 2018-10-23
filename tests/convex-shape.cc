@@ -20,6 +20,7 @@
 #include "hpp/constraints/convex-shape.hh"
 
 using hpp::constraints::ConvexShape;
+using hpp::constraints::ConvexShapeData;
 using hpp::constraints::value_type;
 using hpp::constraints::vector3_t;
 
@@ -33,6 +34,8 @@ BOOST_AUTO_TEST_CASE (triangle)
   pts.push_back (p1);
   pts.push_back (p2);
   ConvexShape t (pts);
+  ConvexShapeData d;
+  d.updateToCurrentTransform(t);
 
   std::vector <vector3_t> ptsIn, ptsOut;
   ptsIn.push_back (p0);
@@ -49,25 +52,31 @@ BOOST_AUTO_TEST_CASE (triangle)
   ptsOut.push_back (vector3_t (-1,1,0));
 
   for (size_t i = 0; i < ptsIn.size (); i++) {
-    BOOST_CHECK_MESSAGE (t.isInside (ptsIn[i]),
+    BOOST_CHECK_EQUAL (t.isInsideLocal (ptsIn[i]), d.isInside (t, ptsIn[i]));
+    BOOST_CHECK_EQUAL (t.distanceLocal (ptsIn[i]), d.distance (t, ptsIn[i]));
+
+    BOOST_CHECK_MESSAGE (d.isInside (t, ptsIn[i]),
         "Check point inside failed for ptsIn[" << i << "]=" << ptsIn[i]);
-    BOOST_CHECK_MESSAGE (t.distance (ptsIn[i]) <= 0,
+    BOOST_CHECK_MESSAGE (d.distance (t, ptsIn[i]) <= 0,
         "Wrong point to triangle distance for ptsIn[" << i << "]=" << ptsIn[i]
-        << ". Distance returned is " << t.distance (ptsIn[i]));
+        << ". Distance returned is " << d.distance (t, ptsIn[i]));
   }
   for (size_t i = 0; i < ptsOut.size (); i++) {
-    BOOST_CHECK_MESSAGE (!t.isInside (ptsOut[i]),
+    BOOST_CHECK_MESSAGE (!d.isInside (t, ptsOut[i]),
         "Check point outside failed for ptsOut[" << i << "]=" << ptsOut[i]);
-    BOOST_CHECK_MESSAGE (t.distance (ptsOut[i]) >= 0,
+    BOOST_CHECK_MESSAGE (d.distance (t, ptsOut[i]) >= 0,
         "Wrong point to triangle distance for ptsOut[" << i << "]=" << ptsOut[i]
-        << ". Distance returned is " << t.distance (ptsOut[i]));
+        << ". Distance returned is " << d.distance (t, ptsOut[i]));
   }
 }
 
 void checkDistance(const ConvexShape& t, const vector3_t& p, const value_type& expected)
 {
-  BOOST_CHECK_MESSAGE(std::abs(t.distance(p) - expected) < 1e-5,
-      "Point " << p << ".\nDistance computed: " << t.distance(p) << "\nDistance expected: " << expected
+  ConvexShapeData d;
+  d.updateToCurrentTransform(t);
+
+  BOOST_CHECK_MESSAGE(std::abs(d.distance(t, p) - expected) < 1e-5,
+      "Point " << p << ".\nDistance computed: " << d.distance(t, p) << "\nDistance expected: " << expected
       );
 }
 

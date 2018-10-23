@@ -208,20 +208,22 @@ BOOST_AUTO_TEST_CASE (triangle) {
   p[5] = vector3_t (1,1,0);
   p[6] = vector3_t (-1,-1,1);
   ConvexShape t (p[0],p[1],p[2]);
-  BOOST_CHECK_MESSAGE ((t.normal () - z).isZero (), "Norm of triangle is wrong");
-  BOOST_CHECK_MESSAGE ((t.center () - (x+y)/3).isZero (), "Center of triangle is wrong");
+  ConvexShapeData d;
+  d.updateToCurrentTransform(t);
+  BOOST_CHECK_MESSAGE ((d.normal_ - z).isZero (), "Norm of triangle is wrong");
+  BOOST_CHECK_MESSAGE ((d.center_ - (x+y)/3).isZero (), "Center of triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.planeXaxis ().dot (z)) < 1e-8, "X axis of triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (z)) < 1e-8, "Y axis of triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (t.planeXaxis ())) < 1e-8, "X axis of triangle is wrong");
-  BOOST_CHECK_MESSAGE ((t.intersection (p[6], y-z) + x).isZero (), "Wrong intersection of triangle and line is wrong");
-  BOOST_CHECK_MESSAGE (t.isInside (p[4]), "This point is inside");
-  BOOST_CHECK_MESSAGE (!t.isInside (p[5]), "This point is outside");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[0])) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[1])) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[2])) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[4]) + 0.2) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[5]) - 0.5 * std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (t.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (t.planeXaxis ())) < 1e-8, "X and Y axes are not orthogonal");
+  BOOST_CHECK_MESSAGE ((d.intersection (p[6], y-z) + x).isZero (), "Wrong intersection of triangle and line is wrong");
+  BOOST_CHECK_MESSAGE ( d.isInside (t, p[4]), "This point is inside");
+  BOOST_CHECK_MESSAGE (!d.isInside (t, p[5]), "This point is outside");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[0])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[1])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[2])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[4]) + 0.2) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[5]) - 0.5 * std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, d.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
 }
 
 template<bool forward>
