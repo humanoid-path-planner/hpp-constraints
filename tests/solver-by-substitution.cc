@@ -272,6 +272,7 @@ void test_quadratic3 ()
   solver.add (expl1);
   solver.add (expl2);
   solver.add (expl3);
+  BySubstitution copySolver(solver);
 
   matrix_t M (N, N1 + N4);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
@@ -292,7 +293,7 @@ void test_quadratic3 ()
   vector_t x (N);
 
   x.setRandom();
-  SOLVER_CHECK_SOLVE (solver.solve<Backtracking>(x),
+  SOLVER_CHECK_SOLVE (copySolver.solve<Backtracking>(x),
                       SUCCESS);
   // SOLVER_CHECK_SOLVE (solver.solve<lineSearch::Constant>(x), SUCCESS);
   // EIGEN_VECTOR_IS_APPROX (x, vector_t::Zero(N));
@@ -303,14 +304,14 @@ void test_quadratic3 ()
   matrix_t expectedJ (1, N1 + N4 - 1), J(1, N1 + N4 - 1);
 
   x.setRandom();
-  solver.explicitConstraintSet().solve(x);
+  copySolver.explicitConstraintSet().solve(x);
   expectedJ = 2 *
-    (P * solver.explicitConstraintSet().notOutArgs().rview(x).eval() +
+    (P * copySolver.explicitConstraintSet().notOutArgs().rview(x).eval() +
      Xr_0).transpose() * Ar * P;
 
-  solver.computeValue<true> (x);
-  solver.updateJacobian(x);
-  solver.getReducedJacobian(J);
+  copySolver.computeValue<true> (x);
+  copySolver.updateJacobian(x);
+  copySolver.getReducedJacobian(J);
 
   EIGEN_IS_APPROX (expectedJ, J);
 }
