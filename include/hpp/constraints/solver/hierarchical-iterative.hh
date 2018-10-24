@@ -333,6 +333,12 @@ namespace hpp {
           update ();
         }
 
+        /// Get free velocity variables
+        const Indices_t& freeVariables () const
+        {
+          return freeVariables_;
+        }
+
         /// Set maximal number of iterations
         void maxIterations (size_type iterations)
         {

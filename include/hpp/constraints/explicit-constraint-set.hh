@@ -184,7 +184,6 @@ namespace hpp {
 
         /// Set \f$i\overline{n\cup ou}t\f$ of other configuration variables
         ///
-        /// Configuration variables that are neither input nor output
         /// \deprecated use \ref notOutArgs
         const RowBlockIndices& freeArgs () const HPP_CONSTRAINTS_DEPRECATED
         {
@@ -193,7 +192,6 @@ namespace hpp {
 
         /// Set \f$i\overline{n\cup ou}t\f$ of other velocity variables
         ///
-        /// Velocity variables that are neither input nor output
         /// \deprecated use \ref notOutDers
         const ColBlockIndices& freeDers () const HPP_CONSTRAINTS_DEPRECATED
         {
@@ -202,7 +200,7 @@ namespace hpp {
 
         /// Set \f$i\overline{n\cup ou}t\f$ of other configuration variables
         ///
-        /// Configuration variables that are neither input nor output
+        /// Configuration variables that are not output variables
         const RowBlockIndices& notOutArgs () const
         {
           return notOutArgs_;
@@ -210,7 +208,7 @@ namespace hpp {
 
         /// Set \f$i\overline{n\cup ou}t\f$ of other velocity variables
         ///
-        /// Velocity variables that are neither input nor output
+        /// Velocity variables that are not output variables
         const ColBlockIndices& notOutDers () const
         {
           return notOutDers_;
