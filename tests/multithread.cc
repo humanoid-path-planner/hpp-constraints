@@ -19,6 +19,8 @@
 
 #include <stdlib.h>
 
+#include <hpp/constraints/configuration-constraint.hh>
+#include <hpp/constraints/convex-shape-contact.hh>
 #include <hpp/constraints/generic-transformation.hh>
 
 #include <hpp/pinocchio/device.hh>
@@ -54,6 +56,7 @@ BOOST_AUTO_TEST_CASE (multithread) {
   Transform3f tf2 (ee2->currentTransformation ());
 
   std::vector<DifferentiableFunctionPtr_t> functions;
+  functions.push_back(ConfigurationConstraint::create ("Configuration", device, device->currentConfiguration()));
   functions.push_back(Orientation::create            ("Orientation"           , device, ee2, tf2)          );
   functions.push_back(Position::create               ("Position"              , device, ee2, tf2, tf1)     );
   functions.push_back(Transformation::create         ("Transformation"        , device, ee1, tf1)          );
