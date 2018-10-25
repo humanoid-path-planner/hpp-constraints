@@ -32,6 +32,8 @@ SET (${LIBRARY_NAME}_SOURCES
   explicit/implicit-function.cc
   explicit/relative-transformation.cc
   explicit/relative-pose.cc
+  function/of-parameter-subset.cc
+  function/difference.cc
   implicit/relative-pose.cc
   locked-joint.cc
   solver/by-substitution.cc

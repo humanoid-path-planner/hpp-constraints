@@ -21,6 +21,7 @@
 #include <vector>
 #include <iostream>
 #include <hpp/util/indent.hh>
+#include <hpp/pinocchio/util.hh>
 #include <hpp/constraints/fwd.hh>
 
 # define HPP_EIGEN_USE_EVALUATOR EIGEN_VERSION_AT_LEAST(3,2,92)
@@ -989,5 +990,14 @@ namespace Eigen {
 #include <hpp/constraints/impl/matrix-view-operation.hh>
 
 # undef HPP_EIGEN_USE_EVALUATOR
+
+namespace hpp {
+  template <int Option>
+  struct prettyPrint<constraints::segment_t, Option> {
+    static std::ostream& run (std::ostream& os, const constraints::segment_t& s) {
+      return os << "[ " << s.first << ", " << s.first + s.second << " ]";
+    }
+  };
+}
 
 #endif // HPP_CONSTRAINTS_MATRIX_VIEW_HH
