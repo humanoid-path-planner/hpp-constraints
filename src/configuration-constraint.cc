@@ -80,13 +80,13 @@ namespace hpp {
       matrix_t unused;
 
       LiegroupConstElementRef a (argument, goal_.space());
-      diff_ = goal_ - a;
+      J_ = (goal_ - a).transpose();
 
       // Apply jacobian of the difference on the right.
-      goal_.space()->Jdifference<false> (argument, goal_.vector(), diff_.transpose(), unused);
+      goal_.space()->Jdifference<false> (argument, goal_.vector(), J_, unused);
 
       jacobian.leftCols (robot_->numberDof ()).noalias() =
-        weights_.cwiseProduct(diff_).transpose ();
+        J_.cwiseProduct(weights_.transpose());
     }
   } // namespace constraints
 } // namespace hpp

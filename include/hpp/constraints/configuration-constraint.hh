@@ -72,6 +72,7 @@ namespace hpp {
         vector_t weights_;
         EigenBoolVector_t mask_;
         mutable vector_t diff_;
+        mutable Eigen::Matrix<value_type, 1, Eigen::Dynamic> J_;
     }; // class ComBetweenFeet
   } // namespace constraints
 } // namespace hpp
