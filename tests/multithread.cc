@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE (multithread) {
   functions.push_back(createConvexShapeContact_punctual  (device, ee1, "ConvexShapeContact punctual"));
   functions.push_back(createConvexShapeContact_convex    (device, ee1, "ConvexShapeContact convex"));
 
-  const int N = 10;
+  const int N = 100;
   randomConfig (device, q);
   for (std::size_t i = 0; i < functions.size(); ++i) {
     DifferentiableFunctionPtr_t f = functions[i];
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE (multithread) {
     std::vector <LiegroupElement> vs (N, LiegroupElement (f->outputSpace()));
     std::vector <matrix_t> Js (N, matrix_t(f->outputDerivativeSize(), f->inputDerivativeSize()));
 #pragma omp parallel for
-    for (int j = 0; j < 10; ++j) {
+    for (int j = 0; j < N; ++j) {
       f->value    (vs[j], q);
       f->jacobian (Js[j], q);
     }
