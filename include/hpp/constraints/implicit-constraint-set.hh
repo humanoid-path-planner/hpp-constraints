@@ -124,6 +124,16 @@ namespace hpp {
           : Implicit (DifferentiableFunctionSet::create ("Stack"),
                       ComparisonTypes_t ())
           {}
+
+        ImplicitConstraintSet (const ImplicitConstraintSet& o)
+          : Implicit (DifferentiableFunctionSet::create ("Stack"),
+                      ComparisonTypes_t ())
+          {
+            const Implicits_t& constraints = o.constraints();
+            for (Implicits_t::const_iterator constraint = constraints.begin();
+                constraint != constraints.end(); ++constraint)
+              add (*constraint);
+          }
         
       private:
         Implicits_t constraints_;
