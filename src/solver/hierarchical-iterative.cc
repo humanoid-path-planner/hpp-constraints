@@ -496,7 +496,7 @@ namespace hpp {
       (vectorIn_t from, vectorIn_t velocity, vectorOut_t result) const
       {
         typedef pinocchio::LiegroupElement Lge_t;
-        typedef pinocchio::LiegroupConstElementRef LgeConstRef_t;
+        typedef pinocchio::LiegroupElementConstRef LgeConstRef_t;
         LgeConstRef_t O (from, configSpace_);
         Lge_t M (O + velocity);
         saturate_ (M.vector (), result, saturation_);

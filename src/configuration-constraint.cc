@@ -68,7 +68,7 @@ namespace hpp {
       const throw ()
     {
       using namespace hpp::pinocchio;
-      LiegroupConstElementRef a (argument, goal_.space());
+      LiegroupElementConstRef a (argument, goal_.space());
       result.vector () [0] = 0.5 * weights_.dot((goal_ - a).cwiseAbs2());
     }
 
@@ -78,7 +78,7 @@ namespace hpp {
       using namespace hpp::pinocchio;
       matrix_t unused;
 
-      LiegroupConstElementRef a (argument, goal_.space());
+      LiegroupElementConstRef a (argument, goal_.space());
       jacobian.leftCols (robot_->numberDof ()).noalias() = (goal_ - a).transpose();
 
       // Apply jacobian of the difference on the right.
