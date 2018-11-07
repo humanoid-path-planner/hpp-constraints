@@ -122,9 +122,9 @@ namespace hpp {
 
         /// Return the shortest distance from a point to the shape
         /// A negative value means the point is inside the shape
-        /// \param A a point already in the plane containing the convex shape,
+        /// \param a a point already in the plane containing the convex shape,
         ///        and expressed in the local frame.
-        inline value_type distanceLocal (vector3_t a) const {
+        inline value_type distanceLocal (const vector3_t& a) const {
           assert (shapeDimension_ > 1);
           const value_type inf = std::numeric_limits<value_type>::infinity();
           value_type minPosDist = inf, maxNegDist = - inf;
@@ -356,7 +356,7 @@ namespace hpp {
       }
 
       /// See ConvexShape::distance
-      /// \param A a point already in the plane containing the convex shape,
+      /// \param a a point already in the plane containing the convex shape,
       ///        and expressed in the global frame.
       inline value_type distance (const ConvexShape& cs, vector3_t a) const
       {

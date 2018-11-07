@@ -768,7 +768,7 @@ namespace hpp {
 
         /// Constructor
         ///
-        /// \param function the inner function
+        /// \param func the inner function
         FunctionExp (const FunctionTypePtr_t& func) :
           Parent_t (vector_t::Zero(func->outputSize()),
                     matrix_t::Zero(func->outputDerivativeSize(), func->inputDerivativeSize())),

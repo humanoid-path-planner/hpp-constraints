@@ -55,8 +55,8 @@ namespace hpp {
         \li \f$d_{\perp} = \textbf{n}_{f_j}.C_{f_j}P(C_{o_i}, f_j)\f$ is the distance along the normal of \f$ f_j \f$,
 
         The function first selects the pair \f$(o_i,f_j)\f$ with shortest distance.
-        \f$o_i\f$ is \emph{inside} \f$f_j\f$ if \f$d(i,j) < 0\f$.
-        returns a value that depends on the contact types:
+        \f$o_i\f$ is \em inside \f$f_j\f$ if \f$d(i,j) < 0\f$.
+        It returns a value that depends on the contact types:
 
 
         | Contact type   | Inside   | Outside |
@@ -69,6 +69,8 @@ namespace hpp {
         \li \f$m\f$ is the normal margin (used to avoid collisions),
         \li \f$x,y,z,rx,ry,rz\f$ represents the output of the RelativeTransformation
             between the element of the pair.
+
+        \sa ConvexShapeContactComplement
     **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact :
       public DifferentiableFunction {
@@ -100,8 +102,8 @@ namespace hpp {
         };
 
         /// Constructor
+        /// \param name name of the ConvexShapeContact constraint,
         /// \param robot the robot the constraints is applied to,
-        /// \param com COM of the object in the joint frame.
         ConvexShapeContact (const std::string& name,
 				const DevicePtr_t& robot);
 
@@ -187,7 +189,7 @@ namespace hpp {
         | ConvexShapeContact::LINE_ON_PLANE (Unsupported)  | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$  |
         | ConvexShapeContact::PLANE_ON_PLANE | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$ |
 
-        See ConvexShapeContact #details
+        See ConvexShapeContact
      **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContactComplement :
       public DifferentiableFunction
@@ -198,8 +200,8 @@ namespace hpp {
       /// The pair contains two complementary constraints to be used for
       /// manipulation applications.
       /// \param name name of the ConvexShapeContact constraint,
-      /// \param constraintName name of the complement constraint,
-      /// \param name of the robot.
+      /// \param complementName name of the complement constraint,
+      /// \param robot
       static std::pair <ConvexShapeContactPtr_t,
 			ConvexShapeContactComplementPtr_t >
 	createPair (const std::string& name, const std::string& complementName,
@@ -208,8 +210,8 @@ namespace hpp {
     protected:
       /// Constructor
       /// \param name name of the ConvexShapeContact constraint,
-      /// \param constraintName name of the complement constraint,
-      /// \param name of the robot.
+      /// \param complementName name of the complement constraint,
+      /// \param robot
       ConvexShapeContactComplement (const std::string& name,
 					const std::string& complementName,
 					const DevicePtr_t& robot);

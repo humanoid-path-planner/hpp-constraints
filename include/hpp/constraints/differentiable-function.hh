@@ -132,6 +132,8 @@ namespace hpp {
       }
 
       /// Approximate the jacobian using forward finite difference.
+      /// \retval jacobian jacobian will be stored in this argument
+      /// \param arg point at which the jacobian will be computed
       /// \param robot use to add configuration and velocities. If set to NULL,
       ///              the configuration space is considered a vector space.
       /// \param eps refers to \f$\epsilon\f$ in
@@ -143,6 +145,10 @@ namespace hpp {
           value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon())) const;
 
       /// Approximate the jacobian using forward finite difference.
+      /// \retval jacobian jacobian will be stored in this argument
+      /// \param arg point at which the jacobian will be computed
+      /// \param robot use to add configuration and velocities. If set to NULL,
+      ///              the configuration space is considered a vector space.
       /// \param eps refers to \f$\epsilon\f$ in
       ///            http://en.wikipedia.org/wiki/Numerical_differentiation
       /// Evaluate the function 2*x.size() times but more precise the
@@ -167,9 +173,7 @@ namespace hpp {
       ///
       /// \param sizeInput dimension of the function input
       /// \param sizeInputDerivative dimension of the function input derivative,
-      /// \param outputElement element of the output space of the function.
-      ///        giving an element of the space provides the necessary
-      ///        information about the output space.
+      /// \param outputSpace output space of the function.
       /// \param name function name
       DifferentiableFunction (size_type sizeInput,
 			      size_type sizeInputDerivative,

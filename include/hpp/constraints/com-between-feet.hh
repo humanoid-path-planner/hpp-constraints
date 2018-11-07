@@ -30,11 +30,12 @@
 namespace hpp {
   namespace constraints {
 
-    /// Constraint on the relative position of the center of mass
-    ///
-    /// The value of the function is defined as the position of the center
-    /// of mass in the reference frame of a joint.
     /**
+     *  Constraint on the relative position of the center of mass
+     *
+     *  The value of the function is defined as the position of the center
+     *  of mass in the reference frame of a joint.
+     *
      *  \f{eqnarray*}
      *  \mathbf{f}(\mathbf{q}) &=&
      *  \left(\begin{array}{c}
@@ -44,15 +45,15 @@ namespace hpp {
      *    ( x_{com} - x_R ) \cdot (u)\\
      *  \end{array}\right)
      *  \f}
+     *  where
+     *  \li \f$\mathbf{x}_{com}\f$ is the position of the center of mass,
+     *  \li \f$\mathbf{x_L}\f$ is the position of the left joint,
+     *  \li \f$\mathbf{x_R}\f$ is the position of the right joint,
+     *  \li \f$\mathbf{x}_{ref}\f$ is the desired position of the center of mass
+     *      expressed in reference joint frame.
+     *  \li \f$ u = x_R - x_L \f$
+     *  \li \f$ e = x_{com} - (\frac{x_L + x_R}{2})\f$
     **/
-    /// where
-    /// \li \f$\mathbf{x}_{com}\f$ is the position of the center of mass,
-    /// \li \f$\mathbf{x_L}\f$ is the position of the left joint,
-    /// \li \f$\mathbf{x_R}\f$ is the position of the right joint,
-    /// \li \f$\mathbf{x}_{ref}\f$ is the desired position of the center of mass
-    ///     expressed in reference joint frame.
-    /// \li \f$ u = x_R - x_L \f$
-    /// \li \f$ e = x_{com} - (\frac{x_L + x_R}{2})\f$
     class HPP_CONSTRAINTS_DLLAPI ComBetweenFeet : public DifferentiableFunction
     {
       public:

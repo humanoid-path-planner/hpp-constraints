@@ -33,7 +33,7 @@ namespace hpp {
       /// \f}
       /// where
       /// \li \f$n\f$ is the dimension of the input configuration space,
-      /// \li \f$[i,i+p-1]\f$ is an interval included in $\f[1,n]\f$,
+      /// \li \f$[i,i+p-1]\f$ is an interval included in \f$[1,n]\f$,
       /// \li \f$g\f$ is a differentiable mapping from \f$\mathbf{R}^p\f$
       ///     to the output space of \f$f\f$.
       class HPP_CONSTRAINTS_DLLAPI OfParameterSubset :
