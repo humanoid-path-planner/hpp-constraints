@@ -188,10 +188,9 @@ namespace hpp {
             "DOF " << col << " at row " << row << ": "
             << maxError << " > " << /* HESSIAN_MAXIMUM_COEF << " * " << */ std::sqrt(eps)
             );
-        hppDnum (error,
-            "Jacobian is" << iendl << jacobian << iendl
-            "Finite diff is" << iendl << Jfd << iendl
-            "Difference is" << iendl << (jacobian - Jfd));
+        hppDnum (error, "Jacobian is" << iendl << jacobian << iendl
+            << "Finite diff is" << iendl << Jfd << iendl
+            << "Difference is" << iendl << (jacobian - Jfd));
       }
 #endif
     }
