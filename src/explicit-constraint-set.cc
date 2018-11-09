@@ -243,7 +243,8 @@ namespace hpp {
         d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
         d.constraint->explicitFunction ()->jacobian(d.jacobian, d.qin);
         if (d.equalityIndices.nbIndices() > 0)
-          d.constraint->explicitFunction ()->outputSpace ()->dIntegrate_dq
+          d.constraint->explicitFunction ()->outputSpace ()
+            ->dIntegrate_dq <pinocchio::DerivativeTimesInput>
             (d.f_value, d.rhs_explicit, d.jacobian);
       }
       for(std::size_t i = 0; i < data_.size(); ++i) {
