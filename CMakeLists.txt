@@ -117,6 +117,7 @@ ENDIF ()
 ADD_SUBDIRECTORY (src)
 
 IF (RUN_TESTS)
+  ADD_REQUIRED_DEPENDENCY("romeo_description")
   SET(BOOST_COMPONENT math unit_test_framework)
   SEARCH_FOR_BOOST()
   ADD_SUBDIRECTORY(tests)
