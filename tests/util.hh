@@ -65,7 +65,7 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
   using hpp::pinocchio::size_type;
   bool ret = false;
   qSat = q;
-  const se3::Model& model = robot->model();
+  const ::pinocchio::Model& model = robot->model();
 
   for (std::size_t i = 1; i < model.joints.size(); ++i) {
     const size_type nq = model.joints[i].nq();
@@ -113,7 +113,7 @@ void randomConfig (const hpp::pinocchio::DevicePtr_t& d, hpp::pinocchio::Configu
   size_type offset = d->configSize () - extraDim;
 
   q.resize (d->configSize ());
-  q.head(offset) = se3::randomConfiguration(d->model());
+  q.head(offset) = ::pinocchio::randomConfiguration(d->model());
 
   // Shoot extra configuration variables
   for (size_type i=0; i<extraDim; ++i) {

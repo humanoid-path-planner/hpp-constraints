@@ -28,13 +28,13 @@ namespace hpp {
   namespace constraints {
     namespace {
       using hpp::pinocchio::DefaultLieGroupMap;
-      typedef std::vector<se3::JointIndex> JointIndexVector;
+      typedef std::vector<pinocchio::JointIndex> JointIndexVector;
 
       struct FiniteDiffRobotOp
       {
         FiniteDiffRobotOp (const DevicePtr_t& r, const value_type& epsilon)
           : robot(r), model(robot->model()), 
-          increments(se3::finiteDifferenceIncrement(model)),
+          increments(::pinocchio::finiteDifferenceIncrement(model)),
           epsilon(epsilon),
           v(robot->numberDof())
         {}
@@ -76,7 +76,7 @@ namespace hpp {
         }
 
         const DevicePtr_t& robot;
-        const se3::Model& model;
+        const pinocchio::Model& model;
         // const JointIndexVector velocityRankToJointIndex;
         const vector_t increments;
         const value_type& epsilon;

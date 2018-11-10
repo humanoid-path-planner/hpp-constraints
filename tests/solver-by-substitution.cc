@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
              ee3 = device->getJointByName ("LWristPitch");
 
   Configuration_t q = device->currentConfiguration (),
-                  qrand = se3::randomConfiguration(device->model());
+                  qrand = ::pinocchio::randomConfiguration(device->model());
 
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);

@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   ColBlockIndices expectedCol;
 
   Configuration_t q = device->currentConfiguration (),
-                  qrand = se3::randomConfiguration(device->model());
+                  qrand = ::pinocchio::randomConfiguration(device->model());
 
   {
     ExplicitConstraintSet expression (device->configSpace ());

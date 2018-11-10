@@ -93,7 +93,11 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      typedef se3::GeometryData GeometryData;
+      template <typename Iterator1, typename Iterator2>
+      void initGeomData(const Iterator1& begin1, const Iterator1& end1,
+          const Iterator2& begin2, const Iterator2& end2);
+
+      typedef ::pinocchio::GeometryData GeometryData;
 
       DevicePtr_t robot_;
       JointPtr_t joint1_;

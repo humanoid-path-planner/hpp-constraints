@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(one_layer)
              ee2 = device->getJointByName ("RAnkleRoll");
 
   Configuration_t q = device->currentConfiguration (),
-                  qrand = se3::randomConfiguration(device->model());
+                  qrand = ::pinocchio::randomConfiguration(device->model());
 
   solver::HierarchicalIterative solver(device->configSpace());
   solver.maxIterations(20);

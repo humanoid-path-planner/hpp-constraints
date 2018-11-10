@@ -35,7 +35,7 @@ namespace hpp {
       typedef hpp::pinocchio::liegroup::SpecialOrthogonalOperation <3> SO3;
       typedef hpp::pinocchio::liegroup::CartesianProductOperation <R3, SO3>
       R3xSO3;
-      typedef se3::SpecialEuclideanOperation <3> SE3;
+      typedef pinocchio::liegroup::SpecialEuclideanOperation <3> SE3;
       typedef hpp::pinocchio::LiegroupType LiegroupType;
 
       struct JacobianVisitor : public boost::static_visitor <>
@@ -122,7 +122,7 @@ namespace hpp {
         outJacobian_.lview (result_) = Jlog_Mf_inverse_Mout;
         JointJacobian_t inJ (6, Jf_.cols ());
         inJ.topRows <3> ().noalias() =
-          (Rout.transpose () * se3::skew (pOut - pf) * Rf ) * Jf_.bottomRows <3> ();
+          (Rout.transpose () * ::pinocchio::skew (pOut - pf) * Rf ) * Jf_.bottomRows <3> ();
         inJ.topRows <3> ().noalias() -=
           ( Rout.transpose () * Rf ) * Jf_.topRows <3> ();
         inJ.bottomRows <3> ().noalias() = ( - Rout.transpose () * Rf )* Jf_.bottomRows <3> ();

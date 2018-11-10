@@ -40,6 +40,7 @@
 #include <../tests/util.hh>
 #include <../tests/convex-shape-contact-function.hh>
 
+using hpp::pinocchio::SE3;
 using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
 using hpp::pinocchio::Device;
@@ -62,9 +63,9 @@ const static size_t MAX_NB_ERROR = 5;
 
 static matrix3_t I3 = matrix3_t::Identity();
 static vector3_t zero = vector3_t::Identity();
-static se3::SE3 MId = se3::SE3::Identity();
-se3::SE3 toSE3(const matrix3_t& R) { return se3::SE3(R, zero); }
-se3::SE3 toSE3(const vector3_t& t) { return se3::SE3(I3, t); }
+static SE3 MId = SE3::Identity();
+SE3 toSE3(const matrix3_t& R) { return SE3(R, zero); }
+SE3 toSE3(const vector3_t& t) { return SE3(I3, t); }
 
 DevicePtr_t createRobot ()
 {

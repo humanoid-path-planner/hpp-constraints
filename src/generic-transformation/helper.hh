@@ -400,9 +400,9 @@ namespace hpp {
           const JointConstPtr_t& j1, const JointConstPtr_t& j2,
           ArrayXb& activeParameters, ArrayXb& activeDerivativeParameters)
       {
-        typedef se3::JointIndex JointIndex;
+        typedef ::pinocchio::JointIndex JointIndex;
 
-        const se3::Model& model = robot->model();
+        const pinocchio::Model& model = robot->model();
         const JointIndex id1 = (j1 ? j1->index() : 0),
                          id2 = (j2 ? j2->index() : 0);
         JointIndex i1 = id1, i2 = id2;
