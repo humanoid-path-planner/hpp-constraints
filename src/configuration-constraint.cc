@@ -76,14 +76,14 @@ namespace hpp {
         ConfigurationIn_t argument) const throw ()
     {
       using namespace hpp::pinocchio;
-      matrix_t unused;
 
       LiegroupElementConstRef a (argument, goal_.space());
       jacobian.leftCols (robot_->numberDof ()).noalias() = (goal_ - a).transpose();
 
       // Apply jacobian of the difference on the right.
-      goal_.space()->Jdifference<false> (argument, goal_.vector(),
-          jacobian.leftCols (robot_->numberDof ()), unused);
+      goal_.space()->dDifference_dq0<pinocchio::InputTimesDerivative>
+        (argument, goal_.vector(),
+          jacobian.leftCols (robot_->numberDof ()));
 
       jacobian.leftCols (robot_->numberDof ()).array()
         *= weights_.array().transpose();
