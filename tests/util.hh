@@ -52,6 +52,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/extra-config-space.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/util.hh>
 
 #include <hpp/constraints/fwd.hh>
@@ -65,7 +66,7 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
   using hpp::pinocchio::size_type;
   bool ret = false;
   qSat = q;
-  const ::pinocchio::Model& model = robot->model();
+  const hpp::pinocchio::Model& model = robot->model();
 
   for (std::size_t i = 1; i < model.joints.size(); ++i) {
     const size_type nq = model.joints[i].nq();

@@ -21,6 +21,7 @@
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 
 #include <hpp/constraints/tools.hh> // for logSO3
 #include <hpp/constraints/macros.hh>
