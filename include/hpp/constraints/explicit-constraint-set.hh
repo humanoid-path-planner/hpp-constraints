@@ -37,7 +37,7 @@ namespace hpp {
 
     This class combines compatible explicit constraints as
     defined in the following paper published in Robotics Science and System
-    2018: https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf\endlink,
+    2018: https://hal.archives-ouvertes.fr/hal-01804774/file/paper.pdf,
     Section II-B Definition 4.
 
     An explicit constraint \f$E=(in,out,f)\f$ on a robot
@@ -291,7 +291,7 @@ namespace hpp {
         /// \}
 
         /// Return Jacobian matrix of output variable wrt not output variables
-        /// \deprecated use \ref JacobianNotOutToOut instead.
+        /// \deprecated use \ref jacobianNotOutToOut instead.
         inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
           HPP_CONSTRAINTS_DEPRECATED
         {
@@ -422,7 +422,7 @@ namespace hpp {
 
         /// Set the right hand side for a given explicit constraint
         ///
-        /// \param fidx order of the explicit constraint,
+        /// \param i order of the explicit constraint,
         /// \param rhs right hand side.
         void rightHandSide (const size_type& i, vectorIn_t rhs);
 

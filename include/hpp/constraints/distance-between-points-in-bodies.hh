@@ -85,7 +85,6 @@ namespace hpp {
       /// \param name name of the constraint,
       /// \param robot robot that own the bodies,
       /// \param joint1 joint that holds the first body,
-      /// \param joint2 joint that holds the second body.
       DistanceBetweenPointsInBodies (const std::string& name,
 				     const DevicePtr_t& robot,
 				     const JointPtr_t& joint1,

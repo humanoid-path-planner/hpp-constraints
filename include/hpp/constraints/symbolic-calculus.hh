@@ -768,7 +768,7 @@ namespace hpp {
 
         /// Constructor
         ///
-        /// \param function the inner function
+        /// \param func the inner function
         FunctionExp (const FunctionTypePtr_t& func) :
           Parent_t (vector_t::Zero(func->outputSize()),
                     matrix_t::Zero(func->outputDerivativeSize(), func->inputDerivativeSize())),
@@ -850,10 +850,10 @@ namespace hpp {
           return comc_;
         }
         void impl_value (const ConfigurationIn_t ) {
-          comc_->compute (Device::COM);
+          comc_->compute (hpp::pinocchio::COM);
         }
         void impl_jacobian (const ConfigurationIn_t ) {
-          comc_->compute (Device::ALL);
+          comc_->compute (hpp::pinocchio::COMPUTE_ALL);
           // TODO: there is memory and time to be saved here as this copy is
           // not important.
           //this->jacobian_ = comc_->jacobian ();

@@ -140,7 +140,6 @@ namespace hpp {
       ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
       /// \deprecated Call method that takes LiegroupSpacePtr_t instead of
       ///             DevicePtr_t as input and used robot->configSpace () as
@@ -169,7 +168,6 @@ namespace hpp {
       ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
       static ExplicitPtr_t create
         (const LiegroupSpacePtr_t& configSpace,
@@ -242,7 +240,6 @@ namespace hpp {
       ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
       /// \deprecated Use constructor that takes LiegroupSpacePtr_t instead of
       ///             DevicePtr_t as input and used robot->configSpace () as
@@ -269,7 +266,6 @@ namespace hpp {
       ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \param rhs        right hand side.
       /// \note comparison type for this constraint is always equality
       Explicit
 	(const LiegroupSpacePtr_t& configSpace,
@@ -280,17 +276,7 @@ namespace hpp {
 	 const segments_t& outputVelocity,
          const ComparisonTypes_t& comp);
 
-      /// Constructor
-      ///
-      /// \param robot Robot for which the constraint is defined.
-      /// \param function relation between input configuration variables and
-      ///        output configuration variables,
-      /// \param outputConf set of integer intervals defining indices
-      ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param outputVelocity set of integer defining indices
-      ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \param rhs        right hand side.
-      /// \note comparison type for this constraint is always equality
+      /// Copy constructor
       Explicit (const Explicit& other);
 
       // Store weak pointer to itself

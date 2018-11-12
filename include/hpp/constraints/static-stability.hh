@@ -46,7 +46,6 @@ namespace hpp {
 
         /// Constructor
         /// \param robot the robot the constraints is applied to,
-        /// \param joint the joint to which the object is attached,
         /// \param com COM of the object in the joint frame.
         StaticStability (const std::string& name, const DevicePtr_t& robot,
             const Contacts_t& contacts,

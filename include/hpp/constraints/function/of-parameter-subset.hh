@@ -22,14 +22,6 @@
 namespace hpp {
   namespace constraints {
     namespace function {
-      namespace {
-        std::string toStr (const segment_t& s)
-        {
-          std::ostringstream os;
-          os << "[ " << s.first << ", " << s.first + s.second << " ]";
-          return os.str();
-        }
-      }
       /// Function depending on a subset of parameters
       ///
       /// This class implements a function over a configuration space,
@@ -41,7 +33,7 @@ namespace hpp {
       /// \f}
       /// where
       /// \li \f$n\f$ is the dimension of the input configuration space,
-      /// \li \f$[i,i+p-1]\f$ is an interval included in $\f[1,n]\f$,
+      /// \li \f$[i,i+p-1]\f$ is an interval included in \f$[1,n]\f$,
       /// \li \f$g\f$ is a differentiable mapping from \f$\mathbf{R}^p\f$
       ///     to the output space of \f$f\f$.
       class HPP_CONSTRAINTS_DLLAPI OfParameterSubset :
@@ -74,20 +66,7 @@ namespace hpp {
         /// \param inDers interval of velocity indices.
         OfParameterSubset (const DifferentiableFunctionPtr_t& g,
                             const size_type& nArgs, const size_type& nDers,
-                            const segment_t& inArgs, const segment_t& inDers) :
-          DifferentiableFunction (nArgs, nDers,
-                                  g->outputSpace(), g->name() +
-                                  " | " + toStr(inArgs)),
-          g_ (g), sa_ (inArgs), sd_ (inDers)
-        {
-          activeParameters_.setConstant(false);
-          activeParameters_.segment(sa_.first, sa_.second)
-            = g_->activeParameters();
-
-          activeDerivativeParameters_.setConstant(false);
-          activeDerivativeParameters_.segment(sd_.first, sd_.second)
-            = g_->activeDerivativeParameters();
-        }
+                            const segment_t& inArgs, const segment_t& inDers);
 
         void impl_compute (LiegroupElement& y, vectorIn_t arg) const
         {
@@ -100,11 +79,7 @@ namespace hpp {
                            arg.segment (sa_.first, sa_.second));
         }
 
-        std::ostream& print (std::ostream& os) const
-        {
-          constraints::DifferentiableFunction::print(os);
-          return os << incindent << iendl << *g_ << decindent;
-        }
+        std::ostream& print (std::ostream& os) const;
 
         DifferentiableFunctionPtr_t g_;
         const segment_t sa_, sd_;

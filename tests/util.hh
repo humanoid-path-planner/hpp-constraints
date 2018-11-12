@@ -47,13 +47,16 @@
 
 
 #include <pinocchio/multibody/model.hpp>
+#include <pinocchio/algorithm/joint-configuration.hpp>
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/extra-config-space.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/util.hh>
 
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/matrix-view.hh>
 
 bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
     hpp::pinocchio::vectorIn_t q, hpp::pinocchio::vectorOut_t qSat,
@@ -101,6 +104,31 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
       sat[iv] =  0;
   }
   return ret;
+}
+
+void randomConfig (const hpp::pinocchio::DevicePtr_t& d, hpp::pinocchio::Configuration_t& q)
+{
+  using namespace hpp::constraints;
+  size_type extraDim = d->extraConfigSpace ().dimension ();
+  size_type offset = d->configSize () - extraDim;
+
+  q.resize (d->configSize ());
+  q.head(offset) = se3::randomConfiguration(d->model());
+
+  // Shoot extra configuration variables
+  for (size_type i=0; i<extraDim; ++i) {
+    value_type lower = d->extraConfigSpace ().lower (i);
+    value_type upper = d->extraConfigSpace ().upper (i);
+    value_type range = upper - lower;
+    if ((range < 0) ||
+        (range == std::numeric_limits<double>::infinity())) {
+      std::ostringstream oss;
+      oss << "Cannot uniformy sample extra config variable "
+        << i << ". min = " <<lower<< ", max = " << upper << std::endl;
+      throw std::runtime_error (oss.str ());
+    }
+    q [offset + i] = lower + (upper - lower) * rand ()/RAND_MAX;
+  }
 }
 
 template <int Lower, int Upper>

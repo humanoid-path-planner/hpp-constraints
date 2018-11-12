@@ -258,7 +258,7 @@ namespace hpp {
           return;
         }
         typedef pinocchio::LiegroupElement Lge_t;
-        typedef pinocchio::LiegroupConstElementRef LgeConstRef_t;
+        typedef pinocchio::LiegroupElementConstRef LgeConstRef_t;
         LgeConstRef_t O (from, configSpace_);
         LgeConstRef_t M (to, configSpace_);
         OM_ = M - O;

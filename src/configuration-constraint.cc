@@ -55,7 +55,7 @@ namespace hpp {
         ConfigurationIn_t goal, const vector_t& weights) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::R1 (), name),
-      robot_ (robot), weights_ (weights), diff_ (robot->numberDof())
+      robot_ (robot), weights_ (weights)
     {
       assert (weights.size() == robot->numberDof());
       LiegroupSpacePtr_t s (LiegroupSpace::createCopy(robot->configSpace()));
@@ -68,9 +68,8 @@ namespace hpp {
       const throw ()
     {
       using namespace hpp::pinocchio;
-      LiegroupConstElementRef a (argument, goal_.space());
-      diff_.noalias() = (goal_ - a).cwiseAbs2();
-      result.vector () [0] = 0.5 * weights_.dot(diff_);
+      LiegroupElementConstRef a (argument, goal_.space());
+      result.vector () [0] = 0.5 * weights_.dot((goal_ - a).cwiseAbs2());
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
@@ -79,14 +78,15 @@ namespace hpp {
       using namespace hpp::pinocchio;
       matrix_t unused;
 
-      LiegroupConstElementRef a (argument, goal_.space());
-      diff_ = goal_ - a;
+      LiegroupElementConstRef a (argument, goal_.space());
+      jacobian.leftCols (robot_->numberDof ()).noalias() = (goal_ - a).transpose();
 
       // Apply jacobian of the difference on the right.
-      goal_.space()->Jdifference<false> (argument, goal_.vector(), diff_.transpose(), unused);
+      goal_.space()->Jdifference<false> (argument, goal_.vector(),
+          jacobian.leftCols (robot_->numberDof ()), unused);
 
-      jacobian.leftCols (robot_->numberDof ()).noalias() =
-        weights_.cwiseProduct(diff_).transpose ();
+      jacobian.leftCols (robot_->numberDof ()).array()
+        *= weights_.array().transpose();
     }
   } // namespace constraints
 } // namespace hpp

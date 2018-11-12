@@ -31,11 +31,12 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
-    /// Constraint on the relative position of the center of mass
-    ///
-    /// The value of the function is defined as the position of the center
-    /// of mass in the reference frame of a joint.
     /**
+     *  Constraint on the relative position of the center of mass
+     *
+     *  The value of the function is defined as the position of the center
+     *  of mass in the reference frame of a joint.
+     *
      *  \f{eqnarray*}
      *  \mathbf{f}(\mathbf{q}) &=& R^T \left(\mathbf{x} - \mathbf{t}\right)
      *  - \mathbf{x}^{*}\\
@@ -43,15 +44,16 @@ namespace hpp {
      *  J_{com} + [\mathbf{x}-\mathbf{t}]_{\times}J_{joint}^{\omega}
      *  - J_{joint}^{\mathbf{v}}\right)\mathbf{\dot{q}}
      *  \f}
+     *
+     *  where
+     *  \li \f$
+     *      \left(\begin{array}{cc} R & \mathbf{t} \\ 0 & 1\end{array}\right)
+     *      \f$
+     *  is the position of the joint,
+     *  \li \f$\mathbf{x}\f$ is the position of the center of mass,
+     *  \li \f$\mathbf{x}^{*}\f$ is the desired position of the center of mass
+     *      expressed in joint frame.
     **/
-    /// where
-    /// \li \f$
-    ///     \left(\begin{array}{cc} R & \mathbf{t} \\ 0 & 1\end{array}\right)
-    ///     \f$
-    /// is the position of the joint,
-    /// \li \f$\mathbf{x}\f$ is the position of the center of mass,
-    /// \li \f$\mathbf{x}^{*}\f$ is the desired position of the center of mass
-    ///     expressed in joint frame.
     class HPP_CONSTRAINTS_DLLAPI RelativeCom : public DifferentiableFunction
     {
     public:

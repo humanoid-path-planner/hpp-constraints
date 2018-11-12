@@ -31,73 +31,38 @@
 namespace hpp {
   namespace constraints {
     /// \cond DEVEL
-    template <bool rel> struct GenericTransformationJointData
+    template <bool rel> struct GenericTransformationModel
     {
       JointConstPtr_t joint2;
       bool R1isID, R2isID, t1isZero, t2isZero;
       Transform3f F1inJ1, F2inJ2;
+      bool fullPos, fullOri;
+      size_type rowOri;
+      const size_type cols;
+
       inline JointConstPtr_t getJoint1() const { return JointConstPtr_t(); }
       inline void setJoint1(const JointConstPtr_t&) {}
-      const JointJacobian_t& J2 () const { return joint2->jacobian(); }
-      const Transform3f& M2 () const { return joint2->currentTransformation(); }
-      const vector3_t& t2 () const { return joint2->currentTransformation().translation(); }
-      const matrix3_t& R2 () const { return joint2->currentTransformation().rotation(); }
-      GenericTransformationJointData () :
-        joint2(), R1isID(true), R2isID(true), t1isZero(true), t2isZero(true)
+      GenericTransformationModel (const size_type nCols) :
+        joint2(), R1isID(true), R2isID(true), t1isZero(true), t2isZero(true),
+        fullPos(false), fullOri(false), cols (nCols)
       { F1inJ1.setIdentity(); F2inJ2.setIdentity(); }
+      void checkIsIdentity1() {
+        R1isID = F1inJ1.rotation().isIdentity();
+        t1isZero = F1inJ1.translation().isZero();
+      }
+      void checkIsIdentity2() {
+        R2isID = F2inJ2.rotation().isIdentity();
+        t2isZero = F2inJ2.translation().isZero();
+      }
     };
-    template <> struct GenericTransformationJointData<true> :
-      GenericTransformationJointData<false>
+    template <> struct GenericTransformationModel<true> :
+      GenericTransformationModel<false>
     {
       JointConstPtr_t joint1;
       inline JointConstPtr_t getJoint1() const { return joint1; }
       inline void setJoint1(const JointConstPtr_t& j) { joint1 = j; }
-      const JointJacobian_t& J1 () const { return joint1->jacobian(); }
-      const Transform3f& M1 () const { return joint1->currentTransformation(); }
-      const matrix3_t& R1 () const { return joint1->currentTransformation().rotation(); }
-      const vector3_t& t1 () const { return joint1->currentTransformation().translation(); }
-      GenericTransformationJointData () :
-        GenericTransformationJointData<false>(), joint1() {}
-    };
-    template <bool rel> struct GenericTransformationOriData {};
-    template <> struct GenericTransformationOriData<true>
-    {
-      mutable Transform3f M;
-      mutable value_type theta;
-      mutable eigen::matrix3_t JlogXTR1inJ1;
-    };
-    /// This class contains the data of the GenericTransformation class.
-    template <bool rel, bool pos, bool ori> struct GenericTransformationData :
-      GenericTransformationJointData<rel>,
-      GenericTransformationOriData<ori>
-    {
-      enum {
-        NbRows = (pos?3:0)+(ori?3:0),
-        RowPos = (pos? 0:-1),
-        RowOri = (ori?(pos?3:0):-1)
-      };
-      typedef Eigen::Matrix<value_type, NbRows, 1> ValueType;
-      typedef Eigen::Matrix<value_type, NbRows, Eigen::Dynamic> JacobianType;
-      bool fullPos, fullOri;
-      size_type rowOri;
-      const size_type cols;
-      mutable ValueType value;
-      mutable JacobianType jacobian;
-      mutable Eigen::Matrix<value_type, 3, Eigen::Dynamic> tmpJac;
-      mutable eigen::vector3_t cross1, cross2;
-      GenericTransformationData (const size_type nCols) :
-        GenericTransformationJointData<rel>(),
-        GenericTransformationOriData<ori> (),
-        fullPos(false), fullOri(false), cols (nCols),
-        jacobian((int)NbRows, cols)
-      { cross1.setZero(); cross2.setZero(); }
-      void checkIsIdentity1() {
-        this->R1isID = this->F1inJ1.rotation().isIdentity(); this->t1isZero = this->F1inJ1.translation().isZero();
-      }
-      void checkIsIdentity2() {
-        this->R2isID = this->F2inJ2.rotation().isIdentity(); this->t2isZero = this->F2inJ2.translation().isZero();
-        if (this->t2isZero) cross2.setZero();
-      }
+      GenericTransformationModel (const size_type nCols) :
+        GenericTransformationModel<false>(nCols), joint1() {}
     };
     /// \endcond DEVEL
 
@@ -240,60 +205,60 @@ namespace hpp {
       ///
       inline void reference (const Transform3f& reference)
       {
-	d_.F1inJ1 = reference;
-        d_.checkIsIdentity1();
-	d_.F2inJ2.setIdentity ();
-        d_.checkIsIdentity2();
+	m_.F1inJ1 = reference;
+        m_.checkIsIdentity1();
+	m_.F2inJ2.setIdentity ();
+        m_.checkIsIdentity2();
       }
 
       /// Get desired relative orientation
       inline Transform3f reference () const
       {
-	return d_.F1inJ1.actInv(d_.F2inJ2);
+	return m_.F1inJ1.actInv(m_.F2inJ2);
       }
 
       /// Set joint 1
       inline void joint1 (const JointConstPtr_t& joint) {
         // static_assert(IsRelative);
-	d_.setJoint1(joint);
+	m_.setJoint1(joint);
         computeActiveParams();
 	assert (!joint || joint->robot () == robot_);
       }
 
       /// Get joint 1
       inline JointConstPtr_t joint1 () const {
-	return d_.getJoint1();
+	return m_.getJoint1();
       }
 
       /// Set joint 2
       inline void joint2 (const JointConstPtr_t& joint) {
-	d_.joint2 = joint;
+	m_.joint2 = joint;
         computeActiveParams();
 	assert (!joint || joint->robot () == robot_);
       }
 
       /// Get joint 2
       inline JointConstPtr_t joint2 () const {
-	return d_.joint2;
+	return m_.joint2;
       }
 
       /// Set position of frame 1 in joint 1
       inline void frame1InJoint1 (const Transform3f& M) {
-	d_.F1inJ1 = M;
-        d_.checkIsIdentity1();
+	m_.F1inJ1 = M;
+        m_.checkIsIdentity1();
       }
       /// Get position of frame 1 in joint 1
       inline const Transform3f& frame1InJoint1 () const {
-	return d_.F1inJ1;
+	return m_.F1inJ1;
       }
       /// Set position of frame 2 in joint 2
       inline void frame2InJoint2 (const Transform3f& M) {
-	d_.F2inJ2 = M;
-        d_.checkIsIdentity2();
+	m_.F2inJ2 = M;
+        m_.checkIsIdentity2();
       }
       /// Get position of frame 2 in joint 2
       inline const Transform3f& frame2InJoint2 () const {
-	return d_.F2inJ2;
+	return m_.F2inJ2;
       }
 
       virtual std::ostream& print (std::ostream& o) const;
@@ -306,7 +271,7 @@ namespace hpp {
       /// \param mask vector of 6 boolean defining which coordinates of the
       ///        error vector to take into account.
       GenericTransformation (const std::string& name,
-                              const DevicePtr_t&,
+                              const DevicePtr_t& robot,
                               std::vector <bool> mask);
 
     protected:
@@ -325,14 +290,11 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      void computeError (const ConfigurationIn_t& argument) const;
       void computeActiveParams ();
       DevicePtr_t robot_;
-      GenericTransformationData<IsRelative,ComputePosition,ComputeOrientation>
-        d_;
+      GenericTransformationModel<IsRelative> m_;
       const std::vector <bool> mask_;
       WkPtr_t self_;
-      mutable Configuration_t latestArgument_;
     }; // class GenericTransformation
     /// \}
   } // namespace constraints

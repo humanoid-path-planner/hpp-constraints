@@ -68,6 +68,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/solver/by-substitution.hh
 
   include/hpp/constraints/function/of-parameter-subset.hh
+  include/hpp/constraints/function/difference.hh
 
   include/hpp/constraints/solver/impl/by-substitution.hh
   include/hpp/constraints/solver/impl/hierarchical-iterative.hh

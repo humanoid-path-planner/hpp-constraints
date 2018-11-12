@@ -21,6 +21,7 @@
 #include <vector>
 #include <iostream>
 #include <hpp/util/indent.hh>
+#include <hpp/pinocchio/util.hh>
 #include <hpp/constraints/fwd.hh>
 
 # define HPP_EIGEN_USE_EVALUATOR EIGEN_VERSION_AT_LEAST(3,2,92)
@@ -414,14 +415,14 @@ namespace Eigen {
       }
 
       /// Return row indices
-      /// \assertion _allRows should be false
+      /// \warning _allRows should be false
       inline const RowIndices_t& rows() const
       {
         return derived().rows();
       }
 
       /// Return column indices
-      /// \assertion _allCols should be false
+      /// \warning _allCols should be false
       inline const ColIndices_t& cols() const
       {
         return derived().cols();
@@ -438,14 +439,14 @@ namespace Eigen {
       }
 
       /// Return number of row indices
-      /// \assertion _allRows should be false
+      /// \warning _allRows should be false
       inline const size_type& nbRows() const
       {
         return derived().nbRows();
       }
 
       /// Return number of column indices
-      /// \assertion _allCols should be false
+      /// \warning _allCols should be false
       inline const size_type& nbCols() const
       {
         return derived().nbCols();
@@ -472,7 +473,7 @@ namespace Eigen {
       }
 
       /// Extract a set of cols
-      /// \param i, ni start and length of the set of rows
+      /// \param j, nj start and length of the set of rows
       /// \return new instance
       MatrixBlocks <AllRows, AllCols> middleCols
       (size_type j, size_type nj) const
@@ -517,12 +518,12 @@ namespace Eigen {
       }
 
       /// Constructor by vectors of segments
-      /// \param nb0s number of rows,
+      /// \param nbRows number of rows,
       /// \param nbCols number of columns,
       /// \param rows set of row indices,
       /// \param cols set of column indices,
       /// \warning rows and cols must be sorted
-      MatrixBlocks (const size_type& nbrows, const RowIndices_t& rows,
+      MatrixBlocks (const size_type& nbRows, const RowIndices_t& rows,
                     const size_type& nbCols, const ColIndices_t& cols) :
         m_nbRows(nbRows), m_nbCols(nbCols), m_rows(rows), m_cols(cols)
       {
@@ -536,7 +537,7 @@ namespace Eigen {
       }
 
       /// Constructor of single block
-      /// \param first indice for row and column
+      /// \param start indice for row and column
       /// \param size number of indices in the block (row and column)
       /// \note if all rows or all columns are selected (template parameter)
       ///       the block will contain all rows, respectively all columns.
@@ -613,46 +614,46 @@ namespace Eigen {
       }
 
       /// Selectively recompute set of rows
-      /// \param Sort whether set of rows should be sorted,
-      /// \param Shrink whether set of rows should be shrunk,
-      /// \param Cardinal whether number of rows should be recomputed
+      /// \tparam Sort whether set of rows should be sorted,
+      /// \tparam Shrink whether set of rows should be shrunk,
+      /// \tparam Cardinal whether number of rows should be recomputed
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateRows() {
         update<Sort, Shrink, Cardinal> (m_rows, m_nbRows);
       }
 
       /// Selectively recompute set of columns
-      /// \param Sort whether set of columns should be sorted,
-      /// \param Shrink whether set of columns should be shrunk,
-      /// \param Cardinal whether number of columns should be recomputed
+      /// \tparam Sort whether set of columns should be sorted,
+      /// \tparam Shrink whether set of columns should be shrunk,
+      /// \tparam Cardinal whether number of columns should be recomputed
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateCols() {
         update<Sort, Shrink, Cardinal> (m_cols, m_nbCols);
       }
 
       /// Return row indices
-      /// \assertion _allRows should be false
+      /// \warning _allRows should be false
       inline const RowIndices_t& rows() const
       {
         return m_rows;
       }
 
       /// Return column indices
-      /// \assertion _allCols should be false
+      /// \warning _allCols should be false
       inline const ColIndices_t& cols() const
       {
         return m_cols;
       }
 
       /// Return number of row indices
-      /// \assertion _allRows should be false
+      /// \warning _allRows should be false
       inline const size_type& nbRows() const
       {
         return m_nbRows;
       }
 
       /// Return number of column indices
-      /// \assertion _allCols should be false
+      /// \warning _allCols should be false
       inline const size_type& nbCols() const
       {
         return m_nbCols;
@@ -727,28 +728,28 @@ namespace Eigen {
       {}
 
       /// Return row indices
-      /// \assertion _allRows should be false
+      /// \warning _allRows should be false
       inline const RowIndices_t& rows() const
       {
         return m_rows;
       }
 
       /// Return column indices
-      /// \assertion _allCols should be false
+      /// \warning _allCols should be false
       inline const ColIndices_t& cols() const
       {
         return m_cols;
       }
 
       /// Return number of row indices
-      /// \assertion _allRows should be false
+      /// \warning _allRows should be false
       inline const size_type& nbRows() const
       {
         return m_nbRows;
       }
 
       /// Return number of column indices
-      /// \assertion _allCols should be false
+      /// \warning _allCols should be false
       inline const size_type& nbCols() const
       {
         return m_nbCols;
@@ -989,5 +990,14 @@ namespace Eigen {
 #include <hpp/constraints/impl/matrix-view-operation.hh>
 
 # undef HPP_EIGEN_USE_EVALUATOR
+
+namespace hpp {
+  template <int Option>
+  struct prettyPrint<constraints::segment_t, Option> {
+    static std::ostream& run (std::ostream& os, const constraints::segment_t& s) {
+      return os << "[ " << s.first << ", " << s.first + s.second << " ]";
+    }
+  };
+}
 
 #endif // HPP_CONSTRAINTS_MATRIX_VIEW_HH

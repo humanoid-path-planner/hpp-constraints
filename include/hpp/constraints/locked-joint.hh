@@ -56,7 +56,7 @@ namespace hpp {
 				      vectorIn_t value);
 
       /// Create locked degrees of freedom of extra config space
-      /// \param robot robot
+      /// \param dev robot
       /// \param index index of the first  locked extra degree of freedom,
       /// \param value of the locked degrees of freedom, size of value
       ///        determines the number of degrees of freedom locked.

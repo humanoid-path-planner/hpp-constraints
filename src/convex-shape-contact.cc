@@ -23,6 +23,8 @@
 
 #include <hpp/constraints/matrix-view.hh>
 
+#include <../src/generic-transformation/helper.hh>
+
 namespace hpp {
   namespace constraints {
 
@@ -30,12 +32,13 @@ namespace hpp {
     (const std::string& name, const DevicePtr_t& robot) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::Rn (5), name), robot_ (robot),
-      relativeTransformation_ (name, robot, std::vector<bool>(6, true)),
-      normalMargin_ (0), result_ (LiegroupSpace::Rn (6))
+      relativeTransformationModel_ (robot->numberDof()-robot->extraConfigSpace().dimension()),
+      normalMargin_ (0)
     {
-      relativeTransformation_.joint1(robot->rootJoint());
-      relativeTransformation_.joint2(robot->rootJoint());
-      jacobian_.resize (6, robot->numberDof ());
+      relativeTransformationModel_.fullPos = true;
+      relativeTransformationModel_.fullOri = true;
+      relativeTransformationModel_.rowOri = 3;
+
       activeParameters_.setConstant(false);
       activeDerivativeParameters_.setConstant(false);
     }
@@ -70,14 +73,10 @@ namespace hpp {
     {
       objectConvexShapes_.push_back (t);
 
-      relativeTransformation_.joint2 (t.joint_);
       for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
           f_it != floorConvexShapes_.end (); ++f_it) {
-        relativeTransformation_.joint1 (f_it->joint_);
-        activeParameters_ = activeParameters_
-          || relativeTransformation_.activeParameters();
-        activeDerivativeParameters_ = activeDerivativeParameters_
-          || relativeTransformation_.activeDerivativeParameters();
+        setActiveParameters (robot_, f_it->joint_, t.joint_,
+            activeParameters_, activeDerivativeParameters_);
       }
     }
 
@@ -86,14 +85,10 @@ namespace hpp {
       ConvexShape tt (t); tt.reverse ();
       floorConvexShapes_.push_back (tt);
 
-      relativeTransformation_.joint1 (tt.joint_);
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
-        relativeTransformation_.joint2 (o_it->joint_);
-        activeParameters_ = activeParameters_
-          || relativeTransformation_.activeParameters();
-        activeDerivativeParameters_ = activeDerivativeParameters_
-          || relativeTransformation_.activeDerivativeParameters();
+        setActiveParameters (robot_, tt.joint_, o_it->joint_,
+            activeParameters_, activeDerivativeParameters_);
       }
     }
 
@@ -104,50 +99,77 @@ namespace hpp {
     }
 
     std::vector <ConvexShapeContact::ForceData>
-      ConvexShapeContact::computeContactPoints (
+      ConvexShapeContact::computeContactPoints (ConfigurationIn_t q,
           const value_type& normalMargin) const
     {
-      std::vector <ForceData> fds;
-      ForceData fd;
+      pinocchio::DeviceSync device (robot_);
+      device.currentConfiguration (q);
+      device.computeForwardKinematics ();
+
+      std::vector <ForceData> forceDatas;
+      ForceData forceData;
+      ConvexShapeData od, fd;
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
-        // o_it->updateToCurrentTransform ();
-        const vector3_t& globalOC_ = o_it->center ();
+        od.updateToCurrentTransform (*o_it, device.d());
         for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
             f_it != floorConvexShapes_.end (); ++f_it) {
-          // f_it->updateToCurrentTransform ();
-          if (f_it->isInside (globalOC_, f_it->normal ())) {
-            value_type dn = f_it->normal ().dot (globalOC_ - f_it->center ());
+          fd.updateToCurrentTransform (*f_it, device.d());
+          if (fd.isInside (*f_it, od.center_, fd.normal_)) {
+            value_type dn = fd.normal_.dot (od.center_ - fd.center_);
             if (dn < normalMargin) {
               // TODO: compute which points of the object are inside the floor shape.
-              fd.joint = o_it->joint_;
-              fd.points = o_it->Pts_;
-              fd.normal = f_it->N_;
-              fd.supportJoint = f_it->joint_;
-              fds.push_back (fd);
+              forceData.joint = o_it->joint_;
+              forceData.points = o_it->Pts_;
+              forceData.normal = f_it->N_;
+              forceData.supportJoint = f_it->joint_;
+              forceDatas.push_back (forceData);
             }
           }
         }
       }
-      return fds;
+      return forceDatas;
+    }
+
+    void ConvexShapeContact::computeInternalValue (const ConfigurationIn_t& argument,
+        bool& isInside, ContactType& type, vector6_t& value) const
+    {
+      GTDataV<true, true, true> data (relativeTransformationModel_, robot_);
+
+      data.device.currentConfiguration (argument);
+      data.device.computeForwardKinematics ();
+
+      ConvexShapes_t::const_iterator object, floor;
+      isInside = selectConvexShapes (data.device.d(), object, floor);
+      type = contactType (*object, *floor);
+
+      relativeTransformationModel_.joint1 = floor->joint_;
+      relativeTransformationModel_.joint2 = object->joint_;
+      relativeTransformationModel_.F1inJ1 = floor->positionInJoint ();
+      relativeTransformationModel_.F2inJ2 = object->positionInJoint ();
+      relativeTransformationModel_.checkIsIdentity1();
+      relativeTransformationModel_.checkIsIdentity2();
+
+      compute<true, true, true>::error (data);
+      value = data.value;
     }
 
     void ConvexShapeContact::impl_compute (LiegroupElement& result,
                                            ConfigurationIn_t argument) const
     {
-      robot_->currentConfiguration (argument);
-      robot_->computeForwardKinematics ();
+      bool isInside;
+      ContactType type;
+      vector6_t value;
+      computeInternalValue (argument, isInside, type, value);
 
-      selectConvexShapes ();
-      relativeTransformation_.value (result_, argument);
-      if (isInside_) {
-        result.vector () [0] = result_.vector () [0] + normalMargin_;
+      if (isInside) {
+        result.vector () [0] = value [0] + normalMargin_;
         result.vector ().segment <2> (1).setZero ();
       } else {
-        result.vector ().segment <3> (0) = result_.vector ().segment <3> (0);
+        result.vector ().segment <3> (0) = value.head <3> ();
         result.vector () [0] += normalMargin_;
       }
-      switch (contactType_) {
+      switch (type) {
         case POINT_ON_PLANE:
           result.vector ().segment <2> (3).setZero ();
           break;
@@ -157,64 +179,88 @@ namespace hpp {
           // of the reference of "object" should be aligned with the
           // "floor" line axis (Y-axis) projection onto the plane plane.
           // result [3] = 0;
-          // result [4] = result_[5];
+          // result [4] = rt_res_lge[5];
         case PLANE_ON_PLANE:
-          result.vector ().segment<2> (3) = result_.vector ().segment<2> (4);
+          result.vector ().segment<2> (3) = value.tail<2> ();
           break;
       }
       hppDout (info, "result = " << result);
     }
 
     void ConvexShapeContact::computeInternalJacobian
-    (ConfigurationIn_t argument) const
+    (const ConfigurationIn_t& argument,
+     bool& isInside, ContactType& type, matrix_t& jacobian) const
     {
-      robot_->currentConfiguration (argument);
-      robot_->computeForwardKinematics ();
-      selectConvexShapes ();
-      relativeTransformation_.jacobian (jacobian_, argument);
+      static std::vector<bool> mask (6, true);
+
+      GTDataJ<true, true, true> data (relativeTransformationModel_, robot_);
+
+      data.device.currentConfiguration (argument);
+      data.device.computeForwardKinematics ();
+
+      ConvexShapes_t::const_iterator object, floor;
+      isInside = selectConvexShapes (data.device.d(), object, floor);
+      type = contactType (*object, *floor);
+
+      relativeTransformationModel_.joint1 = floor->joint_;
+      relativeTransformationModel_.joint2 = object->joint_;
+      relativeTransformationModel_.F1inJ1 = floor->positionInJoint ();
+      relativeTransformationModel_.F2inJ2 = object->positionInJoint ();
+      relativeTransformationModel_.checkIsIdentity1();
+      relativeTransformationModel_.checkIsIdentity2();
+      data.cross2.setZero();
+
+      compute<true, true, true>::error (data);
+      compute<true, true, true>::jacobian (data, jacobian, mask);
     }
 
     void ConvexShapeContact::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
     {
-      computeInternalJacobian (argument);
-      if (isInside_) {
-	jacobian.row (0) = jacobian_.row (0);
-	jacobian.row (1).setZero ();
-	jacobian.row (2).setZero ();
+      bool isInside;
+      ContactType type;
+      matrix_t tmpJac (6, robot_->numberDof());
+      computeInternalJacobian (argument, isInside, type, tmpJac);
+
+      if (isInside) {
+        jacobian.row (0) = tmpJac.row (0);
+        jacobian.row (1).setZero ();
+        jacobian.row (2).setZero ();
       } else {
-        jacobian.topRows<3> () = jacobian_.topRows <3> ();
+        jacobian.topRows<3> () = tmpJac.topRows <3> ();
       }
-      switch (contactType_) {
+      switch (type) {
         case POINT_ON_PLANE:
           jacobian.bottomRows<2> ().setZero ();
           break;
         case LINE_ON_PLANE:
           // FIXME: See FIXME of impl_compute
           // jacobian.row (3).setZero ();
-          // jacobian.row (4) = jacobian_.row (5);
+          // jacobian.row (4) = tmpJac.row (5);
           throw std::logic_error ("Contact LINE_ON_PLANE: Unimplement feature");
         case PLANE_ON_PLANE:
           //             Row: 3 4                     Row:  4 5
-          jacobian.bottomRows<2> () = jacobian_.bottomRows <2> ();
+          jacobian.bottomRows<2> () = tmpJac.bottomRows <2> ();
           break;
       }
     }
 
-    void ConvexShapeContact::selectConvexShapes () const
+    bool ConvexShapeContact::selectConvexShapes (const pinocchio::DeviceData& data,
+        ConvexShapes_t::const_iterator& object,
+        ConvexShapes_t::const_iterator& floor) const
     {
-      ConvexShapes_t::const_iterator object;
-      ConvexShapes_t::const_iterator floor;
+      ConvexShapeData od, fd;
+      bool isInside = false; // Initialized only to remove compiler warning.
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
-        o_it->updateToCurrentTransform ();
-        const vector3_t& globalOC_ = o_it->center ();
+        od.updateToCurrentTransform (*o_it, data);
+
         for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
             f_it != floorConvexShapes_.end (); ++f_it) {
-          f_it->updateToCurrentTransform ();
-          value_type dp = f_it->distance (f_it->intersection (globalOC_, f_it->normal ())),
-                     dn = f_it->normal ().dot (globalOC_ - f_it->center ());
+          fd.updateToCurrentTransform (*f_it, data);
+          value_type dp = fd.distance (*f_it, fd.intersection (od.center_, fd.normal_)),
+                     dn = fd.normal_.dot (od.center_ - fd.center_);
           if (dp < 0) dist = dn * dn;
           else        dist = dp*dp + dn * dn;
 
@@ -222,15 +268,12 @@ namespace hpp {
             minDist = dist;
             object = o_it;
             floor = f_it;
-	    isInside_ = (dp < 0);
+            isInside = (dp < 0);
           }
         }
       }
-      contactType_ = contactType (*object, *floor);
-      relativeTransformation_.joint1 (floor->joint_);
-      relativeTransformation_.joint2 (object->joint_);
-      relativeTransformation_.frame1InJoint1 (floor->positionInJoint ());
-      relativeTransformation_.frame2InJoint2 (object->positionInJoint ());
+
+      return isInside;
     }
 
     ConvexShapeContact::ContactType ConvexShapeContact::contactType (
@@ -286,31 +329,30 @@ namespace hpp {
     void ConvexShapeContactComplement::impl_compute
     (LiegroupElement& result, ConfigurationIn_t argument) const
     {
-      LiegroupElement tmp (LiegroupSpace::Rn (5));
-      sibling_->impl_compute (tmp, argument);
-      result.vector () [2] = sibling_->result_.vector () [3];
-      if (sibling_->isInside_) {
-	result.vector () [0] = sibling_->result_.vector () [1];
-	result.vector () [1] = sibling_->result_.vector () [2];
-      } else {
-	result.vector () [0] = 0;
-	result.vector () [1] = 0;
-      }
+      bool isInside;
+      ConvexShapeContact::ContactType type;
+      vector6_t value;
+      sibling_->computeInternalValue (argument, isInside, type, value);
+
+      result.vector () [2] = value [3];
+      if (isInside) result.vector ().head<2>() = value.segment<2>(1);
+      else          result.vector ().head<2>().setZero();
       hppDout (info, "result = " << result);
     }
 
     void ConvexShapeContactComplement::impl_jacobian
     (matrixOut_t jacobian, ConfigurationIn_t argument) const
     {
-      sibling_->computeInternalJacobian (argument);
-      if (sibling_->isInside_) {
-	jacobian.row (0) = sibling_->jacobian_.row (1);
-	jacobian.row (1) = sibling_->jacobian_.row (2);
-      } else {
-	jacobian.row (0).setZero ();
-	jacobian.row (1).setZero ();
-      }
-      jacobian.row (2) = sibling_->jacobian_.row (3);
+      bool isInside;
+      ConvexShapeContact::ContactType type;
+      matrix_t tmpJac (6, sibling_->robot_->numberDof());
+      sibling_->computeInternalJacobian (argument, isInside, type, tmpJac);
+
+      if (isInside)
+        jacobian.topRows<2>() = tmpJac.middleRows<2>(1);
+      else
+        jacobian.topRows<2>().setZero ();
+      jacobian.row (2) = tmpJac.row (3);
     }
 
     std::ostream& ConvexShapeContact::print (std::ostream& o) const

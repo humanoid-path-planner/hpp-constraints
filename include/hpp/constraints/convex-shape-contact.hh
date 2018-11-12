@@ -55,8 +55,8 @@ namespace hpp {
         \li \f$d_{\perp} = \textbf{n}_{f_j}.C_{f_j}P(C_{o_i}, f_j)\f$ is the distance along the normal of \f$ f_j \f$,
 
         The function first selects the pair \f$(o_i,f_j)\f$ with shortest distance.
-        \f$o_i\f$ is \emph{inside} \f$f_j\f$ if \f$d(i,j) < 0\f$.
-        returns a value that depends on the contact types:
+        \f$o_i\f$ is \em inside \f$f_j\f$ if \f$d(i,j) < 0\f$.
+        It returns a value that depends on the contact types:
 
 
         | Contact type   | Inside   | Outside |
@@ -69,6 +69,8 @@ namespace hpp {
         \li \f$m\f$ is the normal margin (used to avoid collisions),
         \li \f$x,y,z,rx,ry,rz\f$ represents the output of the RelativeTransformation
             between the element of the pair.
+
+        \sa ConvexShapeContactComplement
     **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact :
       public DifferentiableFunction {
@@ -100,8 +102,8 @@ namespace hpp {
         };
 
         /// Constructor
+        /// \param name name of the ConvexShapeContact constraint,
         /// \param robot the robot the constraints is applied to,
-        /// \param com COM of the object in the joint frame.
         ConvexShapeContact (const std::string& name,
 				const DevicePtr_t& robot);
 
@@ -143,8 +145,9 @@ namespace hpp {
         /// Default to 0
         void setNormalMargin (const value_type& margin);
 
-        /// Compute the contact points in the last configuration.
-        std::vector <ForceData> computeContactPoints (const value_type& normalMargin) const;
+        /// Compute the contact points
+        std::vector <ForceData> computeContactPoints (ConfigurationIn_t q,
+            const value_type& normalMargin) const;
 
       /// Display object in a stream
       std::ostream& print (std::ostream& o) const;
@@ -152,27 +155,28 @@ namespace hpp {
       private:
         void impl_compute (LiegroupElement& result, ConfigurationIn_t argument)
           const;
+        void computeInternalValue (const ConfigurationIn_t& argument,
+            bool& isInside, ContactType& type, vector6_t& value) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
-        void computeInternalJacobian (ConfigurationIn_t argument) const;
+        void computeInternalJacobian (const ConfigurationIn_t& argument,
+            bool& isInside, ContactType& type, matrix_t& jacobian) const;
 
-        void selectConvexShapes () const;
+        typedef std::vector <ConvexShape> ConvexShapes_t;
+        /// \return true if the contact is created.
+        bool selectConvexShapes (const pinocchio::DeviceData& data,
+            ConvexShapes_t::const_iterator& object,
+            ConvexShapes_t::const_iterator& floor) const;
         ContactType contactType (const ConvexShape& object,
             const ConvexShape& floor) const;
 
         DevicePtr_t robot_;
-        mutable RelativeTransformation relativeTransformation_;
+        mutable GenericTransformationModel<true> relativeTransformationModel_;
 
-        typedef std::vector <ConvexShape> ConvexShapes_t;
         ConvexShapes_t objectConvexShapes_;
         ConvexShapes_t floorConvexShapes_;
 
         value_type normalMargin_;
-
-        mutable bool isInside_;
-        mutable ContactType contactType_;
-        mutable LiegroupElement result_;
-        mutable matrix_t jacobian_;
     };
 
     /** Complement to full transformation constraint of ConvexShapeContact
@@ -185,7 +189,7 @@ namespace hpp {
         | ConvexShapeContact::LINE_ON_PLANE (Unsupported)  | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$  |
         | ConvexShapeContact::PLANE_ON_PLANE | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$ |
 
-        See ConvexShapeContact #details
+        See ConvexShapeContact
      **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContactComplement :
       public DifferentiableFunction
@@ -196,8 +200,8 @@ namespace hpp {
       /// The pair contains two complementary constraints to be used for
       /// manipulation applications.
       /// \param name name of the ConvexShapeContact constraint,
-      /// \param constraintName name of the complement constraint,
-      /// \param name of the robot.
+      /// \param complementName name of the complement constraint,
+      /// \param robot
       static std::pair <ConvexShapeContactPtr_t,
 			ConvexShapeContactComplementPtr_t >
 	createPair (const std::string& name, const std::string& complementName,
@@ -206,8 +210,8 @@ namespace hpp {
     protected:
       /// Constructor
       /// \param name name of the ConvexShapeContact constraint,
-      /// \param constraintName name of the complement constraint,
-      /// \param name of the robot.
+      /// \param complementName name of the complement constraint,
+      /// \param robot
       ConvexShapeContactComplement (const std::string& name,
 					const std::string& complementName,
 					const DevicePtr_t& robot);

@@ -30,20 +30,15 @@
 #include "hpp/constraints/differentiable-function-set.hh"
 #include "hpp/constraints/tools.hh"
 
-// The following 6 includes are deprecated and will be removed
-// #include "hpp/constraints/position.hh"
-// #include "hpp/constraints/orientation.hh"
-// #include "hpp/constraints/transformation.hh"
-// #include "hpp/constraints/relative-position.hh"
-// #include "hpp/constraints/relative-orientation.hh"
-// #include "hpp/constraints/relative-transformation.hh"
-
 #define BOOST_TEST_MODULE hpp_constraints
 #include <boost/test/included/unit_test.hpp>
 
 #include <stdlib.h>
 #include <limits>
 #include <math.h>
+
+#include <../tests/util.hh>
+#include <../tests/convex-shape-contact-function.hh>
 
 using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
@@ -71,27 +66,10 @@ static se3::SE3 MId = se3::SE3::Identity();
 se3::SE3 toSE3(const matrix3_t& R) { return se3::SE3(R, zero); }
 se3::SE3 toSE3(const vector3_t& t) { return se3::SE3(I3, t); }
 
-class BasicConfigurationShooter
-{
-public:
-  BasicConfigurationShooter (const DevicePtr_t& robot) : robot_ (robot)
-  {
-  }
-  virtual ConfigurationPtr_t shoot () const
-  {
-    ConfigurationPtr_t config (new Configuration_t (robot_->configSize ()));
-    *config = se3::randomConfiguration(robot_->model());
-    return config;
-  }
-private:
-  const DevicePtr_t& robot_;
-}; // class BasicConfigurationShooter
-
 DevicePtr_t createRobot ()
 {
-  DevicePtr_t robot =
-    hpp::pinocchio::humanoidSimple("test", true,
-        (Device::Computation_t) (Device::JOINT_POSITION | Device::JACOBIAN));
+  using namespace hpp::pinocchio;
+  DevicePtr_t robot = humanoidSimple("test", true, Computation_t (JOINT_POSITION | JACOBIAN));
   robot->rootJoint()->lowerBound(0, -1);
   robot->rootJoint()->lowerBound(1, -1);
   robot->rootJoint()->lowerBound(2, -1);
@@ -99,102 +77,6 @@ DevicePtr_t createRobot ()
   robot->rootJoint()->upperBound(1,  1);
   robot->rootJoint()->upperBound(2,  1);
   return robot;
-}
-
-ConvexShapeContactPtr_t createConvexShapeContact_punctual (DevicePtr_t d, JointPtr_t j, std::string name)
-{
-  /** Floor = penta + square
-   *     +
-   *    / \
-   *   /   +-----+
-   *  +    |     |
-   *   \   +-----+
-   *    \ /
-   *     +
-   *
-   *  Object = point
-  **/
-  std::vector <vector3_t> square(4);
-  square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
-  square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
-
-  std::vector <vector3_t> penta(5);
-  penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
-  penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
-  penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
-
-  std::vector <vector3_t> point(1, vector3_t (0,0,0));
-  ConvexShape pointCs (point, j);
-
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (pointCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
-  return fptr;
-}
-
-ConvexShapeContactPtr_t createConvexShapeContact_convex (DevicePtr_t d, JointPtr_t j, std::string name)
-{
-  /** Floor = penta + square
-   *     +
-   *    / \
-   *   /   +-----+
-   *  +    |     |
-   *   \   +-----+
-   *    \ /
-   *     +
-   *
-   *  Object = point
-   *  +--+
-   *  |   \
-   *  +----+
-  **/
-  std::vector <vector3_t> square(4);
-  square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
-  square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
-
-  std::vector <vector3_t> penta(5);
-  penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
-  penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
-  penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
-
-  std::vector <vector3_t> trapeze(4);
-  trapeze[0] = vector3_t (-0.1, 0.1,0); trapeze[1] = vector3_t ( 0.1, 0.1,0);
-  trapeze[2] = vector3_t ( 0.2,-0.1,0); trapeze[3] = vector3_t (-0.1,-0.1,0);
-  ConvexShape tCs (trapeze, j);
-
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (tCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
-  return fptr;
-}
-
-ConvexShapeContactPtr_t createConvexShapeContact_triangles (DevicePtr_t d, JointPtr_t j, std::string name)
-{
-  vector3_t x (1,0,0), y (0,1,0), z (0,0,1);
-  vector3_t p[12];
-  p[0] = vector3_t (-5,-5,0); p[1] = vector3_t (-5, 5,0); p[2] = vector3_t ( 5,-5,0);
-  p[3] = vector3_t ( 5, 5,0); p[4] = vector3_t (-5, 5,0); p[5] = vector3_t ( 5,-5,0);
-  p[6] = vector3_t ( 0, 0,1); p[7] = vector3_t (  1,0,1); p[8] = vector3_t (0,  1,1);
-  p[9] = vector3_t ( 0, 0,0); p[10] = vector3_t (0.1,0,0); p[11] = vector3_t (0,0.1,0);
-  std::vector<vector3_t> f1 = list_of (p[0])(p[1])(p[2]),
-                         f2 = list_of (p[3])(p[4])(p[5]),
-                         th = list_of (p[6])(p[7])(p[8]),
-                         o  = list_of (p[9])(p[10])(p[11]);
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (ConvexShape (o, j));
-  f.addFloor (ConvexShape (th, JointPtr_t()));
-  f.addFloor (ConvexShape (f1, JointPtr_t()));
-  f.addFloor (ConvexShape (f2, JointPtr_t()));
-  return fptr;
 }
 
 BOOST_AUTO_TEST_CASE (triangle) {
@@ -209,20 +91,22 @@ BOOST_AUTO_TEST_CASE (triangle) {
   p[5] = vector3_t (1,1,0);
   p[6] = vector3_t (-1,-1,1);
   ConvexShape t (p[0],p[1],p[2]);
-  BOOST_CHECK_MESSAGE ((t.normal () - z).isZero (), "Norm of triangle is wrong");
-  BOOST_CHECK_MESSAGE ((t.center () - (x+y)/3).isZero (), "Center of triangle is wrong");
+  ConvexShapeData d;
+  d.updateToCurrentTransform(t);
+  BOOST_CHECK_MESSAGE ((d.normal_ - z).isZero (), "Norm of triangle is wrong");
+  BOOST_CHECK_MESSAGE ((d.center_ - (x+y)/3).isZero (), "Center of triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.planeXaxis ().dot (z)) < 1e-8, "X axis of triangle is wrong");
   BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (z)) < 1e-8, "Y axis of triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (t.planeXaxis ())) < 1e-8, "X axis of triangle is wrong");
-  BOOST_CHECK_MESSAGE ((t.intersection (p[6], y-z) + x).isZero (), "Wrong intersection of triangle and line is wrong");
-  BOOST_CHECK_MESSAGE (t.isInside (p[4]), "This point is inside");
-  BOOST_CHECK_MESSAGE (!t.isInside (p[5]), "This point is outside");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[0])) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[1])) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[2])) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[4]) + 0.2) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (p[5]) - 0.5 * std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
-  BOOST_CHECK_MESSAGE (std::abs (t.distance (t.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (t.planeYaxis ().dot (t.planeXaxis ())) < 1e-8, "X and Y axes are not orthogonal");
+  BOOST_CHECK_MESSAGE ((d.intersection (p[6], y-z) + x).isZero (), "Wrong intersection of triangle and line is wrong");
+  BOOST_CHECK_MESSAGE ( d.isInside (t, p[4]), "This point is inside");
+  BOOST_CHECK_MESSAGE (!d.isInside (t, p[5]), "This point is outside");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[0])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[1])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[2])) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[4]) + 0.2) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, p[5]) - 0.5 * std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
+  BOOST_CHECK_MESSAGE (std::abs (d.distance (t, d.intersection (p[6], z)) - std::sqrt(2)) < 1e-8, "Distance to triangle is wrong");
 }
 
 template<bool forward>
@@ -242,9 +126,10 @@ BOOST_AUTO_TEST_CASE (jacobian) {
              ee2 = device->getJointByName ("rleg5_joint");
   Configuration_t goal = device->currentConfiguration ();
   BOOST_REQUIRE (device);
-  BasicConfigurationShooter cs (device);
 
-  device->currentConfiguration (*cs.shoot ());
+  Configuration_t q1;
+  randomConfig (device, q1);
+  device->currentConfiguration (q1);
   device->computeForwardKinematics ();
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
@@ -273,7 +158,8 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       RelativePosition::create ("RelativePosition with mask (0,1,1)", device, ee1, ee2, tf1, tf2, mask011));
 
-  device->currentConfiguration (*cs.shoot ());
+  randomConfig (device, q1);
+  device->currentConfiguration (q1);
   device->computeForwardKinematics ();
   tf1 = ee1->currentTransformation ();
   tf2 = ee2->currentTransformation ();
@@ -299,9 +185,9 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (stack);
   //*/
 
-  std::vector<ConfigurationPtr_t> cfgs (NUMBER_JACOBIAN_CALCULUS);
-  for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) cfgs[i] = cs.shoot();
-  Configuration_t q1(device->currentConfiguration());
+  std::vector<Configuration_t> cfgs (NUMBER_JACOBIAN_CALCULUS);
+  for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++)
+    randomConfig (device, cfgs[i]);
   matrix_t jacobian, fdCentral, fdForward, errorJacobian;
   for (DFs::iterator fit = functions.begin(); fit != functions.end(); ++fit) {
     DifferentiableFunction& f = **fit;
@@ -310,7 +196,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
     fdCentral.resize(f.outputDerivativeSize (), f.inputDerivativeSize ());
 
     for (size_t i = 0; i < NUMBER_JACOBIAN_CALCULUS; i++) {
-      q1 = *cfgs[i];
+      q1 = cfgs[i];
       jacobian.setZero ();
       f.jacobian (jacobian, q1);
 
@@ -335,7 +221,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
-  BasicConfigurationShooter cs (device);
 
   /// Create the constraints
   typedef DifferentiableFunctionPtr_t DFptr;
@@ -346,31 +231,32 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
     JointTranspose (ee1) * (pij2 - pij);
   DFptr relpos = RelativePosition::create ("RelPos", device, ee1, ee2, MId, MId);
 
-  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  Configuration_t q1, q2;
+  randomConfig (device, q2);
   matrix_t jacobian = matrix_t (pos->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
-      q1 = cs.shoot ();
-      device->currentConfiguration (*q1);
+      randomConfig (device, q1);
+      device->currentConfiguration (q1);
       device->computeForwardKinematics ();
 
       pij->invalidate ();
       relpos_sb_ptr->invalidate ();
 
       /// Position
-      LiegroupElement value = (*pos) (*q1);
-      pij->computeValue (*q1);
+      LiegroupElement value = (*pos) (q1);
+      pij->computeValue (q1);
       BOOST_CHECK (pij->value ().isApprox (value.vector()));
       jacobian.setZero ();
-      pos->jacobian (jacobian, *q1);
-      pij->computeJacobian (*q1);
+      pos->jacobian (jacobian, q1);
+      pij->computeJacobian (q1);
       BOOST_CHECK (pij->jacobian ().isApprox (jacobian));
       // Relative position
-      value = (*relpos) (*q1);
-      relpos_sb_ptr->computeValue (*q1);
+      value = (*relpos) (q1);
+      relpos_sb_ptr->computeValue (q1);
       BOOST_CHECK (relpos_sb_ptr->value ().isApprox (value.vector()));
       jacobian.setZero ();
-      relpos->jacobian (jacobian, *q1);
-      relpos_sb_ptr->computeJacobian (*q1);
+      relpos->jacobian (jacobian, q1);
+      relpos_sb_ptr->computeJacobian (q1);
       BOOST_CHECK (relpos_sb_ptr->jacobian ().isApprox (jacobian));
   }
 }
@@ -380,7 +266,6 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
-  BasicConfigurationShooter cs (device);
 
   /// Create the constraints
   typedef DifferentiableFunctionPtr_t DFptr;
@@ -388,21 +273,22 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   Traits<JointFrame>::Ptr_t jf  = JointFrame::create (ee1);
   DFptr sf = SymbolicFunction<JointFrame>::create ("SymbolicFunctionTest", device, jf);
 
-  ConfigurationPtr_t q1, q2 = cs.shoot ();
+  Configuration_t q1, q2;
+  randomConfig (device, q2);
   matrix_t jacobian1 = matrix_t (trans->outputSize (), device->numberDof ());
   matrix_t jacobian2 = matrix_t (trans->outputSize (), device->numberDof ());
   for (int i = 0; i < 100; i++) {
-      q1 = cs.shoot ();
-      device->currentConfiguration (*q1);
+      randomConfig (device, q1);
+      device->currentConfiguration (q1);
       device->computeForwardKinematics ();
 
-      LiegroupElement value1 = (*trans) (*q1);
-      LiegroupElement value2 = (*sf) (*q1);
+      LiegroupElement value1 = (*trans) (q1);
+      LiegroupElement value2 = (*sf) (q1);
       BOOST_CHECK (value1.vector().isApprox ( value2.vector()));
       jacobian1.setZero ();
       jacobian2.setZero ();
-      trans->jacobian (jacobian1, *q1);
-      sf->jacobian (jacobian2, *q1);
+      trans->jacobian (jacobian1, q1);
+      sf->jacobian (jacobian2, q1);
       BOOST_CHECK (jacobian1.isApprox ( jacobian2));
   }
 }

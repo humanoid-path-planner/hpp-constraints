@@ -134,8 +134,8 @@ namespace hpp {
     /// \param M rigid body transform,
     /// \retval theta angle of rotation,
     /// \retval result 6d vector \f$(\mathbf{v},\mathbf{r})\f$ such that
-    /// the screw motion of linear velocity (of the origin) $\mathbf{v}$
-    /// expressed in the moving frame and of angular velocity $\mathbf{r}$
+    /// the screw motion of linear velocity (of the origin) \f$\mathbf{v}\f$
+    /// expressed in the moving frame and of angular velocity \f$\mathbf{r}\f$
     /// expressed in the moving reaches $M$ in unit time.
     template <typename Derived> inline void logSE3
     (const Transform3f& M, Eigen::MatrixBase<Derived>& result)

@@ -70,8 +70,6 @@ namespace hpp {
         DevicePtr_t robot_;
         LiegroupElement goal_;
         vector_t weights_;
-        EigenBoolVector_t mask_;
-        mutable vector_t diff_;
     }; // class ComBetweenFeet
   } // namespace constraints
 } // namespace hpp

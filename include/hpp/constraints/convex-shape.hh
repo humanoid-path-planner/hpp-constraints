@@ -47,6 +47,20 @@ namespace hpp {
       else               B = A + c1 / c2 * v;
     }
 
+    /// \param A, u point and vector defining the line \f$ A + t*u \f$
+    /// \param P, n point and normal vector defining the plane \f$ Q \in plane \Rightleftarrow (P - Q) . n = 0 \f$
+    /// \return the intesection point.
+    /// \warning \c u and \c n are expected not to be orthogonal.
+    /// \todo make this function robust to orthogonal inputs.
+    inline vector3_t linePlaneIntersection (
+      const vector3_t& A, const vector3_t& u,
+      const vector3_t& P, const vector3_t& n)
+      {
+        assert (std::abs (n.dot(u)) > 1e-8);
+        return A + u * (n.dot(P - A)) / n.dot (u);
+      }
+
+
     class HPP_CONSTRAINTS_DLLAPI ConvexShape
     {
       public:
@@ -91,35 +105,12 @@ namespace hpp {
           init ();
         }
 
-        void updateToCurrentTransform () const
-        {
-          if (joint_ != NULL) recompute (joint_->currentTransformation());
-        }
-
         /// Intersection with a line defined by a point and a vector.
-        /// updateToCurrentTransform() should be called before.
-        inline vector3_t intersection (const vector3_t& A, const vector3_t& u) const {
-          assert (std::abs (n_.dot (u)) > 1e-8);
-          return A + u * (n_.dot(c_ - A)) / n_.dot (u);
-        }
+        /// \param A, u point and vector expressed in the local frame.
         inline vector3_t intersectionLocal (const vector3_t& A, const vector3_t& u) const {
-          assert (std::abs (N_.dot (u)) > 1e-8);
-          return A + u * (N_.dot(C_ - A)) / N_.dot (u);
+          return linePlaneIntersection (A, u, C_, N_);
         }
 
-        /// Check whether the intersection of the line defined by A and u
-        /// onto the plane containing the triangle is inside the triangle.
-        inline bool isInside (const vector3_t& A, const vector3_t& u) const {
-          assert (shapeDimension_ > 2);
-          return isInside (intersection (A, u));
-        }
-        inline bool isInside (const vector3_t& Ap) const {
-          assert (shapeDimension_ > 2);
-          if (joint_ == NULL) return isInsideLocal (Ap);
-          const Transform3f& M = joint_->currentTransformation ();
-          vector3_t Ap_loc = M.actInv(Ap);
-          return isInsideLocal (Ap_loc);
-        }
         /// As isInside but consider A as expressed in joint frame.
         inline bool isInsideLocal (const vector3_t& Ap) const {
           assert (shapeDimension_ > 2);
@@ -131,11 +122,10 @@ namespace hpp {
 
         /// Return the shortest distance from a point to the shape
         /// A negative value means the point is inside the shape
-        /// \param A a point already in the plane containing the convex shape,
-        ///        and expressed in the global frame.
-        inline value_type distance (vector3_t a) const {
+        /// \param a a point already in the plane containing the convex shape,
+        ///        and expressed in the local frame.
+        inline value_type distanceLocal (const vector3_t& a) const {
           assert (shapeDimension_ > 1);
-          if (joint_!=NULL) a = joint_->currentTransformation ().actInv(a);
           const value_type inf = std::numeric_limits<value_type>::infinity();
           value_type minPosDist = inf, maxNegDist = - inf;
           bool outside = false;
@@ -163,31 +153,8 @@ namespace hpp {
           return Us_[0];
         }
 
-        /// Return the normal in world frame.
-        inline const vector3_t& normal () const {
-          assert (shapeDimension_ > 2);
-          return n_;
-        }
-        /// Return the center in world frame.
-        inline const vector3_t& center () const { return c_; }
-
         /// Transform of the shape in the joint frame
         inline const Transform3f& positionInJoint () const { return MinJoint_; }
-        // \param yaxis vector in world frame to which we should try to align
-        inline void computeAlignedPosition (vector3_t yaxis) const {
-          assert (shapeDimension_ > 2);
-          // Project vector onto the plane
-          if (joint_!=NULL) yaxis = joint_->currentTransformation ().actInv(yaxis);
-          vector3_t yproj = yaxis - yaxis.dot (N_) * N_;
-          if (yproj.isZero ()) M_ = MinJoint_;
-          else {
-            M_.translation() = C_;
-            M_.rotation().col(0) = N_;
-            M_.rotation().col(1) = yaxis;
-            M_.rotation().col(2) = N_.cross (yaxis);
-          }
-        }
-        inline const Transform3f& alignedPositionInJoint () const { return M_; }
 
         /// The points in the joint frame. It is constant.
         std::vector <vector3_t> Pts_;
@@ -298,20 +265,104 @@ namespace hpp {
           MinJoint_.rotation().col(0) = N_;
           MinJoint_.rotation().col(1) = Ns_[0];
           MinJoint_.rotation().col(2) = Us_[0];
-
-          if (joint_ == NULL) recompute (Transform3f::Identity());
-          else                recompute (joint_->currentTransformation ());
         }
+    };
 
-        void recompute (const Transform3f& M) const
-        {
-          c_ = M.act (C_);
-          n_ = M.rotation () * N_;
+    struct HPP_CONSTRAINTS_DLLAPI ConvexShapeData
+    {
+      // normal in the world frame
+      vector3_t normal_;
+      // center in the world frame
+      vector3_t center_;
+      // Current joint position
+      Transform3f oMj_;
+
+      /// Compute center and normal in world frame
+      inline void updateToCurrentTransform (const ConvexShape& cs)
+      {
+        if (cs.joint_ == NULL) {
+          oMj_.setIdentity();
+          _recompute<true> (cs);
+        } else {
+          oMj_ = cs.joint_->currentTransformation();
+          _recompute<false> (cs);
         }
+      }
 
-        /// The positions and vectors in the global frame
-        mutable vector3_t n_, c_;
-        mutable Transform3f M_;
+      /// Compute center and normal in world frame
+      /// Thread safe version.
+      inline void updateToCurrentTransform (const ConvexShape& cs, const pinocchio::DeviceData& d)
+      {
+        if (cs.joint_ == NULL) {
+          oMj_.setIdentity();
+          _recompute<true> (cs);
+        } else {
+          oMj_ = cs.joint_->currentTransformation(d);
+          _recompute<false> (cs);
+        }
+      }
+
+      template <bool WorldFrame>
+      inline void _recompute (const ConvexShape& cs)
+      {
+        if (WorldFrame) {
+          center_ = cs.C_;
+          normal_ = cs.N_;
+        } else {
+          center_ = oMj_.act (cs.C_);
+          normal_ = oMj_.rotation () * cs.N_;
+        }
+      }
+
+      /// Intersection with a line defined by a point and a vector.
+      /// \param A, u point and vector expressed in the world frame.
+      inline vector3_t intersection (const vector3_t& A, const vector3_t& u) const
+      {
+        return linePlaneIntersection (A, u, center_, normal_);
+      }
+
+      /// Check whether the intersection of the line defined by A and u
+      /// onto the plane containing the triangle is inside the triangle.
+      /// \param A, u point and vector in world frame defining the line \f$ A + t*u \f$
+      inline bool isInside (const ConvexShape& cs,
+          const vector3_t& A, const vector3_t& u) const
+      {
+        return isInside (cs, intersection (A, u));
+      }
+      /// Check whether the point As in world frame is inside the triangle.
+      inline bool isInside (const ConvexShape& cs, const vector3_t& Ap) const
+      {
+        if (cs.joint_ == NULL) return cs.isInsideLocal (Ap);
+        vector3_t Ap_loc = oMj_.actInv(Ap);
+        return cs.isInsideLocal (Ap_loc);
+      }
+
+      /// \param yaxis vector in world frame to which we should try to align
+      inline Transform3f alignedPositionInJoint (const ConvexShape& cs, vector3_t yaxis) const
+      {
+        assert (cs.shapeDimension_ > 2);
+        // Project vector onto the plane
+        yaxis = oMj_.actInv(yaxis);
+        vector3_t yproj = yaxis - yaxis.dot (cs.N_) * cs.N_;
+        if (yproj.isZero ()) return cs.MinJoint_;
+        else {
+          Transform3f M;
+          M.translation() = cs.C_;
+          M.rotation().col(0) = cs.N_;
+          M.rotation().col(1) = yaxis;
+          M.rotation().col(2) = cs.N_.cross (yaxis);
+          return M;
+        }
+      }
+
+      /// See ConvexShape::distance
+      /// \param a a point already in the plane containing the convex shape,
+      ///        and expressed in the global frame.
+      inline value_type distance (const ConvexShape& cs, vector3_t a) const
+      {
+        if (cs.joint_!=NULL) a = oMj_.actInv(a);
+        return cs.distanceLocal (a);
+      }
     };
   } // namespace constraints
 } // namespace hpp

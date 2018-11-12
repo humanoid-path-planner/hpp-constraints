@@ -38,7 +38,7 @@ namespace hpp {
       public:
         /// Constructor
         /// \param f initial differentiable function,
-        /// \intervals set of intervals of indices corresponding to saturated
+        /// \param intervals set of intervals of indices corresponding to saturated
         ///            input variables.
         ActiveSetDifferentiableFunction (const DifferentiableFunctionPtr_t& f,
             segments_t intervals)

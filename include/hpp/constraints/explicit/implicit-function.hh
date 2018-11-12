@@ -65,7 +65,7 @@ namespace hpp {
       /// \param inputConf set of indices defining q_in,
       /// \param inputVelocity set of indices defining q_in derivative,
       /// \param outputConf set of indices defining q_out
-      /// \param outputVel set of indices defining q_out derivative
+      /// \param outputVelocity set of indices defining q_out derivative
       ///
 
       static Ptr_t create
@@ -96,7 +96,7 @@ namespace hpp {
       /// \param inputConf set of indices defining q_in,
       /// \param inputVelocity set of indices defining q_in derivative,
       /// \param outputConf set of indices defining q_out
-      /// \param outputVel set of indices defining q_out derivative
+      /// \param outputVelocity set of indices defining q_out derivative
       ImplicitFunction (const LiegroupSpacePtr_t& configSpace,
                 const DifferentiableFunctionPtr_t& function,
                 const segments_t& inputConf,

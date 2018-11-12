@@ -160,8 +160,8 @@ namespace hpp {
       /// Some variables can be locked, or computed explicitely. In this case,
       /// the iterative resolution will only change the other variables called
       /// free variables. \sa methods
-      /// \li \ref void freeVariables (const Indices_t& indices) and
-      /// \li \ref void freeVariables (const Indices_t& indices).
+      /// \li \ref freeVariables (const Indices_t& indices) and
+      /// \li \ref freeVariables (const Indices_t& indices).
       class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative
       {
       public:
