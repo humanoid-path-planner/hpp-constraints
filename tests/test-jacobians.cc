@@ -152,6 +152,8 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2));
   functions.push_back (
+      RelativeOrientation::create ("(Relative)Orientation", device, JointPtr_t(new hpp::pinocchio::Joint(device, 0)), ee2, tf1, tf2));
+  functions.push_back (
       RelativeOrientation::create ("RelativeOrientation with mask (0,1,1)", device, ee1, ee2, tf1, tf2, mask011));
   functions.push_back (
       RelativePosition::create ("RelativePosition", device, ee1, ee2, tf1, tf2));

@@ -27,6 +27,14 @@
 
 namespace hpp {
   namespace constraints {
+    void GenericTransformationModel<true>::setJoint1(const JointConstPtr_t& j)
+    {
+      if (j && j->index() > 0)
+        joint1 = j;
+      else joint1.reset();
+      assert (!joint1 || joint1->index());
+    }
+
     template <int _Options> std::ostream&
       GenericTransformation<_Options>::print (std::ostream& os) const
     {

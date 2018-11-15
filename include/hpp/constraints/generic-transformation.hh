@@ -60,7 +60,7 @@ namespace hpp {
     {
       JointConstPtr_t joint1;
       inline JointConstPtr_t getJoint1() const { return joint1; }
-      inline void setJoint1(const JointConstPtr_t& j) { joint1 = j; }
+      void setJoint1(const JointConstPtr_t& j);
       GenericTransformationModel (const size_type nCols) :
         GenericTransformationModel<false>(nCols), joint1() {}
     };
@@ -234,7 +234,7 @@ namespace hpp {
       inline void joint2 (const JointConstPtr_t& joint) {
 	m_.joint2 = joint;
         computeActiveParams();
-	assert (!joint || joint->robot () == robot_);
+	assert (!joint || (joint->index() > 0 && joint->robot () == robot_));
       }
 
       /// Get joint 2
