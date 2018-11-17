@@ -76,7 +76,7 @@ matrix_t randomPositiveDefiniteMatrix (int N)
   BOOST_REQUIRE ( (A.array() <  1).all() );
   BOOST_REQUIRE ( (A.array() > -1).all() );
 
-  A = (A + A) / 2;
+  A = (A + A.transpose()) / 2;
   A += N * matrix_t::Identity (N, N);
   A /= N;
   return A;
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
                                  et->inDer().indices (),
                                  et->outDer().indices ())) >= 0);
   solver.explicitConstraintSetHasChanged();
-  solver.print(std::cout);
+  BOOST_MESSAGE(solver << '\n');
 
   // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), BySubstitution::SUCCESS);
 
