@@ -129,8 +129,6 @@ namespace hpp {
 
       // Tmp variables
       mutable vector_t qsmall_, q_;
-      mutable Transform3f freeflyerPose_;
-      mutable matrix3_t cross1_, cross2_;
       mutable matrix_t tmpJac_, J2_parent_minus_J1_;
     }; // class RelativeTransformation
     /// \}

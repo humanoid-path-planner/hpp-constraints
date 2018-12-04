@@ -127,18 +127,18 @@ namespace hpp {
       // J2 = J2_{parent} * T
       // T = J2_{parent}^{-1} * J2
       // T = J2_{parent}^{-1} * J1 * F1/J1 * F2/J2^{-1}
-      freeflyerPose_ =
+      Transform3f freeflyerPose =
         joint1_->currentTransformation () * F1inJ1_invF2inJ2_;
 
       if (hasParent)
-        freeflyerPose_ = parentJoint_->currentTransformation ().actInv(freeflyerPose_);
+        freeflyerPose = parentJoint_->currentTransformation ().actInv(freeflyerPose);
 
-      freeflyerPose_ =
-        joint2_->positionInParentFrame ().actInv (freeflyerPose_);
+      freeflyerPose =
+        joint2_->positionInParentFrame ().actInv (freeflyerPose);
 
       typedef Transform3f::Quaternion_t Q_t;
-      result.vector ().head<3>() = freeflyerPose_.translation();
-      result.vector ().tail<4>() = Q_t(freeflyerPose_.rotation()).coeffs();
+      result.vector ().head<3>() = freeflyerPose.translation();
+      result.vector ().tail<4>() = Q_t(freeflyerPose.rotation()).coeffs();
     }
 
     void RelativeTransformation::impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const
@@ -164,17 +164,18 @@ namespace hpp {
 
       const vector3_t& t1 (joint1_->currentTransformation().translation());
 
-      cross1_ = se3::skew((R1 * F1inJ1_invF2inJ2_.translation()).eval());
+      matrix3_t cross1 = se3::skew((R1 * F1inJ1_invF2inJ2_.translation()).eval()),
+                cross2;
       if (hasParent) {
         const vector3_t& t2_parent (parentJoint_       ->currentTransformation().translation());
-        cross2_ = se3::skew((t2_parent - t1).eval());
+        cross2 = se3::skew((t2_parent - t1).eval());
 
         if (absolute)
           J2_parent_minus_J1_.noalias() = parentJoint_->jacobian();
         else
           J2_parent_minus_J1_.noalias() = parentJoint_->jacobian() - J1;
       } else {
-        cross2_ = - se3::skew(t1);
+        cross2 = - se3::skew(t1);
         // J2_parent_minus_J1_ = - J1;
       }
 
@@ -184,8 +185,8 @@ namespace hpp {
         const JointJacobian_t& J2_parent (parentJoint_->jacobian());
 
         tmpJac_.noalias() = (R2_inParentFrame.transpose() * R2_parent.transpose()) *
-          ( cross1_ * (omega(J2_parent_minus_J1_))
-            - cross2_ * omega(J2_parent)
+          ( cross1 * (omega(J2_parent_minus_J1_))
+            - cross2 * omega(J2_parent)
             - trans(J2_parent_minus_J1_));
         jacobian.topRows<3>() = inVel_.rview(tmpJac_);
       } else {
@@ -193,7 +194,7 @@ namespace hpp {
           jacobian.topRows<3>().setZero();
         else {
           tmpJac_.noalias() = R2.transpose() *
-            ( (- cross1_ * R1) * omega(J1) + R1 * trans(J1));
+            ( (- cross1 * R1) * omega(J1) + R1 * trans(J1));
           jacobian.topRows<3>() = inVel_.rview(tmpJac_);
         }
       }
