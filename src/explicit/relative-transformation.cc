@@ -120,6 +120,8 @@ namespace hpp {
     {
       forwardKinematics (argument);
 
+      bool hasParent = (parentJoint_ && parentJoint_->index() > 0);
+
       // J1 * M1/J1 = J2 * M2/J2
       // J2 = J1 * M1/J1 * M2/J2^{-1}
       // J2 = J2_{parent} * T
@@ -128,7 +130,7 @@ namespace hpp {
       freeflyerPose_ =
         joint1_->currentTransformation () * F1inJ1_invF2inJ2_;
 
-      if (parentJoint_)
+      if (hasParent)
         freeflyerPose_ = parentJoint_->currentTransformation ().actInv(freeflyerPose_);
 
       freeflyerPose_ =
@@ -148,7 +150,11 @@ namespace hpp {
       robot_->currentConfiguration (q);
       robot_->computeForwardKinematics ();
 
-      const JointJacobian_t& J1 (joint1_->jacobian());
+      bool absolute = (joint1_->index() == 0);
+      bool hasParent = (parentJoint_ && parentJoint_->index() > 0);
+
+      static const JointJacobian_t Jabs;
+      const JointJacobian_t& J1 (absolute ? Jabs : joint1_->jacobian());
       // const JointJacobian_t& J2_parent (parentJoint_->jacobian());
 
       const matrix3_t& R1 (joint1_->currentTransformation().rotation());
@@ -159,18 +165,21 @@ namespace hpp {
       const vector3_t& t1 (joint1_->currentTransformation().translation());
 
       cross1_ = se3::skew((R1 * F1inJ1_invF2inJ2_.translation()).eval());
-      if (parentJoint_) {
+      if (hasParent) {
         const vector3_t& t2_parent (parentJoint_       ->currentTransformation().translation());
         cross2_ = se3::skew((t2_parent - t1).eval());
 
-        J2_parent_minus_J1_.noalias() = parentJoint_->jacobian() - J1;
+        if (absolute)
+          J2_parent_minus_J1_.noalias() = parentJoint_->jacobian();
+        else
+          J2_parent_minus_J1_.noalias() = parentJoint_->jacobian() - J1;
       } else {
         cross2_ = - se3::skew(t1);
         // J2_parent_minus_J1_ = - J1;
       }
 
       // Express velocity of J1 * M1/J1 * M2/J2^{-1} in J2_{parent}.
-      if (parentJoint_) {
+      if (hasParent) {
         const matrix3_t&       R2_parent (parentJoint_->currentTransformation().rotation());
         const JointJacobian_t& J2_parent (parentJoint_->jacobian());
 
@@ -178,26 +187,34 @@ namespace hpp {
           ( cross1_ * (omega(J2_parent_minus_J1_))
             - cross2_ * omega(J2_parent)
             - trans(J2_parent_minus_J1_));
+        jacobian.topRows<3>() = inVel_.rview(tmpJac_);
       } else {
-        tmpJac_.noalias() = R2.transpose() *
-          ( (- cross1_ * R1) * omega(J1) + R1 * trans(J1));
+        if (absolute)
+          jacobian.topRows<3>().setZero();
+        else {
+          tmpJac_.noalias() = R2.transpose() *
+            ( (- cross1_ * R1) * omega(J1) + R1 * trans(J1));
+          jacobian.topRows<3>() = inVel_.rview(tmpJac_);
+        }
       }
 
-      jacobian.topRows<3>() = inVel_.rview(tmpJac_);
-      // jacobian.topRows<3>().setZero();
-
-      if (parentJoint_) {
+      if (hasParent) {
         const matrix3_t&       R2_parent (parentJoint_->currentTransformation().rotation());
         const JointJacobian_t& J2_parent (parentJoint_->jacobian());
 
         // J = p2RT2 * 0RTp2 * [ p2
-        tmpJac_.noalias() = ( R2.transpose() * R2_parent ) * omega(J2_parent)
-          - (R2.transpose() * R1) * omega(J1);
+        tmpJac_.noalias() = ( R2.transpose() * R2_parent ) * omega(J2_parent);
+        if (!absolute)
+          tmpJac_.noalias() -= (R2.transpose() * R1) * omega(J1);
+        jacobian.bottomRows<3>() = inVel_.rview(tmpJac_);
       } else {
-        tmpJac_.noalias() = ( R2.transpose() * R1 ) * omega(J1);
+        if (absolute)
+          jacobian.bottomRows<3>().setZero();
+        else {
+          tmpJac_.noalias() = ( R2.transpose() * R1 ) * omega(J1);
+        jacobian.bottomRows<3>() = inVel_.rview(tmpJac_);
+        }
       }
-
-      jacobian.bottomRows<3>() = inVel_.rview(tmpJac_);
     }
     } // namespace explicit_
   } // namespace constraints
