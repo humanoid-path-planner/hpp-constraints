@@ -27,6 +27,30 @@
 
 namespace hpp {
   namespace constraints {
+    typedef std::vector<CollisionObjectPtr_t> CollisionObjects_t;
+
+    void initGeomData(const pinocchio::GeomModel& model, pinocchio::GeomData& data,
+        const pinocchio::BodyPtr_t& body,
+        const CollisionObjects_t& objects)
+    {
+      // Deactivate all collision pairs.
+      for (std::size_t i = 0; i < model.collisionPairs.size(); ++i)
+        data.activateCollisionPair(i, false);
+      // Activate only the relevant ones.
+      for (size_type i = 0; i < body->nbInnerObjects(); ++i) {
+	CollisionObjectConstPtr_t obj1 (body->innerObjectAt(i));
+	for (std::size_t j = 0; j < objects.size(); ++j) {
+	  CollisionObjectConstPtr_t obj2 (objects[j]);
+          std::size_t idx = model.findCollisionPair(
+              se3::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
+              );
+          if (idx < model.collisionPairs.size())
+            data.activateCollisionPair(idx);
+          else
+            throw std::invalid_argument("Collision pair not found");
+	}
+      }
+    }
 
     DistanceBetweenBodiesPtr_t DistanceBetweenBodies::create
     (const std::string& name, const DevicePtr_t& robot,
@@ -40,17 +64,7 @@ namespace hpp {
 
     DistanceBetweenBodiesPtr_t DistanceBetweenBodies::create
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint, const std::vector<CollisionObjectPtr_t>& objects)
-    {
-      DistanceBetweenBodies* ptr = new DistanceBetweenBodies
-	(name, robot, joint, objects);
-      DistanceBetweenBodiesPtr_t shPtr (ptr);
-      return shPtr;
-    }
-
-    DistanceBetweenBodiesPtr_t DistanceBetweenBodies::create
-    (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint, const ObjectVector_t& objects)
+     const JointPtr_t& joint, const CollisionObjects_t& objects)
     {
       DistanceBetweenBodies* ptr = new DistanceBetweenBodies
 	(name, robot, joint, objects);
@@ -66,33 +80,22 @@ namespace hpp {
       joint1_ (joint1), joint2_ (joint2), data_ (robot->geomModel()),
       latestResult_ (outputSpace ())
     {
-      ObjectVector_t objs1 (joint1_->linkedBody ()->innerObjects ());
-      ObjectVector_t objs2 (joint2_->linkedBody ()->innerObjects ());
-      initGeomData(objs1.begin(), objs1.end(), objs2.begin(), objs2.end());
+      pinocchio::BodyPtr_t body2 (joint2_->linkedBody());
+      CollisionObjects_t objects2 (body2->nbInnerObjects());
+      for (std::size_t j = 0; j < objects2.size(); ++j)
+        objects2[j] = body2->innerObjectAt (j);
+      initGeomData(robot_->geomModel(), data_, joint1_->linkedBody(), objects2);
     }
 
     DistanceBetweenBodies::DistanceBetweenBodies
     (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint, const ObjectVector_t& objects) :
+     const JointPtr_t& joint, const CollisionObjects_t& objects):
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::R1 (), name),
       robot_ (robot), joint1_ (joint), joint2_ (), data_ (robot->geomModel()),
       latestResult_ (outputSpace ())
     {
-      ObjectVector_t objs1 (joint1_->linkedBody ()->innerObjects ());
-      initGeomData(objs1.begin(), objs1.end(), objects.begin(), objects.end());
-    }
-
-    DistanceBetweenBodies::DistanceBetweenBodies
-    (const std::string& name, const DevicePtr_t& robot,
-     const JointPtr_t& joint, const std::vector<CollisionObjectPtr_t>& objects):
-      DifferentiableFunction (robot->configSize (), robot->numberDof (),
-                              LiegroupSpace::R1 (), name),
-      robot_ (robot), joint1_ (joint), joint2_ (), data_ (robot->geomModel()),
-      latestResult_ (outputSpace ())
-    {
-      ObjectVector_t objs1 (joint1_->linkedBody ()->innerObjects ());
-      initGeomData(objs1.begin(), objs1.end(), objects.begin(), objects.end());
+      initGeomData(robot_->geomModel(), data_, joint1_->linkedBody(), objects);
     }
 
     void DistanceBetweenBodies::impl_compute
@@ -146,32 +149,6 @@ namespace hpp {
 	  (  P1_minus_P2.transpose () * R2 * J2.topRows<3>()
            + P1_minus_P2.transpose () * R2.colwise().cross(P2_minus_t2) * J2.bottomRows<3>());
 	jacobian.noalias() -= tmp2/dist.vector () [0];
-      }
-    }
-
-    template <typename Iterator1, typename Iterator2>
-      void DistanceBetweenBodies::initGeomData(
-          const Iterator1& begin1, const Iterator1& end1,
-          const Iterator2& begin2, const Iterator2& end2)
-    {
-      using se3::GeometryModel;
-      const GeometryModel& model = robot_->geomModel();
-      // Deactivate all collision pairs.
-      for (std::size_t i = 0; i < model.collisionPairs.size(); ++i)
-        data_.activateCollisionPair(i, false);
-      // Activate only the relevant ones.
-      for (Iterator1 it1 = begin1; it1 != end1; ++it1) {
-	CollisionObjectConstPtr_t obj1 (*it1);
-	for (Iterator2 it2 = begin2; it2 != end2; ++it2) {
-	  CollisionObjectConstPtr_t obj2 (*it2);
-          std::size_t idx = model.findCollisionPair(
-              se3::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
-              );
-          if (idx < model.collisionPairs.size())
-            data_.activateCollisionPair(idx);
-          else
-            throw std::invalid_argument("Collision pair not found");
-	}
       }
     }
   } // namespace constraints

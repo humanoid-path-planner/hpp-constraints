@@ -63,17 +63,6 @@ namespace hpp {
       static DistanceBetweenBodiesPtr_t create (const std::string& name,
 						const DevicePtr_t& robot,
 						const JointPtr_t& joint,
-						const ObjectVector_t& objects);
-
-      /// Create instance and return shared pointer
-      ///
-      /// \param name name of the constraint,
-      /// \param robot robot that own the bodies,
-      /// \param joint joint that holds the body,
-      /// \param objects list of fixed objects in the environment.
-      static DistanceBetweenBodiesPtr_t create (const std::string& name,
-						const DevicePtr_t& robot,
-						const JointPtr_t& joint,
 						const std::vector<CollisionObjectPtr_t>& objects);
 
       virtual ~DistanceBetweenBodies () throw () {}
@@ -97,16 +86,6 @@ namespace hpp {
       /// \param objects list of fixed objects in the environment.
       DistanceBetweenBodies (const std::string& name, const DevicePtr_t& robot,
 			     const JointPtr_t& joint,
-			     const ObjectVector_t& objects);
-
-      /// Protected constructor
-      ///
-      /// \param name name of the constraint,
-      /// \param robot robot that own the bodies,
-      /// \param joint joint that holds the body,
-      /// \param objects list of fixed objects in the environment.
-      DistanceBetweenBodies (const std::string& name, const DevicePtr_t& robot,
-			     const JointPtr_t& joint,
 			     const std::vector<CollisionObjectPtr_t>& objects);
 
       virtual void impl_compute (LiegroupElement& result,
@@ -114,10 +93,6 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      template <typename Iterator1, typename Iterator2>
-      void initGeomData(const Iterator1& begin1, const Iterator1& end1,
-          const Iterator2& begin2, const Iterator2& end2);
-
       typedef se3::GeometryData GeometryData;
 
       DevicePtr_t robot_;
