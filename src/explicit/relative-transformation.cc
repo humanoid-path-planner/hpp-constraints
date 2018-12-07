@@ -127,8 +127,9 @@ namespace hpp {
       // J2 = J2_{parent} * T
       // T = J2_{parent}^{-1} * J2
       // T = J2_{parent}^{-1} * J1 * F1/J1 * F2/J2^{-1}
-      Transform3f freeflyerPose =
-        joint1_->currentTransformation () * F1inJ1_invF2inJ2_;
+      Transform3f freeflyerPose;
+      if (!joint1_) freeflyerPose =                            F1inJ1_invF2inJ2_;
+      else freeflyerPose = joint1_->currentTransformation () * F1inJ1_invF2inJ2_;
 
       if (hasParent)
         freeflyerPose = parentJoint_->currentTransformation ().actInv(freeflyerPose);
@@ -150,19 +151,19 @@ namespace hpp {
       robot_->currentConfiguration (q);
       robot_->computeForwardKinematics ();
 
-      bool absolute = (joint1_->index() == 0);
+      bool absolute = !joint1_;
       bool hasParent = (parentJoint_ && parentJoint_->index() > 0);
 
       static const JointJacobian_t Jabs;
       const JointJacobian_t& J1 (absolute ? Jabs : joint1_->jacobian());
       // const JointJacobian_t& J2_parent (parentJoint_->jacobian());
 
-      const matrix3_t& R1 (joint1_->currentTransformation().rotation());
+      const matrix3_t& R1 (absolute ? matrix3_t::Identity().eval() : joint1_->currentTransformation().rotation());
       const matrix3_t& R2 (joint2_->currentTransformation().rotation());
       const matrix3_t& R2_inParentFrame (joint2_->positionInParentFrame().
                                          rotation());
 
-      const vector3_t& t1 (joint1_->currentTransformation().translation());
+      const vector3_t& t1 (absolute ? vector3_t::Zero().eval() : joint1_->currentTransformation().translation());
 
       matrix3_t cross1 = se3::skew((R1 * F1inJ1_invF2inJ2_.translation()).eval()),
                 cross2;
