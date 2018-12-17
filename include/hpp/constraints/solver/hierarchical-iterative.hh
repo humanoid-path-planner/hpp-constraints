@@ -567,7 +567,7 @@ namespace hpp {
         mutable value_type sigma_;
 
         mutable vector_t dq_, dqSmall_;
-        mutable matrix_t projector_, reducedJ_;
+        mutable matrix_t reducedJ_;
         mutable Eigen::VectorXi saturation_, reducedSaturation_;
         mutable Configuration_t qSat_;
         mutable ArrayXb tmpSat_;

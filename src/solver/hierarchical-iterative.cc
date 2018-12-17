@@ -105,7 +105,7 @@ namespace hpp {
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
         freeVariables_ (), saturate_ (), constraints_ (),
-        sigma_ (0), dq_ (), dqSmall_ (), projector_ (), reducedJ_ (),
+        sigma_ (0), dq_ (), dqSmall_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
         svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ()),
@@ -127,7 +127,7 @@ namespace hpp {
         saturate_ (other.saturate_), constraints_ (other.constraints_),
         sigma_(other.sigma_),
         dq_ (other.dq_), dqSmall_ (other.dqSmall_),
-        projector_ (other.projector_),reducedJ_ (other.reducedJ_),
+        reducedJ_ (other.reducedJ_),
         saturation_ (other.saturation_),
         reducedSaturation_ (other.reducedSaturation_), qSat_ (other.qSat_),
         tmpSat_ (other.tmpSat_), squaredNorm_ (other.squaredNorm_),
@@ -254,7 +254,8 @@ namespace hpp {
           datas_[i].reducedJ.resize(datas_[i].activeRowsOfJ.nbRows(), reducedSize);
 
           datas_[i].svd = SVD_t (f.outputDerivativeSize(), reducedSize,
-                                 Eigen::ComputeThinU | Eigen::ComputeThinV);
+                                 Eigen::ComputeThinU |
+                                 (i==stacks_.size()-1 ? Eigen::ComputeThinV : Eigen::ComputeFullV));
           datas_[i].svd.setThreshold (SVD_THRESHOLD);
           datas_[i].PK.resize (reducedSize, reducedSize);
 
@@ -263,7 +264,6 @@ namespace hpp {
 
         dq_ = vector_t::Zero(configSpace_->nv ());
         dqSmall_.resize(reducedSize);
-        projector_.resize(reducedSize, reducedSize);
         reducedJ_.resize(reducedDimension_, reducedSize);
         svd_ = SVD_t (reducedDimension_, reducedSize,
                       Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -563,7 +563,16 @@ namespace hpp {
           if (d.maxRank > 0)
             sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
         } else {
-          projector_.setIdentity();
+          // dq = dQ_0 + P_0 * v_1
+          // f_1(q+dq) = f_1(q) + J_1 * dQ_0 + M_1 * v_1
+          // M_1 = J_1 * P_0
+          // v_1 = M+_1 * (-f_1(q) - J_1 * dQ_1) + K_1 * v_2
+          // dq = dQ_0 + P_0 * M+_1 * (-f_1(q) - J_1 * dQ_1) + P_0 * K_1 * v_2
+          //    = dQ_1                                       + P_1       * b_2
+          //
+          // dQ_1 = dQ_0 + P_0 * M+_1 * (-f_1(q) - J_1 * dQ_1)
+          //  P_1 = P_0 * K_1
+          matrix_t* projector = NULL;
           for (std::size_t i = 0; i < stacks_.size (); ++i) {
             const DifferentiableFunction& f = stacks_[i].function ();
             Data& d = datas_[i];
@@ -574,30 +583,38 @@ namespace hpp {
             /// projector is of size numberDof
             bool first = (i == 0);
             bool last = (i == stacks_.size() - 1);
-            err = d.activeRowsOfJ.keepRows().rview(- d.error);
             if (first) {
+              err = d.activeRowsOfJ.keepRows().rview(- d.error);
               // dq should be zero and projector should be identity
               d.svd.compute (d.reducedJ);
               HPP_DEBUG_SVDCHECK (d.svd);
               // TODO Eigen::JacobiSVD does a dynamic allocation here.
               dqSmall_ = d.svd.solve (err);
             } else {
-              // TODO check whether d.reducedJ * projector_ is not the null matrix.
-              d.svd.compute (d.reducedJ * projector_);
+              err = d.activeRowsOfJ.keepRows().rview(- d.error);
+              err.noalias() -= d.reducedJ * dqSmall_;
+
+              assert(projector != NULL);
+              d.svd.compute (d.reducedJ * *projector);
               HPP_DEBUG_SVDCHECK (d.svd);
               // TODO Eigen::JacobiSVD does a dynamic allocation here.
-              dqSmall_ += d.svd.solve (err - d.reducedJ * dqSmall_);
+              dqSmall_ += *projector * d.svd.solve (err);
             }
             // Update sigma
-            d.maxRank = std::max(d.maxRank, d.svd.rank());
+            const size_type rank = d.svd.rank();
+            d.maxRank = std::max(d.maxRank, rank);
             if (d.maxRank > 0)
               sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
 
             if (last) break; // No need to compute projector for next step.
 
+            if (d.svd.matrixV().cols() == rank) break; // The kernel is { 0 }
             /// compute projector for next step.
-            projectorOnSpan <SVD_t> (d.svd, d.PK);
-            projector_ -= d.PK;
+            if (projector == NULL)
+              d.PK.noalias() = getV2<SVD_t> (d.svd, rank);
+            else
+              d.PK.noalias() = *projector * getV2<SVD_t> (d.svd, rank);
+            projector = &d.PK;
           }
         }
         expandDqSmall();
