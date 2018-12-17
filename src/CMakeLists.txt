@@ -25,6 +25,7 @@ SET (${LIBRARY_NAME}_SOURCES
   configuration-constraint.cc
   convex-shape-contact.cc
   matrix-view.cc
+  manipulability.cc
   static-stability.cc
   explicit-constraint-set.cc
   implicit.cc
