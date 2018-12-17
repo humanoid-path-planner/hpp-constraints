@@ -157,13 +157,19 @@ namespace hpp {
         template <typename LineSearchType>
           Status solve (vectorOut_t arg, LineSearchType ls = LineSearchType()) const
         {
+          return solve <LineSearchType> (arg, false, ls);
+        }
+
+        template <typename LineSearchType>
+          Status solve (vectorOut_t arg, bool optimize, LineSearchType ls = LineSearchType()) const
+        {
           // TODO when there are only locked joint explicit constraints,
           // there is no need for this intricated loop.
           // if (explicit_.isConstant()) {
           // explicit_.solve(arg);
           // iterative_.solve(arg, ls);
           // } else {
-          return impl_solve (arg, ls);
+          return impl_solve (arg, optimize, ls);
           // }
         }
 
@@ -315,7 +321,7 @@ namespace hpp {
         typedef solver::HierarchicalIterative parent_t;
 
         template <typename LineSearchType>
-          Status impl_solve (vectorOut_t arg, LineSearchType ls) const;
+          Status impl_solve (vectorOut_t arg, bool optimize, LineSearchType ls) const;
 
         ExplicitConstraintSet explicit_;
         mutable matrix_t Je_, JeExpanded_;
