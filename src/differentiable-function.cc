@@ -124,8 +124,14 @@ namespace hpp {
           vector_t h = vector_t::Zero (jacobian.cols());
           LiegroupElement f_x_mdx (f.outputSpace ()),
             f_x_pdx (f.outputSpace ());
+          const ArrayXb& adp = f.activeDerivativeParameters();
 
           for (size_type j = 0; j < n; ++j) {
+            if (!adp[j]) {
+              jacobian.col (j).setZero();
+              continue;
+            }
+
             h[j] = op.step(j, x);
 
             op.template integrate<false>(x, h, j, x_mdx);
@@ -153,10 +159,16 @@ namespace hpp {
           vector_t x_dx = x;
           vector_t h = vector_t::Zero (jacobian.cols());
           LiegroupElement f_x (f.outputSpace ()), f_x_pdx (f.outputSpace ());
+          const ArrayXb& adp = f.activeDerivativeParameters();
 
           f.value (f_x, x);
 
           for (size_type j = 0; j < n; ++j) {
+            if (!adp[j]) {
+              jacobian.col (j).setZero();
+              continue;
+            }
+
             h[j] = op.step(j, x);
 
             op.template integrate<true >(x, h, j, x_dx);
