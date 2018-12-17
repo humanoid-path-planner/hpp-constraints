@@ -300,11 +300,12 @@ namespace hpp {
 
         virtual std::ostream& print (std::ostream& os) const;
 
-        void integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result)
+        bool integrate(vectorIn_t from, vectorIn_t velocity, vectorOut_t result)
           const
         {
-          solver::HierarchicalIterative::integrate(from, velocity, result);
+          bool res = solver::HierarchicalIterative::integrate(from, velocity, result);
           explicit_.solve (result);
+          return res;
         }
 
       protected:

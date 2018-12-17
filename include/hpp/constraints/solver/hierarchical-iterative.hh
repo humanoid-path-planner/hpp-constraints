@@ -501,7 +501,7 @@ namespace hpp {
           return dq_;
         }
 
-        virtual void integrate(vectorIn_t from, vectorIn_t velocity,
+        virtual bool integrate(vectorIn_t from, vectorIn_t velocity,
                                vectorOut_t result) const;
         /// \}
 
