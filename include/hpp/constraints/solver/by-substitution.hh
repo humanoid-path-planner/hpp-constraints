@@ -224,7 +224,12 @@ namespace hpp {
         ///       parameterizable constraints (type Equality) .
         bool rightHandSide (const ImplicitPtr_t& constraint,
                             vectorIn_t rhs);
-        /// Set the right hand side
+
+	/// Get right hand side of a constraints
+	bool getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) ;
+
+
+	/// Set the right hand side
         /// \param rhs the right hand side
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality).

@@ -41,7 +41,7 @@ namespace hpp {
             const LiegroupElement& lge, const std::string& name)
         {
           return DifferentiableFunctionPtr_t
-            (new ConstantFunction (lge, 0, 0, "LockedJoint " + name));
+            (new ConstantFunction (lge, 0, 0, "LockedJoint " + name + ' ' + numToStr(lge.vector().transpose())));
         }
     }
 

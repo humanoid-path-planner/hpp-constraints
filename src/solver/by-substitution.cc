@@ -312,6 +312,17 @@ namespace hpp {
         return false;
       }
 
+      bool BySubstitution::getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs)
+      {
+	if (parent_t::getRightHandSide ( constraint, rhs))
+          return true;
+        ExplicitPtr_t exp (HPP_DYNAMIC_PTR_CAST (Explicit, constraint));
+        if (exp) {
+          return explicit_.getRightHandSide ( exp, rhs);
+        }
+        return false;
+      }
+
       void BySubstitution::rightHandSide (vectorIn_t rhs)
       {
         const size_type top = parent_t::rightHandSideSize();

@@ -420,6 +420,12 @@ namespace hpp {
         /// \param rhs right hand side.
         bool rightHandSide (const ExplicitPtr_t& constraint, vectorIn_t rhs);
 
+	/// Get the right hand side for a given explicit constraint
+        ///
+        /// \param constraint the explicit constraint,
+        /// \param rhs right hand side.
+        bool getRightHandSide (const ExplicitPtr_t& constraint, vectorOut_t rhs) const ;
+
         /// Set the right hand side for a given explicit constraint
         ///
         /// \param i order of the explicit constraint,
