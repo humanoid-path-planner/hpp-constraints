@@ -78,12 +78,6 @@ SET(${PROJECT_NAME}_HEADERS
 )
 
 # Activate hpp-util logging if requested
-SET (HPP_DEBUG FALSE CACHE BOOL "trigger hpp-util debug output")
-IF (HPP_DEBUG)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_DEBUG")
-ENDIF()
-
-# Activate hpp-util logging if requested
 SET (HPP_CONSTRAINTS_NUMERIC_DEBUG ${HPP_DEBUG} CACHE BOOL "trigger hpp-util debug output")
 IF (HPP_CONSTRAINTS_NUMERIC_DEBUG)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_CONSTRAINTS_NUMERIC_DEBUG")
@@ -105,6 +99,7 @@ IF (USE_QPOASES)
 ENDIF ()
 
 SETUP_HPP_PROJECT()
+
 SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
 SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")

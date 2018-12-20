@@ -1,6 +1,7 @@
 namespace hpp {
   namespace constraints {
     /// \mainpage
+    /// \anchor hpp_constraints_documentation
     ///
     /// This package provides a representation of the concept of mathematical
     /// functions from a manifold, for instace the configuration space of a robot
