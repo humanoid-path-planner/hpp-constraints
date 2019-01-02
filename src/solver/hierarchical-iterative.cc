@@ -368,6 +368,37 @@ namespace hpp {
         return false;
       }
 
+      bool HierarchicalIterative::getRightHandSide
+      (const ImplicitPtr_t& constraint,vectorOut_t rhs) const
+      {
+        const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
+        for (std::size_t i = 0; i < stacks_.size (); ++i) {
+          const Data& d = datas_[i];
+          const ImplicitConstraintSet& ics (stacks_[i]);
+          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
+                                        ics.functionPtr ()));
+          DifferentiableFunctionSetPtr_t dfs
+            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
+                                  ics.functionPtr ()));
+          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
+          size_type row = 0;
+          for (std::size_t j = 0; j < fs.size(); ++j) {
+            if (f == fs[j]) {
+              for (size_type k = 0; k < f->outputSize(); ++k) {
+                if (d.comparison[row + k] == Equality) {
+		  rhs [k]= (d.rightHandSide.vector () [row + k]);
+		}
+		//else {
+		//rhs[k]=0;
+		//}
+
+	      }
+	      return true;
+	    }
+	    row += fs[j]->outputSize();
+	  }
+	}
+      }
       void HierarchicalIterative::rightHandSide (vectorIn_t rhs)
       {
         size_type row = 0;

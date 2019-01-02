@@ -352,7 +352,22 @@ namespace hpp {
       }
       return false;
     }
-
+    
+    bool ExplicitConstraintSet::getRightHandSide (const ExplicitPtr_t& constraint, vectorOut_t rhs)const 
+    {
+      for (std::size_t i = 0; i < data_.size (); ++i) {
+	const Data& d = data_[i];
+	if (d.constraint == constraint) {
+	  d.equalityIndices.lview(rhs)=d.equalityIndices.rview(d.rhs_implicit);
+	  // d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
+	  
+	  return true;
+	}
+      }
+      return false;
+    }
+    
+    
     void ExplicitConstraintSet::rightHandSide
     (const size_type& i, vectorIn_t rhs)
     {
