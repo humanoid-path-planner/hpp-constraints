@@ -43,7 +43,7 @@ namespace hpp {
 	for (std::size_t j = 0; j < objects.size(); ++j) {
 	  CollisionObjectConstPtr_t obj2 (objects[j]);
           std::size_t idx = model.findCollisionPair(
-              se3::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
+              ::pinocchio::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
               );
           if (idx < model.collisionPairs.size())
             data.activateCollisionPair(idx);
@@ -150,32 +150,6 @@ namespace hpp {
 	  (  P1_minus_P2.transpose () * R2 * J2.topRows<3>()
            + P1_minus_P2.transpose () * R2.colwise().cross(P2_minus_t2) * J2.bottomRows<3>());
 	jacobian.noalias() -= tmp2/dist.vector () [0];
-      }
-    }
-
-    template <typename Iterator1, typename Iterator2>
-      void DistanceBetweenBodies::initGeomData(
-          const Iterator1& begin1, const Iterator1& end1,
-          const Iterator2& begin2, const Iterator2& end2)
-    {
-      using pinocchio::GeomModel;
-      const GeomModel& model = robot_->geomModel();
-      // Deactivate all collision pairs.
-      for (std::size_t i = 0; i < model.collisionPairs.size(); ++i)
-        data_.activateCollisionPair(i, false);
-      // Activate only the relevant ones.
-      for (Iterator1 it1 = begin1; it1 != end1; ++it1) {
-	CollisionObjectConstPtr_t obj1 (*it1);
-	for (Iterator2 it2 = begin2; it2 != end2; ++it2) {
-	  CollisionObjectConstPtr_t obj2 (*it2);
-          std::size_t idx = model.findCollisionPair(
-              ::pinocchio::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
-              );
-          if (idx < model.collisionPairs.size())
-            data_.activateCollisionPair(idx);
-          else
-            throw std::invalid_argument("Collision pair not found");
-	}
       }
     }
   } // namespace constraints
