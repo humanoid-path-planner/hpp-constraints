@@ -34,6 +34,27 @@ namespace hpp {
       return rhs_;
     }
 
+    void Implicit::rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF)
+    {
+      assert (rhsF->inputSize() == 1);
+      assert (rhsF->inputDerivativeSize() == 1);
+      assert (rhsF->outputSpace()->isVectorSpace());
+      // Check that the right hand side is non-constant on all axis.
+      for (std::size_t i = 0; i < comparison_.size(); ++i)
+        assert (comparison_[i] == constraints::Equality);
+
+      rhsFunction_ = rhsF;
+    }
+
+    vectorIn_t Implicit::rightHandSideAt (const value_type& s)
+    {
+      if (rhsFunction_) {
+        vector_t S (1); S[0] = s;
+        rhsFunction_->value (rhsFunction_->outputSpace()->elementRef(rhs_), S);
+      }
+      return rightHandSide();
+    }
+
     size_type Implicit::rhsSize () const
     {
       return rhs_.size ();
