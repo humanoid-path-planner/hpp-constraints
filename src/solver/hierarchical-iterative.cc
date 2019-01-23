@@ -419,6 +419,15 @@ namespace hpp {
         assert (row == rhs.size());
       }
 
+      void HierarchicalIterative::rightHandSideAt (const value_type& s)
+      {
+        for (std::size_t i = 0; i < constraints_.size (); ++i) {
+          ImplicitPtr_t implicit = constraints_[i];
+          if (!implicit->constantRightHandSide())
+            rightHandSide (implicit, implicit->rightHandSideAt (s));
+        }
+      }
+
       vector_t HierarchicalIterative::rightHandSide () const
       {
         vector_t rhs(rightHandSideSize());

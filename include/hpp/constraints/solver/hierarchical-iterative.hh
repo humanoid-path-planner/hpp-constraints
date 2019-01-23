@@ -468,6 +468,10 @@ namespace hpp {
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality).
         virtual void rightHandSide (vectorIn_t rhs);
+	
+        /// Set the right hand side at a given parameter.
+        /// \param s parameter passed to Implicit::rightHandSideAt
+        void rightHandSideAt (const value_type& s);
 
         /// Get the right hand side
         /// \return the right hand side
