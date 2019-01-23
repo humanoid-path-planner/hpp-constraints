@@ -61,7 +61,7 @@ namespace hpp {
       if (errorIsAboveThr && reducedDimension_ == 0) return INFEASIBLE;
       if (optimize && !errorIsAboveThr) qopt = arg;
 
-      Status status;
+      Status status = SUCCESS;
       while ( (optimize || (errorIsAboveThr && errorDecreased))) {
         // 1. Maximum iterations
         if (iter >= maxIterations_) {
