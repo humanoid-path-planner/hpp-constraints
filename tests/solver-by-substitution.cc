@@ -56,6 +56,7 @@ using hpp::constraints::JointPtr_t;
 using hpp::constraints::RelativeTransformation;
 using hpp::constraints::RelativeTransformationPtr_t;
 using hpp::constraints::LiegroupElement;
+using hpp::constraints::LiegroupElementRef;
 using hpp::constraints::vectorIn_t;
 using hpp::constraints::matrixOut_t;
 using hpp::constraints::Transform3f;

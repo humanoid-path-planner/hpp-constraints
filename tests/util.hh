@@ -174,7 +174,7 @@ class Quadratic : public hpp::constraints::DifferentiableFunction
     typedef hpp::constraints::matrixOut_t matrixOut_t;
     typedef hpp::constraints::vector_t vector_t;
     typedef hpp::constraints::vectorIn_t vectorIn_t;
-    typedef hpp::constraints::LiegroupElement LiegroupElement;
+    typedef hpp::constraints::LiegroupElementRef LiegroupElementRef;
     typedef hpp::constraints::value_type value_type;
 
     Quadratic (const matrix_t& _A, const vector_t& _b, const value_type& _c)

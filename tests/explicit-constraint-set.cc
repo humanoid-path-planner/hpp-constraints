@@ -63,6 +63,7 @@ using hpp::constraints::LiegroupSpacePtr_t;
 using hpp::constraints::Transform3f;
 using hpp::constraints::vectorIn_t;
 using hpp::constraints::LiegroupElement;
+using hpp::constraints::LiegroupElementRef;
 using hpp::constraints::matrixOut_t;
 using hpp::constraints::AffineFunctionPtr_t;
 using hpp::constraints::segment_t;
