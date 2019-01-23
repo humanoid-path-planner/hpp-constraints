@@ -398,6 +398,7 @@ namespace hpp {
 	    row += fs[j]->outputSize();
 	  }
 	}
+        return false;
       }
       void HierarchicalIterative::rightHandSide (vectorIn_t rhs)
       {
