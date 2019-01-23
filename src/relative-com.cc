@@ -90,7 +90,7 @@ namespace hpp {
       jacobian_.setZero ();
     }
 
-    void RelativeCom::impl_compute (LiegroupElement& result,
+    void RelativeCom::impl_compute (LiegroupElementRef result,
 				    ConfigurationIn_t argument)
       const throw ()
     {

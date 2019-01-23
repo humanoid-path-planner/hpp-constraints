@@ -108,7 +108,7 @@ namespace hpp {
       ///        except freeflyer joint)
       /// \retval result vector of output configuration variables corresponding
       ///         to the freeflyer value.
-      void impl_compute (LiegroupElement& result, vectorIn_t argument) const;
+      void impl_compute (LiegroupElementRef result, vectorIn_t argument) const;
 
       void impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const;
 

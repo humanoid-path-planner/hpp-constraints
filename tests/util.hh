@@ -197,7 +197,7 @@ class Quadratic : public hpp::constraints::DifferentiableFunction
       BOOST_REQUIRE (A.rows() == b.rows());
     }
 
-    void impl_compute (LiegroupElement& y, vectorIn_t x) const
+    void impl_compute (LiegroupElementRef y, vectorIn_t x) const
     {
       y.vector()[0] = x.transpose() * A * x + b.dot(x) + c;
     }

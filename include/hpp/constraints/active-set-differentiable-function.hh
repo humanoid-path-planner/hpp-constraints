@@ -68,7 +68,7 @@ namespace hpp {
         typedef std::vector < segments_t > intervalss_t;
 
         /// User implementation of function evaluation
-        virtual void impl_compute (LiegroupElement& result,
+        virtual void impl_compute (LiegroupElementRef result,
                                    vectorIn_t argument) const
         {
           function_->value(result, argument);

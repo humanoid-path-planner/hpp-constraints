@@ -33,7 +33,7 @@ namespace hpp {
       J_JT_.resize (J_.rows(),J_.rows());
     }
 
-    void Manipulability::impl_compute (LiegroupElement& res, vectorIn_t arg) const
+    void Manipulability::impl_compute (LiegroupElementRef res, vectorIn_t arg) const
     {
       assert (cols_.cols().size()>0);
 

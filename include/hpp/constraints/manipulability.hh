@@ -51,7 +51,7 @@ namespace hpp {
       Manipulability (DifferentiableFunctionPtr_t function,
           DevicePtr_t robot, std::string name);
 
-      void impl_compute (LiegroupElement& result, vectorIn_t argument) const;
+      void impl_compute (LiegroupElementRef result, vectorIn_t argument) const;
 
       void impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const;
 

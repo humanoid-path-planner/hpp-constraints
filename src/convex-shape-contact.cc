@@ -154,7 +154,7 @@ namespace hpp {
       value = data.value;
     }
 
-    void ConvexShapeContact::impl_compute (LiegroupElement& result,
+    void ConvexShapeContact::impl_compute (LiegroupElementRef result,
                                            ConfigurationIn_t argument) const
     {
       bool isInside;
@@ -327,7 +327,7 @@ namespace hpp {
     }
 
     void ConvexShapeContactComplement::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const
+    (LiegroupElementRef result, ConfigurationIn_t argument) const
     {
       bool isInside;
       ConvexShapeContact::ContactType type;

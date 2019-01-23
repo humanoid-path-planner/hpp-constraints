@@ -207,7 +207,7 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
-    void impl_compute (LiegroupElement& result,
+    void impl_compute (LiegroupElementRef result,
                        vectorIn_t arg) const
     {
       // forwardKinematics(arg);

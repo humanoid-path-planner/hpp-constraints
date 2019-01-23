@@ -68,7 +68,7 @@ namespace hpp {
                             const size_type& nArgs, const size_type& nDers,
                             const segment_t& inArgs, const segment_t& inDers);
 
-        void impl_compute (LiegroupElement& y, vectorIn_t arg) const
+        void impl_compute (LiegroupElementRef y, vectorIn_t arg) const
         {
           g_->value(y, arg.segment (sa_.first, sa_.second));
         }

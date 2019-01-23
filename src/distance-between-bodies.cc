@@ -100,7 +100,7 @@ namespace hpp {
     }
 
     void DistanceBetweenBodies::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
     {
       if ((argument.rows () == latestArgument_.rows ()) &&
 	  (argument == latestArgument_)) {

@@ -153,7 +153,7 @@ namespace hpp {
       std::ostream& print (std::ostream& o) const;
 
       private:
-        void impl_compute (LiegroupElement& result, ConfigurationIn_t argument)
+        void impl_compute (LiegroupElementRef result, ConfigurationIn_t argument)
           const;
         void computeInternalValue (const ConfigurationIn_t& argument,
             bool& isInside, ContactType& type, vector6_t& value) const;
@@ -218,7 +218,7 @@ namespace hpp {
 
 
     private:
-      void impl_compute (LiegroupElement& result, ConfigurationIn_t argument) const;
+      void impl_compute (LiegroupElementRef result, ConfigurationIn_t argument) const;
 
       void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument)
 	const;

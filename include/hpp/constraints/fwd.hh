@@ -49,6 +49,7 @@ namespace hpp {
     typedef pinocchio::JointJacobian_t JointJacobian_t;
     typedef pinocchio::Transform3f Transform3f;
     typedef pinocchio::LiegroupElement LiegroupElement;
+    typedef pinocchio::LiegroupElementRef LiegroupElementRef;
     typedef pinocchio::LiegroupSpace LiegroupSpace;
     typedef pinocchio::LiegroupSpacePtr_t LiegroupSpacePtr_t;
     typedef pinocchio::LiegroupSpaceConstPtr_t LiegroupSpaceConstPtr_t;

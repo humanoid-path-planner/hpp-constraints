@@ -365,7 +365,7 @@ class LockedJoint : public DifferentiableFunction
       return ret;
     }
 
-    void impl_compute (LiegroupElement& result, vectorIn_t) const
+    void impl_compute (LiegroupElementRef result, vectorIn_t) const
     {
       result.vector () = value_;
     }
@@ -453,7 +453,7 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
-    void impl_compute (LiegroupElement& result,
+    void impl_compute (LiegroupElementRef result,
                        vectorIn_t arg) const
     {
       // forwardKinematics(arg);

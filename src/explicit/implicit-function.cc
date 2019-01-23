@@ -259,7 +259,7 @@ namespace hpp {
           (activeDerivativeParameters_.matrix()).setConstant(true);
       }
 
-      void ImplicitFunction::impl_compute (LiegroupElement& result,
+      void ImplicitFunction::impl_compute (LiegroupElementRef result,
                                    vectorIn_t argument) const
       {
         using Eigen::MatrixBlocks;

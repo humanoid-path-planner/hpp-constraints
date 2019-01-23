@@ -116,7 +116,7 @@ namespace hpp {
     }
 
     void RelativeTransformation::impl_compute
-    (LiegroupElement& result, vectorIn_t argument) const
+    (LiegroupElementRef result, vectorIn_t argument) const
     {
       forwardKinematics (argument);
 

@@ -84,7 +84,7 @@ namespace hpp {
     }
 
     void DistanceBetweenPointsInBodies::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
     {
       if ((argument.rows () == latestArgument_.rows ()) &&
 	  (argument == latestArgument_)) {

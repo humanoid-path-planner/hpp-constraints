@@ -102,7 +102,7 @@ namespace hpp {
         {}
 
       protected:
-        void impl_compute (LiegroupElement& result, ConfigurationIn_t arg)
+        void impl_compute (LiegroupElementRef result, ConfigurationIn_t arg)
           const throw ()
         {
           size_type row = 0;

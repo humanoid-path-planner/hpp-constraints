@@ -153,7 +153,7 @@ namespace hpp {
 
     template <int _Options>
     void GenericTransformation<_Options>::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
     {
       GTDataV<IsRelative, ComputePosition, ComputeOrientation> data (m_, robot_);
 

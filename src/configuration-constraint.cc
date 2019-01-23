@@ -63,7 +63,7 @@ namespace hpp {
       goal_ = LiegroupElement (goal, s);
     }
 
-    void ConfigurationConstraint::impl_compute (LiegroupElement& result,
+    void ConfigurationConstraint::impl_compute (LiegroupElementRef result,
                                                 ConfigurationIn_t argument)
       const throw ()
     {
