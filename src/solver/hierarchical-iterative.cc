@@ -355,6 +355,9 @@ namespace hpp {
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
             if (f == fs[j]) {
+              // The use of comparisonType implies that the output size
+              // and the output derivative size are the same.
+              assert (f->outputSpace()->isVectorSpace ());
               for (size_type k = 0; k < f->outputSize(); ++k) {
                 if (d.comparison[row + k] == Equality) {
                   d.rightHandSide.vector () [row + k] = rhs [k];
@@ -384,6 +387,9 @@ namespace hpp {
           size_type row = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
             if (f == fs[j]) {
+              // The use of comparisonType implies that the output size
+              // and the output derivative size are the same.
+              assert (f->outputSpace()->isVectorSpace ());
               for (size_type k = 0; k < f->outputSize(); ++k) {
                 if (d.comparison[row + k] == Equality) {
 		  rhs [k]= (d.rightHandSide.vector () [row + k]);
@@ -400,6 +406,7 @@ namespace hpp {
 	}
         return false;
       }
+
       void HierarchicalIterative::rightHandSide (vectorIn_t rhs)
       {
         size_type row = 0;

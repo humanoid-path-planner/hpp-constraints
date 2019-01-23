@@ -312,7 +312,7 @@ namespace hpp {
         return false;
       }
 
-      bool BySubstitution::getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs)
+      bool BySubstitution::getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) const
       {
 	if (parent_t::getRightHandSide ( constraint, rhs))
           return true;
