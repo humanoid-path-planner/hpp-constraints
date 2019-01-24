@@ -86,6 +86,8 @@ namespace hpp {
           const JointPtr_t& joint, const vector3_t reference,
           std::vector <bool> mask,
           const std::string& name);
+
+      virtual std::ostream& print (std::ostream& o) const;
     protected:
       /// Compute value of error
       ///

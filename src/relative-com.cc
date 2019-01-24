@@ -19,11 +19,15 @@
 
 #include <hpp/constraints/relative-com.hh>
 
+#include <hpp/util/indent.hh>
 #include <hpp/util/debug.hh>
+
+#include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/center-of-mass-computation.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 #include <hpp/constraints/macros.hh>
 
@@ -88,6 +92,16 @@ namespace hpp {
       if (mask[0] && mask[1] && mask[2])
         nominalCase_ = true;
       jacobian_.setZero ();
+    }
+
+    std::ostream& RelativeCom::print (std::ostream& o) const
+    {
+      return o << "RelativeCom: " << name () << incindent
+        << iendl << "Joint: "        << (joint_ ? joint_->name() : "World")
+        << iendl << "Reference: " << one_line (reference_)
+        << iendl << "mask: ";
+      for (size_type i=0; i<3; ++i) o << mask_ [i] << ", ";
+      return o << decindent;
     }
 
     void RelativeCom::impl_compute (LiegroupElementRef result,
