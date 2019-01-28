@@ -135,6 +135,7 @@ namespace hpp {
     Implicit::Implicit (const Implicit& other):
       comparison_ (other.comparison_), rhs_ (other.rhs_),
       rhsRealSize_ (other.rhsRealSize_), function_ (other.function_),
+      rhsFunction_ (other.rhsFunction_),
       value_ (other.value_), jacobian_ (other.jacobian_)
     {
     }
