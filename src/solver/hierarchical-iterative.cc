@@ -124,7 +124,7 @@ namespace hpp {
         reducedDimension_ (other.reducedDimension_),
         lastIsOptional_ (other.lastIsOptional_),
         freeVariables_ (other.freeVariables_),
-        saturate_ (other.saturate_), constraints_ (other.constraints_),
+        saturate_ (other.saturate_), constraints_ (other.constraints_.size()),
         sigma_(other.sigma_),
         dq_ (other.dq_), dqSmall_ (other.dqSmall_),
         reducedJ_ (other.reducedJ_),
@@ -134,6 +134,8 @@ namespace hpp {
         datas_ (other.datas_), svd_ (other.svd_), OM_ (other.OM_),
 	OP_ (other.OP_), statistics_ (other.statistics_)
       {
+        for (std::size_t i = 0; i < constraints_.size(); ++i)
+          constraints_[i] = other.constraints_[i]->copy();
       }
 
       bool HierarchicalIterative::contains
