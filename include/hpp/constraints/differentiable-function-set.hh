@@ -122,8 +122,8 @@ namespace hpp {
           for (Functions_t::const_iterator _f = functions_.begin();
               _f != functions_.end(); ++_f) {
             const DifferentiableFunction& f = **_f;
-            f.impl_jacobian(jacobian.middleRows(row, f.outputSize()), arg);
-            row += f.outputSize();
+            f.impl_jacobian(jacobian.middleRows(row, f.outputDerivativeSize()), arg);
+            row += f.outputDerivativeSize();
           }
         }
       private:
