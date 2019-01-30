@@ -97,7 +97,7 @@ namespace hpp {
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
-      assert (function_->outputDerivativeSize () == comparison_.size ());
+      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
@@ -117,7 +117,7 @@ namespace hpp {
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
-      assert (function_->outputDerivativeSize () == comparison_.size ());
+      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const Implicit& other):

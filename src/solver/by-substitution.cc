@@ -118,7 +118,7 @@ namespace hpp {
                                 const std::size_t& priority,
                                 const ComparisonTypes_t& comp)
       {
-        HierarchicalIterative::add (f, priority, comp);
+        HierarchicalIterative::add (Implicit::create (f, comp), priority);
       }
 
       void BySubstitution::explicitConstraintSetHasChanged()

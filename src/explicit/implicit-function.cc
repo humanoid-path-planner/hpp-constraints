@@ -142,7 +142,7 @@ namespace hpp {
        const segments_t& outputConf, const segments_t& outputVelocity)
       {
 	ImplicitFunction* ptr = new ImplicitFunction
-	  (robot, function, inputConf, outputConf, inputVelocity,
+	  (robot->configSpace(), function, inputConf, outputConf, inputVelocity,
            outputVelocity);
 	return ImplicitFunctionPtr_t (ptr);
       }
