@@ -168,6 +168,7 @@ namespace hpp {
                                        const std::size_t& priority)
       {
         const ComparisonTypes_t comp (constraint->comparisonType ());
+        assert ((size_type)comp.size() == constraint->function().outputDerivativeSize());
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
           stacks_.resize (minSize, ImplicitConstraintSet ());
@@ -250,6 +251,7 @@ namespace hpp {
           datas_[i].output = LiegroupElement (f.outputSpace ());
           datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
           datas_[i].rightHandSide.setNeutral ();
+          datas_[i].error.resize (f.outputSpace ()->nv());
 
           assert(configSpace_->nv () == f.inputDerivativeSize());
           datas_[i].jacobian.resize(f.outputDerivativeSize(),
@@ -305,8 +307,10 @@ namespace hpp {
           ImplicitConstraintSet& ics = stacks_[i];
           Data& d = datas_[i];
           ics.function ().value (d.output, config);
-          d.equalityIndices.lview(d.rightHandSide.vector ()) =
-            d.equalityIndices.rview(d.output.vector ());
+          d.error.setZero();
+          d.equalityIndices.lview(d.error) =
+            d.equalityIndices.rview(d.output - d.rightHandSide);
+          d.rightHandSide += d.error;
         }
         return rightHandSide();
       }
@@ -324,20 +328,29 @@ namespace hpp {
             (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
                                   ics.functionPtr ()));
           const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          size_type row = 0;
+          size_type iq = 0, iv = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
+            LiegroupSpacePtr_t space (f->outputSpace());
+            size_type nq = space->nq(),
+                      nv = space->nv();
             if (f == fs[j]) {
-              LiegroupElement tmp (f->outputSpace ());
-              f->value (tmp, config);
-              d.output.vector ().segment(row, f->outputSize()) = tmp.vector ();
-              for (size_type k = 0; k < f->outputSize(); ++k) {
-                if (d.comparison[row + k] == Equality) {
-                  d.rightHandSide.vector () [row + k] = d.output.vector ()[row + k];
-                }
+              LiegroupElementRef output (space->elementRef (
+                    d.output       .vector ().segment(iq, nq)));
+              LiegroupElementRef rhs    (space->elementRef (
+                    d.rightHandSide.vector ().segment(iq, nq)));
+
+              f->value (output, config);
+              d.error.head(nv) = output - rhs;
+
+              for (size_type k = 0; k < nv; ++k) {
+                if (d.comparison[iv + k] != Equality)
+                  d.error[k] = 0;
               }
+              rhs += d.error.head(nv);
               return true;
             }
-            row += fs[j]->outputSize();
+            iq += nq;
+            iv += nv;
           }
         }
         return false;
@@ -356,20 +369,27 @@ namespace hpp {
             (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
                                   ics.functionPtr ()));
           const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          size_type row = 0;
+          size_type iq = 0, iv = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
+            LiegroupSpacePtr_t space (f->outputSpace());
+            size_type nq = space->nq(),
+                      nv = space->nv();
             if (f == fs[j]) {
-              // The use of comparisonType implies that the output size
-              // and the output derivative size are the same.
-              assert (f->outputSpace()->isVectorSpace ());
-              for (size_type k = 0; k < f->outputSize(); ++k) {
-                if (d.comparison[row + k] == Equality) {
-                  d.rightHandSide.vector () [row + k] = rhs [k];
-                }
+              pinocchio::LiegroupElementConstRef output (space->elementConstRef (rhs));
+              LiegroupElementRef drhs   (space->elementRef (
+                    d.rightHandSide.vector ().segment(iq, nq)));
+
+              d.error.head(space->nv()) = output - drhs;
+
+              for (size_type k = 0; k < nv; ++k) {
+                if (d.comparison[iv + k] != Equality)
+                  d.error[k] = 0;
               }
+              drhs += d.error.head(nv);
               return true;
             }
-            row += fs[j]->outputSize();
+            iq += nq;
+            iv += nv;
           }
         }
         return false;
@@ -380,7 +400,7 @@ namespace hpp {
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          const Data& d = datas_[i];
+          Data& d = datas_[i];
           const ImplicitConstraintSet& ics (stacks_[i]);
           assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
                                         ics.functionPtr ()));
@@ -388,39 +408,51 @@ namespace hpp {
             (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
                                   ics.functionPtr ()));
           const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          size_type row = 0;
+          size_type iq = 0, iv = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
+            LiegroupSpacePtr_t space (f->outputSpace());
+            size_type nq = space->nq(),
+                      nv = space->nv();
             if (f == fs[j]) {
-              // The use of comparisonType implies that the output size
-              // and the output derivative size are the same.
-              assert (f->outputSpace()->isVectorSpace ());
-              for (size_type k = 0; k < f->outputSize(); ++k) {
-                if (d.comparison[row + k] == Equality) {
-		  rhs [k]= (d.rightHandSide.vector () [row + k]);
-		}
-		//else {
-		//rhs[k]=0;
-		//}
+              LiegroupElementRef output (space->elementRef (rhs));
+              pinocchio::LiegroupElementConstRef drhs (space->elementConstRef (
+                    d.rightHandSide.vector ().segment(iq, nq)));
+              LiegroupElement neutral (space->neutral());
 
-	      }
-	      return true;
-	    }
-	    row += fs[j]->outputSize();
-	  }
+              d.error.head(nv) = drhs - neutral;
+
+              for (size_type k = 0; k < nv; ++k) {
+                if (d.comparison[iv + k] != Equality)
+                  d.error[k] = 0;
+              }
+              output.setNeutral();
+              output += d.error.head(nv);
+              return true;
+            }
+            iq += nq;
+            iv += nv;
+          }
 	}
         return false;
       }
 
       void HierarchicalIterative::rightHandSide (vectorIn_t rhs)
       {
-        size_type row = 0;
+        size_type iq = 0;
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           Data& d = datas_[i];
-          d.equalityIndices.lview(d.rightHandSide.vector ())
-            = rhs.segment(row, d.equalityIndices.m_nbRows);
-          row += d.equalityIndices.m_nbRows;
+          LiegroupSpacePtr_t space (d.rightHandSide.space());
+          size_type nq = space->nq();
+
+          d.error.setZero();
+          d.equalityIndices.lview(d.error) =
+            d.equalityIndices.rview(
+              space->elementConstRef (rhs.segment(iq, nq)) - d.rightHandSide);
+          d.rightHandSide += d.error;
+
+          iq += nq;
         }
-        assert (row == rhs.size());
+        assert (iq == rhs.size());
       }
 
       void HierarchicalIterative::rightHandSideAt (const value_type& s)
@@ -435,15 +467,17 @@ namespace hpp {
       vector_t HierarchicalIterative::rightHandSide () const
       {
         vector_t rhs(rightHandSideSize());
-        size_type row = 0;
+        size_type iq = 0;
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           const Data& d = datas_[i];
-          const size_type nRows = d.equalityIndices.m_nbRows;
-          vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-          seg = d.equalityIndices.rview(d.rightHandSide.vector ());
-          row += nRows;
+          size_type nq = d.rightHandSide.space()->nq();
+          // this does not take the comparison type into account.
+          // It shouldn't matter as rhs should be zero when comparison type is
+          // not Equality
+          rhs.segment(iq, nq) = d.rightHandSide.vector();
+          iq += nq;
         }
-        assert (row == rhs.size());
+        assert (iq == rhs.size());
         return rhs;
       }
 
@@ -451,7 +485,7 @@ namespace hpp {
       {
         size_type rhsSize = 0;
         for (std::size_t i = 0; i < stacks_.size (); ++i)
-          rhsSize += datas_[i].equalityIndices.nbRows();
+          rhsSize += stacks_[i].function().outputSize();
         return rhsSize;
       }
 
@@ -464,8 +498,12 @@ namespace hpp {
           Data& d = datas_[i];
 
           f.value   (d.output, config);
-          if (ComputeJac) f.jacobian(d.jacobian, config);
           d.error = d.output - d.rightHandSide;
+          if (ComputeJac) {
+            f.jacobian(d.jacobian, config);
+            d.output.space()->dDifference_dq1<pinocchio::DerivativeTimesInput>
+              (d.rightHandSide.vector(), d.output.vector(), d.jacobian);
+          }
           applyComparison<ComputeJac>(d.comparison, d.inequalityIndices,
                                       d.error, d.jacobian, inequalityThreshold_);
 
@@ -533,13 +571,12 @@ namespace hpp {
           const ImplicitConstraintSet::Implicits_t constraints
             (stacks_ [i].constraints ());
           const Data& d = datas_[i];
-          size_type row = 0;
+          size_type iv = 0;
           for (std::size_t j = 0; j < constraints.size(); ++j) {
-            size_type outputSize (constraints [j]->function ().outputSize ());
+            size_type nv (constraints [j]->function ().outputDerivativeSize ());
             squaredNorm_ = std::max
-              (squaredNorm_,
-               d.error.segment(row, outputSize).squaredNorm());
-            row += outputSize;
+              (squaredNorm_, d.error.segment(iv, nv).squaredNorm());
+            iv += nv;
           }
         }
       }

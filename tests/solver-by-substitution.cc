@@ -37,6 +37,7 @@ using hpp::constraints::DifferentiableFunction;
 using hpp::constraints::solver::BySubstitution;
 using hpp::constraints::matrix_t;
 using hpp::constraints::vector_t;
+using hpp::constraints::vectorOut_t;
 using hpp::constraints::vector3_t;
 using hpp::constraints::segment_t;
 using hpp::constraints::segments_t;
@@ -67,6 +68,7 @@ using hpp::constraints::solver::lineSearch::Backtracking;
 using hpp::constraints::solver::lineSearch::ErrorNormBased;
 using hpp::constraints::solver::lineSearch::FixedSequence;
 using hpp::pinocchio::unittest::HumanoidRomeo;
+using hpp::pinocchio::unittest::ManipulatorArm2;
 using hpp::pinocchio::unittest::makeDevice;
 
 using boost::assign::list_of;
@@ -378,6 +380,46 @@ class LockedJoint : public DifferentiableFunction
     }
 };
 
+void se3ToConfig (const Transform3f& oMi, vectorOut_t v)
+{
+  assert (v.size() == 7);
+  v.head<3>() = oMi.translation();
+  Eigen::Map<Transform3f::Quaternion> q (v.tail<4>().data());
+  q = oMi.rotation();
+}
+
+class Frame : public DifferentiableFunction
+{
+  public:
+    JointPtr_t joint_;
+
+    Frame(JointPtr_t joint)
+      : DifferentiableFunction(joint->robot()->configSize(),
+          joint->robot()->numberDof(), LiegroupSpace::SE3 (), "Frame"),
+        joint_ (joint)
+    {}
+
+    void impl_compute (LiegroupElementRef result, vectorIn_t arg) const
+    {
+      hpp::pinocchio::DeviceSync robot (joint_->robot());
+      robot.currentConfiguration (arg);
+      robot.computeForwardKinematics ();
+
+      const Transform3f& oMi = joint_->currentTransformation (robot.d());
+      se3ToConfig (oMi, result.vector ());
+    }
+
+    void impl_jacobian (matrixOut_t J, vectorIn_t arg) const
+    {
+      // finiteDifferenceCentral(J, arg, joint_->robot(), 1e-6);
+      hpp::pinocchio::DeviceSync robot (joint_->robot());
+      robot.currentConfiguration (arg);
+      robot.computeForwardKinematics ();
+
+      J = joint_->jacobian (robot.d(), true);
+    }
+};
+
 matrix3_t exponential (const vector3_t& aa)
 {
   matrix3_t R, xCross;
@@ -663,4 +705,70 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   dq.setRandom();
   qrand = tmp;
   solver.projectVectorOnKernel (qrand, dq, tmp);
+}
+
+BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
+{
+  DevicePtr_t device (makeDevice (ManipulatorArm2));
+  BOOST_REQUIRE (device);
+
+  JointPtr_t left = device->getJointByName ("left_w2");
+  hpp::constraints::DifferentiableFunctionPtr_t frame (new Frame (left));
+  hpp::constraints::ImplicitPtr_t constraint (Implicit::create (frame,
+        hpp::constraints::ComparisonTypes_t (6, hpp::constraints::Equality)));
+
+  BySubstitution solver(device->configSpace ());
+  solver.maxIterations(20);
+  solver.errorThreshold(1e-3);
+  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
+
+  solver.add (constraint);
+
+  BOOST_CHECK_EQUAL (solver.rightHandSideSize (), 7);
+
+  for (int i = 0; i < 100; ++i) {
+    Configuration_t q     = ::pinocchio::randomConfiguration(device->model()),
+                    qrand;
+
+    device->currentConfiguration (q);
+    device->computeForwardKinematics ();
+    Transform3f tf_expected (left->currentTransformation ());
+    vector_t rhs_expected (7), tmp(7);
+    se3ToConfig (tf_expected, rhs_expected);
+
+    solver.rightHandSideFromConfig (q);
+    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+    solver.getRightHandSide (constraint, tmp);
+    EIGEN_VECTOR_IS_APPROX (rhs_expected, tmp);
+
+    solver.rightHandSideFromConfig (constraint, q);
+    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+
+    solver.rightHandSide (rhs_expected);
+    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+
+    solver.rightHandSide (constraint, rhs_expected);
+    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+
+    BOOST_CHECK_EQUAL(solver.solve<FixedSequence>(q), BySubstitution::SUCCESS);
+
+    BySubstitution::Status status;
+    for (int j = 0; j < 100; ++j) {
+      qrand = ::pinocchio::randomConfiguration(device->model());
+      status = solver.solve<FixedSequence>(qrand);
+      if (status == BySubstitution::SUCCESS) break;
+    }
+    BOOST_CHECK_EQUAL(status, BySubstitution::SUCCESS);
+
+    if (status == BySubstitution::SUCCESS) {
+      device->currentConfiguration (qrand);
+      device->computeForwardKinematics ();
+      Transform3f tf_result (left->currentTransformation ());
+
+      Transform3f id = tf_expected.actInv(tf_result);
+      BOOST_CHECK_MESSAGE (id.isIdentity (1e-3),
+          "Right hand side is different:\n" << tf_result
+          << '\n' << tf_expected << '\n' << id);
+    }
+  }
 }

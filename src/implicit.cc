@@ -97,17 +97,7 @@ namespace hpp {
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
-      // TODO currently, I think it is not supported to have an implicit constraint
-      // with function_->outputSize() != function_->outputDerivativeSize()
-      // because we apply the comparison type in the same manner to the value
-      // coeffs and to the Jacobian rows.
-      // EqualToZero should not cause any problem.
-      // Equality is ill-defined coefficient wise (as it is implemented).
-      // Superior and Inferior are (I think) ill-defined.
-      // We should apply the comparison on `function_->value() - rhs`
-      // and on the Jacobian rows, because they have the same dimension.
-      assert (function_->outputSize () == function_->outputDerivativeSize ());
-      assert (function_->outputSize () == comparison_.size ());
+      assert (function_->outputDerivativeSize () == comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
@@ -123,13 +113,11 @@ namespace hpp {
                                          Equality);
       }
       if (rhs.size () == 0) {
-        rhs_.resize (function->outputDerivativeSize ());
+        rhs_.resize (function->outputSize ());
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
-      /// TODO See TODO in the constructor above.
-      assert (function_->outputSize () == function_->outputDerivativeSize ());
-      assert (function_->outputSize () == comparison_.size ());
+      assert (function_->outputDerivativeSize () == comparison_.size ());
     }
 
     Implicit::Implicit (const Implicit& other):
@@ -200,8 +188,6 @@ namespace hpp {
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config)
     {
       if (rhsSize () > 0) {
-        assert (*(function_->outputSpace ()) ==
-                *(LiegroupSpace::Rn (function_->outputSize ())));
         LiegroupElement value (function_->outputSpace ());
         function_->value (value, config);
         rightHandSide (value.vector ());
