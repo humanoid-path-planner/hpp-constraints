@@ -348,8 +348,6 @@ namespace hpp {
         return top + bot;
       }
 
-        /// \}
-
       template BySubstitution::Status BySubstitution::impl_solve
       (vectorOut_t arg, bool optimize, lineSearch::Constant       lineSearch) const;
       template BySubstitution::Status BySubstitution::impl_solve

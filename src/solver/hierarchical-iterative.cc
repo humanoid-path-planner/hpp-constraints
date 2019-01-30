@@ -152,7 +152,9 @@ namespace hpp {
       void HierarchicalIterative::add (const DifferentiableFunctionPtr_t& f,
                                        const std::size_t& priority)
       {
-        add (f, priority, ComparisonTypes_t(f->outputSize(), EqualToZero));
+        add (Implicit::create (f,
+              ComparisonTypes_t(f->outputDerivativeSize(), EqualToZero)),
+            priority);
       }
 
       void HierarchicalIterative::add (const DifferentiableFunctionPtr_t& f,
