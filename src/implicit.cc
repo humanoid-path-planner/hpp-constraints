@@ -36,12 +36,14 @@ namespace hpp {
 
     void Implicit::rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF)
     {
-      assert (rhsF->inputSize() == 1);
-      assert (rhsF->inputDerivativeSize() == 1);
-      assert (rhsF->outputSpace()->isVectorSpace());
-      // Check that the right hand side is non-constant on all axis.
-      for (std::size_t i = 0; i < comparison_.size(); ++i)
-        assert (comparison_[i] == constraints::Equality);
+      if (rhsF) {
+        assert (rhsF->inputSize() == 1);
+        assert (rhsF->inputDerivativeSize() == 1);
+        assert (*rhsF->outputSpace() == *function_->outputSpace());
+        // Check that the right hand side is non-constant on all axis.
+        for (std::size_t i = 0; i < comparison_.size(); ++i)
+          assert (comparison_[i] == constraints::Equality);
+      }
 
       rhsFunction_ = rhsF;
     }
@@ -141,7 +143,7 @@ namespace hpp {
     ImplicitPtr_t Implicit::create (
         const DifferentiableFunctionPtr_t& function)
     {
-      ComparisonTypes_t comp (function->outputSize(), constraints::EqualToZero);
+      ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
 
       Implicit* ptr = new Implicit (function, comp);
       ImplicitPtr_t shPtr (ptr);
