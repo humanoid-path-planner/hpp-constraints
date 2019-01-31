@@ -22,6 +22,20 @@
       "check " #Va ".isApprox(" #Vb ") failed "                                \
       "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]")
 
+#define SE3CONFIG_IS_APPROX(Va, Vb) {                                          \
+  BOOST_CHECK_MESSAGE((Va.head<3>()).isApprox(Vb.head<3>(), test_precision),   \
+      "check " #Va ".isApprox(" #Vb ") failed "                                \
+      "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]");     \
+  if ((Va.tail<4>().array() * Vb.tail<4>().array() > 0.01).any()) {                                                \
+    BOOST_CHECK_MESSAGE((Va.tail<4>()).isApprox( Vb.tail<4>(), test_precision),\
+        "check " #Va ".isApprox(" #Vb ") failed "                              \
+        "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]");   \
+  } else {                                                                     \
+    BOOST_CHECK_MESSAGE((Va.tail<4>()).isApprox(-Vb.tail<4>(), test_precision),\
+        "check " #Va ".isApprox(" #Vb ") failed "                              \
+        "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]");   \
+  }}
+
 #define EIGEN_VECTOR_IS_NOT_APPROX(Va, Vb)                                     \
   BOOST_CHECK_MESSAGE(!Va.isApprox(Vb, test_precision),                        \
       "check !" #Va ".isApprox(" #Vb ") failed "                               \

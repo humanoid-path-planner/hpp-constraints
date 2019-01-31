@@ -709,13 +709,48 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
 
 BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
 {
+  using namespace hpp::constraints;
+
   DevicePtr_t device (makeDevice (ManipulatorArm2));
   BOOST_REQUIRE (device);
 
+  Configuration_t q, qrand;
+
   JointPtr_t left = device->getJointByName ("left_w2");
-  hpp::constraints::DifferentiableFunctionPtr_t frame (new Frame (left));
-  hpp::constraints::ImplicitPtr_t constraint (Implicit::create (frame,
-        hpp::constraints::ComparisonTypes_t (6, hpp::constraints::Equality)));
+  TransformationSE3::Ptr_t frame (TransformationSE3::create
+      ("left_w2", device, left, Transform3f::Identity()));
+  Transformation::Ptr_t logFrame (Transformation::create
+      ("left_w2", device, left, Transform3f::Identity()));
+
+  // Check the logFrame if the log6 of frame.
+  LiegroupElement valueFrame (frame->outputSpace()),
+                  logValFrame (logFrame->outputSpace());
+  matrix_t Jframe (6, device->numberDof()), JlogFrame (6, device->numberDof()),
+           expectedJlogFrame (6, device->numberDof());
+  LiegroupElement neutral = frame->outputSpace ()->neutral();
+  for (int i = 0; i < 100; ++i) {
+    q = ::pinocchio::randomConfiguration(device->model());
+
+    frame   ->value (valueFrame , q);
+    logFrame->value (logValFrame, q);
+
+    vector_t expectedLog = hpp::pinocchio::log (valueFrame);
+
+    EIGEN_VECTOR_IS_APPROX(expectedLog, logValFrame.vector());
+
+    frame   ->jacobian (Jframe           , q);
+    logFrame->jacobian (expectedJlogFrame, q);
+
+    JlogFrame = Jframe;
+    frame->outputSpace ()->dDifference_dq1<hpp::pinocchio::DerivativeTimesInput>
+      (neutral.vector(), valueFrame.vector(), JlogFrame);
+
+    EIGEN_IS_APPROX (expectedJlogFrame, JlogFrame);
+  }
+
+  // Check that the solver can handle constraints with SE3 outputs.
+  ImplicitPtr_t constraint (Implicit::create (frame,
+        ComparisonTypes_t (6, Equality)));
 
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
@@ -727,28 +762,31 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
   BOOST_CHECK_EQUAL (solver.rightHandSideSize (), 7);
 
   for (int i = 0; i < 100; ++i) {
-    Configuration_t q     = ::pinocchio::randomConfiguration(device->model()),
-                    qrand;
+    q = ::pinocchio::randomConfiguration(device->model()),
 
     device->currentConfiguration (q);
     device->computeForwardKinematics ();
     Transform3f tf_expected (left->currentTransformation ());
-    vector_t rhs_expected (7), tmp(7);
+    vector_t rhs_expected (7), rhs(7);
     se3ToConfig (tf_expected, rhs_expected);
 
     solver.rightHandSideFromConfig (q);
-    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
-    solver.getRightHandSide (constraint, tmp);
-    EIGEN_VECTOR_IS_APPROX (rhs_expected, tmp);
+    rhs = solver.rightHandSide();
+    SE3CONFIG_IS_APPROX (rhs_expected, rhs);
+    solver.getRightHandSide (constraint, rhs);
+    SE3CONFIG_IS_APPROX (rhs_expected, rhs);
 
     solver.rightHandSideFromConfig (constraint, q);
-    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+    rhs = solver.rightHandSide();
+    SE3CONFIG_IS_APPROX (rhs_expected, rhs);
 
     solver.rightHandSide (rhs_expected);
-    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+    rhs = solver.rightHandSide();
+    SE3CONFIG_IS_APPROX (rhs_expected, rhs);
 
     solver.rightHandSide (constraint, rhs_expected);
-    EIGEN_VECTOR_IS_APPROX (rhs_expected, solver.rightHandSide ());
+    rhs = solver.rightHandSide();
+    SE3CONFIG_IS_APPROX (rhs_expected, rhs);
 
     BOOST_CHECK_EQUAL(solver.solve<FixedSequence>(q), BySubstitution::SUCCESS);
 
