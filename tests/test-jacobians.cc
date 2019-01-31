@@ -145,6 +145,8 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       Orientation::create ("Orientation", device, ee2, toSE3(tf2.rotation())));
   functions.push_back (
+      OrientationSO3::create ("OrientationSO3", device, ee2, toSE3(tf2.rotation())));
+  functions.push_back (
       Orientation::create ("Orientation with mask (0,1,1)", device, ee1, toSE3(tf1.rotation()), mask011));
   functions.push_back (
       Position::create ("Position", device, ee1, toSE3(tf1.translation()), tf2));
@@ -153,7 +155,11 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       RelativeOrientation::create ("RelativeOrientation", device, ee1, ee2, tf1, tf2));
   functions.push_back (
+      RelativeOrientationSO3::create ("RelativeOrientationSO3", device, ee1, ee2, tf1, tf2));
+  functions.push_back (
       RelativeOrientation::create ("(Relative)Orientation", device, hpp::pinocchio::Joint::create(device, 0), ee2, tf1, tf2));
+  functions.push_back (
+      RelativeOrientationSO3::create ("(Relative)OrientationSO3", device, hpp::pinocchio::Joint::create(device, 0), ee2, tf1, tf2));
   functions.push_back (
       RelativeOrientation::create ("RelativeOrientation with mask (0,1,1)", device, ee1, ee2, tf1, tf2, mask011));
   functions.push_back (
@@ -170,7 +176,11 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       Transformation::create ("Transformation", device, ee1, tf1));
   functions.push_back (
+      TransformationSE3::create ("TransformationSE3", device, ee1, tf1));
+  functions.push_back (
       RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back (
+      RelativeTransformationSE3::create ("RelativeTransformationSE3", device, ee1, ee2, tf1, tf2));
   functions.push_back (
       createConvexShapeContact_triangles (device, ee1, "ConvexShapeContact triangle"));
   functions.push_back (
