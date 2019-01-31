@@ -27,6 +27,7 @@
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/differentiable-function.hh>
+# include <hpp/constraints/matrix-view.hh>
 
 namespace hpp {
   namespace constraints {
@@ -116,10 +117,12 @@ namespace hpp {
         IsRelative         = _Options & RelativeBit,
         ComputeOrientation = _Options & OrientationBit,
         ComputePosition    = _Options & PositionBit,
+        OutputSE3          = _Options & OutputSE3Bit,
         IsPosition         = ComputePosition  && !ComputeOrientation,
         IsOrientation      = !ComputePosition && ComputeOrientation,
         IsTransform        = ComputePosition  && ComputeOrientation,
-        ValueSize          = (ComputePosition?3:0) + (ComputeOrientation?3:0)
+        ValueSize          = (ComputePosition?3:0) + (ComputeOrientation?(OutputSE3?4:3):0),
+        DerSize            = (ComputePosition?3:0) + (ComputeOrientation ?3:0)
       };
 
       /// \cond
@@ -138,7 +141,7 @@ namespace hpp {
       ///        account.
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
           const JointConstPtr_t& joint2, const Transform3f& reference,
-          std::vector <bool> mask = std::vector<bool>(ValueSize,true));
+          std::vector <bool> mask = std::vector<bool>(DerSize,true));
 
       /// Object builder for absolute functions.
       ///
@@ -157,7 +160,7 @@ namespace hpp {
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
           /* World frame          */ const JointConstPtr_t& joint2,
           const Transform3f& frame2, const Transform3f& frame1,
-         std::vector <bool> mask = std::vector<bool>(ValueSize,true));
+         std::vector <bool> mask = std::vector<bool>(DerSize,true));
 
       /// Object builder for relative functions.
       ///
@@ -174,7 +177,7 @@ namespace hpp {
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
           const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
           const Transform3f& reference,
-          std::vector <bool> mask = std::vector<bool>(ValueSize,true));
+          std::vector <bool> mask = std::vector<bool>(DerSize,true));
 
       /// Object builder for relative functions.
       ///
@@ -197,7 +200,7 @@ namespace hpp {
       static Ptr_t create (const std::string& name, const DevicePtr_t& robot,
 	 const JointConstPtr_t& joint1,  const JointConstPtr_t& joint2,
 	 const Transform3f& frame1, const Transform3f& frame2,
-         std::vector <bool> mask = std::vector<bool>(ValueSize,true));
+         std::vector <bool> mask = std::vector<bool>(DerSize,true));
 
       virtual ~GenericTransformation () {}
 
@@ -293,6 +296,7 @@ namespace hpp {
       void computeActiveParams ();
       DevicePtr_t robot_;
       GenericTransformationModel<IsRelative> m_;
+      Eigen::RowBlockIndices Vindices_;
       const std::vector <bool> mask_;
       WkPtr_t self_;
     }; // class GenericTransformation

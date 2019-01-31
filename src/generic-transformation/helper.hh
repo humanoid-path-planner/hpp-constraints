@@ -41,7 +41,7 @@ namespace hpp {
       template <bool rel> struct GTOriDataJ {};
       template <> struct GTOriDataJ<true>
       {
-        eigen::matrix3_t JlogXTR1inJ1;
+        eigen::matrix3_t Jlog_from1;
       };
       /// This class contains the data of the GenericTransformation class.
       template <bool rel> struct GTDataBase
@@ -63,42 +63,44 @@ namespace hpp {
         GTDataBase (const GenericTransformationModel<rel>& m, const DevicePtr_t& d)
           : device (d), model(m) {}
       };
-      template <bool rel, bool pos, bool ori> struct GTDataV :
+      template <bool rel, bool pos, bool ori, bool ose3> struct GTDataV :
         GTDataBase<rel>, GTOriDataV<ori>
       {
         enum {
-          NbRows = (pos?3:0)+(ori?3:0)
+          ValueSize = (pos?3:0)+(ori?(ose3?4:3):0)
         };
-        typedef Eigen::Matrix<value_type, NbRows, 1> ValueType;
+        typedef Eigen::Matrix<value_type, ValueSize, 1> ValueType;
         ValueType value;
 
         GTDataV (const GenericTransformationModel<rel>& m, const DevicePtr_t& d)
           : GTDataBase<rel>(m, d) {}
       };
       /// This class contains the data of the GenericTransformation class.
-      template <bool rel, bool pos, bool ori> struct GTDataJ :
-        GTDataV<rel, pos, ori>,
+      template <bool rel, bool pos, bool ori, bool ose3> struct GTDataJ :
+        GTDataV<rel, pos, ori, ose3>,
         GTOriDataJ<ori>
       {
         enum {
-          NbRows = (pos?3:0)+(ori?3:0),
+          ValueSize = GTDataV<rel,pos,ori,ose3>::ValueSize,
+          JacobianSize = (pos?3:0)+(ori?3:0),
           RowPos = (pos? 0:-1),
           RowOri = (ori?(pos?3:0):-1)
         };
-        typedef Eigen::Matrix<value_type, NbRows, Eigen::Dynamic> JacobianType;
-        typedef Eigen::Matrix<value_type,      3, Eigen::Dynamic> matrix3x_t;
+        typedef Eigen::Matrix<value_type, JacobianSize, Eigen::Dynamic> JacobianType;
+        typedef Eigen::Matrix<value_type,            3, Eigen::Dynamic> matrix3x_t;
         JacobianType jacobian;
         matrix3x_t tmpJac;
         eigen::vector3_t cross1, cross2;
 
         GTDataJ (const GenericTransformationModel<rel>& m, const DevicePtr_t& d)
-          : GTDataV<rel,pos,ori> (m, d)
+          : GTDataV<rel,pos,ori,ose3> (m, d)
           // TODO the two following matrices should be of type Eigen::Map<...>
           // and they should point to some buffer in m.device
           // , jacobian (buffer1, NbRows, m.cols)
           // , tmpJac   (buffer2,      3, m.cols)
         {
-          if (!m.fullPos || !m.fullOri) jacobian.resize ((int)NbRows, m.cols);
+          assert (!ose3 || (!ori || m.fullOri));
+          if (!m.fullPos || !m.fullOri) jacobian.resize ((int)JacobianSize, m.cols);
           cross1.setZero();
           if (m.t2isZero) cross2.setZero();
         }
@@ -171,25 +173,34 @@ namespace hpp {
 
       template <bool flag /* false */ > struct unary
       {
-        template <bool rel, bool pos> static inline void log (
-            GTDataV<rel, pos, flag>&) {}
-        template <bool rel, bool pos> static inline void Jlog (
-            GTDataJ<rel, pos, flag>&) {}
+        template <bool rel, bool pos, bool ose3> static inline void log (
+            GTDataV<rel, pos, flag, ose3>&) {}
+        template <bool rel, bool pos, bool ose3> static inline void Jlog (
+            GTDataJ<rel, pos, flag, ose3>&) {}
       };
       template <> struct unary <true>
       {
-        template <bool rel, bool pos> static inline void log (
-            GTDataV<rel, pos, true>& d)
+        template <bool rel, bool pos, bool ose3> static inline void log (
+            GTDataV<rel, pos, true, ose3>& d)
           {
-            logSO3(d.M.rotation(), d.theta, d.value.template tail<3>());
-            hppDnum (info, "theta=" << d.theta);
+            if (ose3) {
+              matrixToQuat (d.M.rotation(), d.value.template tail<4>());
+            } else {
+              logSO3(d.M.rotation(), d.theta, d.value.template tail<3>());
+              hppDnum (info, "theta=" << d.theta);
+            }
           }
-        template <bool rel, bool pos> static inline void Jlog (
-            GTDataJ<rel, pos, true>& d)
+        template <bool rel, bool pos, bool ose3> static inline void Jlog (
+            GTDataJ<rel, pos, true, ose3>& d)
           {
-            computeJlog(d.theta, d.value.template tail<3>(), d.JlogXTR1inJ1);
-            hppDnum (info, "Jlog_: " << d.JlogXTR1inJ1);
-            if (!d.model.R1isID) d.JlogXTR1inJ1 *= d.model.F1inJ1.rotation().transpose();
+            if (ose3) {
+              d.Jlog_from1 = d.model.F2inJ2.rotation().transpose() * d.R2().transpose();
+              if (rel && d.model.getJoint1()) d.Jlog_from1 *= d.R1();
+            } else {
+              computeJlog(d.theta, d.value.template tail<3>(), d.Jlog_from1);
+              hppDnum (info, "Jlog_: " << d.Jlog_from1);
+              if (!d.model.R1isID) d.Jlog_from1 *= d.model.F1inJ1.rotation().transpose();
+            }
           }
       };
 
@@ -208,22 +219,23 @@ namespace hpp {
       {
         // the first template allow us to consider relative transformation as
         // absolute when joint1 is NULL, at run time
-        template <bool rel, bool pos> static inline void Jorientation (
-            GTDataJ<rel, pos, rflag>&, matrixOut_t) {}
-        template <bool rel, bool ori> static inline void Jtranslation (
-            GTDataJ<rel, rflag, ori>&, matrixOut_t) {}
+        template <bool rel, bool pos, bool ose3> static inline void Jorientation (
+            GTDataJ<rel, pos, rflag, ose3>&, matrixOut_t) {}
+        template <bool rel, bool ori, bool ose3> static inline void Jtranslation (
+            GTDataJ<rel, rflag, ori, ose3>&, matrixOut_t) {}
       };
       template <> struct binary<false, true> // Absolute
       {
-        template <bool rel, bool pos> static inline void Jorientation (
-            GTDataJ<rel, pos, true>& d, matrixOut_t J)
+        template <bool rel, bool pos, bool ose3> static inline void Jorientation (
+            GTDataJ<rel, pos, true, ose3>& d, matrixOut_t J)
         {
-          assign_if<true>(!d.model.fullOri, d, J,
-            (d.JlogXTR1inJ1 * d.R2()) * omega(d.J2()),
+          assert (!ose3 || d.model.fullOri);
+          assign_if<true>(!(ose3 || d.model.fullOri), d, J,
+            (d.Jlog_from1 * d.R2()) * omega(d.J2()),
             d.model.rowOri);
         }
-        template <bool rel, bool ori> static inline void Jtranslation (
-            GTDataJ<rel, true, ori>& d,
+        template <bool rel, bool ori, bool ose3> static inline void Jtranslation (
+            GTDataJ<rel, true, ori, ose3>& d,
             matrixOut_t J)
         {
           const JointJacobian_t& J2 (d.J2());
@@ -250,18 +262,19 @@ namespace hpp {
       };
       template <> struct binary<true, true> // Relative
       {
-        template <bool pos> static inline void Jorientation (
-            GTDataJ<true, pos, true>& d,
+        template <bool pos, bool ose3> static inline void Jorientation (
+            GTDataJ<true, pos, true, ose3>& d,
             matrixOut_t J)
         {
           d.tmpJac.noalias() = (d.R1().transpose() * d.R2()) * omega(d.J2());
           d.tmpJac.noalias() -= omega(d.J1());
-          assign_if<true>(!d.model.fullOri, d, J,
-              d.JlogXTR1inJ1 * d.tmpJac,
+          assert (!ose3 || d.model.fullOri);
+          assign_if<true>(!(ose3 || d.model.fullOri), d, J,
+              d.Jlog_from1 * d.tmpJac,
               d.model.rowOri);
         }
-        template <bool ori> static inline void Jtranslation (
-            GTDataJ<true, true, ori>& d,
+        template <bool ori, bool ose3> static inline void Jtranslation (
+            GTDataJ<true, true, ori, ose3>& d,
             matrixOut_t J)
         {
           const JointJacobian_t& J1 (d.J1()); const JointJacobian_t& J2 (d.J2());
@@ -287,7 +300,7 @@ namespace hpp {
 
       /// ------- Compute relative transform -----------------------------------
       template <bool compileTimeRel /* false */, bool ori /* false */> struct relativeTransform {
-        template <bool runtimeRel> static inline void run (GTDataV<runtimeRel, true, false>& d)
+        template <bool runtimeRel, bool pos, bool ose3> static inline void run (GTDataV<runtimeRel, pos, false, ose3>& d)
         {
           // There is no joint1
           const Transform3f& M2 = d.M2 ();
@@ -298,8 +311,8 @@ namespace hpp {
         }
       };
       template <> struct relativeTransform<false, true> {
-        template <bool runtimeRel, bool pos> static inline void run (
-            GTDataV<runtimeRel, pos, true>& d)
+        template <bool runtimeRel, bool pos, bool ose3> static inline void run (
+            GTDataV<runtimeRel, pos, true, ose3>& d)
         {
           const Transform3f& M2 = d.M2 ();
           d.M = d.model.F1inJ1.actInv(M2 * d.model.F2inJ2);
@@ -307,8 +320,8 @@ namespace hpp {
         }
       };
       template <> struct relativeTransform<true, true> {
-        template <bool pos> static inline void run (
-            GTDataV<true, pos, true>& d)
+        template <bool pos, bool ose3> static inline void run (
+            GTDataV<true, pos, true, ose3>& d)
         {
           if (d.model.joint1 == NULL) {
             // runtime absolute reference.
@@ -322,7 +335,7 @@ namespace hpp {
         }
       };
       template <> struct relativeTransform<true, false> {
-        static inline void run (GTDataV<true, true, false>& d)
+        template <bool pos, bool ose3> static inline void run (GTDataV<true, pos, false, ose3>& d)
         {
           if (d.model.joint1 == NULL) {
             // runtime absolute reference.
@@ -341,15 +354,15 @@ namespace hpp {
         }
       };
 
-      template <bool rel, bool pos, bool ori> struct compute
+      template <bool rel, bool pos, bool ori, bool ose3> struct compute
       {
-        static inline void error (GTDataV<rel, pos, ori>& d)
+        static inline void error (GTDataV<rel, pos, ori, ose3>& d)
         {
           relativeTransform<rel, ori>::run (d);
           unary<ori>::log(d);
         }
 
-        static inline void jacobian (GTDataJ<rel, pos, ori>& d,
+        static inline void jacobian (GTDataJ<rel, pos, ori, ose3>& d,
             matrixOut_t jacobian, const std::vector<bool>& mask)
         {
           const Transform3f& M2 = d.M2 ();

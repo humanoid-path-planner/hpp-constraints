@@ -130,6 +130,7 @@ namespace hpp {
     const int RelativeBit       = 0x1;
     const int PositionBit       = 0x2;
     const int OrientationBit    = 0x4;
+    const int OutputSE3Bit      = 0x8;
     /// \endcond DEVEL
     typedef GenericTransformation<               PositionBit | OrientationBit > Transformation;
     typedef GenericTransformation<               PositionBit                  > Position;
@@ -137,6 +138,11 @@ namespace hpp {
     typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit > RelativeTransformation;
     typedef GenericTransformation< RelativeBit | PositionBit                  > RelativePosition;
     typedef GenericTransformation< RelativeBit |               OrientationBit > RelativeOrientation;
+    typedef GenericTransformation<               PositionBit | OrientationBit | OutputSE3Bit > TransformationSE3;
+    typedef GenericTransformation< RelativeBit | PositionBit | OrientationBit | OutputSE3Bit > RelativeTransformationSE3;
+    typedef GenericTransformation<                             OrientationBit | OutputSE3Bit > OrientationSO3;
+    typedef GenericTransformation< RelativeBit |               OrientationBit | OutputSE3Bit > RelativeOrientationSO3;
+
     typedef boost::shared_ptr<Position> PositionPtr_t;
     typedef boost::shared_ptr<Orientation> OrientationPtr_t;
     typedef boost::shared_ptr<Transformation> TransformationPtr_t;
