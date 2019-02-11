@@ -184,7 +184,7 @@ namespace Eigen {
 # if !HPP_EIGEN_USE_EVALUATOR
         CoeffReadCost = ArgType::CoeffReadCost,
 # endif // !HPP_EIGEN_USE_EVALUATOR
-        Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
+        Flags = ~PacketAccessBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
         RowsAtCompileTime = (_allRows ? ArgType::RowsAtCompileTime : _Rows),
         ColsAtCompileTime = (_allCols ? ArgType::ColsAtCompileTime : _Cols),
         MaxRowsAtCompileTime = ArgType::MaxRowsAtCompileTime,
@@ -310,7 +310,7 @@ namespace Eigen {
 
       enum {
         CoeffReadCost = evaluator<ArgType>::CoeffReadCost,
-        Flags = ~AlignedBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
+        Flags = ~PacketAccessBit & ~DirectAccessBit & ~ActualPacketAccessBit & ~LinearAccessBit & ArgType::Flags,
         Alignment = 0
       };
       EIGEN_DEVICE_FUNC explicit unary_evaluator (const XprType& view)
