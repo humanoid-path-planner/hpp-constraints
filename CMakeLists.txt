@@ -28,7 +28,6 @@ INCLUDE(cmake/test.cmake)
 SET(PROJECT_NAME hpp-constraints)
 SET(PROJECT_DESCRIPTION
   "Definition of basic geometric constraints for motion planning")
-SET(PROJECT_URL "https://github.com/humanoid-path-planner/hpp-constraints")
 
 # Add a cache variable to allow not compiling and running tests
 set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
@@ -105,10 +104,9 @@ SEARCH_FOR_EIGEN()
 ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")
 ADD_REQUIRED_DEPENDENCY("hpp-statistics")
 IF (${USE_QPOASES})
-  SET(QPOASES_PREFIX ${CMAKE_PREFIX_PATH} CACHE PATH "Set the prefix where qpOASES is installed")
-  FIND_LIBRARY(QPOASES_LIBRARY "qpOASES" PATHS ${QPOASES_PREFIX} PATH_SUFFIXES lib)
-  FIND_PATH(QPOASES_INCLUDE_DIRS NAMES "qpOASES.hpp" PATHS ${QPOASES_PREFIX} PATH_SUFFIXES include)
-  INCLUDE_DIRECTORIES(${QPOASES_INCLUDE_DIRS})
+  SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/qpOASES")
+  FIND_PACKAGE("qpOASES" REQUIRED)
+  INCLUDE_DIRECTORIES(${qpOASES_INCLUDE_DIRS})
 ENDIF ()
 
 ADD_SUBDIRECTORY (src)
