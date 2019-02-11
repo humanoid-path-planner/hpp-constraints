@@ -197,6 +197,7 @@ namespace Eigen {
     struct Assignment<Derived, MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols>, Functor, Dense2Dense, Scalar> {
       typedef MatrixBlockView <ArgType, _Rows, _Cols, _allRows, _allCols> OtherDerived;
       static EIGEN_STRONG_INLINE void run(Derived& dst, const OtherDerived& src, const Functor& func) {
+        dst.resize(src.rows(), src.cols());
         typedef Block<Derived> BlockDerived;
         typedef Assignment<BlockDerived, typename OtherDerived::BlockConstXprType, Functor> AssignmentType;
         for (typename OtherDerived::block_iterator b (src); b.valid(); ++b) {
