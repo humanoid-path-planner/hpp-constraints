@@ -104,6 +104,15 @@ namespace hpp {
         /// Return the right hand side of the equation.
         vectorOut_t nonConstRightHandSide ();
 
+        void rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF);
+
+        const DifferentiableFunctionPtr_t& rightHandSideFunction () const
+        {
+          return rhsFunction_;
+        }
+
+        vectorIn_t rightHandSideAt (const value_type& s);
+
         /// \}
 
         /// Return a reference to function \f$f\f$.
@@ -166,6 +175,7 @@ namespace hpp {
         vector_t rhs_;
         size_type rhsRealSize_;
         DifferentiableFunctionPtr_t function_;
+        DifferentiableFunctionPtr_t rhsFunction_;
         vector_t value_;
         matrix_t jacobian_;
 	ImplicitWkPtr_t weak_;

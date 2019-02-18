@@ -22,6 +22,7 @@
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 
@@ -53,7 +54,7 @@ public:
     size_type offset = robot_->configSize () - extraDim;
 
     Configuration_t config(robot_->configSize ());
-    config.head(offset) = se3::randomConfiguration(robot_->model());
+    config.head(offset) = ::pinocchio::randomConfiguration(robot_->model());
 
     // Shoot extra configuration variables
     for (size_type i=0; i<extraDim; ++i) {
@@ -76,9 +77,8 @@ private:
 }; // class BasicConfigurationShooter
 
 BOOST_AUTO_TEST_CASE (print) {
-  DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
-  device->model().upperPositionLimit.head<3>().setOnes();
-  device->model().lowerPositionLimit.head<3>().setZero();
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
@@ -137,10 +137,9 @@ BOOST_AUTO_TEST_CASE (print) {
 }
 
 BOOST_AUTO_TEST_CASE (multithread) {
-  DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
   device->numberDeviceData (4);
-  device->model().upperPositionLimit.head<3>().setOnes();
-  device->model().lowerPositionLimit.head<3>().setZero();
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);

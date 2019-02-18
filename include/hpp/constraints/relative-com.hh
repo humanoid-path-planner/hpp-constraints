@@ -86,12 +86,14 @@ namespace hpp {
           const JointPtr_t& joint, const vector3_t reference,
           std::vector <bool> mask,
           const std::string& name);
+
+      virtual std::ostream& print (std::ostream& o) const;
     protected:
       /// Compute value of error
       ///
       /// \param argument configuration of the robot,
       /// \retval result error vector
-      virtual void impl_compute	(LiegroupElement& result,
+      virtual void impl_compute	(LiegroupElementRef result,
 				 ConfigurationIn_t argument)
 	const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,

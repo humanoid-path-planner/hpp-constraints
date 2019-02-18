@@ -46,7 +46,7 @@ namespace hpp {
           DifferentiableFunction (space->nq(), space->nv(), space, name) {}
 
       protected:
-        void impl_compute (LiegroupElement& y, vectorIn_t arg) const
+        void impl_compute (LiegroupElementRef y, vectorIn_t arg) const
         {
           y.vector() = arg;
         }
@@ -85,7 +85,7 @@ namespace hpp {
 
       private:
         /// User implementation of function evaluation
-        void impl_compute (LiegroupElement& y, vectorIn_t x) const
+        void impl_compute (LiegroupElementRef y, vectorIn_t x) const
         {
           y.vector ().noalias() = J_ * x + b_;
         }
@@ -132,7 +132,7 @@ namespace hpp {
         {}
 
         /// User implementation of function evaluation
-        void impl_compute (LiegroupElement& r, vectorIn_t) const { r = c_; }
+        void impl_compute (LiegroupElementRef r, vectorIn_t) const { r = c_; }
 
         void impl_jacobian (matrixOut_t J, vectorIn_t) const { J.setZero(); }
 

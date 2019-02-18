@@ -118,7 +118,7 @@ namespace hpp {
                                 const std::size_t& priority,
                                 const ComparisonTypes_t& comp)
       {
-        HierarchicalIterative::add (f, priority, comp);
+        HierarchicalIterative::add (Implicit::create (f, comp), priority);
       }
 
       void BySubstitution::explicitConstraintSetHasChanged()
@@ -312,7 +312,7 @@ namespace hpp {
         return false;
       }
 
-      bool BySubstitution::getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs)
+      bool BySubstitution::getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) const
       {
 	if (parent_t::getRightHandSide ( constraint, rhs))
           return true;
@@ -347,8 +347,6 @@ namespace hpp {
         const size_type bot = explicit_.rightHandSideSize();
         return top + bot;
       }
-
-        /// \}
 
       template BySubstitution::Status BySubstitution::impl_solve
       (vectorOut_t arg, bool optimize, lineSearch::Constant       lineSearch) const;

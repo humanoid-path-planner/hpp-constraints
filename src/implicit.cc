@@ -34,6 +34,29 @@ namespace hpp {
       return rhs_;
     }
 
+    void Implicit::rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF)
+    {
+      if (rhsF) {
+        assert (rhsF->inputSize() == 1);
+        assert (rhsF->inputDerivativeSize() == 1);
+        assert (*rhsF->outputSpace() == *function_->outputSpace());
+        // Check that the right hand side is non-constant on all axis.
+        for (std::size_t i = 0; i < comparison_.size(); ++i)
+          assert (comparison_[i] == constraints::Equality);
+      }
+
+      rhsFunction_ = rhsF;
+    }
+
+    vectorIn_t Implicit::rightHandSideAt (const value_type& s)
+    {
+      if (rhsFunction_) {
+        vector_t S (1); S[0] = s;
+        rhsFunction_->value (rhsFunction_->outputSpace()->elementRef(rhs_), S);
+      }
+      return rightHandSide();
+    }
+
     size_type Implicit::rhsSize () const
     {
       return rhs_.size ();
@@ -76,17 +99,7 @@ namespace hpp {
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
-      // TODO currently, I think it is not supported to have an implicit constraint
-      // with function_->outputSize() != function_->outputDerivativeSize()
-      // because we apply the comparison type in the same manner to the value
-      // coeffs and to the Jacobian rows.
-      // EqualToZero should not cause any problem.
-      // Equality is ill-defined coefficient wise (as it is implemented).
-      // Superior and Inferior are (I think) ill-defined.
-      // We should apply the comparison on `function_->value() - rhs`
-      // and on the Jacobian rows, because they have the same dimension.
-      assert (function_->outputSize () == function_->outputDerivativeSize ());
-      assert (function_->outputSize () == comparison_.size ());
+      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
@@ -102,18 +115,17 @@ namespace hpp {
                                          Equality);
       }
       if (rhs.size () == 0) {
-        rhs_.resize (function->outputDerivativeSize ());
+        rhs_.resize (function->outputSize ());
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
-      /// TODO See TODO in the constructor above.
-      assert (function_->outputSize () == function_->outputDerivativeSize ());
-      assert (function_->outputSize () == comparison_.size ());
+      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const Implicit& other):
       comparison_ (other.comparison_), rhs_ (other.rhs_),
       rhsRealSize_ (other.rhsRealSize_), function_ (other.function_),
+      rhsFunction_ (other.rhsFunction_),
       value_ (other.value_), jacobian_ (other.jacobian_)
     {
     }
@@ -131,7 +143,7 @@ namespace hpp {
     ImplicitPtr_t Implicit::create (
         const DifferentiableFunctionPtr_t& function)
     {
-      ComparisonTypes_t comp (function->outputSize(), constraints::EqualToZero);
+      ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
 
       Implicit* ptr = new Implicit (function, comp);
       ImplicitPtr_t shPtr (ptr);
@@ -178,8 +190,6 @@ namespace hpp {
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config)
     {
       if (rhsSize () > 0) {
-        assert (*(function_->outputSpace ()) ==
-                *(LiegroupSpace::Rn (function_->outputSize ())));
         LiegroupElement value (function_->outputSpace ());
         function_->value (value, config);
         rightHandSide (value.vector ());

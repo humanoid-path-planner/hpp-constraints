@@ -104,7 +104,7 @@ namespace hpp {
                 const segments_t& inputVelocity,
                 const segments_t& outputVelocity);
       /// Compute g (q_out) - f (q_in)
-      void impl_compute (LiegroupElement& result, vectorIn_t argument) const;
+      void impl_compute (LiegroupElementRef result, vectorIn_t argument) const;
 
       /// Compute Jacobian of g (q_out) - f (q_in) with respect to q.
       void impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const;

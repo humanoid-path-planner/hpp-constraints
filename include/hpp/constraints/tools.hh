@@ -200,6 +200,24 @@ namespace hpp {
       value.block (3, 3, 3, 3) = Jlog3;
     }
 
+    template <typename Derived1, typename Derived2> void matrixToQuat
+    (const Eigen::MatrixBase<Derived1>& M, Eigen::MatrixBase<Derived2> const& q)
+    {
+      Derived2& _q = const_cast<Derived2&> (q.derived());
+      assert (q.size() == 4);
+      Eigen::Map<Transform3f::Quaternion> quat (_q.data());
+      quat = M;
+    }
+
+    template <typename Derived> void se3ToConfig
+    (const Transform3f& M, Eigen::MatrixBase<Derived> const& q)
+    {
+      Derived& _q = const_cast<Derived&> (q.derived());
+      assert (q.size() == 7);
+      _q.template head<3>() = M.translation();
+      matrixToQuat (M.rotation(), _q.template tail<4>());
+    }
+
     /// \}
   } // namespace constraints
 } // namespace hpp

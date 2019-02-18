@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE (Jlog_SE3)
     for (size_type i=0; i<6; ++i) {
       vector6_t v; v.setZero ();
       v [i] = 1;
-      se3::Motion nu (v);
-      Transform3f M (M0 * se3::exp6 (dt * nu));
+      ::pinocchio::Motion nu (v);
+      Transform3f M (M0 * ::pinocchio::exp6 (dt * nu));
       logSE3 (M, log);
       std::cout << "(log-log0)/dt=" << ((log-log0)/dt).transpose () << std::endl;
       std::cout << "Jlog * v=     " << (Jlog * v).transpose () << std::endl;

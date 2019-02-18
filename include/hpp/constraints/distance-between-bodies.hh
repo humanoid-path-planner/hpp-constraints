@@ -88,12 +88,12 @@ namespace hpp {
 			     const JointPtr_t& joint,
 			     const std::vector<CollisionObjectPtr_t>& objects);
 
-      virtual void impl_compute (LiegroupElement& result,
+      virtual void impl_compute (LiegroupElementRef result,
 				 ConfigurationIn_t argument) const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();
     private:
-      typedef se3::GeometryData GeometryData;
+      typedef ::pinocchio::GeometryData GeometryData;
 
       DevicePtr_t robot_;
       JointPtr_t joint1_;

@@ -63,6 +63,7 @@ using hpp::constraints::LiegroupSpacePtr_t;
 using hpp::constraints::Transform3f;
 using hpp::constraints::vectorIn_t;
 using hpp::constraints::LiegroupElement;
+using hpp::constraints::LiegroupElementRef;
 using hpp::constraints::matrixOut_t;
 using hpp::constraints::AffineFunctionPtr_t;
 using hpp::constraints::segment_t;
@@ -207,7 +208,7 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
-    void impl_compute (LiegroupElement& result,
+    void impl_compute (LiegroupElementRef result,
                        vectorIn_t arg) const
     {
       // forwardKinematics(arg);
@@ -451,7 +452,7 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   ColBlockIndices expectedCol;
 
   Configuration_t q = device->currentConfiguration (),
-                  qrand = se3::randomConfiguration(device->model());
+                  qrand = ::pinocchio::randomConfiguration(device->model());
 
   {
     ExplicitConstraintSet expression (device->configSpace ());

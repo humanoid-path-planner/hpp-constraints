@@ -45,6 +45,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/matrix-view.hh
   include/hpp/constraints/generic-transformation.hh
   include/hpp/constraints/macros.hh
+  include/hpp/constraints/manipulability.hh
   include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/convex-shape-contact.hh
   include/hpp/constraints/symbolic-calculus.hh

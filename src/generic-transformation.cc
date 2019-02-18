@@ -27,6 +27,42 @@
 
 namespace hpp {
   namespace constraints {
+    template <bool pos, bool ori, bool ose3> LiegroupSpacePtr_t
+      liegroupSpace (const std::vector<bool>& mask)
+    {
+      if (!ose3) return LiegroupSpace::Rn (size (mask));
+      assert (ori);
+      assert (mask[(pos ? 3 : 0) + 0]
+          &&  mask[(pos ? 3 : 0) + 1]
+          &&  mask[(pos ? 3 : 0) + 2]
+          && "Full orientation is necessary to output SE3 / SO3 error");
+      const size_type nTranslation = size(mask) - 3;
+      LiegroupSpacePtr_t SO3 = LiegroupSpace::SO3();
+      switch (nTranslation) {
+        case 0: return SO3;
+        case 1: return LiegroupSpace::R1() * SO3;
+        case 2: return LiegroupSpace::R2() * SO3;
+        case 3: return LiegroupSpace::R3() * SO3;
+        default: throw std::logic_error ("This should not happend. Invalid mask.");
+      }
+    }
+
+    template <bool pos, bool ori, bool ose3> inline Eigen::RowBlockIndices
+      indices (const std::vector<bool>& mask)
+    {
+      ArrayXb _mask (mask.size() + (ose3 ? 1 : 0));
+      for (std::size_t i = 0; i < mask.size(); ++i) _mask[i] = mask[i];
+      if (ose3) {
+        assert (ori);
+        assert (mask[(pos ? 3 : 0) + 0]
+            &&  mask[(pos ? 3 : 0) + 1]
+            &&  mask[(pos ? 3 : 0) + 2]
+            && "Full orientation is necessary to output SE3 / SO3 error");
+        _mask[_mask.size()-1] = true;
+      }
+      return Eigen::RowBlockIndices (Eigen::BlockIndex::fromLogicalExpression (_mask));
+    }
+
     void GenericTransformationModel<true>::setJoint1(const JointConstPtr_t& j)
     {
       if (j && j->index() > 0)
@@ -48,7 +84,7 @@ namespace hpp {
         << iendl << "Joint2: "         << joint2()->name()
         << iendl << "Frame in joint 2" << incindent << iendl; pinocchio::display(os, frame2InJoint2()) << decindent
         << iendl << "mask: ";
-      for (size_type i=0; i<ValueSize; ++i) os << mask_ [i] << ", ";
+      for (size_type i=0; i<DerSize; ++i) os << mask_ [i] << ", ";
       return os << decindent;
     }
 
@@ -123,12 +159,14 @@ namespace hpp {
       (const std::string& name, const DevicePtr_t& robot,
        std::vector <bool> mask) :
         DifferentiableFunction (robot->configSize (), robot->numberDof (),
-                                LiegroupSpace::Rn (size (mask)), name),
+            liegroupSpace <ComputePosition, ComputeOrientation, OutputSE3> (mask),
+            name),
         robot_ (robot),
         m_(robot->numberDof()-robot->extraConfigSpace().dimension()),
+        Vindices_ (indices<ComputePosition, ComputeOrientation, OutputSE3> (mask)),
         mask_ (mask)
     {
-      assert(mask.size()==ValueSize);
+      assert(mask.size()==DerSize);
       std::size_t iOri = 0;
       m_.rowOri = 0;
       if (ComputePosition) {
@@ -153,20 +191,15 @@ namespace hpp {
 
     template <int _Options>
     void GenericTransformation<_Options>::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
     {
-      GTDataV<IsRelative, ComputePosition, ComputeOrientation> data (m_, robot_);
+      GTDataV<IsRelative, ComputePosition, ComputeOrientation, OutputSE3> data (m_, robot_);
 
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
-      compute<IsRelative, ComputePosition, ComputeOrientation>::error (data);
+      compute<IsRelative, ComputePosition, ComputeOrientation, OutputSE3>::error (data);
 
-      size_type index=0;
-      for (size_type i=0; i<ValueSize; ++i) {
-	if (mask_ [i]) {
-	  result.vector () [index] = data.value[i]; ++index;
-	}
-      }
+      result.vector() = Vindices_.rview (data.value);
     }
 
     template <int _Options>
@@ -177,12 +210,14 @@ namespace hpp {
       // allocated in GTDataJ. At the moment, this allocation is necessary to
       // support multithreadind. To avoid it, DeviceData should provide some
       // a temporary buffer to pass to an Eigen::Map
-      GTDataJ<IsRelative, ComputePosition, ComputeOrientation> data (m_, robot_);
+      {
+      GTDataJ<IsRelative, ComputePosition, ComputeOrientation, OutputSE3> data (m_, robot_);
 
       data.device.currentConfiguration (arg);
       data.device.computeForwardKinematics ();
-      compute<IsRelative, ComputePosition, ComputeOrientation>::error (data);
-      compute<IsRelative, ComputePosition, ComputeOrientation>::jacobian (data, jacobian, mask_);
+      compute<IsRelative, ComputePosition, ComputeOrientation, OutputSE3>::error (data);
+      compute<IsRelative, ComputePosition, ComputeOrientation, OutputSE3>::jacobian (data, jacobian, mask_);
+      }
 
 #ifdef CHECK_JACOBIANS
       const value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon());
@@ -210,5 +245,13 @@ namespace hpp {
     template class GenericTransformation< RelativeBit | PositionBit | OrientationBit >;
     template class GenericTransformation< RelativeBit | PositionBit                  >;
     template class GenericTransformation< RelativeBit |               OrientationBit >;
+
+    template class GenericTransformation< OutputSE3Bit |               PositionBit | OrientationBit >;
+    // template class GenericTransformation< OutputSE3Bit |               PositionBit                  >;
+    template class GenericTransformation< OutputSE3Bit |                             OrientationBit >;
+    template class GenericTransformation< OutputSE3Bit | RelativeBit | PositionBit | OrientationBit >;
+    // template class GenericTransformation< OutputSE3Bit | RelativeBit | PositionBit                  >;
+    template class GenericTransformation< OutputSE3Bit | RelativeBit |               OrientationBit >;
+
   } // namespace constraints
 } // namespace hpp

@@ -102,7 +102,7 @@ namespace hpp {
         {}
 
       protected:
-        void impl_compute (LiegroupElement& result, ConfigurationIn_t arg)
+        void impl_compute (LiegroupElementRef result, ConfigurationIn_t arg)
           const throw ()
         {
           size_type row = 0;
@@ -122,8 +122,8 @@ namespace hpp {
           for (Functions_t::const_iterator _f = functions_.begin();
               _f != functions_.end(); ++_f) {
             const DifferentiableFunction& f = **_f;
-            f.impl_jacobian(jacobian.middleRows(row, f.outputSize()), arg);
-            row += f.outputSize();
+            f.impl_jacobian(jacobian.middleRows(row, f.outputDerivativeSize()), arg);
+            row += f.outputDerivativeSize();
           }
         }
       private:

@@ -22,6 +22,20 @@
       "check " #Va ".isApprox(" #Vb ") failed "                                \
       "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]")
 
+#define SE3CONFIG_IS_APPROX(Va, Vb) {                                          \
+  BOOST_CHECK_MESSAGE((Va.head<3>()).isApprox(Vb.head<3>(), test_precision),   \
+      "check " #Va ".isApprox(" #Vb ") failed "                                \
+      "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]");     \
+  if ((Va.tail<4>().array() * Vb.tail<4>().array() > 0.01).any()) {                                                \
+    BOOST_CHECK_MESSAGE((Va.tail<4>()).isApprox( Vb.tail<4>(), test_precision),\
+        "check " #Va ".isApprox(" #Vb ") failed "                              \
+        "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]");   \
+  } else {                                                                     \
+    BOOST_CHECK_MESSAGE((Va.tail<4>()).isApprox(-Vb.tail<4>(), test_precision),\
+        "check " #Va ".isApprox(" #Vb ") failed "                              \
+        "[\n" << (Va).transpose() << "\n!=\n" << (Vb).transpose() << "\n]");   \
+  }}
+
 #define EIGEN_VECTOR_IS_NOT_APPROX(Va, Vb)                                     \
   BOOST_CHECK_MESSAGE(!Va.isApprox(Vb, test_precision),                        \
       "check !" #Va ".isApprox(" #Vb ") failed "                               \
@@ -52,6 +66,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/extra-config-space.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/util.hh>
 
 #include <hpp/constraints/fwd.hh>
@@ -65,7 +80,7 @@ bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
   using hpp::pinocchio::size_type;
   bool ret = false;
   qSat = q;
-  const se3::Model& model = robot->model();
+  const hpp::pinocchio::Model& model = robot->model();
 
   for (std::size_t i = 1; i < model.joints.size(); ++i) {
     const size_type nq = model.joints[i].nq();
@@ -113,7 +128,7 @@ void randomConfig (const hpp::pinocchio::DevicePtr_t& d, hpp::pinocchio::Configu
   size_type offset = d->configSize () - extraDim;
 
   q.resize (d->configSize ());
-  q.head(offset) = se3::randomConfiguration(d->model());
+  q.head(offset) = ::pinocchio::randomConfiguration(d->model());
 
   // Shoot extra configuration variables
   for (size_type i=0; i<extraDim; ++i) {
@@ -173,7 +188,7 @@ class Quadratic : public hpp::constraints::DifferentiableFunction
     typedef hpp::constraints::matrixOut_t matrixOut_t;
     typedef hpp::constraints::vector_t vector_t;
     typedef hpp::constraints::vectorIn_t vectorIn_t;
-    typedef hpp::constraints::LiegroupElement LiegroupElement;
+    typedef hpp::constraints::LiegroupElementRef LiegroupElementRef;
     typedef hpp::constraints::value_type value_type;
 
     Quadratic (const matrix_t& _A, const vector_t& _b, const value_type& _c)
@@ -196,7 +211,7 @@ class Quadratic : public hpp::constraints::DifferentiableFunction
       BOOST_REQUIRE (A.rows() == b.rows());
     }
 
-    void impl_compute (LiegroupElement& y, vectorIn_t x) const
+    void impl_compute (LiegroupElementRef y, vectorIn_t x) const
     {
       y.vector()[0] = x.transpose() * A * x + b.dot(x) + c;
     }
