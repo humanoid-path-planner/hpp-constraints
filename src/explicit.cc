@@ -72,7 +72,7 @@ namespace hpp {
      const ComparisonTypes_t& comp)
     {
       Explicit* ptr = new Explicit
-	(robot, function, inputConf, outputConf, inputVelocity, outputVelocity,
+	(robot->configSpace(), function, inputConf, outputConf, inputVelocity, outputVelocity,
          defaultCompTypes(outputVelocity,comp));
       ExplicitPtr_t shPtr (ptr);
       ExplicitWkPtr_t wkPtr (shPtr);
@@ -122,7 +122,7 @@ namespace hpp {
      const segments_t& outputVelocity,
      const ComparisonTypes_t& comp) :
       Implicit (explicit_::ImplicitFunction::create
-                (robot, explicitFunction, inputConf, outputConf, inputVelocity,
+                (robot->configSpace(), explicitFunction, inputConf, outputConf, inputVelocity,
                  outputVelocity),
                 comp),
       inputToOutput_ (explicitFunction),

@@ -75,7 +75,7 @@ namespace hpp {
         ///
         /// \param argument configuration of the robot,
         /// \retval result error vector
-        virtual void impl_compute (LiegroupElement& result,
+        virtual void impl_compute (LiegroupElementRef result,
                                    ConfigurationIn_t argument) const throw ()
         {
           robot_->currentConfiguration (argument);

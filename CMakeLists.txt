@@ -45,6 +45,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/matrix-view.hh
   include/hpp/constraints/generic-transformation.hh
   include/hpp/constraints/macros.hh
+  include/hpp/constraints/manipulability.hh
   include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/convex-shape-contact.hh
   include/hpp/constraints/symbolic-calculus.hh
@@ -99,8 +100,7 @@ ENDIF ()
 
 SETUP_HPP_PROJECT()
 
-SET(Eigen_REQUIRED "eigen3 >= 3.2.4")
-SEARCH_FOR_EIGEN()
+ADD_REQUIRED_DEPENDENCY("eigen3 >= 3.2.92")
 ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")
 ADD_REQUIRED_DEPENDENCY("hpp-statistics")
 IF (${USE_QPOASES})

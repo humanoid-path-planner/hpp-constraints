@@ -96,7 +96,7 @@ namespace hpp {
       for (int i=0; i<3; i++) pointRef_[i] = pointRef[i];
     }
 
-    void ComBetweenFeet::impl_compute (LiegroupElement& result,
+    void ComBetweenFeet::impl_compute (LiegroupElementRef result,
         ConfigurationIn_t argument)
       const throw ()
     {

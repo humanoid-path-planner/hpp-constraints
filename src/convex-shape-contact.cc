@@ -134,7 +134,7 @@ namespace hpp {
     void ConvexShapeContact::computeInternalValue (const ConfigurationIn_t& argument,
         bool& isInside, ContactType& type, vector6_t& value) const
     {
-      GTDataV<true, true, true> data (relativeTransformationModel_, robot_);
+      GTDataV<true, true, true, false> data (relativeTransformationModel_, robot_);
 
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
@@ -150,11 +150,11 @@ namespace hpp {
       relativeTransformationModel_.checkIsIdentity1();
       relativeTransformationModel_.checkIsIdentity2();
 
-      compute<true, true, true>::error (data);
+      compute<true, true, true, false>::error (data);
       value = data.value;
     }
 
-    void ConvexShapeContact::impl_compute (LiegroupElement& result,
+    void ConvexShapeContact::impl_compute (LiegroupElementRef result,
                                            ConfigurationIn_t argument) const
     {
       bool isInside;
@@ -193,7 +193,7 @@ namespace hpp {
     {
       static std::vector<bool> mask (6, true);
 
-      GTDataJ<true, true, true> data (relativeTransformationModel_, robot_);
+      GTDataJ<true, true, true, false> data (relativeTransformationModel_, robot_);
 
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
@@ -210,8 +210,8 @@ namespace hpp {
       relativeTransformationModel_.checkIsIdentity2();
       data.cross2.setZero();
 
-      compute<true, true, true>::error (data);
-      compute<true, true, true>::jacobian (data, jacobian, mask);
+      compute<true, true, true, false>::error (data);
+      compute<true, true, true, false>::jacobian (data, jacobian, mask);
     }
 
     void ConvexShapeContact::impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const
@@ -327,7 +327,7 @@ namespace hpp {
     }
 
     void ConvexShapeContactComplement::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const
+    (LiegroupElementRef result, ConfigurationIn_t argument) const
     {
       bool isInside;
       ConvexShapeContact::ContactType type;

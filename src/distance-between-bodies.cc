@@ -24,6 +24,7 @@
 #include <hpp/pinocchio/body.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 
 namespace hpp {
   namespace constraints {
@@ -42,7 +43,7 @@ namespace hpp {
 	for (std::size_t j = 0; j < objects.size(); ++j) {
 	  CollisionObjectConstPtr_t obj2 (objects[j]);
           std::size_t idx = model.findCollisionPair(
-              se3::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
+              ::pinocchio::CollisionPair (obj1->indexInModel(), obj2->indexInModel())
               );
           if (idx < model.collisionPairs.size())
             data.activateCollisionPair(idx);
@@ -99,7 +100,7 @@ namespace hpp {
     }
 
     void DistanceBetweenBodies::impl_compute
-    (LiegroupElement& result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
     {
       if ((argument.rows () == latestArgument_.rows ()) &&
 	  (argument == latestArgument_)) {
@@ -108,8 +109,8 @@ namespace hpp {
       }
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
-      se3::updateGeometryPlacements(robot_->model(), robot_->data(), robot_->geomModel(), data_);
-      minIndex_ = se3::computeDistances(robot_->geomModel(), data_);
+      ::pinocchio::updateGeometryPlacements(robot_->model(), robot_->data(), robot_->geomModel(), data_);
+      minIndex_ = ::pinocchio::computeDistances(robot_->geomModel(), data_);
       result.vector () [0] = data_.distanceResults[minIndex_].min_distance;
       latestArgument_ = argument;
       latestResult_ = result;

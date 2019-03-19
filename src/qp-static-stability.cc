@@ -131,7 +131,7 @@ namespace hpp {
       return create ("QPStaticStability", robot, contacts, com);
     }
 
-    void QPStaticStability::impl_compute (LiegroupElement& result,
+    void QPStaticStability::impl_compute (LiegroupElementRef result,
                                           ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);

@@ -91,7 +91,7 @@ namespace hpp {
 				     const vector3_t& point1,
 				     const vector3_t& point2);
 
-      virtual void impl_compute (LiegroupElement& result,
+      virtual void impl_compute (LiegroupElementRef result,
 				 ConfigurationIn_t argument) const throw ();
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const throw ();

@@ -207,38 +207,21 @@ namespace hpp {
         /// \name Right hand side accessors
         /// \{
 
-        /// Compute right hand side of equality constraints from a configuration
-        /// \param config a configuration.
-        ///
-        /// for each constraint of type Equality, set right hand side as
-        /// \f$rhs = f(\mathbf{q})\f$.
-        /// \note Only parameterizable constraints (type Equality) are set
+        /// \copydoc HierarchicalIterative::rightHandSideFromConfig(ConfigurationIn_t)
         vector_t rightHandSideFromConfig (ConfigurationIn_t config);
 
-        /// Compute right hand side of a constraint from a configuration
-        /// \param constraint the constraint,
-        /// \param config a configuration.
-        ///
-        /// Set right hand side as \f$rhs = f(\mathbf{q})\f$.
-        /// \note Only parameterizable constraints (type Equality) are set
+        /// \copydoc HierarchicalIterative::rightHandSideFromConfig(const ImplicitPtr_t&, ConfigurationIn_t)
         bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
                                       ConfigurationIn_t config);
-        /// Set right hand side of a constraints
-        /// \param constraint the constraint,
-        /// \param rhs right hand side.
-        /// \note Size of rhs should be equal to the total dimension of
-        ///       parameterizable constraints (type Equality) .
+
+        /// \copydoc HierarchicalIterative::rightHandSide(const ImplicitPtr_t&, vectorIn_t)
         bool rightHandSide (const ImplicitPtr_t& constraint,
                             vectorIn_t rhs);
 
-	/// Get right hand side of a constraints
-	bool getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) ;
+        /// \copydoc HierarchicalIterative::getRightHandSide(const ImplicitPtr_t&, vectorOut_t)
+	bool getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) const;
 
-
-	/// Set the right hand side
-        /// \param rhs the right hand side
-        /// \note Size of rhs should be equal to the total dimension of
-        ///       parameterizable constraints (type Equality).
+        /// \copydoc HierarchicalIterative::rightHandSide(vectorIn_t)
         void rightHandSide (vectorIn_t rhs);
 
         /// Get the right hand side
@@ -247,9 +230,7 @@ namespace hpp {
         ///       constraints (type Equality).
         vector_t rightHandSide () const;
 
-        /// Get size of the right hand side
-        /// \return sum of dimensions of parameterizable constraints
-        ///         (type Equality)
+        /// \copydoc HierarchicalIterative::rightHandSideSize()
         size_type rightHandSideSize () const;
 
         /// \}

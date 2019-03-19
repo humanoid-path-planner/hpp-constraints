@@ -74,7 +74,7 @@ namespace hpp {
       return create ("StaticStability", robot, contacts, com);
     }
 
-    void StaticStability::impl_compute (LiegroupElement& result,
+    void StaticStability::impl_compute (LiegroupElementRef result,
                                         ConfigurationIn_t argument) const
     {
       robot_->currentConfiguration (argument);

@@ -47,7 +47,7 @@ namespace hpp {
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
-      void value (LiegroupElement& result,
+      void value (LiegroupElementRef result,
                   vectorIn_t argument) const
       {
 	assert (result.size () == outputSize ());
@@ -181,7 +181,7 @@ namespace hpp {
 			      std::string name = std::string ());
 
       /// User implementation of function evaluation
-      virtual void impl_compute (LiegroupElement& result,
+      virtual void impl_compute (LiegroupElementRef result,
 				 vectorIn_t argument) const = 0;
 
       virtual void impl_jacobian (matrixOut_t jacobian,

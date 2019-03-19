@@ -450,24 +450,28 @@ namespace hpp {
         ///
         /// Set right hand side as \f$rhs = f(\mathbf{q})\f$.
         /// \note Only parameterizable constraints (type Equality) are set
-        bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
+        virtual bool rightHandSideFromConfig (const ImplicitPtr_t& constraint,
                                               ConfigurationIn_t config);
         /// Set right hand side of a constraints
         /// \param constraint the constraint,
         /// \param rhs right hand side.
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality) .
-        bool rightHandSide (const ImplicitPtr_t& constraint,
+        virtual bool rightHandSide (const ImplicitPtr_t& constraint,
                                     vectorIn_t rhs);
 
 	/// Get right hand side of a constraints
-	bool getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) const;
-	
+	virtual bool getRightHandSide (const ImplicitPtr_t& constraint,vectorOut_t rhs) const;
+
         /// Set the right hand side
         /// \param rhs the right hand side
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality).
-        void rightHandSide (vectorIn_t rhs);
+        virtual void rightHandSide (vectorIn_t rhs);
+	
+        /// Set the right hand side at a given parameter.
+        /// \param s parameter passed to Implicit::rightHandSideAt
+        void rightHandSideAt (const value_type& s);
 
         /// Get the right hand side
         /// \return the right hand side

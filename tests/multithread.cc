@@ -24,7 +24,6 @@
 #include <hpp/constraints/generic-transformation.hh>
 
 #include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/simple-device.hh>
 
 #include <../tests/util.hh>
@@ -40,10 +39,9 @@ using hpp::pinocchio::Transform3f;
 using namespace hpp::constraints;
 
 BOOST_AUTO_TEST_CASE (multithread) {
-  DevicePtr_t device = hpp::pinocchio::humanoidSimple ("test");
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
   device->numberDeviceData (4);
-  device->model().upperPositionLimit.head<3>().setOnes();
-  device->model().lowerPositionLimit.head<3>().setZero();
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
