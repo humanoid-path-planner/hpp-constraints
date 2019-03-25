@@ -229,7 +229,7 @@ namespace hpp {
       void BySubstitution::projectVectorOnKernel
       (ConfigurationIn_t arg, vectorIn_t darg, ConfigurationOut_t result) const
       {
-        if (constraints_.empty ()) {
+        if (constraints_.empty () || reducedDimension() == 0) {
           result = darg;
           return;
         }
@@ -239,6 +239,7 @@ namespace hpp {
 
         svd_.compute (reducedJ_);
 
+        // TODO the output of explicit solver should be set to zero ?
         dqSmall_ = freeVariables_.rview(darg);
 
         size_type rank = svd_.rank();
