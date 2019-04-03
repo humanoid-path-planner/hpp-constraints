@@ -169,6 +169,9 @@ namespace hpp {
       {
         const ComparisonTypes_t comp (constraint->comparisonType ());
         assert ((size_type)comp.size() == constraint->function().outputDerivativeSize());
+        assert ((constraint->function().outputSpace ()->nq () ==
+                 constraint->function().outputSpace ()->nv ()) ||
+                (comp == ComparisonTypes_t (comp.size (), Equality)));
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
           stacks_.resize (minSize, ImplicitConstraintSet ());
