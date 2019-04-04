@@ -176,8 +176,7 @@ namespace hpp {
       {
         const ComparisonTypes_t comp (constraint->comparisonType ());
         assert ((size_type)comp.size() == constraint->function().outputDerivativeSize());
-        assert ((constraint->function().outputSpace ()->nq () ==
-                 constraint->function().outputSpace ()->nv ()) ||
+        assert ((constraint->function().outputSpace ()->isVectorSpace ()) ||
                 (comp == ComparisonTypes_t (comp.size (), Equality)));
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
@@ -385,18 +384,25 @@ namespace hpp {
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
-              pinocchio::LiegroupElementConstRef output (space->elementConstRef (rhs));
-              LiegroupElementRef drhs   (space->elementRef (
-                    d.rightHandSide.vector ().segment(iq, nq)));
+              if (space->isVectorSpace ()) {
+                for (size_type k = 0, l = 0; k < f->outputSize(); ++k) {
+                  if (d.comparison[iq + k] == Equality) {
+                    d.rightHandSide.vector () [iq + k] = rhs [l];
+                    ++l;
+                  }
+                }
+                return true;
+              } else {
+                pinocchio::LiegroupElementConstRef output
+                  (space->elementConstRef (rhs));
+                LiegroupElementRef drhs
+                  (space->elementRef
+                   (d.rightHandSide.vector ().segment(iq, nq)));
 
-              d.error.head(space->nv()) = output - drhs;
-
-              for (size_type k = 0; k < nv; ++k) {
-                if (d.comparison[iv + k] != Equality)
-                  d.error[k] = 0;
+                d.error.head(space->nv()) = output - drhs;
+                drhs += d.error.head(nv);
+                return true;
               }
-              drhs += d.error.head(nv);
-              return true;
             }
             iq += nq;
             iv += nv;
@@ -424,20 +430,26 @@ namespace hpp {
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
-              LiegroupElementRef output (space->elementRef (rhs));
-              pinocchio::LiegroupElementConstRef drhs (space->elementConstRef (
-                    d.rightHandSide.vector ().segment(iq, nq)));
-              LiegroupElement neutral (space->neutral());
+              if (space->isVectorSpace ()) {
+                for (size_type k = 0, l = 0; k < f->outputSize(); ++k) {
+                  if (d.comparison[iq + k] == Equality) {
+                    rhs [l] = d.rightHandSide.vector () [iq + k];
+                    ++l;
+                  }
+                }
+                return true;
+              } else {
+                LiegroupElementRef output (space->elementRef (rhs));
+                pinocchio::LiegroupElementConstRef drhs
+                  (space->elementConstRef
+                   (d.rightHandSide.vector ().segment(iq, nq)));
+                LiegroupElement neutral (space->neutral());
 
-              d.error.head(nv) = drhs - neutral;
-
-              for (size_type k = 0; k < nv; ++k) {
-                if (d.comparison[iv + k] != Equality)
-                  d.error[k] = 0;
+                d.error.head(nv) = drhs - neutral;
+                output.setNeutral();
+                output += d.error.head(nv);
+                return true;
               }
-              output.setNeutral();
-              output += d.error.head(nv);
-              return true;
             }
             iq += nq;
             iv += nv;
