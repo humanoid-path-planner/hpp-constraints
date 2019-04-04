@@ -99,12 +99,19 @@ namespace hpp {
           (const HierarchicalIterative& solver, vectorOut_t arg, vectorOut_t darg);
       }
 
+      static bool noSaturation (vectorIn_t q, vectorOut_t qSat,
+                                Eigen::VectorXi& saturation)
+      {
+        qSat = q;
+        saturation.setZero ();
+      }
+
       HierarchicalIterative::HierarchicalIterative
       (const LiegroupSpacePtr_t& configSpace) :
         squaredErrorThreshold_ (0), inequalityThreshold_ (0),
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
-        freeVariables_ (), saturate_ (), constraints_ (),
+        freeVariables_ (), saturate_ (noSaturation), constraints_ (),
         sigma_ (0), dq_ (), dqSmall_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
