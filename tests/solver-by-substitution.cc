@@ -818,27 +818,29 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
 
 BOOST_AUTO_TEST_CASE (rightHandSide)
 {
-  size_type N (10);
-  matrix_t A (randomPositiveDefiniteMatrix(N));
-  AffineFunctionPtr_t affine (new AffineFunction (A));
-  vector_t b (vector_t::Random(N-4));
-  ComparisonTypes_t comp (N, Equality);
-  comp [1] = comp [3] = comp [5] = comp [6] = EqualToZero;
+  for (size_type i=0; i<1000; ++i) {
+    size_type N (10);
+    matrix_t A (randomPositiveDefiniteMatrix(N));
+    AffineFunctionPtr_t affine (new AffineFunction (A));
+    vector_t b (vector_t::Random(N-4));
+    ComparisonTypes_t comp (N, Equality);
+    comp [1] = comp [3] = comp [5] = comp [6] = EqualToZero;
 
-  BySubstitution solver (LiegroupSpace::Rn (N));
-  solver.maxIterations(20);
-  solver.errorThreshold(test_precision);
-  // Create constraint with various comparison types
-  ImplicitPtr_t constraint (Implicit::create (affine, comp));
-  solver.add (constraint);
-  solver.rightHandSide (constraint, b);
-  vector_t b1 (N-4);
-  solver.getRightHandSide (constraint, b1);
-  BOOST_CHECK (b == b1);
-  // Check resolution
-  vector_t B (N); B << b [0], 0, b [1], 0, b [2], 0, 0, b [3], b [4], b [5];
-  vector_t x (N);
-  solver.solve (x);
-  vector_t error (A * x - B);
-  BOOST_CHECK (error.norm () < test_precision);
+    BySubstitution solver (LiegroupSpace::Rn (N));
+    solver.maxIterations(20);
+    solver.errorThreshold(test_precision);
+    // Create constraint with various comparison types
+    ImplicitPtr_t constraint (Implicit::create (affine, comp));
+    solver.add (constraint);
+    solver.rightHandSide (constraint, b);
+    vector_t b1 (N-4);
+    solver.getRightHandSide (constraint, b1);
+    BOOST_CHECK (b == b1);
+    // Check resolution
+    vector_t B (N); B << b [0], 0, b [1], 0, b [2], 0, 0, b [3], b [4], b [5];
+    vector_t x (N);
+    solver.solve (x);
+    vector_t error (A * x - B);
+    BOOST_CHECK (error.norm () < test_precision);
+  }
 }
