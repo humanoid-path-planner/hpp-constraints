@@ -841,6 +841,8 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
     vector_t x (N);
     solver.solve (x);
     vector_t error (A * x - B);
-    BOOST_CHECK (error.norm () < test_precision);
+    BOOST_CHECK_MESSAGE (error.norm () < test_precision,
+        "Error threshold exceeded. Error is " << error.transpose() << ", norm "
+        << error.norm() << ". Precision is " << test_precision);
   }
 }
