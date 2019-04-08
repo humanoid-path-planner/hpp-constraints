@@ -104,6 +104,7 @@ namespace hpp {
       {
         qSat = q;
         saturation.setZero ();
+        return false;
       }
 
       HierarchicalIterative::HierarchicalIterative
