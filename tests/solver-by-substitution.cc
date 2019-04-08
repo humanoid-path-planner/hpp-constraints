@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
     BOOST_CHECK (b == b1);
     // Check resolution
     vector_t B (N); B << b [0], 0, b [1], 0, b [2], 0, 0, b [3], b [4], b [5];
-    vector_t x (N);
+    vector_t x (vector_t::Random(N));
     solver.solve (x);
     vector_t error (A * x - B);
     BOOST_CHECK_MESSAGE (error.norm () < test_precision,
