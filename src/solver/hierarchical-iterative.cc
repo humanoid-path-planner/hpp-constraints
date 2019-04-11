@@ -482,8 +482,11 @@ namespace hpp {
       {
         for (std::size_t i = 0; i < constraints_.size (); ++i) {
           ImplicitPtr_t implicit = constraints_[i];
-          if (!implicit->constantRightHandSide())
+          // If constraint has no right hand side function set, do nothing
+          if ((!implicit->constantRightHandSide()) &&
+              (implicit->rightHandSideFunction ())) {
             rightHandSide (implicit, implicit->rightHandSideAt (s));
+          }
         }
       }
 
