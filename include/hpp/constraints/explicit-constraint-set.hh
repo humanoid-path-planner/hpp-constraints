@@ -126,6 +126,11 @@ namespace hpp {
         ///       previously added functions.
         size_type add (const ExplicitPtr_t& constraint);
 
+        /// Check whether an explicit numerical constraint has been added
+        /// \param numericalConstraint explicit numerical constraint
+        /// \return true if the constraint is in the set.
+        bool contains (const ExplicitPtr_t& numericalConstraint) const;
+
         /// Constructor
         ///
         /// \param space Lie group on which constraints are defined.

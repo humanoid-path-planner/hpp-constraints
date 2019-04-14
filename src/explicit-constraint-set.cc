@@ -217,6 +217,17 @@ namespace hpp {
       return data_.size() - 1;
     }
 
+    bool ExplicitConstraintSet::contains
+    (const ExplicitPtr_t& numericalConstraint) const
+    {
+      for (std::vector<Data>::const_iterator it = data_.begin ();
+           it != data_.end (); ++it) {
+        if ((it->constraint == numericalConstraint) ||
+            (*(it->constraint) == *numericalConstraint)) return true;
+      }
+      return false;
+    }
+
     void ExplicitConstraintSet::solveExplicitConstraint
     (const std::size_t& iF, vectorOut_t arg) const
     {
@@ -357,7 +368,7 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < data_.size (); ++i) {
 	const Data& d = data_[i];
-	if (d.constraint == constraint) {
+	if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
 	  d.equalityIndices.lview(rhs)=d.equalityIndices.rview(d.rhs_implicit);
 	  // d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
 	  

@@ -61,6 +61,10 @@ namespace hpp {
         HierarchicalIterative (other), explicit_ (other.explicit_),
         Je_ (other.Je_), JeExpanded_ (other.JeExpanded_)
       {
+        for (NumericalConstraints_t::iterator it (constraints_.begin ());
+             it != constraints_.end (); ++it) {
+          assert (contains (*it));
+        }
       }
 
       bool BySubstitution::add (const ImplicitPtr_t& nm,
@@ -111,6 +115,7 @@ namespace hpp {
         hppDout (info, "Constraint has dimension "
                  << dimension());
 
+        assert (contains (nm));
         return true;
       }
 
@@ -126,6 +131,16 @@ namespace hpp {
         // set free variables to indices that are not output of the explicit
         // constraint.
         freeVariables (explicit_.notOutDers ().transpose ());
+      }
+
+      bool BySubstitution::contains
+      (const ImplicitPtr_t& numericalConstraint) const
+      {
+        if (parent_t::contains (numericalConstraint)) return true;
+        ExplicitPtr_t expl (HPP_DYNAMIC_PTR_CAST (Explicit,
+                                                  numericalConstraint));
+        if (!expl) return false;
+        return explicit_.contains (expl);
       }
 
       segments_t BySubstitution::implicitDof () const
