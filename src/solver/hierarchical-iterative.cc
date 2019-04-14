@@ -352,7 +352,7 @@ namespace hpp {
           const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
           size_type iq = 0, iv = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
-            LiegroupSpacePtr_t space (f->outputSpace());
+            LiegroupSpacePtr_t space (fs [j]->outputSpace());
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
