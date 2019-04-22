@@ -43,6 +43,10 @@ namespace hpp {
           hppDout (error, "The descent direction is not valid: " << t/c);
         } else {
           value_type alpha = 1;
+          /* TODO add a threshold to avoid too large steps.
+          const value_type u2 = u.squaredNorm();
+          if (u2 > 1.) alpha = 1. / std::sqrt(u2);
+          */
 
           while (alpha > smallAlpha) {
             darg = alpha * u;
@@ -67,7 +71,7 @@ namespace hpp {
         }
 
         u *= smallAlpha;
-        solver.integrate (arg, darg, arg);
+        solver.integrate (arg, u, arg);
         return false;
       }
 
