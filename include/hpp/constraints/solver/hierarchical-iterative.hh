@@ -207,7 +207,7 @@ namespace hpp {
         /// \param numericalConstraint numerical constraint
         /// \return true if numerical constraint is already in the solver
         ///         whatever the passive dofs are.
-        bool contains (const ImplicitPtr_t& numericalConstraint) const;
+        virtual bool contains (const ImplicitPtr_t& numericalConstraint) const;
 
         /// Add an implicit equality constraint
         ///

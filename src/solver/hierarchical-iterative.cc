@@ -149,10 +149,22 @@ namespace hpp {
       bool HierarchicalIterative::contains
       (const ImplicitPtr_t& numericalConstraint) const
       {
-        for (NumericalConstraints_t::const_iterator it = constraints_.begin ();
-             it != constraints_.end (); ++it) {
-          if (numericalConstraint == *it || *numericalConstraint == **it)
-            return true;
+        // Check that function is in stacks_
+        const DifferentiableFunctionPtr_t& f
+          (numericalConstraint->functionPtr ());
+        for (std::size_t i = 0; i < stacks_.size (); ++i) {
+          const ImplicitConstraintSet& ics (stacks_[i]);
+          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
+                                        ics.functionPtr ()));
+          DifferentiableFunctionSetPtr_t dfs
+            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
+                                  ics.functionPtr ()));
+          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
+          for (std::size_t j = 0; j < fs.size(); ++j) {
+            if (f == fs[j]) {
+              return true;
+            }
+          }
         }
         return false;
       }
@@ -340,7 +352,7 @@ namespace hpp {
           const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
           size_type iq = 0, iv = 0;
           for (std::size_t j = 0; j < fs.size(); ++j) {
-            LiegroupSpacePtr_t space (f->outputSpace());
+            LiegroupSpacePtr_t space (fs [j]->outputSpace());
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
