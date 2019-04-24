@@ -183,7 +183,7 @@ void test_quadratic2 ()
   AffineFunctionPtr_t affine2 (new AffineFunction (C));
   ExplicitPtr_t expl2 (Explicit::create (LiegroupSpace::Rn (N),
                                          affine2, in2, out2, in2, out2));
-  
+
 
   // Make solver
   BySubstitution solver (LiegroupSpace::Rn (N));
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(functions2)
     (LiegroupSpace::R3 (),
      AffineFunctionPtr_t (new AffineFunction (matrix_t (1, 0), C)),
      segments_t(), out, segments_t(), out);
-                         
+
   solver.add (expl);
 
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
                                  et->inDer().indices (),
                                  et->outDer().indices ())) >= 0);
   solver.explicitConstraintSetHasChanged();
-  BOOST_MESSAGE(solver << '\n');
+  BOOST_TEST_MESSAGE(solver << '\n');
 
   // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), BySubstitution::SUCCESS);
 
@@ -838,9 +838,11 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
     BOOST_CHECK (b == b1);
     // Check resolution
     vector_t B (N); B << b [0], 0, b [1], 0, b [2], 0, 0, b [3], b [4], b [5];
-    vector_t x (N);
+    vector_t x (vector_t::Random(N));
     solver.solve (x);
     vector_t error (A * x - B);
-    BOOST_CHECK (error.norm () < test_precision);
+    BOOST_CHECK_MESSAGE (error.norm () < test_precision,
+        "Error threshold exceeded. Error is " << error.transpose() << ", norm "
+        << error.norm() << ". Precision is " << test_precision);
   }
 }

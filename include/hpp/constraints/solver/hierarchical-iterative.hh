@@ -183,6 +183,8 @@ namespace hpp {
         /// \li -1 if the lower bound is reached,
         /// \li  1 if the upper bound is reached,
         /// \li  0 otherwise.
+        /// \return true if and only if at least one degree of freedom has been
+        ///         saturated
         typedef boost::function<bool (vectorIn_t q, vectorOut_t qSat,
                                       Eigen::VectorXi& saturation)>
           Saturation_t;
