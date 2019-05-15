@@ -19,6 +19,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include <hpp/constraints/solver/by-substitution.hh>
+#include <hpp/constraints/explicit/relative-pose.hh>
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
@@ -30,6 +31,7 @@
 #include <hpp/constraints/affine-function.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
+#include <hpp/pinocchio/configuration.hh>
 
 #include <../tests/util.hh>
 
@@ -47,6 +49,7 @@ using hpp::constraints::AffineFunction;
 using hpp::constraints::AffineFunctionPtr_t;
 using hpp::constraints::ConstantFunction;
 using hpp::constraints::ConstantFunctionPtr_t;
+using hpp::constraints::DifferentiableFunctionPtr_t;
 using hpp::constraints::ExplicitConstraintSet;
 using hpp::constraints::Explicit;
 using hpp::constraints::ExplicitPtr_t;
@@ -55,6 +58,7 @@ using hpp::constraints::ImplicitPtr_t;
 using hpp::constraints::matrix3_t;
 using hpp::constraints::LiegroupSpace;
 using hpp::constraints::JointPtr_t;
+using hpp::constraints::Transformation;
 using hpp::constraints::RelativeTransformation;
 using hpp::constraints::RelativeTransformationPtr_t;
 using hpp::constraints::LiegroupElement;
@@ -75,7 +79,7 @@ using hpp::constraints::solver::lineSearch::FixedSequence;
 using hpp::pinocchio::unittest::HumanoidRomeo;
 using hpp::pinocchio::unittest::ManipulatorArm2;
 using hpp::pinocchio::unittest::makeDevice;
-
+using hpp::pinocchio::displayConfig;
 using boost::assign::list_of;
 
 matrix_t randomPositiveDefiniteMatrix (int N)
@@ -820,7 +824,7 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
 {
   for (size_type i=0; i<1000; ++i) {
     size_type N (10);
-    matrix_t A (randomPositiveDefiniteMatrix(N));
+    matrix_t A (randomPositiveDefiniteMatrix((int) N));
     AffineFunctionPtr_t affine (new AffineFunction (A));
     vector_t b (vector_t::Random(N-4));
     ComparisonTypes_t comp (N, Equality);
@@ -844,5 +848,84 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
     BOOST_CHECK_MESSAGE (error.norm () < test_precision,
         "Error threshold exceeded. Error is " << error.transpose() << ", norm "
         << error.norm() << ". Precision is " << test_precision);
+  }
+}
+
+BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
+{
+  // Create a kinematic chain
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
+  BOOST_REQUIRE (device);
+
+  ComparisonTypes_t comp1 (6, Equality);
+  comp1 [0] = comp1 [2] = comp1 [4] = EqualToZero;
+  ComparisonTypes_t comp2 (6, Equality);
+  comp2 [1] = comp2 [2] = EqualToZero;
+  // Create two relative transformation constraints
+  Transform3f tf1; // Identity
+  vector3_t u; u << 0, -.2, 0;
+  Transform3f tf2; tf2.translation (u);
+  ImplicitPtr_t c1 (hpp::constraints::implicit::RelativePose::create
+                    ("RelativeTransformation", device, ee1, ee2, tf1, tf2,
+                     std::vector <bool> (6, true), comp1));
+  u << 1.2, 0, -1;
+  tf2.translation (u);
+  ImplicitPtr_t c2 (hpp::constraints::explicit_::RelativePose::create
+                    ("Transformation", device, JointPtr_t (), ee1, tf2, tf1,
+                     std::vector <bool> (6, true), comp2));
+
+  BySubstitution solver (device->configSpace ());
+  solver.maxIterations(20);
+  solver.errorThreshold(test_precision);
+  solver.add (c1);
+  solver.add (c2);
+  //           0
+  //           rhs [0]
+  // f1 (q) =  0
+  //           rhs [1]
+  //           0
+  //           rhs [2]
+  //
+  //           rhs [3]
+  //           0
+  // f2 (q) =  0
+  //           rhs [4]
+  //           rhs [5]
+  //           rhs [6]
+  for (size_type i=0; i<1000; ++i) {
+    Configuration_t q (device->configSize ()); q.setRandom ();
+    bool success;
+    // Set right hand side for both constraints from random configuration
+    success = solver.rightHandSideFromConfig (c1, q);
+    BOOST_CHECK (success);
+    success = solver.rightHandSideFromConfig (c2, q);
+    BOOST_CHECK (success);
+    // Store right hand side for each constraint
+    vector_t rhs1 (3), rhs1_ (3), rhs2 (4), rhs2_ (4);
+    success = solver.getRightHandSide (c1, rhs1);
+    BOOST_CHECK (success);
+    success = solver.getRightHandSide (c2, rhs2);
+    BOOST_CHECK (success);
+    // Set right hand side for both constraints from other random configuration
+    q.setRandom ();
+    success = solver.rightHandSideFromConfig (c1, q);
+    BOOST_CHECK (success);
+    success = solver.rightHandSideFromConfig (c2, q);
+    BOOST_CHECK (success);
+    // Set right hand side from stored values
+    success = solver.rightHandSide (c1, rhs1);
+    BOOST_CHECK (success);
+    success = solver.rightHandSide (c2, rhs2);
+    BOOST_CHECK (success);
+    // Get right hand side for each constraint and compare to stored values
+    success = solver.getRightHandSide (c1, rhs1_);
+    BOOST_CHECK (success);
+    success = solver.getRightHandSide (c2, rhs2_);
+    BOOST_CHECK (success);
+    BOOST_CHECK_EQUAL (rhs1, rhs1_);
+    BOOST_CHECK_EQUAL (rhs2, rhs2_);
   }
 }
