@@ -369,7 +369,7 @@ namespace hpp {
       for (std::size_t i = 0; i < data_.size (); ++i) {
 	const Data& d = data_[i];
 	if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
-	  d.equalityIndices.lview(rhs)=d.equalityIndices.rview(d.rhs_implicit);
+	  rhs = d.equalityIndices.rview(d.rhs_implicit);
 	  // d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
 	  
 	  return true;
@@ -384,7 +384,7 @@ namespace hpp {
     {
       assert (i < (size_type) data_.size());
       Data& d = data_[i];
-      d.equalityIndices.lview(d.rhs_implicit) = d.equalityIndices.rview(rhs);
+      d.equalityIndices.lview(d.rhs_implicit) = rhs;
       d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
     }
 
