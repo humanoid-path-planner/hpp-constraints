@@ -23,17 +23,63 @@
 
 namespace hpp {
   namespace constraints {
-    /// \addtogroup constraints
-    /// \{
+    /**
+        \addtogroup constraints
+        \{
+    */
+    /**
+        This class represents a parameterizable numerical constraint that
+        compares the output of a function \f$h\f$ to a right hand side vector.
 
-    /// This class represents a numerical constraint  with the following format
-    /// \f{equation} f(q) \bowtie rhs \f},
-    /// where \f$\bowtie\f$ is one of the following comparison operators:
-    /// \li Equality: \f$f(\mathbf{q}) = rhs\f$, where \f$rhs\f$ is a
-    /// parameterizable right hand side,
-    /// \li EqualToZero: \f$f(\mathbf{q}) = 0\f$,
-    /// \li Superior: \f$f(\mathbf{q}) > 0\f$
-    /// \li Inferior: \f$f(\mathbf{q}) < 0\f$
+        \par Definition
+        \li The function \f$h\f$ takes input in a configuration space
+        \f$\mathcal{C}\f$ and output in a Lie group \f$\mathbf{L}\f$,
+        \li the dimensions of \f$\mathbf{L}\f$ and of its tangent space are
+        respectively \f$(n_q,n_v)\f$.
+        \li The comparison is represented by a vector \f$c\f$ of dimension
+        \f$n_v\f$
+        with values in enum hpp::contraints::ComparisonType = {
+        \f$\mathbf{Equality}\f$, \f$\mathbf{EqualToZero}\f$,
+        \f$\mathbf{Inferior}\f$, \f$\mathbf{Superior}\f$ }.
+        \li The right hand side is a vector of dimension \f$n_q\f$.
+
+        \par Error
+        A configuration \f$\mathbf{q}\f$ is said to satisfy the constraint for
+        a given right hand side if and only if the error \f$e\f$ as computed
+        below is
+        smaller in norm than a given threshold.
+
+        Let
+        \f[
+        \Delta = f (\mathbf{q}) - rhs \in \mathbf{R}^{n_v},
+        \f]
+        for each component \f$i\in\{0,\cdots,n_v-1\}\f$,
+        \li if \f$c_i\f$ is \f$\mathbf{Inferior}\f$,
+        \f$e_i = \max (0,\Delta_i)\f$,
+        \li if \f$c_i\f$ is \f$\mathbf{Superior}\f$,
+        \f$e_i = \min (0,\Delta_i)\f$,
+        \li if \f$c_i\f$ is \f$\mathbf{Equality}\f$,
+        \f$e_i = \Delta_i\f$,
+        \li if \f$c_i\f$ is \f$\mathbf{EqualToZero}\f$, \f$e_i = \Delta_i\f$.
+
+        \par Parameterizable right hand side
+        Lines with \textbf{Equality} comparator in the above definition of the
+        error need a parameter, while lines with comparators \textbf{Inferior},
+        \textbf{Superior}, or \textbf{EqualToZero} do not.
+        As a consequence, the right hand side of the constraint is defined by
+        a vector \f$\lambda\f$ of parameters of size the number of
+        \textbf{Equality} occurences in vector \f$c\f$. The right hand side is
+        then defined as in the following example:
+        \f[
+        rhs = \exp\left(\begin{array}{c}\lambda_1 \\ 0 \\ 0 \\ \lambda_2 \\
+        \vdots \end{array}\right)
+         \ \ \ \ c = \left(\begin{array}{c}\mathbf{Equality} \\
+        \mathbf{EqualToZero} \\ \mathbf{Inferior} \\ \mathbf{Equality} \\
+        \vdots \end{array}\right)
+        \f]
+        To retrieve the size of vector \f$\lambda\f$, call method
+        Implicit::parameterSize ().
+    */
     class HPP_CONSTRAINTS_DLLAPI Implicit {
       public:
 	/// Operator equality
@@ -75,23 +121,41 @@ namespace hpp {
         ///
         /// \warning Only values of the right hand side corresponding to 
         /// \link Equality "equality constraints" \endlink are set. As a
-        /// result, the input configuration may not satisfy the other constraints.
-        /// The rationale is the following. Equality constraints define a
-        /// foliation of the configuration space. Leaves of the foliation are
-        /// defined by the value of the right hand side of the equality
-        /// constraints. This method is mainly used in manipulation planning
-        /// to retrieve the leaf a configuration lies on.
-        void rightHandSideFromConfig (ConfigurationIn_t config);
+        /// result, the input configuration may not satisfy the other
+        /// constraints.
+        ///
+        /// \deprecated In future versions, right hand side will not be a member
+        ///             of the class anymore.
+        void rightHandSideFromConfig (ConfigurationIn_t config) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Set the right hand side of the equation.
         /// \param rhs the right hand side.
-        void rightHandSide (vectorIn_t rhs);
+        ///
+        /// \deprecated In future versions, right hand side will not be a member
+        ///             of the class anymore.
+        void rightHandSide (vectorIn_t rhs) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Return the right hand side of the equation.
-        vectorIn_t rightHandSide () const;
+        ///
+        /// \deprecated In future versions, right hand side will not be a member
+        ///             of the class anymore.
+        vectorIn_t rightHandSide () const HPP_CONSTRAINTS_DEPRECATED;
 
-        /// Return the size of the right hand side constraint.
-        size_type rhsSize () const;
+        /// Return the dimension of the left hand side function tangent output
+        /// space
+        ///
+        /// \deprecated Use function ()->outputSpace ()->nv () instead.
+        size_type rhsSize () const HPP_CONSTRAINTS_DEPRECATED;
+
+        /// Get size of parameter defining the right hand side of the constraint
+        ///
+        /// See class documentation for details.
+        size_type parameterSize () const;
+
+        /// Get size of right hand side of the constraint
+        ///
+        /// This is the dimension (nq) of the output space of the function
+        size_type rightHandSideSize () const;
 
         /// Return the ComparisonType
         const ComparisonTypes_t& comparisonType () const;
@@ -101,8 +165,10 @@ namespace hpp {
 
         bool constantRightHandSide () const;
 
-        /// Return the right hand side of the equation.
-        vectorOut_t nonConstRightHandSide ();
+        /// Return a modifiable reference to right hand side of equation.
+        /// \deprecated In future versions, right hand side will not be a member
+        ///             of the class anymore.
+        vectorOut_t nonConstRightHandSide () HPP_CONSTRAINTS_DEPRECATED;
 
         void rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF);
 
@@ -130,7 +196,9 @@ namespace hpp {
         /// Return a reference to the value.
         /// This vector can be used to store the output of the function,
         /// its size being initialized.
-        vector_t& value ()
+        /// \deprecated In future versions, the value will not be a member of
+        ///             the class anymore.
+        vector_t& value () HPP_CONSTRAINTS_DEPRECATED
         {
           return value_;
         }
@@ -138,7 +206,9 @@ namespace hpp {
         /// Return a reference to the jacobian.
         /// This matrix can be used to store the derivative of the function,
         /// its size being initialized.
-        matrix_t& jacobian ()
+        /// \deprecated In future versions, the Jacobian will not be a member of
+        ///             the class anymore.
+        matrix_t& jacobian () HPP_CONSTRAINTS_DEPRECATED
         {
           return jacobian_;
         }

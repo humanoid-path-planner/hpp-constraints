@@ -162,7 +162,7 @@ namespace hpp {
     {
       assert (HPP_DYNAMIC_PTR_CAST (explicit_::ImplicitFunction,
                                     functionPtr ()));
-      assert (rhsSize () == joint->numberDof ());
+      assert (rightHandSideSize () == joint->configSize ());
       assert (*(value.space ()) == *configSpace_);
     }
 
@@ -198,7 +198,7 @@ namespace hpp {
                                     functionPtr ()));
       assert (joint->numberDof () == joint->configSize ());
       // rightHandSide (value);
-      assert (rhsSize () == value.size());
+      assert (rightHandSideSize () == value.size());
     }
 
     LockedJoint::LockedJoint (const DevicePtr_t& dev, const size_type index,
@@ -236,7 +236,7 @@ namespace hpp {
       assert (value.size() > 0);
       assert (rankInConfiguration() + value.size() <= dev->configSize());
       // rightHandSide (value);
-      assert (rhsSize () == value.size());
+      assert (rightHandSideSize () == value.size());
     }
 
     void LockedJoint::init (const LockedJointPtr_t& self)
@@ -249,7 +249,6 @@ namespace hpp {
     {
       LiegroupElement v; vector_t empty;
       function().value(v, empty);
-      v += rightHandSide();
       os << "Locked joint " << jointName_
 	 << ", value = " << pinocchio::displayConfig (v.vector())
         << ": rank in configuration = " << rankInConfiguration()

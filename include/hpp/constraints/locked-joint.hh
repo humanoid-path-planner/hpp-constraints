@@ -90,17 +90,17 @@ namespace hpp {
       void value (vectorIn_t value);
 
       /// Set the value of the locked joint from a configuration.
-      void rightHandSideFromConfig (ConfigurationIn_t config);
+      void rightHandSideFromConfig (ConfigurationIn_t config) HPP_CONSTRAINTS_DEPRECATED;
 
       /// Check whether a configuration statisfies the constraint.
-      bool isSatisfied (ConfigurationIn_t config);
+      bool isSatisfied (ConfigurationIn_t config) HPP_CONSTRAINTS_DEPRECATED;
 
       /// Check whether a configuration statisfies the constraint.
       ///
       /// \param config input configuration
       /// \retval error difference between configuration of joint read in
       ///         input configuration and locked value.
-      bool isSatisfied (ConfigurationIn_t config, vector_t& error);
+      bool isSatisfied (ConfigurationIn_t config, vector_t& error) HPP_CONSTRAINTS_DEPRECATED;
 
       /// Return shared pointer to joint
       const JointPtr_t& joint ()

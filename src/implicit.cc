@@ -19,6 +19,23 @@
 
 namespace hpp {
   namespace constraints {
+    size_type computeRightHandSideSize (const ComparisonTypes_t& comp)
+    {
+      size_type size = 0;
+      for (std::size_t i = 0; i < comp.size(); ++i) {
+        switch (comp[i]) {
+        case Superior:
+        case Inferior:
+          break;
+        case Equality:
+          ++size;
+          break;
+        default:
+          break;
+        }
+      }
+      return size;
+    }
     void Implicit::rightHandSide (vectorIn_t rhs)
     {
       rhs_ = rhs;
@@ -62,6 +79,15 @@ namespace hpp {
       return rhs_.size ();
     }
 
+    size_type Implicit::parameterSize () const
+    {
+      return rhsRealSize_;
+    }
+
+    size_type Implicit::rightHandSideSize () const
+    {
+      return function_->outputSpace ()->nq ();
+    }
     const ComparisonTypes_t& Implicit::comparisonType () const
     {
       return comparison_;
@@ -82,12 +108,14 @@ namespace hpp {
         rhs_ = vector_t ();
       else
         rhs_ = vector_t::Zero (rhsRealSize_);
+      rhsRealSize_ = computeRightHandSideSize (comparison_);
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
                         ComparisonTypes_t comp) :
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
-      rhsRealSize_ (rhs_.size()), function_ (function),
+      rhsRealSize_ (computeRightHandSideSize (comparison_)),
+      function_ (function),
       value_ (function->outputSize ()),
       jacobian_ (function->outputDerivativeSize (),
                  function->inputDerivativeSize ())
@@ -119,6 +147,7 @@ namespace hpp {
       }
       if (constantRightHandSide ())
         rhs_ = vector_t ();
+      rhsRealSize_ = computeRightHandSideSize (comparison_);
       assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
@@ -187,9 +216,10 @@ namespace hpp {
       return createCopy (weak_.lock ());
     }
 
+    // deprecated
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config)
     {
-      if (rhsSize () > 0) {
+      if (parameterSize () > 0) {
         LiegroupElement value (function_->outputSpace ());
         function_->value (value, config);
         rightHandSide (value.vector ());
