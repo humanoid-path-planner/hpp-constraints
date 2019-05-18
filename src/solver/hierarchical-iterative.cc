@@ -726,6 +726,7 @@ namespace hpp {
       std::ostream& HierarchicalIterative::print (std::ostream& os) const
       {
         os << "HierarchicalIterative, " << stacks_.size() << " level." << iendl
+           << "max iter: " << maxIterations() << ", error threshold: " << errorThreshold() << iendl
            << "dimension " << dimension() << iendl
            << "reduced dimension " << reducedDimension() << iendl
            << "reduction: " << freeVariables_ << incindent;
