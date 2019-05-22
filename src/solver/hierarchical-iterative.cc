@@ -113,6 +113,7 @@ namespace hpp {
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
         freeVariables_ (), saturate_ (noSaturation), constraints_ (),
+        iq_ (), iv_ (),
         sigma_ (0), dq_ (), dqSmall_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
@@ -133,6 +134,7 @@ namespace hpp {
         lastIsOptional_ (other.lastIsOptional_),
         freeVariables_ (other.freeVariables_),
         saturate_ (other.saturate_), constraints_ (other.constraints_.size()),
+        iq_ (other.iq_), iv_ (other.iv_),
         sigma_(other.sigma_),
         dq_ (other.dq_), dqSmall_ (other.dqSmall_),
         reducedJ_ (other.reducedJ_),
@@ -187,17 +189,33 @@ namespace hpp {
       void HierarchicalIterative::add (const ImplicitPtr_t& constraint,
                                        const std::size_t& priority)
       {
+        DifferentiableFunctionPtr_t f (constraint->functionPtr ());
+        if (priority_.find (f) != priority_.end ()) {
+          std::ostringstream oss;
+          oss << "Contraint \"" << f->name ()
+              << "\" already in solver";
+          throw std::logic_error (oss.str ().c_str ());
+        }
+        priority_ [f] = priority;
         const ComparisonTypes_t comp (constraint->comparisonType ());
-        assert ((size_type)comp.size() == constraint->function().outputDerivativeSize());
-        assert ((constraint->function().outputSpace ()->isVectorSpace ()) ||
+        assert ((size_type)comp.size() == f->outputDerivativeSize());
+        assert ((f->outputSpace ()->isVectorSpace ()) ||
                 (comp == ComparisonTypes_t (comp.size (), Equality)));
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
           stacks_.resize (minSize, ImplicitConstraintSet ());
           datas_. resize (minSize, Data());
         }
-        stacks_ [priority].add (constraint);
         Data& d = datas_[priority];
+        // Store rank in output vector value
+        iq_ [f] = datas_ [priority].output.space ()->nq ();
+        // Store rank in output vector derivative
+        iv_ [f] = datas_ [priority].output.space ()->nv ();
+        hppDout (info, "Adding " << f << " to solver " << this);
+        // warning adding constraint to the stack modifies behind the stage
+        // the dimension of datas_ [priority].output.space (). It should
+        // therefore be done after the previous lines.
+        stacks_ [priority].add (constraint);
         for (std::size_t i = 0; i < comp.size(); ++i) {
           switch (comp[i]) {
           case Superior:
@@ -356,6 +374,11 @@ namespace hpp {
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
+              assert (iq_.find (f) != iq_.end ());
+              assert (iv_.find (f) != iv_.end ());
+              assert (iq == iq_ [f]);
+              assert (iv == iv_ [f]);
+              assert (i == priority_ [f]);
               LiegroupElementRef output (space->elementRef (
                     d.output       .vector ().segment(iq, nq)));
               LiegroupElementRef rhs    (space->elementRef (
@@ -375,6 +398,8 @@ namespace hpp {
             iv += nv;
           }
         }
+        assert (iq_.find (f) == iq_.end ());
+        assert (iv_.find (f) == iv_.end ());
         return false;
       }
 
@@ -397,6 +422,11 @@ namespace hpp {
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
+              assert (iq_.find (f) != iq_.end ());
+              assert (iv_.find (f) != iv_.end ());
+              assert (iq == iq_ [f]);
+              assert (iv == iv_ [f]);
+              assert (i == priority_ [f]);
               if (space->isVectorSpace ()) {
                 for (size_type k = 0, l = 0; k < f->outputSize(); ++k) {
                   if (d.comparison[iq + k] == Equality) {
@@ -443,6 +473,11 @@ namespace hpp {
             size_type nq = space->nq(),
                       nv = space->nv();
             if (f == fs[j]) {
+              assert (iq_.find (f) != iq_.end ());
+              assert (iv_.find (f) != iv_.end ());
+              assert (iq_.find (f)->second == iq);
+              assert (iv_.find (f)->second == iv);
+              assert (i == priority_.find (f)->second);
               if (space->isVectorSpace ()) {
                 for (size_type k = 0, l = 0; k < f->outputSize(); ++k) {
                   if (d.comparison[iq + k] == Equality) {

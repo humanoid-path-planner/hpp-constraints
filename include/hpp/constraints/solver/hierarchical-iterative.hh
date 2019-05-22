@@ -470,7 +470,7 @@ namespace hpp {
         /// \note Size of rhs should be equal to the total dimension of
         ///       parameterizable constraints (type Equality).
         virtual void rightHandSide (vectorIn_t rhs);
-	
+
         /// Set the right hand side at a given parameter.
         /// \param s parameter passed to Implicit::rightHandSideAt
         void rightHandSideAt (const value_type& s);
@@ -568,6 +568,12 @@ namespace hpp {
         Saturation_t saturate_;
         /// Members moved from core::ConfigProjector
         NumericalConstraints_t constraints_;
+        /// Value rank of constraint in its priority level
+        std::map <DifferentiableFunctionPtr_t, size_type> iq_;
+        /// Derivative rank of constraint in its priority level
+        std::map <DifferentiableFunctionPtr_t, size_type> iv_;
+        /// Priority level of constraint
+        std::map <DifferentiableFunctionPtr_t, std::size_t> priority_;
 
         /// The smallest non-zero singular value
         mutable value_type sigma_;
