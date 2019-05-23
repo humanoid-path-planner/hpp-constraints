@@ -350,6 +350,7 @@ namespace hpp {
           d.error.setZero();
           d.equalityIndices.lview(d.error) =
             d.equalityIndices.rview(d.output - d.rightHandSide);
+          // rhs = exp (error)
           d.rightHandSide += d.error;
         }
         return rightHandSide();
@@ -359,170 +360,111 @@ namespace hpp {
       (const ImplicitPtr_t& constraint, ConfigurationIn_t config)
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
-        for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          Data& d = datas_[i];
-          const ImplicitConstraintSet& ics (stacks_[i]);
-          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
-                                        ics.functionPtr ()));
-          DifferentiableFunctionSetPtr_t dfs
-            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
-                                  ics.functionPtr ()));
-          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          size_type iq = 0, iv = 0;
-          for (std::size_t j = 0; j < fs.size(); ++j) {
-            LiegroupSpacePtr_t space (fs [j]->outputSpace());
-            size_type nq = space->nq(),
-                      nv = space->nv();
-            if (f == fs[j]) {
-              assert (iq_.find (f) != iq_.end ());
-              assert (iv_.find (f) != iv_.end ());
-              assert (iq == iq_ [f]);
-              assert (iv == iv_ [f]);
-              assert (i == priority_ [f]);
-              LiegroupElementRef output (space->elementRef (
+        if (iq_.find (f) == iq_.end ()) {
+          return false;
+        }
+        LiegroupSpacePtr_t space (f->outputSpace());
+        size_type iq = iq_ [f];
+        size_type iv = iv_ [f];
+        size_type nq = space->nq ();
+        size_type nv = space->nv ();
+        std::size_t i = priority_ [f];
+        Data& d = datas_[i];
+        LiegroupElementRef output (space->elementRef (
                     d.output       .vector ().segment(iq, nq)));
-              LiegroupElementRef rhs    (space->elementRef (
+        LiegroupElementRef rhs    (space->elementRef (
                     d.rightHandSide.vector ().segment(iq, nq)));
 
-              f->value (output, config);
-              d.error.head(nv) = output - rhs;
-
-              for (size_type k = 0; k < nv; ++k) {
-                if (d.comparison[iv + k] != Equality)
-                  d.error[k] = 0;
-              }
-              rhs += d.error.head(nv);
-              return true;
-            }
-            iq += nq;
-            iv += nv;
-          }
+        f->value (output, config);
+        assert (d.error.size () == nv);
+        // d.error is used here as an intermediate storage. The value
+        // computed is not exactly the error
+        d.error = output - rhs;
+        for (size_type k = 0; k < nv; ++k) {
+          if (d.comparison[iv + k] != Equality)
+            d.error[k] = 0;
         }
-        assert (iq_.find (f) == iq_.end ());
-        assert (iv_.find (f) == iv_.end ());
-        return false;
+        rhs += d.error;
+        return true;
       }
 
       bool HierarchicalIterative::rightHandSide
-      (const ImplicitPtr_t& constraint, vectorIn_t rhs)
+      (const ImplicitPtr_t& constraint, vectorIn_t rightHandSide)
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
-        for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          Data& d = datas_[i];
-          const ImplicitConstraintSet& ics (stacks_[i]);
-          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
-                                        ics.functionPtr ()));
-          DifferentiableFunctionSetPtr_t dfs
-            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
-                                  ics.functionPtr ()));
-          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          size_type iq = 0, iv = 0;
-          for (std::size_t j = 0; j < fs.size(); ++j) {
-            LiegroupSpacePtr_t space (fs [j]->outputSpace());
-            size_type nq = space->nq(),
-                      nv = space->nv();
-            if (f == fs[j]) {
-              assert (iq_.find (f) != iq_.end ());
-              assert (iv_.find (f) != iv_.end ());
-              assert (iq == iq_ [f]);
-              assert (iv == iv_ [f]);
-              assert (i == priority_ [f]);
-              if (space->isVectorSpace ()) {
-                for (size_type k = 0, l = 0; k < f->outputSize(); ++k) {
-                  if (d.comparison[iq + k] == Equality) {
-                    d.rightHandSide.vector () [iq + k] = rhs [l];
-                    ++l;
-                  }
-                }
-                return true;
-              } else {
-                pinocchio::LiegroupElementConstRef output
-                  (space->elementConstRef (rhs));
-                LiegroupElementRef drhs
-                  (space->elementRef
-                   (d.rightHandSide.vector ().segment(iq, nq)));
-
-                d.error.head(space->nv()) = output - drhs;
-                drhs += d.error.head(nv);
-                return true;
-              }
-            }
-            iq += nq;
-            iv += nv;
-          }
+        LiegroupSpacePtr_t space (f->outputSpace());
+        assert (rightHandSide.size () == space->nq ());
+        if (iq_.find (f) == iq_.end ()) {
+          return false;
         }
-        return false;
+        size_type iq = iq_ [f];
+        size_type iv = iv_ [f];
+        size_type nq = space->nq ();
+        size_type nv = space->nv ();
+        std::size_t i = priority_ [f];
+        Data& d = datas_[i];
+        assert (d.error.size () == nv);
+        pinocchio::LiegroupElementConstRef output
+          (space->elementConstRef (rightHandSide));
+        LiegroupElementRef rhs (space->elementRef
+                                (d.rightHandSide.vector ().segment(iq, nq)));
+        // d.error is used here as an intermediate storage. The value
+        // computed is not the error
+        d.error = output - space->neutral (); // log (rightHandSide)
+        for (size_type k = 0; k < nv; ++k) {
+          if (d.comparison[iv + k] != Equality)
+            assert (d.error[k] == 0);
+        }
+        rhs = space->neutral () + d.error; // exp (d.error)
+        return true;
       }
 
       bool HierarchicalIterative::getRightHandSide
-      (const ImplicitPtr_t& constraint,vectorOut_t rhs) const
+      (const ImplicitPtr_t& constraint,vectorOut_t rightHandSide) const
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
-        for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          Data& d = datas_[i];
-          const ImplicitConstraintSet& ics (stacks_[i]);
-          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
-                                        ics.functionPtr ()));
-          DifferentiableFunctionSetPtr_t dfs
-            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
-                                  ics.functionPtr ()));
-          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          size_type iq = 0, iv = 0;
-          for (std::size_t j = 0; j < fs.size(); ++j) {
-            LiegroupSpacePtr_t space (fs [j]->outputSpace());
-            size_type nq = space->nq(),
-                      nv = space->nv();
-            if (f == fs[j]) {
-              assert (iq_.find (f) != iq_.end ());
-              assert (iv_.find (f) != iv_.end ());
-              assert (iq_.find (f)->second == iq);
-              assert (iv_.find (f)->second == iv);
-              assert (i == priority_.find (f)->second);
-              if (space->isVectorSpace ()) {
-                for (size_type k = 0, l = 0; k < f->outputSize(); ++k) {
-                  if (d.comparison[iq + k] == Equality) {
-                    rhs [l] = d.rightHandSide.vector () [iq + k];
-                    ++l;
-                  }
-                }
-                return true;
-              } else {
-                LiegroupElementRef output (space->elementRef (rhs));
-                pinocchio::LiegroupElementConstRef drhs
-                  (space->elementConstRef
-                   (d.rightHandSide.vector ().segment(iq, nq)));
-                LiegroupElement neutral (space->neutral());
-
-                d.error.head(nv) = drhs - neutral;
-                output.setNeutral();
-                output += d.error.head(nv);
-                return true;
-              }
-            }
-            iq += nq;
-            iv += nv;
-          }
-	}
-        return false;
+        std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp;
+        itp = priority_.find (f);
+        if (itp == priority_.end ()) {
+          return false;
+        }
+        LiegroupSpacePtr_t space (f->outputSpace());
+        size_type nq = space->nq ();
+        size_type nv = space->nv ();
+        std::size_t i = itp->second;
+        Data& d = datas_[i];
+        assert (*d.rightHandSide.space () == *space);
+        assert (rightHandSide.size () == nq);
+        assert (d.error.size () == nv);
+        rightHandSide = d.rightHandSide.vector ();
+        return true;
       }
 
-      void HierarchicalIterative::rightHandSide (vectorIn_t rhs)
+      void HierarchicalIterative::rightHandSide (vectorIn_t rightHandSide)
       {
-        size_type iq = 0;
+        size_type iq = 0, iv = 0;
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           Data& d = datas_[i];
           LiegroupSpacePtr_t space (d.rightHandSide.space());
           size_type nq = space->nq();
+          size_type nv = space->nv();
+          pinocchio::LiegroupElementConstRef output
+            (space->elementConstRef (rightHandSide.segment (iq, nq)));
+          LiegroupElementRef rhs
+            (space->elementRef (d.rightHandSide.vector ().segment(iq, nq)));
 
-          d.error.setZero();
-          d.equalityIndices.lview(d.error) =
-            d.equalityIndices.rview(
-              space->elementConstRef (rhs.segment(iq, nq)) - d.rightHandSide);
-          d.rightHandSide += d.error;
-
+          // d.error is used here as an intermediate storage. The value
+          // computed is not the error
+          d.error = output - space->neutral (); // log (rightHandSide)
+          for (size_type k = 0; k < nv; ++k) {
+            if (d.comparison[iv + k] != Equality)
+              assert (d.error[k] == 0);
+          }
+          rhs = space->neutral () + d.error; // exp (d.error)
           iq += nq;
+          iv += nv;
         }
-        assert (iq == rhs.size());
+        assert (iq == rightHandSide.size());
       }
 
       void HierarchicalIterative::rightHandSideAt (const value_type& s)

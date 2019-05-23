@@ -826,9 +826,10 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
     size_type N (10);
     matrix_t A (randomPositiveDefiniteMatrix((int) N));
     AffineFunctionPtr_t affine (new AffineFunction (A));
-    vector_t b (vector_t::Random(N-4));
+    vector_t b (vector_t::Random(N));
     ComparisonTypes_t comp (N, Equality);
     comp [1] = comp [3] = comp [5] = comp [6] = EqualToZero;
+       b [1] =    b [3] =    b [5] =    b [6] = 0;
 
     BySubstitution solver (LiegroupSpace::Rn (N));
     solver.maxIterations(20);
@@ -837,14 +838,13 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
     ImplicitPtr_t constraint (Implicit::create (affine, comp));
     solver.add (constraint);
     solver.rightHandSide (constraint, b);
-    vector_t b1 (N-4);
+    vector_t b1 (N);
     solver.getRightHandSide (constraint, b1);
     BOOST_CHECK (b == b1);
     // Check resolution
-    vector_t B (N); B << b [0], 0, b [1], 0, b [2], 0, 0, b [3], b [4], b [5];
     vector_t x (vector_t::Random(N));
     solver.solve (x);
-    vector_t error (A * x - B);
+    vector_t error (A * x - b);
     BOOST_CHECK_MESSAGE (error.norm () < test_precision,
         "Error threshold exceeded. Error is " << error.transpose() << ", norm "
         << error.norm() << ". Precision is " << test_precision);
@@ -884,18 +884,18 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   solver.add (c1);
   solver.add (c2);
   //           0
-  //           rhs [0]
-  // f1 (q) =  0
   //           rhs [1]
-  //           0
-  //           rhs [2]
-  //
+  // f1 (q) =  0
   //           rhs [3]
   //           0
-  // f2 (q) =  0
-  //           rhs [4]
   //           rhs [5]
+  //
   //           rhs [6]
+  //           0
+  // f2 (q) =  0
+  //           rhs [9]
+  //           rhs [10]
+  //           rhs [11]
   for (size_type i=0; i<1000; ++i) {
     Configuration_t q (device->configSize ()); q.setRandom ();
     bool success;
@@ -905,7 +905,10 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
     success = solver.rightHandSideFromConfig (c2, q);
     BOOST_CHECK (success);
     // Store right hand side for each constraint
-    vector_t rhs1 (3), rhs1_ (3), rhs2 (4), rhs2_ (4);
+    vector_t rhs1 (6); rhs1.setZero ();
+    vector_t rhs1_ (6); rhs1_.setZero ();
+    vector_t rhs2 (6); rhs2.setZero ();
+    vector_t rhs2_ (6); rhs2_.setZero ();
     success = solver.getRightHandSide (c1, rhs1);
     BOOST_CHECK (success);
     success = solver.getRightHandSide (c2, rhs2);
