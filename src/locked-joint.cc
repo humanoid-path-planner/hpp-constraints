@@ -162,7 +162,7 @@ namespace hpp {
     {
       assert (HPP_DYNAMIC_PTR_CAST (explicit_::ImplicitFunction,
                                     functionPtr ()));
-      assert (rightHandSideSize () == joint->configSize ());
+      assert (rightHandSideSize () == joint->numberDof ());
       assert (*(value.space ()) == *configSpace_);
     }
 
