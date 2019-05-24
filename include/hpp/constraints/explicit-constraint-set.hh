@@ -443,6 +443,8 @@ namespace hpp {
         vector_t rightHandSide () const;
 
         /// Get size of the right hand side
+        ///
+        /// See documentation of classes Implicit and Explicit for details.
         size_type rightHandSideSize () const;
 
         /// \}

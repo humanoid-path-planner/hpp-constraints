@@ -343,9 +343,13 @@ namespace hpp {
       for (std::size_t i = 0; i < data_.size (); ++i) {
         Data& d = data_[i];
 
-        d.equalityIndices.lview(d.rhs_implicit)
-          = rhs.segment(row, d.equalityIndices.nbRows());
-        row += d.equalityIndices.nbRows();
+        d.equalityIndices.lview(d.rhs_implicit) =
+          d.equalityIndices.rview (rhs.segment(row, d.rhs_implicit.size ()));
+        ComparisonTypes_t ct (d.constraint->comparisonType ());
+        for (std::size_t i=0; i < ct.size (); ++i) {
+          assert (ct [i] == Equality || rhs [row + i] == 0);
+        }
+        row += d.rhs_implicit.size ();
         d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
       }
       assert (row == rhs.size());
@@ -369,9 +373,8 @@ namespace hpp {
       for (std::size_t i = 0; i < data_.size (); ++i) {
 	const Data& d = data_[i];
 	if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
-	  rhs = d.equalityIndices.rview(d.rhs_implicit);
+	  rhs = d.rhs_implicit;
 	  // d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
-	  
 	  return true;
 	}
       }
@@ -384,7 +387,12 @@ namespace hpp {
     {
       assert (i < (size_type) data_.size());
       Data& d = data_[i];
-      d.equalityIndices.lview(d.rhs_implicit) = rhs;
+      d.equalityIndices.lview (d.rhs_implicit) =
+        d.equalityIndices.rview (rhs);
+      ComparisonTypes_t ct (d.constraint->comparisonType ());
+      for (std::size_t i=0; i < ct.size (); ++i) {
+        assert (ct [i] == Equality || rhs [i] == 0);
+      }
       d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
     }
 
@@ -394,9 +402,9 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < data_.size (); ++i) {
         const Data& d = data_[i];
-        const size_type nRows = d.equalityIndices.nbRows();
+        const size_type nRows = d.rhs_implicit.size ();
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        seg = d.equalityIndices.rview(d.rhs_implicit);
+        seg = d.rhs_implicit;
         row += nRows;
       }
       assert (row == rhs.size());
@@ -407,7 +415,7 @@ namespace hpp {
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < data_.size (); ++i)
-        rhsSize += data_[i].equalityIndices.nbRows();
+        rhsSize += data_[i].rhs_implicit.size ();
       return rhsSize;
     }
 
