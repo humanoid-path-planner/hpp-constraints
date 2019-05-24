@@ -60,16 +60,16 @@ BOOST_AUTO_TEST_CASE(block_index)
 
   segments_t v, w, expected_v, expected_w;
 
-  v = list_of(a)(f);
+  v = list_of(a)(f).convert_to_container<segments_t>();
   BOOST_CHECK_EQUAL(BlockIndex::difference (v, b), v);
 
-  v = list_of(segment_t(0,5))(segment_t(7,9));
+  v = list_of(segment_t(0,5))(segment_t(7,9)).convert_to_container<segments_t>();
   v = BlockIndex::difference (v, segment_t (0,4));
-  expected_v = list_of(segment_t(4,1))(segment_t(7,9));
+  expected_v = list_of(segment_t(4,1))(segment_t(7,9)).convert_to_container<segments_t>();
   BOOST_CHECK_EQUAL(v, expected_v);
 
-  v = list_of (b)(a)(c);
-  expected_v = list_of(segment_t(0,3));
+  v = list_of (b)(a)(c).convert_to_container<segments_t>();
+  expected_v = list_of(segment_t(0,3)).convert_to_container<segments_t>();
   BlockIndex::sort(v);
   BlockIndex::shrink(v);
   BOOST_CHECK_EQUAL(v.size(), 1);
@@ -92,129 +92,129 @@ BOOST_AUTO_TEST_CASE(block_index)
   BlockIndex::add (w, v);
 
   // v = 0 1 2 3 [4 5 6] 7 8 [9 10] 11 12 13 14 [15 16 17 18 19] 20 ...
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (5,2))(f)(g);
-  expected_w = list_of (segment_t (4, 1));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (5,2))(f)(g).convert_to_container<segments_t>();
+  expected_w = list_of (segment_t (4, 1)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 1);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
   v.clear ();
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (6,1))(f)(g);
-  expected_w = list_of (segment_t (4, 2));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (6,1))(f)(g).convert_to_container<segments_t>();
+  expected_w = list_of (segment_t (4, 2)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 2);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (f)(g);
-  expected_w = list_of (e);
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (f)(g).convert_to_container<segments_t>();
+  expected_w = list_of (e).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 3);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (10,1))(g);
-  expected_w = list_of (e)(segment_t (9,1));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (10,1))(g).convert_to_container<segments_t>();
+  expected_w = list_of (e)(segment_t (9,1)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 4);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (g);
-  expected_w = list_of (e)(f);
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (g).convert_to_container<segments_t>();
+  expected_w = list_of (e)(f).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 5);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (16, 4));
-  expected_w = list_of (e)(f)(segment_t (15, 1));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (16, 4)).convert_to_container<segments_t>();
+  expected_w = list_of (e)(f)(segment_t (15, 1)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 6);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (17, 3));
-  expected_w = list_of (e)(f)(segment_t (15, 2));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (17, 3)).convert_to_container<segments_t>();
+  expected_w = list_of (e)(f)(segment_t (15, 2)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 7);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (18, 2));
-  expected_w = list_of (e)(f)(segment_t (15, 3));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (18, 2)).convert_to_container<segments_t>();
+  expected_w = list_of (e)(f)(segment_t (15, 3)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 8);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
-  expected_v = list_of (segment_t (19, 1));
-  expected_w = list_of (e)(f)(segment_t (15, 4));
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
+  expected_v = list_of (segment_t (19, 1)).convert_to_container<segments_t>();
+  expected_w = list_of (e)(f)(segment_t (15, 4)).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 9);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
-  v = list_of (e)(f)(g);
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
   expected_v.clear ();
-  expected_w = list_of (e)(f)(g);
+  expected_w = list_of (e)(f)(g).convert_to_container<segments_t>();
   w = BlockIndex::split (v, 10);
   BOOST_CHECK (v == expected_v);
   BOOST_CHECK (w == expected_w);
 
   // v = 0 1 2 3 [4 5 6] 7 8 [9 10] 11 12 13 14 [15 16 17 18 19] 20 ...
-  v = list_of (e)(f)(g);
+  v = list_of (e)(f)(g).convert_to_container<segments_t>();
 
-  expected_w = list_of (segment_t (4, 1));
+  expected_w = list_of (segment_t (4, 1)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 1);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (segment_t (4, 2));
+  expected_w = list_of (segment_t (4, 2)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 2);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (e);
+  expected_w = list_of (e).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 3);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (e)(segment_t (9, 1));
+  expected_w = list_of (e)(segment_t (9, 1)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 4);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (e)(f);
+  expected_w = list_of (e)(f).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 5);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (e)(f)(segment_t (15, 1));
+  expected_w = list_of (e)(f)(segment_t (15, 1)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 6);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (e)(f)(segment_t (15, 2));
+  expected_w = list_of (e)(f)(segment_t (15, 2)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 0, 7);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (segment_t (5, 2))(f)(segment_t (15, 3));
+  expected_w = list_of (segment_t (5, 2))(f)(segment_t (15, 3)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 1, 7);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (segment_t (6, 1))(f)(segment_t (15, 4));
+  expected_w = list_of (segment_t (6, 1))(f)(segment_t (15, 4)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 2, 7);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (f)(g);
+  expected_w = list_of (f)(g).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 3, 7);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (f)(segment_t (15, 4));
+  expected_w = list_of (f)(segment_t (15, 4)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 3, 6);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (segment_t (10, 1))(segment_t (15, 4));
+  expected_w = list_of (segment_t (10, 1))(segment_t (15, 4)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 4, 5);
   BOOST_CHECK (w == expected_w);
 
-  expected_w = list_of (segment_t (10, 1))(segment_t (15, 3));
+  expected_w = list_of (segment_t (10, 1))(segment_t (15, 3)).convert_to_container<segments_t>();
   w = BlockIndex::extract (v, 4, 4);
   BOOST_CHECK (w == expected_w);
 }
