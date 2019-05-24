@@ -376,15 +376,15 @@ namespace hpp {
                     d.rightHandSide.vector ().segment(iq, nq)));
 
         f->value (output, config);
-        assert (d.error.size () == nv);
+        assert (d.error.size () >= nv);
         // d.error is used here as an intermediate storage. The value
         // computed is not exactly the error
-        d.error = output - rhs;
+        d.error.head (nv) = output - rhs;
         for (size_type k = 0; k < nv; ++k) {
           if (d.comparison[iv + k] != Equality)
             d.error[k] = 0;
         }
-        rhs += d.error;
+        rhs += d.error.head (nv);
         return true;
       }
 
@@ -403,19 +403,19 @@ namespace hpp {
         size_type nv = space->nv ();
         std::size_t i = priority_ [f];
         Data& d = datas_[i];
-        assert (d.error.size () == nv);
+        assert (d.error.size () <= nv);
         pinocchio::LiegroupElementConstRef output
           (space->elementConstRef (rightHandSide));
         LiegroupElementRef rhs (space->elementRef
                                 (d.rightHandSide.vector ().segment(iq, nq)));
         // d.error is used here as an intermediate storage. The value
         // computed is not the error
-        d.error = output - space->neutral (); // log (rightHandSide)
+        d.error.head (nv) = output - space->neutral (); // log (rightHandSide)
         for (size_type k = 0; k < nv; ++k) {
           if (d.comparison[iv + k] != Equality)
             assert (d.error[k] == 0);
         }
-        rhs = space->neutral () + d.error; // exp (d.error)
+        rhs = space->neutral () + d.error.head (nv); // exp (d.error)
         return true;
       }
 
@@ -435,7 +435,6 @@ namespace hpp {
         Data& d = datas_[i];
         assert (*d.rightHandSide.space () == *space);
         assert (rightHandSide.size () == nq);
-        assert (d.error.size () == nv);
         rightHandSide = d.rightHandSide.vector ();
         return true;
       }
