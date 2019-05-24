@@ -36,6 +36,11 @@ namespace hpp {
           return ret;
         }
 
+        // This function computes the configuration variables of
+        //   - joint1 and its parents up to the root joint,
+        //   - joint2 parent and its parent up to root joint.
+        // Note that configuration variables of joint2 do not belong to
+        // the resulting set.
         BlockIndex::segments_t inputConfVariables
         (const DevicePtr_t& robot, JointConstPtr_t joint1,
          JointConstPtr_t joint2)
@@ -61,6 +66,11 @@ namespace hpp {
           return vectorOfBoolToIntervals (conf);
         }
 
+        // This function computes the velocity variables of
+        //   - joint1 and its parents up to the root joint,
+        //   - joint2 parent and its parent up to root joint.
+        // Note that velocity variables of joint2 do not belong to
+        // the resulting set.
         BlockIndex::segments_t inputVelocityVariables
         (const DevicePtr_t& robot, JointConstPtr_t joint1,
          JointConstPtr_t joint2)
@@ -86,11 +96,13 @@ namespace hpp {
           return vectorOfBoolToIntervals (vel);
         }
 
+        // Return configuration variables of a joint
         BlockIndex::segments_t jointConfInterval (JointConstPtr_t j) {
           return BlockIndex::segments_t(1, BlockIndex::segment_t
                                         (j->rankInConfiguration(),
                                          j->configSize()));
         }
+        // Return velocity variables of a joint
         BlockIndex::segments_t jointVelInterval (JointConstPtr_t j) {
           return BlockIndex::segments_t(1, BlockIndex::segment_t
                                         (j->rankInVelocity(), j->numberDof()));
@@ -166,6 +178,10 @@ namespace hpp {
                                 mask, comp, rhs),
         frame1_ (frame1), frame2_ (frame2)
         {
+          assert ((*joint2->configurationSpace () ==
+                   *pinocchio::LiegroupSpace::SE3 ()) ||
+                  (*joint2->configurationSpace () ==
+                   *pinocchio::LiegroupSpace::R3xSO3 ()));
         }
 
       RelativePose::RelativePose (const RelativePose& other) :
