@@ -856,7 +856,8 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   // Create a kinematic chain
   DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
       hpp::pinocchio::unittest::HumanoidSimple);
-  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+  JointPtr_t root = device->rootJoint (),
+             ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
 
@@ -874,7 +875,7 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   u << 1.2, 0, -1;
   tf2.translation (u);
   ImplicitPtr_t c2 (hpp::constraints::explicit_::RelativePose::create
-                    ("Transformation", device, JointPtr_t (), ee1, tf2, tf1,
+                    ("Transformation", device, JointPtr_t (), root, tf2, tf1,
                      std::vector <bool> (6, true), comp2));
 
   BySubstitution solver (device->configSpace ());
