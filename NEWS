@@ -1,4 +1,5 @@
                                                                 -*- outline -*-
+New in 4.6.0
 * class Implicit has been improved.
   - It does not handle right hand side anymore: methods setting and getting
     right hand side have been made deprecated.
@@ -9,7 +10,6 @@
   - The documentation has been made more accurate.
 
 New in 4.5.0
-
 * Move ExplicitRelativeTransformation from hpp-core and refactor
   - explicit_::RelativePose now derive from Explicit and from
     implicit::RelativePose,
