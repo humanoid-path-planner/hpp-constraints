@@ -8,6 +8,8 @@ New in 4.6.0
   - The function of the constraint may now have output in a Lie group other
     than a vector space.
   - The documentation has been made more accurate.
+* Accessor to right hand side by constraint have been fixed
+  - in HierarchicalIterative.
 
 New in 4.5.0
 * Move ExplicitRelativeTransformation from hpp-core and refactor
