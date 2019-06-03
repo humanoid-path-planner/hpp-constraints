@@ -36,9 +36,9 @@ namespace hpp {
         \f$\mathcal{C}\f$ and output in a Lie group \f$\mathbf{L}\f$,
         \li the dimensions of \f$\mathbf{L}\f$ and of its tangent space are
         respectively \f$(n_q,n_v)\f$.
-        \li The comparison is represented by a vector \f$c\f$ of dimension
-        \f$n_v\f$
-        with values in enum hpp::contraints::ComparisonType = {
+        \li The comparison is represented by a vector \f$\mathbf{c}\f$ of
+        dimension \f$n_v\f$ with values in
+        enum hpp::contraints::ComparisonType = {
         \f$\mathbf{Equality}\f$, \f$\mathbf{EqualToZero}\f$,
         \f$\mathbf{Inferior}\f$, \f$\mathbf{Superior}\f$ }.
         \li The right hand side is a vector of dimension \f$n_q\f$.
@@ -51,7 +51,7 @@ namespace hpp {
 
         Let
         \f[
-        \Delta = f (\mathbf{q}) - rhs \in \mathbf{R}^{n_v},
+        \Delta = h (\mathbf{q}) - rhs \in \mathbf{R}^{n_v},
         \f]
         for each component \f$i\in\{0,\cdots,n_v-1\}\f$,
         \li if \f$c_i\f$ is \f$\mathbf{Inferior}\f$,
@@ -68,12 +68,12 @@ namespace hpp {
         \textbf{Superior}, or \textbf{EqualToZero} do not.
         As a consequence, the right hand side of the constraint is defined by
         a vector \f$\lambda\f$ of parameters of size the number of
-        \textbf{Equality} occurences in vector \f$c\f$. The right hand side is
-        then defined as in the following example:
+        \textbf{Equality} occurences in vector \f$\mathbf{c}\f$. The right hand
+        side is then defined as in the following example:
         \f[
         rhs = \exp\left(\begin{array}{c}\lambda_1 \\ 0 \\ 0 \\ \lambda_2 \\
         \vdots \end{array}\right)
-         \ \ \ \ c = \left(\begin{array}{c}\mathbf{Equality} \\
+         \ \ \ \ \mathbf{c} = \left(\begin{array}{c}\mathbf{Equality} \\
         \mathbf{EqualToZero} \\ \mathbf{Inferior} \\ \mathbf{Equality} \\
         \vdots \end{array}\right)
         \f]
