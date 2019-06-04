@@ -46,6 +46,11 @@ namespace hpp {
       return rhs_;
     }
 
+    vectorOut_t Implicit::rightHandSide ()
+    {
+      return rhs_;
+    }
+
     vectorOut_t Implicit::nonConstRightHandSide ()
     {
       return rhs_;

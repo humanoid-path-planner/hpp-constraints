@@ -174,6 +174,8 @@ namespace hpp {
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated In future versions, right hand side will not be a member
         ///             of the class anymore.
+        vectorOut_t rightHandSide ();
+
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated use rightHandSide instead.
         vectorOut_t nonConstRightHandSide () HPP_CONSTRAINTS_DEPRECATED;
