@@ -78,7 +78,20 @@ namespace hpp {
         \vdots \end{array}\right)
         \f]
         To retrieve the size of vector \f$\lambda\f$, call method
-        Implicit::parameterSize ().
+        Implicit::parameterSize (). To set and get the right hand side value,
+        use method Implicit::rightHandSide.
+
+        \par Time varying right hand side
+
+        The right hand side of the constraint may depend on time, for instance
+        if the constraint is associated to a trajectory following task.
+        In this case, the right hand side is a function from \f$\mathbf{R}\f$
+        to \f$\mathbf{L}\f$.
+
+        To set or get a time varying right hand side, use methods
+        Implicit::rightHandSideFunction, Implicit::rightHandSideFromConfig.
+        To get the value of the right hand
+        side for a given time, use method Implicit::rightHandSideAt.
     */
     class HPP_CONSTRAINTS_DLLAPI Implicit {
       public:
@@ -163,31 +176,45 @@ namespace hpp {
 	/// Set the comparison type
 	void comparisonType (const ComparisonTypes_t& comp);
 
+        /// Whether right hand side is constant
+        /// \deprecated use (parameterSize () == 0) instead
         bool constantRightHandSide () const;
 
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated In future versions, right hand side will not be a member
         ///             of the class anymore.
+        /// Return a modifiable reference to right hand side of equation.
+        /// \deprecated use rightHandSide instead.
         vectorOut_t nonConstRightHandSide () HPP_CONSTRAINTS_DEPRECATED;
 
+        /// Set time-varying right hand side
+        /// \param rhsF Mapping from \f$\mathbf{R}\f$ to output space
+        /// \f$\mathbf{L}\f$ of \f$h\f$ defining the variation along time
+        /// of the right hand side.
         void rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF);
 
+        /// Get time-varying right hand side
+        /// \return the mapping from \f$\mathbf{R}\f$ to output space
+        /// \f$\mathbf{L}\f$ of \f$h\f$ defining the variation along time
+        /// of the right hand side.
         const DifferentiableFunctionPtr_t& rightHandSideFunction () const
         {
           return rhsFunction_;
         }
 
+        /// Evaluate and set right hand side at given time
+        /// \param s time
         vectorIn_t rightHandSideAt (const value_type& s);
 
         /// \}
 
-        /// Return a reference to function \f$f\f$.
+        /// Return a reference to function \f$h\f$.
         DifferentiableFunction& function () const
         {
           return *function_;
         }
 
-        /// Return a reference to the inner function.
+        /// Return a reference to function \f$h\f$.
         const DifferentiableFunctionPtr_t& functionPtr () const
         {
           return function_;
@@ -216,12 +243,18 @@ namespace hpp {
       protected:
         /// Constructor
         /// \param function the differentiable function
+        /// \param comp vector of comparison \f$\mathbf{c}\f$.
+        /// \precond size of comp should be equal to size of tangent space to
+        ///          function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
             ComparisonTypes_t comp);
 
         /// Constructor
-        /// \param function the differentiable function
-        /// \param rhs the right hand side of this equation
+        /// \param function the differentiable function,
+        /// \param comp vector of comparison \f$\mathbf{c}\f$,
+        /// \param rhs the right hand side of the equation.
+        /// \precond size of comp and size of rhs should be equal to size of
+        ///          tangent space to function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
             ComparisonTypes_t comp, vectorIn_t rhs);
 
