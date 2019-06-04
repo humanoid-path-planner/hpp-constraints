@@ -136,23 +136,14 @@ namespace hpp {
         /// \link Equality "equality constraints" \endlink are set. As a
         /// result, the input configuration may not satisfy the other
         /// constraints.
-        ///
-        /// \deprecated In future versions, right hand side will not be a member
-        ///             of the class anymore.
-        void rightHandSideFromConfig (ConfigurationIn_t config) HPP_CONSTRAINTS_DEPRECATED;
+        void rightHandSideFromConfig (ConfigurationIn_t config);
 
         /// Set the right hand side of the equation.
         /// \param rhs the right hand side.
-        ///
-        /// \deprecated In future versions, right hand side will not be a member
-        ///             of the class anymore.
-        void rightHandSide (vectorIn_t rhs) HPP_CONSTRAINTS_DEPRECATED;
+        void rightHandSide (vectorIn_t rhs);
 
         /// Return the right hand side of the equation.
-        ///
-        /// \deprecated In future versions, right hand side will not be a member
-        ///             of the class anymore.
-        vectorIn_t rightHandSide () const HPP_CONSTRAINTS_DEPRECATED;
+        vectorIn_t rightHandSide () const;
 
         /// Return the dimension of the left hand side function tangent output
         /// space
