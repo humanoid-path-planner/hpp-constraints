@@ -112,20 +112,6 @@ namespace hpp {
       return configSpace_;
     }
 
-    bool LockedJoint::isSatisfied (ConfigurationIn_t config)
-    {
-      vector_t error;
-      return isSatisfied (config, error);
-    }
-
-    bool LockedJoint::isSatisfied (ConfigurationIn_t config, vector_t& error)
-    {
-      LiegroupElement q (config.segment (rankInConfiguration(), configSize ()),
-                         configSpace_);
-      error = q - (configSpace_->exp (rightHandSide ()));
-      return error.isApprox (vector_t::Zero (joint_->numberDof ()));
-    }
-
     void LockedJoint::rightHandSideFromConfig (ConfigurationIn_t config)
     {
       Implicit::rightHandSideFromConfig (config);
