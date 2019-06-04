@@ -128,11 +128,16 @@ namespace hpp {
 
     void LockedJoint::rightHandSideFromConfig (ConfigurationIn_t config)
     {
-      if (!constantRightHandSide ()) {
+      Implicit::rightHandSideFromConfig (config);
+#ifndef NDEBUG
+      vector_t rhs (rightHandSide ());
+      if (parameterSize () != 0) {
         LiegroupElement q (config.segment (rankInConfiguration(), configSize ()),
                            configSpace_);
         rightHandSide (q - configSpace_->neutral ());
       }
+      assert (rhs == rightHandSide ());
+#endif
     }
 
     LockedJoint::LockedJoint (const JointPtr_t& joint,
