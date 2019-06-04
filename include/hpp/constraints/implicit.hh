@@ -169,7 +169,7 @@ namespace hpp {
 
         /// Whether right hand side is constant
         /// \deprecated use (parameterSize () == 0) instead
-        bool constantRightHandSide () const;
+        bool constantRightHandSide () const HPP_CONSTRAINTS_DEPRECATED;
 
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated In future versions, right hand side will not be a member

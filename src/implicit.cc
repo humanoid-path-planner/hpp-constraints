@@ -96,8 +96,11 @@ namespace hpp {
     bool Implicit::constantRightHandSide () const
     {
       for (std::size_t i = 0; i < comparison_.size(); ++i)
-        if (comparison_[i] == constraints::Equality)
+        if (comparison_[i] == constraints::Equality) {
+          assert (parameterSize_ != 0);
           return false;
+        }
+      assert (parameterSize_ == 0);
       return true;
     }
 
