@@ -429,12 +429,10 @@ namespace hpp {
           return false;
         }
         LiegroupSpacePtr_t space (f->outputSpace());
-        size_type nq = space->nq ();
-        size_type nv = space->nv ();
         std::size_t i = itp->second;
         Data& d = datas_[i];
         assert (*d.rightHandSide.space () == *space);
-        assert (rightHandSide.size () == nq);
+        assert (rightHandSide.size () == space->nq ());
         rightHandSide = d.rightHandSide.vector ();
         return true;
       }
@@ -471,7 +469,7 @@ namespace hpp {
         for (std::size_t i = 0; i < constraints_.size (); ++i) {
           ImplicitPtr_t implicit = constraints_[i];
           // If constraint has no right hand side function set, do nothing
-          if ((!implicit->constantRightHandSide()) &&
+          if ((implicit->parameterSize () != 0) &&
               (implicit->rightHandSideFunction ())) {
             rightHandSide (implicit, implicit->rightHandSideAt (s));
           }

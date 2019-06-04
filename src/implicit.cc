@@ -211,7 +211,6 @@ namespace hpp {
       return createCopy (weak_.lock ());
     }
 
-    // deprecated
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config)
     {
       if (parameterSize () > 0) {
