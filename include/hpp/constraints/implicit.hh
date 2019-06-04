@@ -249,7 +249,7 @@ namespace hpp {
       private:
         ComparisonTypes_t comparison_;
         vector_t rhs_;
-        size_type rhsRealSize_;
+        size_type parameterSize_;
         DifferentiableFunctionPtr_t function_;
         DifferentiableFunctionPtr_t rhsFunction_;
 	ImplicitWkPtr_t weak_;

@@ -19,7 +19,7 @@
 
 namespace hpp {
   namespace constraints {
-    size_type computeRightHandSideSize (const ComparisonTypes_t& comp)
+    size_type computeParameterSize (const ComparisonTypes_t& comp)
     {
       size_type size = 0;
       for (std::size_t i = 0; i < comp.size(); ++i) {
@@ -86,7 +86,7 @@ namespace hpp {
 
     size_type Implicit::parameterSize () const
     {
-      return rhsRealSize_;
+      return parameterSize_;
     }
 
     size_type Implicit::rightHandSideSize () const
@@ -112,47 +112,39 @@ namespace hpp {
     void Implicit::comparisonType (const ComparisonTypes_t& comp)
     {
       comparison_ = comp;
-      if (constantRightHandSide())
-        rhs_ = vector_t ();
-      else
-        rhs_ = vector_t::Zero (rhsRealSize_);
-      rhsRealSize_ = computeRightHandSideSize (comparison_);
+      parameterSize_ = computeParameterSize (comparison_);
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
                         ComparisonTypes_t comp) :
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
-      rhsRealSize_ (computeRightHandSideSize (comparison_)),
-      function_ (function),
+      parameterSize_ (computeParameterSize (comparison_)),
+      function_ (function)
     {
       if (comp.size () == 0) {
         // Argument was probably not provided, set to Equality
         comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
                                          Equality);
       }
-      if (constantRightHandSide ())
-        rhs_ = vector_t ();
       assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
                         ComparisonTypes_t comp, vectorIn_t rhs) :
-      comparison_ (comp), rhs_ (rhs), rhsRealSize_ (rhs.size()),
-      value_ (function->outputSize ()),
       comparison_ (comp), rhs_ (rhs), function_ (function)
     {
+      if (rhs_.size () == 0) {
+        rhs_ = vector_t::Zero (function->outputSize ());
+      }
       if (comp.size () == 0) {
         // Argument was probably not provided, set to Equality
         comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
                                          Equality);
       }
-      if (rhs.size () == 0) {
-        rhs_.resize (function->outputSize ());
-      }
-      if (constantRightHandSide ())
-        rhs_ = vector_t ();
-      rhsRealSize_ = computeRightHandSideSize (comparison_);
-      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
+      parameterSize_ = computeParameterSize (comparison_);
+      assert (function_->outputDerivativeSize () ==
+              (size_type)comparison_.size ());
+      assert (function->outputDerivativeSize () == (size_type) rhs_.size ());
     }
 
     Implicit::Implicit (const Implicit& other):
