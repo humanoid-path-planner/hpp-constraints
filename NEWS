@@ -1,4 +1,8 @@
                                                                 -*- outline -*-
+* class Implicit has been cleaned up
+  - methods setting and getting the right hand side are not deprecated anymore,
+  - deprecated methods have been remove
+
 New in 4.6.0
 * class Implicit has been improved.
   - It does not handle right hand side anymore: methods setting and getting
