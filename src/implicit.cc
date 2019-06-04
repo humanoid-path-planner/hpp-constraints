@@ -124,9 +124,6 @@ namespace hpp {
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
       rhsRealSize_ (computeRightHandSideSize (comparison_)),
       function_ (function),
-      value_ (function->outputSize ()),
-      jacobian_ (function->outputDerivativeSize (),
-                 function->inputDerivativeSize ())
     {
       if (comp.size () == 0) {
         // Argument was probably not provided, set to Equality
@@ -141,9 +138,8 @@ namespace hpp {
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
                         ComparisonTypes_t comp, vectorIn_t rhs) :
       comparison_ (comp), rhs_ (rhs), rhsRealSize_ (rhs.size()),
-      function_ (function), value_ (function->outputSize ()),
-      jacobian_ (matrix_t (function->outputSize (),
-                           function->inputDerivativeSize ()))
+      value_ (function->outputSize ()),
+      comparison_ (comp), rhs_ (rhs), function_ (function)
     {
       if (comp.size () == 0) {
         // Argument was probably not provided, set to Equality
@@ -161,9 +157,8 @@ namespace hpp {
 
     Implicit::Implicit (const Implicit& other):
       comparison_ (other.comparison_), rhs_ (other.rhs_),
-      rhsRealSize_ (other.rhsRealSize_), function_ (other.function_),
-      rhsFunction_ (other.rhsFunction_),
-      value_ (other.value_), jacobian_ (other.jacobian_)
+      parameterSize_ (other.parameterSize_), function_ (other.function_),
+      rhsFunction_ (other.rhsFunction_)
     {
     }
 

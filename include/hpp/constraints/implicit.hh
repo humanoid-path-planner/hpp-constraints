@@ -213,26 +213,6 @@ namespace hpp {
           return function_;
         }
 
-        /// Return a reference to the value.
-        /// This vector can be used to store the output of the function,
-        /// its size being initialized.
-        /// \deprecated In future versions, the value will not be a member of
-        ///             the class anymore.
-        vector_t& value () HPP_CONSTRAINTS_DEPRECATED
-        {
-          return value_;
-        }
-
-        /// Return a reference to the jacobian.
-        /// This matrix can be used to store the derivative of the function,
-        /// its size being initialized.
-        /// \deprecated In future versions, the Jacobian will not be a member of
-        ///             the class anymore.
-        matrix_t& jacobian () HPP_CONSTRAINTS_DEPRECATED
-        {
-          return jacobian_;
-        }
-
       protected:
         /// Constructor
         /// \param function the differentiable function
@@ -272,8 +252,6 @@ namespace hpp {
         size_type rhsRealSize_;
         DifferentiableFunctionPtr_t function_;
         DifferentiableFunctionPtr_t rhsFunction_;
-        vector_t value_;
-        matrix_t jacobian_;
 	ImplicitWkPtr_t weak_;
     }; // class Implicit
     /// \}
