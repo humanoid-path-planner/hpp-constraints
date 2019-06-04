@@ -90,7 +90,7 @@ namespace hpp {
       void value (vectorIn_t value);
 
       /// Set the value of the locked joint from a configuration.
-      void rightHandSideFromConfig (ConfigurationIn_t config) HPP_CONSTRAINTS_DEPRECATED;
+      void rightHandSideFromConfig (ConfigurationIn_t config);
 
       /// Check whether a configuration statisfies the constraint.
       bool isSatisfied (ConfigurationIn_t config) HPP_CONSTRAINTS_DEPRECATED;
