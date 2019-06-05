@@ -403,7 +403,7 @@ namespace hpp {
         size_type nv = space->nv ();
         std::size_t i = priority_ [f];
         Data& d = datas_[i];
-        assert (d.error.size () <= nv);
+        assert (d.error.size () >= nv);
         pinocchio::LiegroupElementConstRef output
           (space->elementConstRef (rightHandSide));
         LiegroupElementRef rhs (space->elementRef
