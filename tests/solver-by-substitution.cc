@@ -71,7 +71,6 @@ using hpp::constraints::Configuration_t;
 using hpp::constraints::Orientation;
 using hpp::constraints::ComparisonTypes_t;
 using hpp::constraints::EqualToZero;
-using hpp::constraints::EqualToZero;
 using hpp::constraints::Equality;
 using hpp::constraints::solver::lineSearch::Backtracking;
 using hpp::constraints::solver::lineSearch::ErrorNormBased;
@@ -605,6 +604,7 @@ BOOST_AUTO_TEST_CASE(functions2)
                        AffineFunctionPtr_t (new AffineFunction (Jg)),
                        inArg.indices (), outArg.indices (),
                        inDer.indices (), outArg.indices ()));
+  ImplicitPtr_t c1 (expl);
   solver.add (expl);
   BOOST_CHECK_EQUAL(solver.dimension(), 2);
 
@@ -614,7 +614,11 @@ BOOST_AUTO_TEST_CASE(functions2)
   /// q2 = g(q3)
   // This function should not be removed from the system.
   Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
-  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jh))));
+  ImplicitPtr_t impl
+    (Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jh))));
+  ImplicitPtr_t c2 (impl);
+  c2->comparisonType (ComparisonTypes_t (1, Equality));
+  solver.add(impl);
   BOOST_CHECK_EQUAL(solver.dimension(), 3);
 
   // We add to the system q3 = C
@@ -625,7 +629,8 @@ BOOST_AUTO_TEST_CASE(functions2)
     (LiegroupSpace::R3 (),
      AffineFunctionPtr_t (new AffineFunction (matrix_t (1, 0), C)),
      segments_t(), out, segments_t(), out);
-
+  ImplicitPtr_t c3 (expl);
+  c3->comparisonType (ComparisonTypes_t (1, Equality));
   solver.add (expl);
 
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
@@ -633,6 +638,26 @@ BOOST_AUTO_TEST_CASE(functions2)
 
   segments_t impDof = list_of(segment_t(0,1));
   BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
+  // test right hand side access by functions.
+  vector_t rhs1 (vector_t::Zero (c1->rightHandSideSize ()));
+  vector_t rhs2 (vector_t::Random (c2->rightHandSideSize ()));
+  vector_t rhs3 (vector_t::Random (c3->rightHandSideSize ()));
+
+  BOOST_CHECK (solver.rightHandSide (c1, rhs1));
+  BOOST_CHECK (solver.rightHandSide (c2, rhs2));
+  BOOST_CHECK (solver.rightHandSide (c3, rhs3));
+
+  vector_t tmp1 (c1->rightHandSideSize ()); tmp1.fill (sqrt (-1));
+  vector_t tmp2 (c2->rightHandSideSize ()); tmp2.fill (sqrt (-1));
+  vector_t tmp3 (c3->rightHandSideSize ()); tmp3.fill (sqrt (-1));
+
+  BOOST_CHECK (solver.getRightHandSide (c1, tmp1));
+  BOOST_CHECK (solver.getRightHandSide (c2, tmp2));
+  BOOST_CHECK (solver.getRightHandSide (c3, tmp3));
+
+  BOOST_CHECK (tmp1 == rhs1);
+  BOOST_CHECK (tmp2 == rhs2);
+  BOOST_CHECK (tmp3 == rhs3);
 }
 
 BOOST_AUTO_TEST_CASE(hybrid_solver)

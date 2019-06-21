@@ -1,10 +1,12 @@
                                                                 -*- outline -*-
-* class Implicit has been cleaned up
+* Class HierarchicalIterative
+  - a bug in right hand side getter by constraint has been fixed.
+* Class Implicit has been cleaned up
   - methods setting and getting the right hand side are not deprecated anymore,
-  - deprecated methods have been remove
+  - deprecated methods have been remove.
 
 New in 4.6.0
-* class Implicit has been improved.
+* Class Implicit has been improved.
   - It does not handle right hand side anymore: methods setting and getting
     right hand side have been made deprecated.
   - It does not store value and Jacobian anymore: setters and getters have been

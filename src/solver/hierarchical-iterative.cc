@@ -428,12 +428,18 @@ namespace hpp {
         if (itp == priority_.end ()) {
           return false;
         }
+        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIq;
+        itIq = iq_.find (f);
+        if (itIq == iq_.end ()) {
+          return false;
+        }
         LiegroupSpacePtr_t space (f->outputSpace());
         std::size_t i = itp->second;
+        size_type iq = itIq->second;
         Data& d = datas_[i];
-        assert (*d.rightHandSide.space () == *space);
         assert (rightHandSide.size () == space->nq ());
-        rightHandSide = d.rightHandSide.vector ();
+        assert (d.rightHandSide.space ()->nq () >= iq + space->nq ());
+        rightHandSide = d.rightHandSide.vector ().segment (iq, space->nq ());
         return true;
       }
 
