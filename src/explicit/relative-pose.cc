@@ -149,8 +149,8 @@ namespace hpp {
         // convert p1 to Transform3f M1
         Transform3f M1 ((Quaternion_t (p1.vector ().tail <4> ()))
                         .toRotationMatrix (), p1.vector ().head <3> ());
-        // M2 = F_{2/J_2} M1 F_{2/J_2}
-        Transform3f M2 (frame2_ * M2 * frame2_.inverse ());
+        // M2 = F_{2/J_2} M1 F_{2/J_2}^{-1}
+        Transform3f M2 (frame2_ * M1 * frame2_.inverse ());
         // convert M2 to LiegroupElement p2
         vector7_t v2;
         v2.head <3> () = M2.translation ();
