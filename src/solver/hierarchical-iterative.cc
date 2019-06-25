@@ -722,12 +722,11 @@ namespace hpp {
           //  P_1 = P_0 * K_1
           matrix_t* projector = NULL;
           for (std::size_t i = 0; i < stacks_.size (); ++i) {
-            const DifferentiableFunction& f = stacks_[i].function ();
             Data& d = datas_[i];
 
             // TODO: handle case where this is the first element of the stack and it
             // has no functions
-            if (f.outputSize () == 0) continue;
+            if (d.reducedJ.rows() == 0) continue;
             /// projector is of size numberDof
             bool first = (i == 0);
             bool last = (i == stacks_.size() - 1);
@@ -742,11 +741,16 @@ namespace hpp {
               err = d.activeRowsOfJ.keepRows().rview(- d.error);
               err.noalias() -= d.reducedJ * dqSmall_;
 
-              assert(projector != NULL);
-              d.svd.compute (d.reducedJ * *projector);
+              if (projector == NULL) {
+                d.svd.compute (d.reducedJ);
+                // TODO Eigen::JacobiSVD does a dynamic allocation here.
+                dqSmall_ += d.svd.solve (err);
+              } else {
+                d.svd.compute (d.reducedJ * *projector);
+                // TODO Eigen::JacobiSVD does a dynamic allocation here.
+                dqSmall_ += *projector * d.svd.solve (err);
+              }
               HPP_DEBUG_SVDCHECK (d.svd);
-              // TODO Eigen::JacobiSVD does a dynamic allocation here.
-              dqSmall_ += *projector * d.svd.solve (err);
             }
             // Update sigma
             const size_type rank = d.svd.rank();
