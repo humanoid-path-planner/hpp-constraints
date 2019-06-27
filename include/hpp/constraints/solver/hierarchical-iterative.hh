@@ -401,6 +401,12 @@ namespace hpp {
           return stacks_[priority];
         }
 
+        /// Get constraints (implicit and explicit)
+        const NumericalConstraints_t& constraints () const
+        {
+          return constraints_;
+        }
+
         std::size_t numberStacks() const
         {
           return stacks_.size();
@@ -434,6 +440,16 @@ namespace hpp {
 
         /// Returns the error vector
         void residualError(vectorOut_t error) const;
+
+        /// Inclusion of manifolds
+        ///
+        /// \param solver another solver
+        ///
+        /// This function returns true if the solution manifold of the solver
+        /// given as input is a submanifold of the solution manifold of this
+        /// solver. The function tests whether constraints of the input solver
+        /// are also in this solver.
+        bool definesSubmanifoldOf (const HierarchicalIterative& solver) const;
 
         /// \name Right hand side accessors
         /// \{
