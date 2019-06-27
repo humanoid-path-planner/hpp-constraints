@@ -441,6 +441,16 @@ namespace hpp {
         /// Returns the error vector
         void residualError(vectorOut_t error) const;
 
+        /// Inclusion of manifolds
+        ///
+        /// \param solver another solver
+        ///
+        /// This function returns true if the solution manifold of the solver
+        /// given as input is a submanifold of the solution manifold of this
+        /// solver. The function tests whether constraints of the input solver
+        /// are also in this solver.
+        bool definesSubmanifoldOf (const HierarchicalIterative& solver) const;
+
         /// \name Right hand side accessors
         /// \{
 

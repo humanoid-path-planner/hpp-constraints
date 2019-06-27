@@ -619,6 +619,26 @@ namespace hpp {
         }
       }
 
+      bool HierarchicalIterative::definesSubmanifoldOf
+      (const HierarchicalIterative& solver) const
+      {
+        for (NumericalConstraints_t::const_iterator it
+               (solver.constraints ().begin ());
+             it != solver.constraints ().end (); ++it) {
+          bool isInThisSolver (false);
+          for (NumericalConstraints_t::const_iterator it1
+                 (this->constraints ().begin ());
+               it1 != this->constraints ().end (); ++it1) {
+            if (**it1 == **it) {
+              isInThisSolver = true;
+              break;
+            }
+          }
+          if (!isInThisSolver) return false;
+        }
+        return true;
+      }
+
       void HierarchicalIterative::computeDescentDirection () const
       {
         sigma_ = std::numeric_limits<value_type>::max();

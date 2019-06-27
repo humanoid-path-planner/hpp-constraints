@@ -540,7 +540,10 @@ typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(functions1)
 {
-  BySubstitution solver(LiegroupSpace::R3 ());
+  BySubstitution solver  (LiegroupSpace::R3 ());
+  BySubstitution solver1 (LiegroupSpace::R3 ());
+  BySubstitution solver2 (LiegroupSpace::R3 ());
+  BySubstitution solver3 (LiegroupSpace::R3 ());
 
   /// System:
   /// f (q1, q2) = 0
@@ -549,9 +552,16 @@ BOOST_AUTO_TEST_CASE(functions1)
   ///         q2 = C
 
   // f
-  solver.add(Implicit::create
-             (AffineFunctionPtr_t (new AffineFunction
-                                   (matrix_t::Identity(2,3)))));
+  ImplicitPtr_t impl (Implicit::create
+                      (AffineFunctionPtr_t (new AffineFunction
+                                            (matrix_t::Identity(2,3)))));
+  solver.add (impl);
+  // Test inclusion of manifolds
+  solver1.add (impl->copy ());
+  BOOST_CHECK (solver.definesSubmanifoldOf (solver));
+  BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
+  BOOST_CHECK (solver1.definesSubmanifoldOf (solver));
+
   // q1 = g(q3)
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -563,6 +573,9 @@ BOOST_AUTO_TEST_CASE(functions1)
   ExplicitPtr_t expl (Explicit::create (LiegroupSpace::R3 (),affine ,
                                         in, out, in, out));
   solver.add(expl);
+  // Test inclusion of manifolds
+  BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
+  solver1.add (expl->copy ());
   // q2 = C
   affine = AffineFunctionPtr_t (new AffineFunction
                                 (matrix_t(1,0), vector_t::Zero(1)));
@@ -572,12 +585,14 @@ BOOST_AUTO_TEST_CASE(functions1)
                            in, out, in, out);
   solver.add(expl);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+  BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
 
   // h
   matrix_t h (1,3); h << 0, 1, 0;
   solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (h))));
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
+  BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
 
   segments_t impDof = list_of(segment_t(2,1));
   BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
