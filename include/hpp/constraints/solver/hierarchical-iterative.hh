@@ -401,6 +401,12 @@ namespace hpp {
           return stacks_[priority];
         }
 
+        /// Get constraints (implicit and explicit)
+        const NumericalConstraints_t& constraints () const
+        {
+          return constraints_;
+        }
+
         std::size_t numberStacks() const
         {
           return stacks_.size();
