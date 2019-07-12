@@ -14,7 +14,7 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#define BOOST_TEST_MODULE HYBRID_SOLVER
+#define BOOST_TEST_MODULE SOLVER_BY_SUBSTITUTION
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
 
@@ -972,4 +972,57 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
     BOOST_CHECK_EQUAL (rhs1, rhs1_);
     BOOST_CHECK_EQUAL (rhs2, rhs2_);
   }
+}
+
+BOOST_AUTO_TEST_CASE (merge)
+{
+  // Create a kinematic chain
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
+  JointPtr_t root = device->rootJoint (),
+             ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
+  BOOST_REQUIRE (device);
+  Configuration_t q (device->configSpace ()->neutral ().vector ());
+  ComparisonTypes_t comp1 (6, Equality);
+  comp1 [0] = comp1 [2] = comp1 [4] = EqualToZero;
+  ComparisonTypes_t comp2 (6, Equality);
+  comp2 [1] = comp2 [2] = EqualToZero;
+  // Create two relative transformation constraints
+  Transform3f tf1; // Identity
+  vector3_t u; u << 0, -.2, 0;
+  Transform3f tf2; tf2.translation (u);
+  ImplicitPtr_t c1 (hpp::constraints::implicit::RelativePose::create
+                    ("RelativeTransformation", device, ee1, ee2, tf1, tf2,
+                     std::vector <bool> (6, true), comp1));
+  u << 1.2, 0, -1;
+  tf2.translation (u);
+  ImplicitPtr_t c2 (hpp::constraints::LockedJoint::create
+                    (ee1, ee1->configurationSpace ()->neutral ()));
+
+  ImplicitPtr_t c3 (hpp::constraints::explicit_::RelativePose::create
+                    ("Transformation root", device, JointPtr_t (), root, tf2,
+                     tf1, std::vector <bool> (6, true), comp2));
+
+  BySubstitution solver1 (device->configSpace ());
+  BySubstitution solver2 (device->configSpace ());
+  solver1.maxIterations(20);
+  solver1.errorThreshold(test_precision);
+  solver1.add (c1->copy ());
+  solver1.add (c2->copy ());
+  solver2.add (c1->copy ());
+  solver2.add (c3->copy ());
+  // copy and merge solvers
+  BySubstitution solver3 (solver1);
+  BySubstitution solver4 (solver2);
+
+  solver3.merge (solver4);
+
+  BOOST_CHECK (solver3.numericalConstraints ().size () == 3);
+  BOOST_CHECK (solver3.contains (c1));
+  BOOST_CHECK (solver3.contains (c2));
+  BOOST_CHECK (solver3.contains (c3));
+  BOOST_CHECK (solver3.rightHandSideFromConfig (c1, q));
+  BOOST_CHECK (solver3.rightHandSideFromConfig (c2, q));
+  BOOST_CHECK (solver3.rightHandSideFromConfig (c3, q));
 }
