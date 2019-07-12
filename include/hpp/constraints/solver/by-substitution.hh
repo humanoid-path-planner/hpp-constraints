@@ -241,6 +241,16 @@ namespace hpp {
 
         /// \}
 
+        /// Return the size of the error as computed by isSatisfied
+        ///
+        /// Size of error is different from size of right hand side
+        /// (rightHandSideSize) if the solver contains constraints with
+        /// values in a Lie group.
+        size_type errorSize () const
+        {
+          return dimension() + explicit_.outDers().nbIndices();
+        }
+
         bool isSatisfied (vectorIn_t arg) const
         {
           return
