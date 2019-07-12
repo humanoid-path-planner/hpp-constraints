@@ -311,7 +311,7 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < data_.size (); ++i) {
         Data& d = data_[i];
-        if (d.constraint == constraint) {
+        if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
           rightHandSideFromInput (i, arg);
           return true;
         }
