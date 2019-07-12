@@ -238,13 +238,18 @@ namespace hpp {
 
       void HierarchicalIterative::merge (const HierarchicalIterative& other)
       {
+        std::size_t priority;
         for (NumericalConstraints_t::const_iterator it
                (other.constraints_.begin ()); it != other.constraints_.end ();
              ++it) {
           std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator
             itp (other.priority_.find ((*it)->functionPtr ()));
-          assert (itp != other.priority_.end ());
-          std::size_t priority (itp->second);
+          if (itp == other.priority_.end ()) {
+            // If priority is not set, constraint is explicit
+            priority = 0;
+          } else {
+            priority = itp->second;
+          }
           this->add (*it, priority);
         }
       }
