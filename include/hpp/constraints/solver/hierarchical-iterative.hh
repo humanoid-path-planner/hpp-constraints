@@ -236,6 +236,13 @@ namespace hpp {
         ///        in decreasing order: 0 is the highest priority level,
         void add (const ImplicitPtr_t& constraint, const std::size_t& priority);
 
+        /// add constraints of another solver
+        /// \param other other solver
+        ///
+        /// Add constraints of other to this solver.
+        /// \note right hand side of other is not copied.
+        virtual void merge (const HierarchicalIterative& other);
+
         /// Set the saturation function
         void saturation (const Saturation_t& saturate)
         {
@@ -504,7 +511,7 @@ namespace hpp {
 
         /// \}
 
-        /// \name Access to internal datas
+        /// \name Access to internal data
         /// You should know what you do when you call these functions
         /// \{
 

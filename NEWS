@@ -4,7 +4,8 @@
   - a getter to numerical constraints has been added. It returns the implicit
     and explicit constraints,
   - a method computing whether a solver solution manifold is a submanifold of
-    another solver solution manifold has been added.
+    another solver solution manifold has been added,
+  - method merge adds the constraints of another solver to this one.
 * Class Implicit has been cleaned up
   - methods setting and getting the right hand side are not deprecated anymore,
   - deprecated methods have been remove.

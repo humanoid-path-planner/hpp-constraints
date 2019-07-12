@@ -236,6 +236,19 @@ namespace hpp {
 
       }
 
+      void HierarchicalIterative::merge (const HierarchicalIterative& other)
+      {
+        for (NumericalConstraints_t::const_iterator it
+               (other.constraints_.begin ()); it != other.constraints_.end ();
+             ++it) {
+          std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator
+            itp (other.priority_.find ((*it)->functionPtr ()));
+          assert (itp != other.priority_.end ());
+          std::size_t priority (itp->second);
+          this->add (*it, priority);
+        }
+      }
+
       ArrayXb HierarchicalIterative::activeParameters () const
       {
         ArrayXb ap (ArrayXb::Constant(configSpace_->nq (), false));
