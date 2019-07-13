@@ -364,6 +364,19 @@ namespace hpp {
         return top + bot;
       }
 
+      bool BySubstitution::isConstraintSatisfied
+      (const ImplicitPtr_t& constraint, vectorIn_t arg,
+       vectorOut_t error, bool& constraintFound) const
+      {
+        constraintFound = false;
+        bool satisfied (parent_t::isConstraintSatisfied (constraint, arg, error,
+                                                         constraintFound));
+        if (constraintFound) return satisfied;
+        return explicit_.isConstraintSatisfied (constraint, arg, error,
+                                                constraintFound);
+      }
+
+
       template BySubstitution::Status BySubstitution::impl_solve
       (vectorOut_t arg, bool optimize, lineSearch::Constant       lineSearch) const;
       template BySubstitution::Status BySubstitution::impl_solve

@@ -303,6 +303,19 @@ namespace hpp {
           return squaredNorm_ < squaredErrorThreshold_;
         }
 
+        /// Whether a constraint is satisfied for an input vector
+        ///
+        /// \param constraint, the constraint in the solver,
+        /// \param arg the input vector
+        /// \retval error the error of the constraint.
+        /// \retval constraintFound whether the constraint belongs to the
+        ///         solver,
+        /// \return true if constraint belongs to solver and error is below
+        ///         the threshold, false otherwise.
+        bool isConstraintSatisfied (const ImplicitPtr_t& constraint,
+                                    vectorIn_t arg, vectorOut_t error,
+                                    bool& constraintFound) const;
+
         /// Returns the lowest singular value.
         /// If the jacobian has maximum rank r, then it corresponds to r-th
         /// greatest singular value. This value is zero when the jacobian is

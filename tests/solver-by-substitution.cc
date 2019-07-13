@@ -1025,4 +1025,28 @@ BOOST_AUTO_TEST_CASE (merge)
   BOOST_CHECK (solver3.rightHandSideFromConfig (c1, q));
   BOOST_CHECK (solver3.rightHandSideFromConfig (c2, q));
   BOOST_CHECK (solver3.rightHandSideFromConfig (c3, q));
+
+  // Check computation of errors by constraint
+  // order is c1 c3 c2
+  vector_t error (solver3.errorSize ());
+  vector_t error1 (c1->function ().outputSpace ()->nv ());
+  vector_t error2 (c2->function ().outputSpace ()->nv ());
+  vector_t error3 (c3->function ().outputSpace ()->nv ());
+  bool satisfied (solver3.isSatisfied (q, error));
+  bool found;
+  bool satisfied1 (solver3.isConstraintSatisfied (c1, q, error1, found));
+  BOOST_CHECK (found);
+  bool satisfied2 (solver3.isConstraintSatisfied (c2, q, error2, found));
+  BOOST_CHECK (found);
+  bool satisfied3 (solver3.isConstraintSatisfied (c3, q, error3, found));
+  BOOST_CHECK (found);
+  BOOST_CHECK (satisfied == (satisfied1 && satisfied2 && satisfied3));
+  size_type row = 0, nRows = error1.size ();
+  BOOST_CHECK (error1 == error.segment (row, nRows));
+  row += nRows;
+  nRows = error3.size ();
+  BOOST_CHECK (error3 == error.segment (row, nRows));
+  row += nRows;
+  nRows = error2.size ();
+  BOOST_CHECK (error2 == error.segment (row, nRows));
 }

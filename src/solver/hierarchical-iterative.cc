@@ -463,6 +463,38 @@ namespace hpp {
         return true;
       }
 
+      bool HierarchicalIterative::isConstraintSatisfied
+      (const ImplicitPtr_t& constraint, vectorIn_t arg, vectorOut_t error,
+       bool& constraintFound) const
+      {
+        const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
+        assert (error.size () == f->outputSpace ()->nv ());
+        std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp;
+        itp = priority_.find (f);
+        if (itp == priority_.end ()) {
+          constraintFound = false;
+          return false;
+        }
+        constraintFound = true;
+        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIq;
+        itIq = iq_.find (f);
+        assert (itIq != iq_.end ());
+        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIv;
+        itIv = iv_.find (f);
+        assert (itIv != iv_.end ());
+        size_type priority (itp->second);
+        Data& d = datas_[priority];
+        // Evaluate constraint function
+        size_type iq = itIq->second, nq = f->outputSpace ()->nq ();
+        LiegroupElementRef output (d.output.vector ().segment (iq, nq),
+                                   f->outputSpace ());
+        LiegroupElementRef rhs (d.rightHandSide.vector ().segment (iq, nq),
+                                f->outputSpace ());
+        f->value (output, arg);
+        error = output - rhs;
+        return (error.squaredNorm () < squaredErrorThreshold_);
+      }
+
       void HierarchicalIterative::rightHandSide (vectorIn_t rightHandSide)
       {
         size_type iq = 0, iv = 0;

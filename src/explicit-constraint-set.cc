@@ -90,6 +90,29 @@ namespace hpp {
       return isSatisfied (arg, diffSmall_);
     }
 
+    bool ExplicitConstraintSet::isConstraintSatisfied
+    (const ImplicitPtr_t& constraint, vectorIn_t arg, vectorOut_t error,
+     bool& constraintFound) const
+    {
+      value_type squaredNorm = 0;
+      constraintFound = false;
+      for(std::size_t i = 0; i < data_.size(); ++i) {
+        const Data& d (data_[i]);
+        if (d.constraint->functionPtr () == constraint->functionPtr ()) {
+          const DifferentiableFunction& h (d.constraint->function ());
+          h.value (d.h_value, arg);
+          assert (error.size () == h.outputSpace ()->nv ());
+          assert (*(d.h_value.space ()) == *(LiegroupSpace::Rn
+                                             (d.rhs_implicit.size ())));
+          error = d.h_value.vector () - d.rhs_implicit;
+          squaredNorm = error.squaredNorm ();
+          constraintFound = true;
+          return squaredNorm < squaredErrorThreshold_;
+        }
+      }
+      return false;
+    }
+
     ExplicitConstraintSet::Data::Data
     (const ExplicitPtr_t& _constraint) :
       constraint (_constraint), rhs_implicit
