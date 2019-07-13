@@ -251,6 +251,8 @@ namespace hpp {
           return dimension() + explicit_.outDers().nbIndices();
         }
 
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
         bool isSatisfied (vectorIn_t arg) const
         {
           return
@@ -258,6 +260,11 @@ namespace hpp {
             && explicit_.isSatisfied (arg);
         }
 
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
+        /// \retval error the constraint errors dispatched in a vector,
+        ///         the head of the vector corresponds to implicit constraints,
+        ///         the tail of the vector corresponds to explicit constraints.
         bool isSatisfied (vectorIn_t arg, vectorOut_t error) const
         {
           assert (error.size() == dimension() + explicit_.outDers().nbIndices());

@@ -108,8 +108,13 @@ namespace hpp {
         ///         \left(f(\mathbf{q}_{in}) + rhs\right)\f$
         bool solve (vectorOut_t arg) const;
 
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
         bool isSatisfied (vectorIn_t arg) const;
 
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
+        /// \retval error the constraint errors
         bool isSatisfied (vectorIn_t arg, vectorOut_t error) const;
 
         /// \}
