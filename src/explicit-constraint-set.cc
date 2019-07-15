@@ -414,7 +414,8 @@ namespace hpp {
         d.equalityIndices.rview (rhs);
       ComparisonTypes_t ct (d.constraint->comparisonType ());
       for (std::size_t i=0; i < ct.size (); ++i) {
-        assert (ct [i] == Equality || rhs [i] == 0);
+        assert (ct [i] == Equality ||
+                rhs [i] * rhs [i] < squaredErrorThreshold_);
       }
       d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
     }
