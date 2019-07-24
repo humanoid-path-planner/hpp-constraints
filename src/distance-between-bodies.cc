@@ -36,7 +36,7 @@ namespace hpp {
     {
       // Deactivate all collision pairs.
       for (std::size_t i = 0; i < model.collisionPairs.size(); ++i)
-        data.activateCollisionPair(i, false);
+        data.deactivateCollisionPair(i);
       // Activate only the relevant ones.
       for (size_type i = 0; i < body->nbInnerObjects(); ++i) {
 	CollisionObjectConstPtr_t obj1 (body->innerObjectAt(i));
