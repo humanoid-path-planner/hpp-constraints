@@ -146,6 +146,9 @@ namespace hpp {
         /// Check whether an explicit numerical constraint has been added
         /// \param numericalConstraint explicit numerical constraint
         /// \return true if the constraint is in the set.
+        /// \note Comparison between constraints is performed by
+        /// function names. This means that two constraints with the
+        /// same function names are considered as equal.
         bool contains (const ExplicitPtr_t& numericalConstraint) const;
 
         /// Constructor

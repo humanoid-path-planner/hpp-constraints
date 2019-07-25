@@ -207,6 +207,9 @@ namespace hpp {
         /// \param numericalConstraint numerical constraint
         /// \return true if numerical constraint is already in the solver
         ///         whatever the passive dofs are.
+        /// \note Comparison between constraints is performed by
+        /// function names. This means that two constraints with the
+        /// same function names are considered as equal.
         virtual bool contains (const ImplicitPtr_t& numericalConstraint) const;
 
         /// Add an implicit equality constraint
