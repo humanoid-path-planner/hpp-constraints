@@ -1049,4 +1049,8 @@ BOOST_AUTO_TEST_CASE (merge)
   row += nRows;
   nRows = error2.size ();
   BOOST_CHECK (error2 == error.segment (row, nRows));
+
+  BySubstitution solver5 (device->configSpace ());
+  solver5.add (c3);
+  BOOST_CHECK (solver5.contains (c3->copy ()));
 }
