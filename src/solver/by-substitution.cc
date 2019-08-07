@@ -42,13 +42,15 @@ namespace hpp {
           (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
       } // namespace lineSearch
 
-      DifferentiableFunctionPtr_t activeSetFunction
-      (const DifferentiableFunctionPtr_t& function,
+      ImplicitPtr_t activeSetFunction
+      (const ImplicitPtr_t& cimp,
        const segments_t& pdofs)
       {
-        if (pdofs.empty()) return function;
-        return ActiveSetDifferentiableFunctionPtr_t
-          (new ActiveSetDifferentiableFunction(function, pdofs));
+        if (pdofs.empty()) return cimp;
+        ActiveSetDifferentiableFunctionPtr_t f
+          (new ActiveSetDifferentiableFunction(cimp->functionPtr(), pdofs));
+        ImplicitPtr_t c (Implicit::create (f, cimp->comparisonType()));
+        return c;
       }
 
       BySubstitution::BySubstitution (const LiegroupSpacePtr_t& configSpace) :
@@ -104,9 +106,7 @@ namespace hpp {
                    (enm->outputVelocity()));
           explicitConstraintSetHasChanged();
         } else {
-          ImplicitPtr_t constraint
-            (Implicit::create (activeSetFunction(nm->functionPtr(),
-                                                 passiveDofs), types));
+          ImplicitPtr_t constraint = activeSetFunction (nm, passiveDofs);
           HierarchicalIterative::add (constraint, priority);
           // add (Implicit::create
           //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
