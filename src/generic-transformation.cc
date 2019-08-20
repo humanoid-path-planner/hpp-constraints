@@ -159,11 +159,11 @@ namespace hpp {
       (const std::string& name, const DevicePtr_t& robot,
        std::vector <bool> mask) :
         DifferentiableFunction (robot->configSize (), robot->numberDof (),
-            liegroupSpace <ComputePosition, ComputeOrientation, OutputSE3> (mask),
+            liegroupSpace <(bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> (mask),
             name),
         robot_ (robot),
         m_(robot->numberDof()-robot->extraConfigSpace().dimension()),
-        Vindices_ (indices<ComputePosition, ComputeOrientation, OutputSE3> (mask)),
+        Vindices_ (indices<(bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> (mask)),
         mask_ (mask)
     {
       assert(mask.size()==DerSize);
