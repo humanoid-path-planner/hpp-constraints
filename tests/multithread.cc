@@ -15,6 +15,9 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #define BOOST_TEST_MODULE multithread_test
+
+#include <pinocchio/fwd.hpp>
+
 #include <boost/test/included/unit_test.hpp>
 
 #include <stdlib.h>
