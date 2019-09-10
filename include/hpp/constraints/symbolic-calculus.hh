@@ -346,10 +346,10 @@ namespace hpp {
     /// Scalar product of two expressions.
     template <typename LhsValue, typename RhsValue>
     class ScalarProduct :
-      public CalculusBase < ScalarProduct < LhsValue, RhsValue >, value_type, RowJacobianMatrix >
+      public CalculusBase < ScalarProduct < LhsValue, RhsValue >, Eigen::Matrix<value_type,1,1>, RowJacobianMatrix >
     {
       public:
-        typedef CalculusBase < ScalarProduct < LhsValue, RhsValue >, value_type, RowJacobianMatrix >
+        typedef CalculusBase < ScalarProduct < LhsValue, RhsValue >, Eigen::Matrix<value_type,1,1>, RowJacobianMatrix >
           Parent_t;
 
         HPP_CONSTRAINTS_CB_CREATE2 (ScalarProduct, const typename Traits<LhsValue>::Ptr_t&, const typename Traits<RhsValue>::Ptr_t&)
@@ -368,7 +368,7 @@ namespace hpp {
         void impl_value (const ConfigurationIn_t arg) {
           e_->lhs_->computeValue (arg);
           e_->rhs_->computeValue (arg);
-          this->value_ = e_->lhs_->value ().dot (e_->rhs_->value ());
+          this->value_[0] = e_->lhs_->value ().dot (e_->rhs_->value ());
         }
         void impl_jacobian (const ConfigurationIn_t arg) {
           e_->lhs_->computeValue (arg);
