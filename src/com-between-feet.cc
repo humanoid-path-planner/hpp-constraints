@@ -116,12 +116,12 @@ namespace hpp {
       if (mask_[2]) {
         xmxlDotu_->invalidate ();
         xmxlDotu_->computeValue (argument);
-        result.vector () [index++] =   xmxlDotu_->value();
+        result.vector () [index++] =   xmxlDotu_->value()[0];
       }
       if (mask_[3]) {
         xmxrDotu_->invalidate ();
         xmxrDotu_->computeValue (argument);
-        result.vector () [index  ] =   xmxrDotu_->value();
+        result.vector () [index  ] =   xmxrDotu_->value()[0];
       }
     }
 

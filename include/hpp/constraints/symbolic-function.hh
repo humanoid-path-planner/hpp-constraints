@@ -60,6 +60,18 @@ namespace hpp {
           return ptr;
         }
 
+        /// Return a shared pointer to a new instance
+        static Ptr_t create (const std::string& name, size_type sizeInput,
+                          size_type sizeInputDerivative,
+                          size_type sizeOutput,
+                          const typename Traits<Expression>::Ptr_t expr)
+        {
+          std::vector<bool> mask (sizeOutput, true);
+          Ptr_t ptr (new SymbolicFunction (name,sizeInput,sizeInputDerivative,sizeOutput,expr,mask));
+          ptr->init (ptr);
+          return ptr;
+        }
+
         virtual ~SymbolicFunction () throw () {}
 
         SymbolicFunction (const std::string& name, const DevicePtr_t& robot,
@@ -70,6 +82,15 @@ namespace hpp {
                                   name),
           robot_ (robot), expr_ (expr), mask_ (mask) {}
 
+        SymbolicFunction (const std::string& name, size_type sizeInput,
+                          size_type sizeInputDerivative,
+                          size_type sizeOutput,
+                          const typename Traits<Expression>::Ptr_t expr,
+                          std::vector <bool> mask) :
+          DifferentiableFunction (sizeInput, sizeInputDerivative,
+                                  LiegroupSpace::Rn (sizeOutput), name),
+          robot_ (), expr_ (expr), mask_ (mask) {}
+
       protected:
         /// Compute value of error
         ///
@@ -78,8 +99,10 @@ namespace hpp {
         virtual void impl_compute (LiegroupElementRef result,
                                    ConfigurationIn_t argument) const throw ()
         {
-          robot_->currentConfiguration (argument);
-          robot_->computeForwardKinematics ();
+          if (robot_) {
+            robot_->currentConfiguration (argument);
+            robot_->computeForwardKinematics ();
+          }
           expr_->invalidate ();
           expr_->computeValue (argument);
           size_t index = 0;
@@ -92,8 +115,10 @@ namespace hpp {
         virtual void impl_jacobian (matrixOut_t jacobian,
             ConfigurationIn_t arg) const throw ()
         {
-          robot_->currentConfiguration (arg);
-          robot_->computeForwardKinematics ();
+          if (robot_) {
+            robot_->currentConfiguration (arg);
+            robot_->computeForwardKinematics ();
+          }
           expr_->invalidate ();
           expr_->computeJacobian (arg);
           size_t index = 0;

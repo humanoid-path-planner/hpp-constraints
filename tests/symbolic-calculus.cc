@@ -14,6 +14,8 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#include <pinocchio/fwd.hpp>
+
 #define BOOST_TEST_MODULE SymbolicCalculus
 
 #include <pinocchio/fwd.hpp>
@@ -333,7 +335,7 @@ BOOST_AUTO_TEST_CASE (ScalarProductTest) {
     sp->computeValue (unused);
     value (cfg, v);
     jacobian (cfg, j);
-    BOOST_CHECK (v.isApproxToConstant (sp->value ()));
+    BOOST_CHECK (v.isApprox (sp->value ()));
     sp->computeJacobian (unused);
     BOOST_CHECK (sp->jacobian ().isApprox (j));
   }
