@@ -14,8 +14,6 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <pinocchio/fwd.hpp>
-
 #define BOOST_TEST_MODULE SymbolicCalculus
 
 #include <pinocchio/fwd.hpp>
@@ -45,7 +43,7 @@ class PointTesterT : public CalculusBase <PointTesterT<ValueType, JacobianType>,
     struct DataWrapper {
       ValueType value;
       JacobianType jacobian;
-      
+
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 

@@ -14,8 +14,6 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <pinocchio/fwd.hpp>
-
 #define BOOST_TEST_MODULE multithread_test
 
 #include <pinocchio/fwd.hpp>
