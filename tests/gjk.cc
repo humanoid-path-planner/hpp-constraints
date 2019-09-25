@@ -253,7 +253,7 @@ struct Data
 
     AB =(B-A);
     AC =(C-A);
-    AD =(D-A); 
+    AD =(D-A);
     AB_OA =(AB*A);
     CB_OA =(AC*A);
     DB_OA =(AD*A);
@@ -465,7 +465,7 @@ int checkCase (Data& d, int N, std::vector<int> conds)
   }
   std::cout << '\n';
 
-  return (success ? 1 : 0);
+  return (success ? 0 : 1);
 }
 
 template <typename T>

@@ -193,11 +193,11 @@ namespace hpp {
     void GenericTransformation<_Options>::impl_compute
     (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
     {
-      GTDataV<IsRelative, ComputePosition, ComputeOrientation, OutputSE3> data (m_, robot_);
+      GTDataV<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> data (m_, robot_);
 
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
-      compute<IsRelative, ComputePosition, ComputeOrientation, OutputSE3>::error (data);
+      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3>::error (data);
 
       result.vector() = Vindices_.rview (data.value);
     }
@@ -211,12 +211,12 @@ namespace hpp {
       // support multithreadind. To avoid it, DeviceData should provide some
       // a temporary buffer to pass to an Eigen::Map
       {
-      GTDataJ<IsRelative, ComputePosition, ComputeOrientation, OutputSE3> data (m_, robot_);
+      GTDataJ<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> data (m_, robot_);
 
       data.device.currentConfiguration (arg);
       data.device.computeForwardKinematics ();
-      compute<IsRelative, ComputePosition, ComputeOrientation, OutputSE3>::error (data);
-      compute<IsRelative, ComputePosition, ComputeOrientation, OutputSE3>::jacobian (data, jacobian, mask_);
+      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3>::error (data);
+      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3>::jacobian (data, jacobian, mask_);
       }
 
 #ifdef CHECK_JACOBIANS
