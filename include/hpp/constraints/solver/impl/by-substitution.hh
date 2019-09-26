@@ -118,7 +118,7 @@ namespace hpp {
           } else {
             dq_ /= scaling;
             scaling *= 0.5;
-            arg = qopt;
+            if (qopt.size() > 0) arg = qopt;
             onlyLineSearch = true;
           }
         }
