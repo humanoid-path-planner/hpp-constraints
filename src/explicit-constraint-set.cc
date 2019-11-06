@@ -457,9 +457,10 @@ namespace hpp {
            << " -> "
            << RowBlockIndices (d.constraint->outputConf ())
           << incendl << *d.constraint->explicitFunction ()
-          << decendl << "Rhs explicit: " << condensed(d.rhs_explicit)
+          << iendl << "Rhs explicit: " << condensed(d.rhs_explicit)
           << iendl << "Rhs implicit: " << condensed(d.rhs_implicit)
-          << iendl   << "Equality: " << d.equalityIndices;
+          << iendl << "Equality: " << d.equalityIndices
+          << decindent;
       }
       return os << decindent << decindent;
     }

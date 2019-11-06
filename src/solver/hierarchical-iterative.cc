@@ -801,9 +801,10 @@ namespace hpp {
               (constraints [j]->functionPtr ());
             os << iendl << j << ": ["
                << row << ", " << f->outputSize() << "],"
-               << *f
+               << incindent << *f
                << iendl << "Rhs: " << condensed(d.rightHandSide.vector().segment
-                                                (row, f->outputSize()));
+                                                (row, f->outputSize()))
+               << decindent;
             row += f->outputSize();
           }
           os << decendl;
