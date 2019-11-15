@@ -35,7 +35,6 @@ namespace hpp {
       {
         FiniteDiffRobotOp (const DevicePtr_t& r, const value_type& epsilon)
           : robot(r), model(robot->model()), 
-          increments(::pinocchio::finiteDifferenceIncrement(model)),
           epsilon(epsilon),
           v(robot->numberDof())
         {}
@@ -43,12 +42,7 @@ namespace hpp {
         inline value_type step (const size_type& i, const vector_t& x) const
         {
           assert(i >= 0);
-          value_type r;
-          if (i < increments.size()) {
-            return increments[i];
-          } else {
-            r = std::abs(x[i]);
-          }
+          value_type r = std::abs(x[i]);
 
           if (r == 0) return epsilon;
           else        return epsilon * r;
@@ -78,8 +72,6 @@ namespace hpp {
 
         const DevicePtr_t& robot;
         const pinocchio::Model& model;
-        // const JointIndexVector velocityRankToJointIndex;
-        const vector_t increments;
         const value_type& epsilon;
         mutable vector_t v;
       };
