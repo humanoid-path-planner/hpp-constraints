@@ -22,6 +22,7 @@ SET(PROJECT_DESCRIPTION "Definition of basic geometric constraints for motion pl
 CMAKE_POLICY (SET CMP0012 NEW)
 SET(CXX_DISABLE_WERROR TRUE)
 SET(DOXYGEN_USE_MATHJAX YES)
+SET(PROJECT_USE_CMAKE_EXPORT TRUE)
 INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/eigen.cmake)
