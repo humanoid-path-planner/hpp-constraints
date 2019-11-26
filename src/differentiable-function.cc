@@ -17,7 +17,6 @@
 #include <hpp/constraints/differentiable-function.hh>
 
 #include <pinocchio/multibody/liegroup/liegroup.hpp>
-#include <pinocchio/algorithm/finite-differences.hpp>
 
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/joint-collection.hh>
@@ -34,7 +33,7 @@ namespace hpp {
       struct FiniteDiffRobotOp
       {
         FiniteDiffRobotOp (const DevicePtr_t& r, const value_type& epsilon)
-          : robot(r), model(robot->model()), 
+          : robot(r), model(robot->model()),
           epsilon(epsilon),
           v(robot->numberDof())
         {}
