@@ -14,20 +14,18 @@
 # hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 # Requires at least CMake 2.6 to configure the package.
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+SET(PROJECT_NAME hpp-constraints)
+SET(PROJECT_DESCRIPTION "Definition of basic geometric constraints for motion planning")
 
 CMAKE_POLICY (SET CMP0012 NEW)
 SET(CXX_DISABLE_WERROR TRUE)
 SET(DOXYGEN_USE_MATHJAX YES)
-INCLUDE(cmake/base.cmake)
 INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/eigen.cmake)
 INCLUDE(cmake/test.cmake)
-
-SET(PROJECT_NAME hpp-constraints)
-SET(PROJECT_DESCRIPTION
-  "Definition of basic geometric constraints for motion planning")
 
 # Add a cache variable to allow not compiling and running tests
 set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
@@ -98,7 +96,8 @@ IF (USE_QPOASES)
   PKG_CONFIG_APPEND_CFLAGS (-DHPP_CONSTRAINTS_USE_QPOASES)
 ENDIF ()
 
-SETUP_HPP_PROJECT()
+COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
+PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
 
 ADD_REQUIRED_DEPENDENCY("eigen3 >= 3.2.92")
 ADD_REQUIRED_DEPENDENCY("pinocchio")
@@ -120,5 +119,3 @@ IF (RUN_TESTS)
 ENDIF ()
 
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
-
-SETUP_HPP_PROJECT_FINALIZE()
