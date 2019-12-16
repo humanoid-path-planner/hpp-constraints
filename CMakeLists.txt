@@ -22,13 +22,18 @@ SET(PROJECT_DESCRIPTION "Definition of basic geometric constraints for motion pl
 CMAKE_POLICY (SET CMP0012 NEW)
 SET(CXX_DISABLE_WERROR TRUE)
 SET(DOXYGEN_USE_MATHJAX YES)
+SET(PROJECT_USE_CMAKE_EXPORT TRUE)
 INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/eigen.cmake)
 INCLUDE(cmake/test.cmake)
 
 # Add a cache variable to allow not compiling and running tests
-set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
+if(DEFINED RUN_TESTS AND NOT DEFINED BUILD_TESTING)
+  set (BUILD_TESTING ${RUN_TESTS} CACHE BOOL "compile and run unit tests")
+else()
+  set (BUILD_TESTING TRUE CACHE BOOL "compile and run unit tests")
+endif()
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
@@ -111,7 +116,7 @@ ENDIF ()
 
 ADD_SUBDIRECTORY (src)
 
-IF (RUN_TESTS)
+IF (BUILD_TESTING)
   ADD_REQUIRED_DEPENDENCY("romeo_description")
   SET(BOOST_COMPONENT math unit_test_framework)
   SEARCH_FOR_BOOST()
