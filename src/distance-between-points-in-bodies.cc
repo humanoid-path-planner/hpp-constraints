@@ -84,7 +84,7 @@ namespace hpp {
     }
 
     void DistanceBetweenPointsInBodies::impl_compute
-    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const
     {
       if ((argument.rows () == latestArgument_.rows ()) &&
 	  (argument == latestArgument_)) {
@@ -106,7 +106,7 @@ namespace hpp {
     }
 
     void DistanceBetweenPointsInBodies::impl_jacobian
-    (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
+    (matrixOut_t jacobian, ConfigurationIn_t arg) const
     {
       LiegroupElement dist (outputSpace ());
       impl_compute (dist, arg);

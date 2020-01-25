@@ -98,7 +98,7 @@ namespace hpp {
 
     void ComBetweenFeet::impl_compute (LiegroupElementRef result,
         ConfigurationIn_t argument)
-      const throw ()
+      const
     {
       robot_->currentConfiguration (argument);
       robot_->computeForwardKinematics ();
@@ -126,7 +126,7 @@ namespace hpp {
     }
 
     void ComBetweenFeet::impl_jacobian (matrixOut_t jacobian,
-        ConfigurationIn_t arg) const throw ()
+        ConfigurationIn_t arg) const
     {
       robot_->currentConfiguration (arg);
       robot_->computeForwardKinematics ();

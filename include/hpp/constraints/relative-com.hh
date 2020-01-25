@@ -80,7 +80,7 @@ namespace hpp {
 				      const JointPtr_t& joint,
 				      const vector3_t reference,
                                       std::vector <bool> mask = std::vector<bool> (3, true));
-      virtual ~RelativeCom () throw () {}
+      virtual ~RelativeCom () {}
       RelativeCom (const DevicePtr_t& robot,
           const CenterOfMassComputationPtr_t& comc,
           const JointPtr_t& joint, const vector3_t reference,
@@ -95,9 +95,9 @@ namespace hpp {
       /// \retval result error vector
       virtual void impl_compute	(LiegroupElementRef result,
 				 ConfigurationIn_t argument)
-	const throw ();
+	const;
       virtual void impl_jacobian (matrixOut_t jacobian,
-				  ConfigurationIn_t arg) const throw ();
+				  ConfigurationIn_t arg) const;
     private:
       DevicePtr_t robot_;
       CenterOfMassComputationPtr_t comc_;

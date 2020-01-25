@@ -46,7 +46,7 @@ namespace hpp {
             (new ImplicitConstraintSet(name));
         }
 
-        virtual ~ImplicitConstraintSet () throw () {}
+        virtual ~ImplicitConstraintSet () {}
 
         /// \name Function stack management
         /// \{

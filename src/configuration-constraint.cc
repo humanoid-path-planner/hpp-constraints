@@ -65,7 +65,7 @@ namespace hpp {
 
     void ConfigurationConstraint::impl_compute (LiegroupElementRef result,
                                                 ConfigurationIn_t argument)
-      const throw ()
+      const
     {
       using namespace hpp::pinocchio;
       LiegroupElementConstRef a (argument, goal_.space());
@@ -73,7 +73,7 @@ namespace hpp {
     }
 
     void ConfigurationConstraint::impl_jacobian (matrixOut_t jacobian,
-        ConfigurationIn_t argument) const throw ()
+        ConfigurationIn_t argument) const
     {
       using namespace hpp::pinocchio;
 

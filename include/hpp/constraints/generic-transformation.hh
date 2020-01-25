@@ -289,9 +289,9 @@ namespace hpp {
       /// \param argument configuration of the robot,
       /// \retval result error vector
       virtual void impl_compute	(LiegroupElementRef result,
-				 ConfigurationIn_t argument) const throw ();
+				 ConfigurationIn_t argument) const;
       virtual void impl_jacobian (matrixOut_t jacobian,
-				  ConfigurationIn_t arg) const throw ();
+				  ConfigurationIn_t arg) const;
     private:
       void computeActiveParams ();
       DevicePtr_t robot_;

@@ -72,7 +72,7 @@ namespace hpp {
           return ptr;
         }
 
-        virtual ~SymbolicFunction () throw () {}
+        virtual ~SymbolicFunction () {}
 
         SymbolicFunction (const std::string& name, const DevicePtr_t& robot,
                           const typename Traits<Expression>::Ptr_t expr,
@@ -97,7 +97,7 @@ namespace hpp {
         /// \param argument configuration of the robot,
         /// \retval result error vector
         virtual void impl_compute (LiegroupElementRef result,
-                                   ConfigurationIn_t argument) const throw ()
+                                   ConfigurationIn_t argument) const
         {
           if (robot_) {
             robot_->currentConfiguration (argument);
@@ -113,7 +113,7 @@ namespace hpp {
         }
 
         virtual void impl_jacobian (matrixOut_t jacobian,
-            ConfigurationIn_t arg) const throw ()
+            ConfigurationIn_t arg) const
         {
           if (robot_) {
             robot_->currentConfiguration (arg);

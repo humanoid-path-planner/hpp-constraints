@@ -48,7 +48,7 @@ namespace hpp {
             ConfigurationIn_t goal,
             const vector_t& weights);
 
-        virtual ~ConfigurationConstraint () throw () {}
+        virtual ~ConfigurationConstraint () {}
 
         /// \param weights vector of size robot->numberDof()
         ConfigurationConstraint (const std::string& name,
@@ -61,10 +61,10 @@ namespace hpp {
         /// \param argument configuration of the robot,
         /// \retval result error vector
         virtual void impl_compute (LiegroupElementRef result,
-                                   ConfigurationIn_t argument) const throw ();
+                                   ConfigurationIn_t argument) const;
 
         virtual void impl_jacobian (matrixOut_t jacobian,
-            ConfigurationIn_t arg) const throw ();
+            ConfigurationIn_t arg) const;
       private:
         typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
         DevicePtr_t robot_;

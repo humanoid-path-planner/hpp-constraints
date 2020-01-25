@@ -45,7 +45,7 @@ namespace hpp {
             (new DifferentiableFunctionSet(name));
         }
 
-        virtual ~DifferentiableFunctionSet () throw () {}
+        virtual ~DifferentiableFunctionSet () {}
 
         /// \name Function stack management
         /// \{
@@ -103,7 +103,7 @@ namespace hpp {
 
       protected:
         void impl_compute (LiegroupElementRef result, ConfigurationIn_t arg)
-          const throw ()
+          const
         {
           size_type row = 0;
           std::size_t i = 0;
@@ -116,7 +116,7 @@ namespace hpp {
             row += f.outputSize(); ++i;
           }
         }
-        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
+        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t arg) const
         {
           size_type row = 0;
           for (Functions_t::const_iterator _f = functions_.begin();

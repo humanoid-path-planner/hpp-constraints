@@ -65,7 +65,7 @@ namespace hpp {
 						const JointPtr_t& joint,
 						const std::vector<CollisionObjectPtr_t>& objects);
 
-      virtual ~DistanceBetweenBodies () throw () {}
+      virtual ~DistanceBetweenBodies () {}
 
     protected:
       /// Protected constructor
@@ -89,9 +89,9 @@ namespace hpp {
 			     const std::vector<CollisionObjectPtr_t>& objects);
 
       virtual void impl_compute (LiegroupElementRef result,
-				 ConfigurationIn_t argument) const throw ();
+				 ConfigurationIn_t argument) const;
       virtual void impl_jacobian (matrixOut_t jacobian,
-				  ConfigurationIn_t arg) const throw ();
+				  ConfigurationIn_t arg) const;
     private:
       typedef ::pinocchio::GeometryData GeometryData;
 

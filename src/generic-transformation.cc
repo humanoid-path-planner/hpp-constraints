@@ -191,7 +191,7 @@ namespace hpp {
 
     template <int _Options>
     void GenericTransformation<_Options>::impl_compute
-    (LiegroupElementRef result, ConfigurationIn_t argument) const throw ()
+    (LiegroupElementRef result, ConfigurationIn_t argument) const
     {
       GTDataV<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> data (m_, robot_);
 
@@ -204,7 +204,7 @@ namespace hpp {
 
     template <int _Options>
     void GenericTransformation<_Options>::impl_jacobian
-    (matrixOut_t jacobian, ConfigurationIn_t arg) const throw ()
+    (matrixOut_t jacobian, ConfigurationIn_t arg) const
     {
       // TODO there is still a little bit a memory which is dynamically
       // allocated in GTDataJ. At the moment, this allocation is necessary to

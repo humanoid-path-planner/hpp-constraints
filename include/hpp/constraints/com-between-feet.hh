@@ -76,7 +76,7 @@ namespace hpp {
             const JointPtr_t& jointReference, const vector3_t pointRef,
             std::vector <bool> mask = boost::assign::list_of (true)(true)(true)(true));
 
-        virtual ~ComBetweenFeet () throw () {}
+        virtual ~ComBetweenFeet () {}
 
         ComBetweenFeet (const std::string& name, const DevicePtr_t& robot,
             const CenterOfMassComputationPtr_t& comc,
@@ -91,10 +91,10 @@ namespace hpp {
         /// \param argument configuration of the robot,
         /// \retval result error vector
         virtual void impl_compute (LiegroupElementRef result,
-                                   ConfigurationIn_t argument) const throw ();
+                                   ConfigurationIn_t argument) const;
 
         virtual void impl_jacobian (matrixOut_t jacobian,
-            ConfigurationIn_t arg) const throw ();
+            ConfigurationIn_t arg) const;
       private:
         DevicePtr_t robot_;
         mutable Traits<PointCom>::Ptr_t com_;
