@@ -113,7 +113,11 @@ namespace hpp {
       typedef boost::shared_ptr <GenericTransformation> Ptr_t;
       typedef boost::weak_ptr <GenericTransformation> WkPtr_t;
 
+#if __cplusplus >= 201103L
+      static constexpr bool
+#else
       enum {
+#endif
         IsRelative         = _Options & RelativeBit,
         ComputeOrientation = _Options & OrientationBit,
         ComputePosition    = _Options & PositionBit,
@@ -123,7 +127,10 @@ namespace hpp {
         IsTransform        = ComputePosition  && ComputeOrientation,
         ValueSize          = (ComputePosition?3:0) + (ComputeOrientation?(OutputSE3?4:3):0),
         DerSize            = (ComputePosition?3:0) + (ComputeOrientation ?3:0)
-      };
+#if __cplusplus < 201103L
+      }
+#endif
+      ;
 
       /// \cond
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
