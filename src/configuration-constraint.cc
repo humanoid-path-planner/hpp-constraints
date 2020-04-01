@@ -17,12 +17,17 @@
 #include <hpp/constraints/configuration-constraint.hh>
 
 #include <pinocchio/multibody/liegroup/liegroup.hpp>
+#include <pinocchio/multibody/model.hpp>
 
 #include <hpp/util/debug.hh>
+#include <hpp/util/indent.hh>
+#include <hpp/pinocchio/util.hh>
+
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 
 namespace hpp {
   namespace constraints {
@@ -52,15 +57,45 @@ namespace hpp {
 
     ConfigurationConstraint::ConfigurationConstraint (
         const std::string& name, const DevicePtr_t& robot,
-        ConfigurationIn_t goal, const vector_t& weights) :
+        ConfigurationIn_t goal, const vector_t& ws) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::R1 (), name),
-      robot_ (robot), weights_ (weights)
+      robot_ (robot), weights_ ()
     {
-      assert (weights.size() == robot->numberDof());
+      weights(ws);
       LiegroupSpacePtr_t s (LiegroupSpace::createCopy(robot->configSpace()));
       s->mergeVectorSpaces();
       goal_ = LiegroupElement (goal, s);
+    }
+
+    void ConfigurationConstraint::weights (const vector_t& ws)
+    {
+      if (ws.size() != robot_->numberDof())
+        throw std::invalid_argument("Size of weights vector should be the same "
+            "as the robot number DoFs.");
+      weights_ = ws;
+
+      activeParameters_ = ArrayXb::Constant (inputSize(), true);
+      activeDerivativeParameters_ = ArrayXb::Constant (weights_.size(), true);
+
+      const pinocchio::Model& model = robot_->model();
+      for (int i = 1; i < model.njoints; ++i) {
+
+        if ((weights_.segment(model.joints[i].idx_v(), model.joints[i].nv())
+              .array() == 0).all()) {
+          activeParameters_.segment(
+              model.joints[i].idx_q(), model.joints[i].nq()).setConstant(false);
+          activeDerivativeParameters_.segment(
+              model.joints[i].idx_v(), model.joints[i].nv()).setConstant(false);
+        }
+      }
+    }
+
+    std::ostream& ConfigurationConstraint::print (std::ostream& o) const
+    {
+      o << "ConfigurationConstraint: " << name() << incindent << iendl
+        << "weights: " << one_line (weights_);
+      return o << decindent;
     }
 
     void ConfigurationConstraint::impl_compute (LiegroupElementRef result,

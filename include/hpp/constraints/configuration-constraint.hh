@@ -55,6 +55,12 @@ namespace hpp {
             const DevicePtr_t& robot, ConfigurationIn_t goal,
             const vector_t& weights);
 
+        const vector_t& weights () const { return weights_; }
+
+        void weights (const vector_t& ws);
+
+        const LiegroupElement& goal () const { return goal_; }
+
       protected:
         /// Compute value of error
         ///
@@ -65,6 +71,8 @@ namespace hpp {
 
         virtual void impl_jacobian (matrixOut_t jacobian,
             ConfigurationIn_t arg) const;
+
+        std::ostream& print (std::ostream& o) const;
       private:
         typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
         DevicePtr_t robot_;
