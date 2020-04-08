@@ -140,7 +140,7 @@ namespace hpp {
       }
 
       void RelativePose::implicitToExplicitRhs (vectorIn_t implicitRhs,
-                                                vectorOut_t explicitRhs)
+                                                vectorOut_t explicitRhs) const
       {
         assert (implicitRhs.size () == 6);
         assert (explicitRhs.size () == 6);

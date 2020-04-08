@@ -75,9 +75,8 @@ namespace hpp {
             SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
             \f}
         */
-
         virtual void implicitToExplicitRhs (vectorIn_t implicitRhs,
-                                            vectorOut_t explicitRhs);
+                                            vectorOut_t explicitRhs) const;
       protected:
         /// Constructor
         ///

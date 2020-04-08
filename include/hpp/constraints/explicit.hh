@@ -221,7 +221,7 @@ namespace hpp {
       /// When implicit formulation derives from explicit one, this method
       /// copies the first argument to the second one.
       virtual void implicitToExplicitRhs (vectorIn_t implicitRhs,
-                                          vectorOut_t explicitRhs)
+                                          vectorOut_t explicitRhs) const
       {
         explicitRhs = implicitRhs;
       }
