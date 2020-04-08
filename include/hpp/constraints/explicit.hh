@@ -226,6 +226,24 @@ namespace hpp {
         explicitRhs = implicitRhs;
       }
 
+      /// Convert right hand side
+      ///
+      /// \param explicitRhs right hand side of explicit formulation.
+      /// \retval implicitRhs right hand side of implicit formulation,
+      ///
+      /// When implicit formulation is different from explicit formulation,
+      ///\sa hpp::constraints::explicit_::RelativePose, right hand side are
+      /// also different. This method converts right hand side from explicit
+      /// to implicit formulation.
+      ///
+      /// When implicit formulation derives from explicit one, this method
+      /// copies the first argument to the second one.
+      virtual void explicitToImplicitRhs (vectorIn_t explicitRhs,
+                                          vectorOut_t implicitRhs) const
+      {
+        implicitRhs = explicitRhs;
+      }
+
     protected:
       /// Constructor
       ///

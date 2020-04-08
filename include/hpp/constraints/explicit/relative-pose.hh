@@ -77,6 +77,28 @@ namespace hpp {
         */
         virtual void implicitToExplicitRhs (vectorIn_t implicitRhs,
                                             vectorOut_t explicitRhs) const;
+        /** Convert right hand side
+
+            \param explicitRhs right hand side of explicit formulation,
+            \retval implicitRhs right hand side of implicit formulation.
+
+            For this constraint, the implicit formulation does not derive
+            from  the explicit formulation. The explicit form writes
+
+            \f{eqnarray}
+            rhs_{expl} &=& \log_{SE(3)} \left(F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1}
+            J_2\right)\\
+            rhs_{impl} &=& \log_{\mathbf{R}^3\times SO(3)} \left(F_{1/J_1}^{-1}
+            J_1^{-1}J_2 F_{2/J_2}\right)
+            \f}
+            Thus
+            \f{equation}
+            rhs_{impl} = \log_{\mathbf{R}^3\times SO(3)}\left( F_{2/J_2}^{-1}
+            \exp_{SE(3)} (rhs_{expl})  F_{2/J_2}\right)
+            \f}
+        */
+        virtual void explicitToImplicitRhs (vectorIn_t explicitRhs,
+                                            vectorOut_t implicitRhs) const;
       protected:
         /// Constructor
         ///
