@@ -346,18 +346,12 @@ namespace hpp {
     (const size_type& i, vectorIn_t arg)
     {
       Data& d = data_[i];
-      d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
-      d.constraint->explicitFunction ()->value(d.f_value, d.qin);
-      d.qout = RowBlockIndices (d.constraint->outputConf ()).rview(arg);
-      d.res_qout.vector() = d.qout;
-      vector_t rhs = d.res_qout - d.f_value;
-      d.equalityIndices.lview(d.rhs_explicit) = d.equalityIndices.rview(rhs);
-
       // compute right hand side of implicit formulation that might be
       // different (RelativePose)
       d.constraint->function ().value (d.h_value, arg);
-      rhs = d.h_value.vector ();
+      vector_t rhs = d.h_value.vector ();
       d.equalityIndices.lview(d.rhs_implicit) = d.equalityIndices.rview(rhs);
+      d.constraint->implicitToExplicitRhs(d.rhs_implicit, d.rhs_explicit);
     }
 
     void ExplicitConstraintSet::rightHandSide (vectorIn_t rhs)
