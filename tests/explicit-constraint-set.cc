@@ -20,6 +20,7 @@
 
 #include <hpp/constraints/explicit-constraint-set.hh>
 #include <hpp/constraints/explicit.hh>
+#include <hpp/constraints/explicit/relative-pose.hh>
 #include <hpp/constraints/locked-joint.hh>
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
@@ -30,8 +31,10 @@
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
+#include <hpp/pinocchio/urdf/util.hh>
 
 #include <hpp/constraints/affine-function.hh>
+#include <hpp/constraints/explicit-constraint-set.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/symbolic-calculus.hh>
 
@@ -599,5 +602,101 @@ BOOST_AUTO_TEST_CASE(locked_joints)
 
     matrix_t jacobian (device->numberDof(), device->numberDof());
     expression.jacobian(jacobian, qrand);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(RelativePose)
+{
+  const std::string urdf
+    ("<robot name=\"two-freeflyers\">\n"
+     "  <link name=\"base_link\">\n"
+     "  </link>\n"
+     "</robot>");
+  // Make robot with two free flyers.
+  DevicePtr_t device (Device::create("two-freeflyers"));
+  hpp::pinocchio::urdf::loadModelFromString(device, 0, "1", "freeflyer",
+                                            urdf, "");
+  hpp::pinocchio::urdf::loadModelFromString(device, 0, "2", "freeflyer",
+                                            urdf, "");
+  assert(device->configSize() == 14);
+  assert(device->numberDof() == 12);
+  // Set joint bounds
+  hpp::pinocchio::JointPtr_t joint1 (device->jointAt(0));
+  hpp::pinocchio::JointPtr_t joint2 (device->jointAt(1));
+  vector_t low (device->configSize()); low.fill(-0.0001);
+  vector_t  up (device->configSize());  up.fill( 0.0001);
+
+  hpp::constraints::Transform3f frame1(pinocchio::SE3::Random());
+  hpp::constraints::Transform3f frame2(pinocchio::SE3::Random());
+  // explicit relative pose
+  hpp::constraints::ExplicitPtr_t constraint
+    (hpp::constraints::explicit_::RelativePose::create
+     ("explicit-relative-pose", device, joint1, joint2, frame1, frame2));
+  assert(constraint->inputConf().size() == 1);
+  assert(constraint->inputConf()[0].first == 0);
+  assert(constraint->inputConf()[0].second == 7);
+
+  for (size_type k=0; k<100; ++k) {
+    // Pick a random configuration
+    vector_t q_rand(pinocchio::randomConfiguration(device->model(), low, up));
+    for (size_type i=0; i<64; ++i) {
+      vector_t q (q_rand);
+      size_type m = 1;
+      hpp::constraints::ComparisonTypes_t comp(6);
+      for (size_type j=0; j<6; ++j) {
+        // m = 2^(j+1)
+        if ((m & i) == 0) {
+          comp [j] = hpp::constraints::Equality;
+        } else {
+          comp [j] = hpp::constraints::EqualToZero;
+        }
+        m *= 2;
+      }
+      constraint->comparisonType (comp);
+      hpp::constraints::ExplicitConstraintSet ecs(device->configSpace());
+      size_type res(ecs.add(constraint));
+      BOOST_CHECK (res != -1);
+      // Get value of function h for initial value of q -> rhs0_impl
+      LiegroupElement rhs0_impl (constraint->function().outputSpace());
+      constraint->function().value(rhs0_impl, q);
+      // Set right hand side from q
+      LiegroupElement rhs1_impl (constraint->function().outputSpace());
+      // Get right hand side from q in implicit form -> rhs1_impl
+      constraint->explicitToImplicitRhs(ecs.rightHandSideFromInput(q),
+                                        rhs1_impl.vector());
+
+      // Solve constraint
+      ecs.solve(q);
+      // Get value of function h for new value of q -> rhs2_impl
+      LiegroupElement rhs2_impl (constraint->function().outputSpace());
+      constraint->function().value(rhs2_impl, q);
+      // Get right hand side in implicit form -> rhs3_impl
+      LiegroupElement rhs3_impl (constraint->function().outputSpace());
+      constraint->explicitToImplicitRhs(ecs.rightHandSide(),
+                                        rhs3_impl.vector());
+      std::cout << "            \t";
+      for (size_type j=0; j < (size_type)comp.size(); ++j) {
+        std::cout << (comp[j] == hpp::constraints::Equality ? " = \t" :
+                      " =0\t");
+      }
+      std::cout << std::endl;
+      std::cout << "rhs0_impl = " << rhs0_impl.vector().transpose() << std::endl;
+      std::cout << "rhs2_impl = " << rhs2_impl.vector().transpose() << std::endl;
+      // For each coordinate check that
+      // rhs3_impl [j] == 0 if comp[i] is EqualToZero
+      // rhs3_impl [j] == rhs1_impl [j] if comp[i] is Equality
+      for (size_type j=0; j<6; ++j){
+        BOOST_CHECK(((comp[j] == hpp::constraints::EqualToZero) &&
+                     (fabs(rhs2_impl.vector()[j]) < 1e-10))
+                    || ((comp[j] == hpp::constraints::Equality) &&
+                        (fabs(rhs2_impl.vector()[j] - rhs0_impl.vector()[j])
+                         < 1e-10)));
+      }
+      // Test conversions from explicit to implicit
+      vector_t rhs_expl(6), rhs_impl(6);
+      constraint->implicitToExplicitRhs(rhs0_impl.vector(), rhs_expl);
+      constraint->explicitToImplicitRhs(rhs_expl, rhs_impl);
+      BOOST_CHECK((rhs_impl - rhs0_impl.vector()).squaredNorm() < 1e-10);
+    }
   }
 }
