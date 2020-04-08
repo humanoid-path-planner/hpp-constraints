@@ -36,9 +36,19 @@ namespace hpp {
       }
       return size;
     }
-    void Implicit::rightHandSide (vectorIn_t rhs)
+    void Implicit::rightHandSide (vectorIn_t rightHandSide)
     {
-      rhs_ = rhs;
+      LiegroupSpacePtr_t space (function_->outputSpace());
+      assert (rightHandSide.size () == space->nq ());
+      pinocchio::LiegroupElementConstRef output
+        (space->elementConstRef (rightHandSide));
+      LiegroupElementRef rhs (space->elementRef (rhs_));
+      vector_t error = output - space->neutral (); // log (rightHandSide)
+      for (size_type k = 0; k < space->nv(); ++k) {
+        if (comparison_[k] != Equality)
+          assert (error[k] == 0);
+      }
+      rhs = space->neutral () + error; // exp (error)
     }
 
     vectorIn_t Implicit::rightHandSide () const
@@ -214,9 +224,19 @@ namespace hpp {
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config)
     {
       if (parameterSize () > 0) {
-        LiegroupElement value (function_->outputSpace ());
-        function_->value (value, config);
-        rightHandSide (value.vector ());
+        LiegroupSpacePtr_t space (function_->outputSpace());
+        LiegroupElement output (space);
+        LiegroupElementRef rhs    (space->elementRef(rhs_));
+
+        function_->value (output, config);
+        // d.error is used here as an intermediate storage. The value
+        // computed is not exactly the error
+        vector_t error = output - rhs;
+        for (size_type k = 0; k < space->nv(); ++k) {
+          if (comparison_[k] != Equality)
+            error[k] = 0;
+        }
+        rhs += error;
       }
     }
   } // namespace constraints
