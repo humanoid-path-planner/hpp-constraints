@@ -29,7 +29,24 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
-    /// Differentiable function
+    /// Differentiable function from a \link hpp::pinocchio::LiegroupSpace Lie
+    /// group\endlink, for instance the configuration space of a robot
+    /// (hpp::pinocchio::Device) to a another \link
+    /// hpp::pinocchio::LiegroupSpace Lie group\endlink.
+    ///
+    /// Note that the input Lie group is only represented by the sizes
+    /// of the elements and of the velocities: methods \link
+    /// DifferentiableFunction::inputSize inputSize\endlink and \link
+    /// DifferentiableFunction::inputDerivativeSize
+    /// inputDerivativeSize\endlink
+    ///
+    /// The output space can be accessed by method \link
+    /// DifferentiableFunction::outputSpace outputSpace\endlink.
+    ///
+    /// The value of the function for a given input can be accessed by method
+    /// \link DifferentiableFunction::value value \endlink.
+    /// The Jacobian of the function for a given input can be accessed by
+    /// method \link DifferentiableFunction::jacobian jacobian \endlink.
     class HPP_CONSTRAINTS_DLLAPI DifferentiableFunction
     {
     public:
@@ -94,10 +111,7 @@ namespace hpp {
       {
 	return inputDerivativeSize_;
       }
-      /// Get output element
-      ///
-      /// Getting an output element enables users to know the type of Liegroup
-      /// the function output values lie in.
+      /// Get output space
       LiegroupSpacePtr_t outputSpace () const
       {
         return outputSpace_;
