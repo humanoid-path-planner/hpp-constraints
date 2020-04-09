@@ -1,4 +1,19 @@
                                                                 -*- outline -*-
+New in ...
+* Computation of constraint right hand side have been fixed
+  - in ExplicitConstraintSet, the computation was wrong, it has been fixed,
+  - in Implicit, the computation has been made similar to the one in
+    HierarchicalIterative.
+* Template flag definitions in GenericTransformation have been fixed
+  - to comply with C++11 standard.
+* throw declaration have been removed to comply with C++11 standard.
+* Configuration variable RUN_TESTS has benn replaced by BUILD_TESTING
+  - for homogeneity with other hpp packages.
+
+New in 4.8.0
+* Wrong indentation in output stream has been fixed.
+
+New in 4.7.0
 * Class HierarchicalIterative
   - a bug in right hand side getter by constraint has been fixed,
   - a getter to numerical constraints has been added. It returns the implicit
