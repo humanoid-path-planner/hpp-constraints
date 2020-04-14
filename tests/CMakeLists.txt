@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with hpp-constraints  If not, see <http://www.gnu.org/licenses/>.
 
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-
 # Make Boost.Test generates the main function in test cases.
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
 
@@ -28,38 +26,26 @@ ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
 # This macro will create a binary from `NAME.cc', link it against
 # Boost and add it to the test suite.
 #
-MACRO(ADD_TESTCASE NAME GENERATED HEADER_ONLY)
-  IF (${GENERATED} STREQUAL TRUE)
-    ADD_UNIT_TEST(${NAME} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cc)
-  ELSE()
-    ADD_UNIT_TEST(${NAME} ${NAME}.cc)
-  ENDIF()
-
-  PKG_CONFIG_USE_DEPENDENCY(${NAME} hpp-pinocchio)
-
-  # Link against Boost and project library.
-  IF(${HEADER_ONLY})
-    TARGET_LINK_LIBRARIES(${NAME} ${Boost_LIBRARIES})
-  ELSE(${HEADER_ONLY})
-    TARGET_LINK_LIBRARIES(${NAME} ${Boost_LIBRARIES} hpp-constraints)
-  ENDIF(${HEADER_ONLY})
+MACRO(ADD_TESTCASE NAME)
+  ADD_UNIT_TEST(${NAME} ${NAME}.cc)
+  TARGET_LINK_LIBRARIES(${NAME} ${Boost_LIBRARIES} ${PROJECT_NAME})
 ENDMACRO(ADD_TESTCASE)
 
 FIND_PACKAGE(OpenMP)
 IF(OPENMP_FOUND)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  ADD_TESTCASE (multithread             FALSE FALSE)
+  ADD_TESTCASE(multithread)
 ENDIF()
 
-ADD_TESTCASE (logarithm                 FALSE TRUE )
-ADD_TESTCASE (matrix-view               FALSE FALSE )
-ADD_TESTCASE (svd                       FALSE TRUE )
+ADD_TESTCASE(logarithm)
+ADD_TESTCASE(matrix-view)
+ADD_TESTCASE(svd)
 
-ADD_TESTCASE (test-jacobians            FALSE FALSE)
-ADD_TESTCASE (generic-transformation    FALSE FALSE)
-ADD_TESTCASE (convex-shape              FALSE FALSE)
-ADD_TESTCASE (symbolic-calculus         FALSE FALSE)
-ADD_TESTCASE (solver-hierarchical-iterative FALSE FALSE)
-ADD_TESTCASE (explicit-constraint-set   FALSE FALSE)
-ADD_TESTCASE (solver-by-substitution    FALSE FALSE)
-ADD_TESTCASE (gjk                       FALSE FALSE)
+ADD_TESTCASE(test-jacobians)
+ADD_TESTCASE(generic-transformation)
+ADD_TESTCASE(convex-shape)
+ADD_TESTCASE(symbolic-calculus)
+ADD_TESTCASE(solver-hierarchical-iterative)
+ADD_TESTCASE(explicit-constraint-set)
+ADD_TESTCASE(solver-by-substitution)
+ADD_TESTCASE(gjk)
