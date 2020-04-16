@@ -29,9 +29,29 @@ namespace hpp {
     /// \{
 
      /**
-     Implementation of constraint specific to locked joint.
-     The underlying equation is \f$ q_i (q) = rhs \f$.
-     The right hand side of the equation is also called value.
+     Implementation of constraint specific to a locked joint.
+
+     The implicit formulation as defined in class Implicit is given by
+     \f{equation}
+     h (\mathbf{q}) = q_{out} - value
+     \f}
+     where \f$value\f$ is an element of the configuration space of the locked
+     joint passed to method \link
+     LockedJoint::create(const JointPtr_t& joint, const LiegroupElement& value)
+     create\endlink.
+
+     Note that \f$h\f$ takes values in \f$\mathbf{R}^{nv}\f$ where
+     \f$nv\f$ is the dimension of the joint tangent space.
+
+     The explicit formulation is given by
+     \f{equation}
+     q_{out} = value + rhs
+     \f}
+     where coordinates of \f$rhs\f$ corresponding to comparison types different
+     from Equality are set to 0.
+
+     As such, the relation between the explicit formulation and the implicit
+     formulation is the default one.
      */
     class HPP_CONSTRAINTS_DLLAPI LockedJoint : public Explicit
     {
