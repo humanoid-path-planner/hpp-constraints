@@ -35,24 +35,26 @@ namespace hpp {
     /** The function returns a relative transformation between the two "closest"
         convex shapes it contains.
 
-        Two set of convex shapes can be given to this class:
+        Twos set of convex shapes can be given to this class:
         \li a set of object contact surfaces, \f$ (o_i)_{i \in I } \f$, which can be in contact with the environment,
         \li a set of floor contact surfaces, \f$ (f_j)_{j \in J } \f$, which can support objects.
 
-        The distance \f$ d_{i,j} = d (o_i, f_j) \f$ between object surface
+        The distance \f$ d (f_j, o_i) \f$ between object surface
         \f$o_i\f$ and environment surface \f$ f_j \f$ is defined by:
         \f{equation*}
-           d(i,j)^2 =
+           d (f_j, o_i)^2 =
              \left\lbrace \begin{array}{cl}
                d_{\parallel}^2 + d_{\perp}^2 &, \text{ if } d_{\parallel} > 0 \\
                d_{\perp}^2                   &, \text{ otherwise}
              \end{array} \right.
         \f}
         where
-        \li \f$P (C_{o_i}, f_j)\f$ is the projection of the center \f$o_i\f$ onto the plane containing \f$ f_j \f$,
+        \li \f$P (C_{o_i}, f_j)\f$ is the projection of the center \f$C_{o_i}\f$ of \f$o_i\f$ onto the plane containing \f$ f_j \f$,
         \li \f$\textbf{n}_{f_j}\f$ is the normal of \f$ f_j \f$,
-        \li \f$d_{\parallel} = d(f_j, P (C_{o_i}, f_j))\f$ is the distance returned by ConvexShape::distance,
-        \li \f$d_{\perp} = \textbf{n}_{f_j}.C_{f_j}P(C_{o_i}, f_j)\f$ is the distance along the normal of \f$ f_j \f$,
+        \li \f$d_{\parallel} = d(f_j, P (C_{o_i}, f_j))\f$ is the distance returned by ConvexShapeData::distance,
+        \li \f$d_{\perp} = \textbf{n}_{f_j}.\vec{C_{f_j}C_{o_i}}\f$ is the distance along the normal of \f$ f_j \f$,
+
+        \image html convex-shape-contact.svg
 
         The function first selects the pair \f$(o_i,f_j)\f$ with shortest distance.
         \f$o_i\f$ is \em inside \f$f_j\f$ if \f$d(i,j) < 0\f$.
