@@ -355,7 +355,7 @@ namespace hpp {
         }
       }
 
-      /// See ConvexShape::distance
+      /// See ConvexShape::distanceLocal
       /// \param a a point already in the plane containing the convex shape,
       ///        and expressed in the global frame.
       inline value_type distance (const ConvexShape& cs, vector3_t a) const

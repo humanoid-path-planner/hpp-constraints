@@ -1,2 +1,4 @@
 INPUT = @CMAKE_SOURCE_DIR@/include/hpp/constraints \
       @CMAKE_SOURCE_DIR@/doc
+
+IMAGE_PATH = @CMAKE_SOURCE_DIR@/doc/figures
