@@ -885,7 +885,7 @@ namespace hpp {
           joint_ (joint)
         {
           assert (joint_ != NULL);
-          this->jacobian_.resize(6,joint->robot()->numberDof());
+          this->jacobian_.resize(6,joint->robot()->numberDof()-joint->robot()->extraConfigSpace().dimension());
         }
 
         const JointPtr_t& joint () const {
