@@ -30,6 +30,9 @@
 namespace hpp {
   namespace constraints {
 
+    /// Wrapper of a CalculusBaseAbstract derived object into a DifferentiableFunction
+    /// \note At the moment, it is not possible to write a CalculusBaseAbstract
+    ///       derived object that uses the extra config space of the robot.
     template <typename Expression>
     class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction
     {
@@ -80,7 +83,12 @@ namespace hpp {
           DifferentiableFunction (robot->configSize(), robot->numberDof(),
                                   LiegroupSpace::Rn (expr->value().size()),
                                   name),
-          robot_ (robot), expr_ (expr), mask_ (mask) {}
+          robot_ (robot), expr_ (expr), mask_ (mask)
+        {
+          size_type d = robot_->extraConfigSpace().dimension();
+          activeParameters_          .tail(d).setConstant(false);
+          activeDerivativeParameters_.tail(d).setConstant(false);
+        }
 
         SymbolicFunction (const std::string& name, size_type sizeInput,
                           size_type sizeInputDerivative,
@@ -122,9 +130,21 @@ namespace hpp {
           expr_->invalidate ();
           expr_->computeJacobian (arg);
           size_t index = 0;
+
+          const typename Expression::JacobianType_t& Je (expr_->jacobian());
+          size_type nv;
+          if (robot_) {
+            size_type d = robot_->extraConfigSpace().dimension();
+            nv = Je.cols();
+            assert(robot_->numberDof() == Je.cols() + d);
+            jacobian.rightCols(d).setZero();
+          } else {
+            nv = jacobian.cols();
+          }
+
           for (std::size_t i = 0; i < mask_.size (); i++) {
             if (mask_[i])
-              jacobian.row (index++) = expr_->jacobian ().row (i);
+              jacobian.row(index++).head(nv) = Je.row (i);
           }
         }
 

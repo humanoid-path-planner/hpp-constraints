@@ -14,6 +14,7 @@
 # hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 SET(LIBRARY_NAME ${PROJECT_NAME})
+
 SET (${LIBRARY_NAME}_SOURCES
   differentiable-function.cc
   differentiable-function-set.cc

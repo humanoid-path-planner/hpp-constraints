@@ -276,6 +276,11 @@ BOOST_AUTO_TEST_CASE (SymbolicCalculus_position) {
 
 BOOST_AUTO_TEST_CASE (SymbolicCalculus_jointframe) {
   DevicePtr_t device = createRobot ();
+  device->setDimensionExtraConfigSpace(3);
+  for (int i = 0; i < 3; ++i) {
+    device->extraConfigSpace().lower(i) = -1;
+    device->extraConfigSpace().upper(i) =  1;
+  }
   JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);

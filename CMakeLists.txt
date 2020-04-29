@@ -1,4 +1,4 @@
-# Copyright 2014, Florent Lamiraux, CNRS
+# Copyright 2014, 2020, Florent Lamiraux, Guilhem Saurel, CNRS
 #
 # This file is part of hpp-constraints.
 # hpp-constraints is free software: you can redistribute it and/or
@@ -13,27 +13,41 @@
 # received a copy of the GNU Lesser General Public License along with
 # hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-# Requires at least CMake 2.6 to configure the package.
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 SET(PROJECT_NAME hpp-constraints)
 SET(PROJECT_DESCRIPTION "Definition of basic geometric constraints for motion planning")
 
-CMAKE_POLICY (SET CMP0012 NEW)
 SET(CXX_DISABLE_WERROR TRUE)
 SET(DOXYGEN_USE_MATHJAX YES)
 SET(PROJECT_USE_CMAKE_EXPORT TRUE)
+
 INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
-INCLUDE(cmake/eigen.cmake)
-INCLUDE(cmake/test.cmake)
 
-# Add a cache variable to allow not compiling and running tests
-if(DEFINED RUN_TESTS AND NOT DEFINED BUILD_TESTING)
-  set (BUILD_TESTING ${RUN_TESTS} CACHE BOOL "compile and run unit tests")
-else()
-  set (BUILD_TESTING TRUE CACHE BOOL "compile and run unit tests")
-endif()
+# Activate hpp-util logging if requested
+SET(HPP_CONSTRAINTS_NUMERIC_DEBUG ${HPP_DEBUG} CACHE BOOL "trigger hpp-util debug output")
+IF(HPP_CONSTRAINTS_NUMERIC_DEBUG)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_CONSTRAINTS_NUMERIC_DEBUG")
+ENDIF()
+
+OPTION(CHECK_JACOBIANS "Check jacobians against finite difference." OFF)
+IF(CHECK_JACOBIANS)
+  ADD_DEFINITIONS(-DCHECK_JACOBIANS)
+ENDIF(CHECK_JACOBIANS)
+
+# Add a cache variable to remove dependency to qpOASES
+SET(USE_QPOASES TRUE CACHE BOOL "Use qpOASES solver for static stability")
+
+COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
+PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
+
+ADD_PROJECT_DEPENDENCY(hpp-pinocchio)
+ADD_PROJECT_DEPENDENCY(hpp-statistics)
+IF(USE_QPOASES)
+  SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/qpOASES")
+  FIND_PACKAGE(qpOASES REQUIRED)
+ENDIF()
 
 SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function.hh
@@ -78,49 +92,63 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/solver/impl/hierarchical-iterative.hh
   include/hpp/constraints/impl/matrix-view.hh
   include/hpp/constraints/impl/matrix-view-operation.hh
-)
+  )
 
-# Activate hpp-util logging if requested
-SET (HPP_CONSTRAINTS_NUMERIC_DEBUG ${HPP_DEBUG} CACHE BOOL "trigger hpp-util debug output")
-IF (HPP_CONSTRAINTS_NUMERIC_DEBUG)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_CONSTRAINTS_NUMERIC_DEBUG")
-ENDIF()
+SET (${PROJECT_NAME}_SOURCES
+  src/differentiable-function.cc
+  src/differentiable-function-set.cc
+  src/generic-transformation.cc
+  src/relative-com.cc
+  src/com-between-feet.cc
+  src/distance-between-bodies.cc
+  src/distance-between-points-in-bodies.cc
+  src/configuration-constraint.cc
+  src/convex-shape-contact.cc
+  src/matrix-view.cc
+  src/manipulability.cc
+  src/static-stability.cc
+  src/explicit-constraint-set.cc
+  src/implicit.cc
+  src/explicit.cc
+  src/explicit/implicit-function.cc
+  src/explicit/relative-transformation.cc
+  src/explicit/relative-pose.cc
+  src/function/of-parameter-subset.cc
+  src/function/difference.cc
+  src/implicit/relative-pose.cc
+  src/locked-joint.cc
+  src/solver/by-substitution.cc
+  src/solver/hierarchical-iterative.cc
+  )
 
-OPTION(CHECK_JACOBIANS "Check jacobians against finite difference." OFF)
-IF(CHECK_JACOBIANS)
-  ADD_DEFINITIONS(-DCHECK_JACOBIANS)
-ENDIF(CHECK_JACOBIANS)
-
-# Add a cache variabie to remove dependency to qpOASES
-SET(USE_QPOASES TRUE CACHE BOOL "Use qpOASES solver for static stability")
-IF (USE_QPOASES)
-  SET(${PROJECT_NAME}_HEADERS ${${PROJECT_NAME}_HEADERS}
+IF(USE_QPOASES)
+  SET(${PROJECT_NAME}_HEADERS
+    ${${PROJECT_NAME}_HEADERS}
     include/hpp/constraints/static-stability.hh
     include/hpp/constraints/qp-static-stability.hh
     )
-  PKG_CONFIG_APPEND_CFLAGS (-DHPP_CONSTRAINTS_USE_QPOASES)
-ENDIF ()
+  PKG_CONFIG_APPEND_CFLAGS(-DHPP_CONSTRAINTS_USE_QPOASES)
+  SET(${PROJECT_NAME}_SOURCES
+    ${${PROJECT_NAME}_SOURCES}
+    src/qp-static-stability.cc
+    )
+ENDIF(USE_QPOASES)
 
-COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
-PROJECT(${PROJECT_NAME} ${PROJECT_ARGS})
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} hpp-pinocchio::hpp-pinocchio hpp-statistics::hpp-statistics)
 
-ADD_REQUIRED_DEPENDENCY("eigen3 >= 3.2.92")
-ADD_REQUIRED_DEPENDENCY("pinocchio")
-ADD_REQUIRED_DEPENDENCY("hpp-pinocchio >= 4")
-ADD_REQUIRED_DEPENDENCY("hpp-statistics")
-IF (${USE_QPOASES})
-  SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/qpOASES")
-  FIND_PACKAGE("qpOASES" REQUIRED)
-  INCLUDE_DIRECTORIES(SYSTEM ${qpOASES_INCLUDE_DIRS})
-ENDIF ()
+IF(USE_QPOASES)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${qpOASES_LIBRARY})
+ENDIF(USE_QPOASES)
 
-ADD_SUBDIRECTORY (src)
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
 
-IF (BUILD_TESTING)
+IF(BUILD_TESTING)
   ADD_REQUIRED_DEPENDENCY("romeo_description")
   SET(BOOST_COMPONENT math unit_test_framework)
   SEARCH_FOR_BOOST()
   ADD_SUBDIRECTORY(tests)
-ENDIF ()
+ENDIF()
 
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
