@@ -86,7 +86,7 @@ namespace hpp {
 
     bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg) const
     {
-      diffSmall_.resize(outDers_.nbIndices());
+      diffSmall_.resize(errorSize_);
       return isSatisfied (arg, diffSmall_);
     }
 

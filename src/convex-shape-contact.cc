@@ -29,11 +29,14 @@ namespace hpp {
   namespace constraints {
 
     ConvexShapeContact::ConvexShapeContact
-    (const std::string& name, const DevicePtr_t& robot) :
+    (const std::string& name, DevicePtr_t robot,
+     const JointAndShapes_t& floorSurfaces,
+     const JointAndShapes_t& objectSurfaces) :
       DifferentiableFunction (robot->configSize (), robot->numberDof (),
                               LiegroupSpace::Rn (5), name), robot_ (robot),
-      relativeTransformationModel_ (robot->numberDof()-robot->extraConfigSpace().dimension()),
-      normalMargin_ (0)
+      relativeTransformationModel_ (robot->numberDof() -
+                                    robot->extraConfigSpace().dimension()),
+      normalMargin_ (0), M_(0)
     {
       relativeTransformationModel_.fullPos = true;
       relativeTransformationModel_.fullOri = true;
@@ -41,16 +44,28 @@ namespace hpp {
 
       activeParameters_.setConstant(false);
       activeDerivativeParameters_.setConstant(false);
+      // Register convex polygons into constraint
+      for (JointAndShapes_t::const_iterator it(floorSurfaces.begin());
+           it != floorSurfaces.end(); ++it)
+      {
+        addFloor(ConvexShape(it->second, it->first));
+      }
+      for (JointAndShapes_t::const_iterator it(objectSurfaces.begin());
+           it != objectSurfaces.end(); ++it)
+      {
+        addObject(ConvexShape(it->second, it->first));
+      }
+      computeRadius();
     }
 
     ConvexShapeContactPtr_t ConvexShapeContact::create (
-        const std::string& name,
-        const DevicePtr_t& robot)
+           const std::string& name, DevicePtr_t robot,
+           const JointAndShapes_t& floorSurfaces,
+           const JointAndShapes_t& objectSurfaces)
     {
       return ConvexShapeContactPtr_t (new ConvexShapeContact
-					  (name, robot));
-    }
-
+                                      (name, robot, floorSurfaces,
+                                       objectSurfaces));
     }
 
     void ConvexShapeContact::addObject (const ConvexShape& t)
@@ -74,6 +89,25 @@ namespace hpp {
         setActiveParameters (robot_, tt.joint_, o_it->joint_,
             activeParameters_, activeDerivativeParameters_);
       }
+    }
+
+    void ConvexShapeContact::computeRadius()
+    {
+      // Compute upper bound of distance between center of polygon and
+      // vectices for all floor polygons.
+      for(ConvexShapes_t::const_iterator shape(floorConvexShapes_.begin());
+          shape != floorConvexShapes_.end(); ++shape)
+      {
+        for (std::vector <vector3_t>::const_iterator itv
+               (shape->Pts_.begin()); itv != shape->Pts_.end(); ++itv)
+        {
+          value_type r ((*itv - shape->C_).norm());
+          if (r > M_) {
+            M_ = r;
+          }
+        }
+      }
+      M_+=1;
     }
 
     void ConvexShapeContact::setNormalMargin (const value_type& margin)
@@ -115,22 +149,24 @@ namespace hpp {
       return forceDatas;
     }
 
-    void ConvexShapeContact::computeInternalValue (const ConfigurationIn_t& argument,
-        bool& isInside, ContactType& type, vector6_t& value) const
+    void ConvexShapeContact::computeInternalValue
+    (const ConfigurationIn_t& argument, bool& isInside, ContactType& type,
+     vector6_t& value, std::size_t& iobject, std::size_t& ifloor) const
     {
       GTDataV<true, true, true, false> data (relativeTransformationModel_, robot_);
 
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
 
-      ConvexShapes_t::const_iterator object, floor;
-      isInside = selectConvexShapes (data.device.d(), object, floor);
-      type = contactType (*object, *floor);
+      isInside = selectConvexShapes (data.device.d(), iobject, ifloor);
+      const ConvexShape& object(objectConvexShapes_[iobject]),
+        floor(floorConvexShapes_[ifloor]);
+      type = contactType (object, floor);
 
-      relativeTransformationModel_.joint1 = floor->joint_;
-      relativeTransformationModel_.joint2 = object->joint_;
-      relativeTransformationModel_.F1inJ1 = floor->positionInJoint ();
-      relativeTransformationModel_.F2inJ2 = object->positionInJoint ();
+      relativeTransformationModel_.joint1 = floor.joint_;
+      relativeTransformationModel_.joint2 = object.joint_;
+      relativeTransformationModel_.F1inJ1 = floor.positionInJoint ();
+      relativeTransformationModel_.F2inJ2 = object.positionInJoint ();
       relativeTransformationModel_.checkIsIdentity1();
       relativeTransformationModel_.checkIsIdentity2();
 
@@ -144,7 +180,8 @@ namespace hpp {
       bool isInside;
       ContactType type;
       vector6_t value;
-      computeInternalValue (argument, isInside, type, value);
+      std::size_t iobject, ifloor;
+      computeInternalValue (argument, isInside, type, value, iobject, ifloor);
 
       if (isInside) {
         result.vector () [0] = value [0] + normalMargin_;
@@ -182,14 +219,16 @@ namespace hpp {
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
 
-      ConvexShapes_t::const_iterator object, floor;
-      isInside = selectConvexShapes (data.device.d(), object, floor);
-      type = contactType (*object, *floor);
+      std::size_t ifloor, iobject;
+      isInside = selectConvexShapes (data.device.d(), iobject, ifloor);
+      const ConvexShape& object(objectConvexShapes_[iobject]),
+        floor(floorConvexShapes_[ifloor]);
+      type = contactType (object, floor);
 
-      relativeTransformationModel_.joint1 = floor->joint_;
-      relativeTransformationModel_.joint2 = object->joint_;
-      relativeTransformationModel_.F1inJ1 = floor->positionInJoint ();
-      relativeTransformationModel_.F2inJ2 = object->positionInJoint ();
+      relativeTransformationModel_.joint1 = floor.joint_;
+      relativeTransformationModel_.joint2 = object.joint_;
+      relativeTransformationModel_.F1inJ1 = floor.positionInJoint ();
+      relativeTransformationModel_.F2inJ2 = object.positionInJoint ();
       relativeTransformationModel_.checkIsIdentity1();
       relativeTransformationModel_.checkIsIdentity2();
       data.cross2.setZero();
@@ -228,30 +267,29 @@ namespace hpp {
       }
     }
 
-    bool ConvexShapeContact::selectConvexShapes (const pinocchio::DeviceData& data,
-        ConvexShapes_t::const_iterator& object,
-        ConvexShapes_t::const_iterator& floor) const
+    bool ConvexShapeContact::selectConvexShapes
+    (const pinocchio::DeviceData& data, std::size_t& iobject,
+     std::size_t& ifloor) const
     {
       ConvexShapeData od, fd;
       bool isInside = false; // Initialized only to remove compiler warning.
 
       value_type dist, minDist = + std::numeric_limits <value_type>::infinity();
-      for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
-          o_it != objectConvexShapes_.end (); ++o_it) {
-        od.updateToCurrentTransform (*o_it, data);
+      for(std::size_t j=0; j<floorConvexShapes_.size(); ++j) {
+        fd.updateToCurrentTransform (floorConvexShapes_[j], data);
 
-        for (ConvexShapes_t::const_iterator f_it = floorConvexShapes_.begin ();
-            f_it != floorConvexShapes_.end (); ++f_it) {
-          fd.updateToCurrentTransform (*f_it, data);
-          value_type dp = fd.distance (*f_it, fd.intersection (od.center_, fd.normal_)),
+        for(std::size_t i=0; i<objectConvexShapes_.size(); ++i) {
+          od.updateToCurrentTransform (objectConvexShapes_[i], data);
+          value_type dp = fd.distance (floorConvexShapes_[j], fd.intersection
+                                       (od.center_, fd.normal_)),
                      dn = fd.normal_.dot (od.center_ - fd.center_);
           if (dp < 0) dist = dn * dn;
           else        dist = dp*dp + dn * dn;
 
           if (dist < minDist) {
             minDist = dist;
-            object = o_it;
-            floor = f_it;
+            iobject = i;
+            ifloor = j;
             isInside = (dp < 0);
           }
         }
@@ -290,37 +328,80 @@ namespace hpp {
     }
 
     ConvexShapeContactComplement::ConvexShapeContactComplement
-    (const std::string& name, const std::string& complementName,
-     const DevicePtr_t& robot) :
-      DifferentiableFunction (robot->configSize (), robot->numberDof (), 3,
-			      complementName),
-      sibling_ (ConvexShapeContact::create (name, robot))
+    (const std::string& name, DevicePtr_t robot,
+     const JointAndShapes_t& floorSurfaces,
+     const JointAndShapes_t& objectSurfaces) :
+      DifferentiableFunction (robot->configSize (), robot->numberDof (),
+                              LiegroupSpace::Rn (3), name +
+                              std::string("/complement")),
+      sibling_ (ConvexShapeContact::create (name, robot, floorSurfaces,
+                                            objectSurfaces))
     {
     }
 
     std::pair < ConvexShapeContactPtr_t,
 		ConvexShapeContactComplementPtr_t >
     ConvexShapeContactComplement::createPair
-    (const std::string& name, const std::string& complementName,
-     const DevicePtr_t& robot)
+    (const std::string& name, DevicePtr_t robot,
+     const JointAndShapes_t& floorSurfaces,
+     const JointAndShapes_t& objectSurfaces)
     {
       ConvexShapeContactComplement* ptr =
-	new ConvexShapeContactComplement (name, complementName, robot);
+	new ConvexShapeContactComplement (name, robot, floorSurfaces,
+                                          objectSurfaces);
       ConvexShapeContactComplementPtr_t shPtr (ptr);
       return std::make_pair (ptr->sibling_, shPtr);
     }
 
+    void ConvexShapeContactComplement::computeRelativePoseRightHandSide
+    (vectorIn_t rhs, std::size_t& ifloor, std::size_t& iobject,
+     vectorOut_t relativePoseRhs) const
+    {
+      value_type M(sibling_->radius());
+      relativePoseRhs.fill(sqrt(-1));
+      // x
+      relativePoseRhs[0] = rhs[0];
+      // ry, rz
+      relativePoseRhs.segment<2>(4) = rhs.segment<2>(3);
+      // rx
+      relativePoseRhs[3] = rhs[7];
+      value_type Y(rhs[5]);
+      value_type Z(rhs[6]);
+      assert(floor(Y/(2*M) + .5) >= 0);
+      ifloor = (std::size_t)(floor(Y/(2*M) + .5));
+      assert(floor(Z/(2*M) + .5) >= 0);
+      iobject = (std::size_t)(floor(Z/(2*M) + .5));
+      if ((rhs[1] == 0) && (rhs[2] == 0))
+      {
+        // inside
+        relativePoseRhs[1] = Y - (value_type)(2*ifloor)*M;
+        relativePoseRhs[2] = Z - (value_type)(2*iobject)*M;
+      }
+      else
+      {
+        // outside
+        relativePoseRhs.segment<2>(1) = rhs.segment<2>(1);
+      }
+      assert(!relativePoseRhs.hasNaN());
+    }
+        
+
     void ConvexShapeContactComplement::impl_compute
     (LiegroupElementRef result, ConfigurationIn_t argument) const
     {
+      value_type M(sibling_->radius());
       bool isInside;
       ConvexShapeContact::ContactType type;
       vector6_t value;
-      sibling_->computeInternalValue (argument, isInside, type, value);
-
+      std::size_t iobject, ifloor;
+      sibling_->computeInternalValue(argument, isInside, type, value, iobject,
+                                     ifloor);
+      vector3_t offset; offset << (value_type)(2*ifloor)*M,
+                          (value_type)(2*iobject)*M, 0;
       result.vector () [2] = value [3];
       if (isInside) result.vector ().head<2>() = value.segment<2>(1);
       else          result.vector ().head<2>().setZero();
+      result.vector() += offset;
       hppDout (info, "result = " << result);
     }
 
@@ -344,13 +425,17 @@ namespace hpp {
       o << "ConvexShapeContact: " << name () << ", active dof "
         << pretty_print (BlockIndex::fromLogicalExpression (activeParameters_)) << incindent;
 
-      o << iendl << "Object shapes:" << incindent;
+      o << iendl << "Object shapes:" << incindent << iendl;
       for (ConvexShapes_t::const_iterator o_it = objectConvexShapes_.begin ();
           o_it != objectConvexShapes_.end (); ++o_it) {
         if (o_it->joint_)
           o << "object on " << o_it->joint_->name() << iendl;
         else
           o << "object on universe" << iendl;
+        o << "position in joint:" << iendl;
+        o << incindent << o_it->positionInJoint();
+        o << decindent << iendl;
+        
       }
       for (ConvexShapes_t::const_iterator fl_it = floorConvexShapes_.begin ();
           fl_it != floorConvexShapes_.end (); ++fl_it) {
@@ -358,8 +443,53 @@ namespace hpp {
           o << "floor on " << fl_it->joint_->name() << iendl;
         else
           o << "floor on universe" << iendl;
+        o << "position in joint:" << iendl;
+        o << incindent << fl_it->positionInJoint();
+        o << decindent << iendl;
       }
       return o << decindent;
     }
+
+    ConvexShapeContactHoldPtr_t ConvexShapeContactHold::create
+    (const std::string& name, DevicePtr_t robot,
+     const JointAndShapes_t& floorSurfaces,
+     const JointAndShapes_t& objectSurfaces)
+    {
+      ConvexShapeContactHold* ptr(new ConvexShapeContactHold
+                                  (name, robot, floorSurfaces,
+                                   objectSurfaces));
+      return ConvexShapeContactHoldPtr_t(ptr);
+    }
+
+    ConvexShapeContactHold::ConvexShapeContactHold
+    (const std::string& name, DevicePtr_t robot,
+     const JointAndShapes_t& floorSurfaces,
+     const JointAndShapes_t& objectSurfaces) :
+      DifferentiableFunction(robot->configSize(), robot->numberDof(),
+                             LiegroupSpace::Rn (8), name)
+    {
+      std::pair<ConvexShapeContactPtr_t, ConvexShapeContactComplementPtr_t>
+        pair (ConvexShapeContactComplement::createPair
+              (name, robot, floorSurfaces, objectSurfaces));
+      constraint_ = pair.first;
+      complement_ = pair.second;
+    }
+
+    void ConvexShapeContactHold::impl_compute
+    (LiegroupElementRef result, vectorIn_t argument) const
+    {
+      LiegroupElementRef tmp1(result.vector().head<5>(), LiegroupSpace::Rn(5));
+      LiegroupElementRef tmp2(result.vector().tail<3>(), LiegroupSpace::Rn(3));
+      constraint_->impl_compute(tmp1, argument);
+      complement_->impl_compute(tmp2, argument);
+    }
+
+    void ConvexShapeContactHold::impl_jacobian
+    (matrixOut_t jacobian, vectorIn_t arg) const
+    {
+      constraint_->impl_jacobian(jacobian.topRows<5>(), arg);
+      complement_->impl_jacobian(jacobian.bottomRows<3>(), arg);
+    }
+
   } // namespace constraints
 } // namespace hpp

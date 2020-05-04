@@ -78,6 +78,7 @@ namespace hpp {
       public DifferentiableFunction {
       public:
         friend class ConvexShapeContactComplement;
+        friend class ConvexShapeContactHold;
 
         /// \cond
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -103,28 +104,35 @@ namespace hpp {
           vector3_t normal;
         };
 
-        /// Constructor
-        /// \param name name of the ConvexShapeContact constraint,
-        /// \param robot the robot the constraints is applied to,
-        ConvexShapeContact (const std::string& name,
-				const DevicePtr_t& robot);
+        /// Create instance and return shared pointer
+        /// \param name name of the constraint,
+        /// \param robot robot that holds the contact surface
+        /// \param floorSurfaces, objectSurfaces set of plane polygonal contact
+        ///        surfaces.
+        static ConvexShapeContactPtr_t create
+          (const std::string& name, DevicePtr_t robot,
+           const JointAndShapes_t& floorSurfaces,
+           const JointAndShapes_t& objectSurfaces);
 
         static ConvexShapeContactPtr_t create (
-            const std::string& name,
             const DevicePtr_t& robot);
 
-        static ConvexShapeContactPtr_t create (
-            const DevicePtr_t& robot);
-
-        /// Add a ConvexShape as an object.
-        void addObject (const ConvexShape& t);
-
-        /// Add a ConvexShape as a floor.
-        ///
-        /// The convex shape will be reverted using ConvexShape::reverse
-        /// so that the normal points inside the floor object.
-        void addFloor (const ConvexShape& t);
-
+        /// Get vector of floor contact surfaces
+        const ConvexShapes_t& floorContactSurfaces () const
+        {
+          return floorConvexShapes_;
+        }
+        /// Get vector of object contact surfaces
+        const ConvexShapes_t& objectContactSurfaces () const
+        {
+          return objectConvexShapes_;
+        }
+        /// Get radius \f$M\f$
+        /// See class documentation for a definition.
+        value_type radius() const
+        {
+          return M_;
+        }
         /// Set the normal margin, i.e. the desired distance between matching
         /// object and nd floor shapes.
         /// Default to 0
@@ -136,22 +144,45 @@ namespace hpp {
 
       /// Display object in a stream
       std::ostream& print (std::ostream& o) const;
+    protected:
+      /// Constructor
+      /// \param name name of the constraint,
+      /// \param robot robot that holds the contact surface
+      /// \param floorSurfaces, objectSurfaces set of plane polygonal contact
+      ///        surfaces.
+      ConvexShapeContact (const std::string& name, DevicePtr_t robot,
+                          const JointAndShapes_t& floorSurfaces,
+                          const JointAndShapes_t& objectSurfaces);
+
 
       private:
+        /// Add a ConvexShape as an object.
+        void addObject (const ConvexShape& t);
+
+        /// Add a ConvexShape as a floor.
+        ///
+        /// The convex shape will be reverted using ConvexShape::reverse
+        /// so that the normal points inside the floor object.
+        void addFloor (const ConvexShape& t);
+        void computeRadius();
+
         void impl_compute (LiegroupElementRef result, ConfigurationIn_t argument)
           const;
         void computeInternalValue (const ConfigurationIn_t& argument,
-            bool& isInside, ContactType& type, vector6_t& value) const;
+          bool& isInside, ContactType& type, vector6_t& value,
+          std::size_t& iobject, std::size_t& ifloor) const;
 
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
         void computeInternalJacobian (const ConfigurationIn_t& argument,
             bool& isInside, ContactType& type, matrix_t& jacobian) const;
 
-        typedef std::vector <ConvexShape> ConvexShapes_t;
+        /// Find floor and object surfaces that are the closest.
+        /// \retval iobject, ifloor indices in internal vectors
+        ///         objectConvexShapes_ and floorConvexShapes_
         /// \return true if the contact is created.
         bool selectConvexShapes (const pinocchio::DeviceData& data,
-            ConvexShapes_t::const_iterator& object,
-            ConvexShapes_t::const_iterator& floor) const;
+                                 std::size_t& iobject, std::size_t& ifloor)
+          const;
         ContactType contactType (const ConvexShape& object,
             const ConvexShape& floor) const;
 
@@ -162,6 +193,9 @@ namespace hpp {
         ConvexShapes_t floorConvexShapes_;
 
         value_type normalMargin_;
+        // upper bound of distance between center of polygon and vectices for
+        // all floor polygons.
+        value_type M_;
     };
 
     /** Complement to full transformation constraint of ConvexShapeContact
@@ -172,34 +206,54 @@ namespace hpp {
         | -------------- | -------- | ------- |
         | ConvexShapeContact::POINT_ON_PLANE (Unsupported) | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$ |
         | ConvexShapeContact::LINE_ON_PLANE (Unsupported)  | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$  |
-        | ConvexShapeContact::PLANE_ON_PLANE | \f$(y,z,rx)\f$ | \f$(0,0,rx)\f$ |
+        | ConvexShapeContact::PLANE_ON_PLANE | \f$(y+2jM,z+2iM,rx)\f$ | \f$(2jM,2iM,rx)\f$ |
 
-        See ConvexShapeContact
+        where
+        \li \f$M\f$ is an upper bound on the radius of all floor polygons,
+        \li \f$i\f$ and \f$j\f$ are the indices of object and floor contact
+        surfaces that minimize
+        \f{equation}
+        d(o_i,f_j)
+        \f}
+
+        \sa ConvexShapeContact
      **/
     class HPP_CONSTRAINTS_DLLAPI ConvexShapeContactComplement :
       public DifferentiableFunction
     {
     public:
+      friend class ConvexShapeContactHold;
       /// Create a pair of constraints
-      ///
-      /// The pair contains two complementary constraints to be used for
-      /// manipulation applications.
-      /// \param name name of the ConvexShapeContact constraint,
-      /// \param complementName name of the complement constraint,
-      /// \param robot
+      /// \param name name of the sibling ConvexShapeContact constraint,
+      ///        "/complement" is added to the name of this constraint
+      /// \param robot robot that holds the contact surface
+      /// \param floorSurfaces, objectSurfaces set of plane polygonal contact
+      ///        surfaces.
       static std::pair <ConvexShapeContactPtr_t,
 			ConvexShapeContactComplementPtr_t >
-	createPair (const std::string& name, const std::string& complementName,
-		    const DevicePtr_t& robot);
+	createPair(const std::string& name, DevicePtr_t robot,
+                   const JointAndShapes_t& floorSurfaces,
+                   const JointAndShapes_t& objectSurfaces);
 
+      /// Compute parameters and right hand side of relative pose
+      /// \param rhs right hand side of this constraint,
+      /// \retval ifloor, iobject indices of floor and object contact surface,
+      /// \retval relativePoseRhs right hand side (implicit representation) of
+      ///         the relative pose constraint corresponding to contact of
+      ///         surfaces ifloor with iobject.
+      void computeRelativePoseRightHandSide
+        (vectorIn_t rhs, std::size_t& ifloor, std::size_t& iobject,
+         vectorOut_t relativePoseRhs) const;
     protected:
       /// Constructor
-      /// \param name name of the ConvexShapeContact constraint,
-      /// \param complementName name of the complement constraint,
-      /// \param robot
-      ConvexShapeContactComplement (const std::string& name,
-					const std::string& complementName,
-					const DevicePtr_t& robot);
+      /// \param name name of the sibling ConvexShapeContact constraint,
+      ///        "/complement" is added to the name of this constraint
+      /// \param robot robot that holds the contact surface
+      /// \param floorSurfaces, objectSurfaces set of plane polygonal contact
+      ///        surfaces.
+      ConvexShapeContactComplement (const std::string& name, DevicePtr_t robot,
+                                    const JointAndShapes_t& floorSurfaces,
+                                    const JointAndShapes_t& objectSurfaces);
 
 
     private:
@@ -210,6 +264,60 @@ namespace hpp {
 
       ConvexShapeContactPtr_t sibling_;
     }; // class ConvexShapeContactComplement
+
+    /// Combination of ConvexShapeContact and complement constaints
+    ///
+    /// Create one instance of
+    /// \li ConvexShapeContact,
+    /// \li ConvexShapeContactComplement,
+    ///
+    /// and concatenate their values.
+    class HPP_CONSTRAINTS_DLLAPI ConvexShapeContactHold :
+      public DifferentiableFunction
+    {
+    public:
+      /// Create instance and return shared pointer
+      /// \param constraintName name of the ConvexShapeContact instance,
+      /// \param complementName name of the ConvexShapeContactComplement
+      ///        instance,
+      /// \param holdName name of this DifferentiableFunction instance
+      /// \param robot the input space of the function is the robot
+      ///        configuration space.
+      static ConvexShapeContactHoldPtr_t create
+        (const std::string& name, DevicePtr_t robot,
+         const JointAndShapes_t& floorSurfaces,
+         const JointAndShapes_t& objectSurfaces);
+
+      ConvexShapeContactPtr_t contactConstraint() const
+      {
+        return constraint_;
+      }
+      ConvexShapeContactComplementPtr_t complement() const
+      {
+        return complement_;
+      }
+
+    protected:
+      /// Constructor
+      /// \param constraintName name of the ConvexShapeContact instance,
+      /// \param complementName name of the ConvexShapeContactComplement
+      ///        instance,
+      /// \param holdName name of this DifferentiableFunction instance
+      /// \param robot the input space of the function is the robot
+      ///        configuration space.
+      ConvexShapeContactHold
+        (const std::string& name, DevicePtr_t robot,
+         const JointAndShapes_t& floorSurfaces,
+         const JointAndShapes_t& objectSurfaces);
+
+      virtual void impl_compute(LiegroupElementRef result, vectorIn_t argument)
+        const;
+      virtual void impl_jacobian(matrixOut_t jacobian, vectorIn_t arg)
+        const;
+    private:
+      ConvexShapeContactPtr_t constraint_;
+      ConvexShapeContactComplementPtr_t complement_;
+    }; // class ConvexShapeContactHold
     /// \}
   } // namespace constraints
 } // namespace hpp

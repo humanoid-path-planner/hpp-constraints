@@ -20,6 +20,7 @@
 #ifndef HPP_CONSTRAINTS_FWD_HH
 # define HPP_CONSTRAINTS_FWD_HH
 
+# include <list>
 # include <hpp/pinocchio/fwd.hh>
 # include <hpp/constraints/deprecated.hh>
 
@@ -39,6 +40,7 @@ namespace hpp {
     typedef pinocchio::vector3_t vector3_t;
     typedef pinocchio::matrix3_t matrix3_t;
     typedef Eigen::Matrix<value_type, 6, 6> matrix6_t;
+    typedef Eigen::Matrix<value_type, 8, 1> vector8_t;
     typedef pinocchio::matrix_t matrix_t;
     typedef Eigen::Ref <const matrix_t> matrixIn_t;
     typedef Eigen::Ref <matrix_t> matrixOut_t;
@@ -50,6 +52,7 @@ namespace hpp {
     typedef pinocchio::Transform3f Transform3f;
     typedef pinocchio::LiegroupElement LiegroupElement;
     typedef pinocchio::LiegroupElementRef LiegroupElementRef;
+    typedef pinocchio::LiegroupElementConstRef LiegroupElementConstRef;
     typedef pinocchio::LiegroupSpace LiegroupSpace;
     typedef pinocchio::LiegroupSpacePtr_t LiegroupSpacePtr_t;
     typedef pinocchio::LiegroupSpaceConstPtr_t LiegroupSpaceConstPtr_t;
@@ -74,8 +77,11 @@ namespace hpp {
     HPP_PREDEF_CLASS (ComBetweenFeet);
     HPP_PREDEF_CLASS (StaticStability);
     HPP_PREDEF_CLASS (QPStaticStability);
+    class ConvexShape;
+    typedef std::vector <ConvexShape> ConvexShapes_t;
     HPP_PREDEF_CLASS (ConvexShapeContact);
     HPP_PREDEF_CLASS (ConvexShapeContactComplement);
+    HPP_PREDEF_CLASS (ConvexShapeContactHold);
     HPP_PREDEF_CLASS (ConfigurationConstraint);
     HPP_PREDEF_CLASS (Identity);
     HPP_PREDEF_CLASS (AffineFunction);
@@ -105,10 +111,17 @@ namespace hpp {
     DistanceBetweenPointsInBodiesPtr_t;
     typedef boost::shared_ptr<RelativeCom> RelativeComPtr_t;
     typedef boost::shared_ptr<ComBetweenFeet> ComBetweenFeetPtr_t;
+    /// Plane polygon represented by its vertices
+    /// Used to model contact surfaces for manipulation applications
+    typedef std::vector<vector3_t> Shape_t;
+    typedef std::pair <JointPtr_t, Shape_t> JointAndShape_t;
+    typedef std::list <JointAndShape_t> JointAndShapes_t;
     typedef boost::shared_ptr<ConvexShapeContact>
       ConvexShapeContactPtr_t;
     typedef boost::shared_ptr<ConvexShapeContactComplement>
       ConvexShapeContactComplementPtr_t;
+    typedef boost::shared_ptr<ConvexShapeContactHold>
+      ConvexShapeContactHoldPtr_t;
     typedef boost::shared_ptr<StaticStability> StaticStabilityPtr_t;
     typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
     typedef boost::shared_ptr<ConfigurationConstraint>
@@ -183,6 +196,8 @@ namespace hpp {
       HPP_PREDEF_CLASS (RelativePose);
       typedef boost::shared_ptr <RelativePose> RelativePosePtr_t;
       typedef boost::shared_ptr <const RelativePose> RelativePoseConstPtr_t;
+      HPP_PREDEF_CLASS(ConvexShapeContact);
+      typedef boost::shared_ptr<ConvexShapeContact> ConvexShapeContactPtr_t;
     } // namespace implicit
 
     namespace explicit_ {
@@ -194,7 +209,9 @@ namespace hpp {
       RelativeTransformationPtr_t;
       HPP_PREDEF_CLASS (ImplicitFunction);
       typedef boost::shared_ptr <ImplicitFunction> ImplicitFunctionPtr_t;
-    } // namespace explicit
+      HPP_PREDEF_CLASS(ConvexShapeContact);
+      typedef boost::shared_ptr<ConvexShapeContact> ConvexShapeContactPtr_t;
+    } // namespace explicit_
 
     HPP_PREDEF_CLASS (LockedJoint);
     typedef boost::shared_ptr <LockedJoint> LockedJointPtr_t;

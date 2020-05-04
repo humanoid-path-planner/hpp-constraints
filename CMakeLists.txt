@@ -74,8 +74,10 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/explicit.hh
   include/hpp/constraints/explicit/implicit-function.hh
   include/hpp/constraints/explicit/relative-pose.hh
+  include/hpp/constraints/explicit/convex-shape-contact.hh
   include/hpp/constraints/explicit/relative-transformation.hh
   include/hpp/constraints/implicit.hh
+  include/hpp/constraints/implicit/convex-shape-contact.hh
   include/hpp/constraints/implicit/relative-pose.hh
   include/hpp/constraints/implicit-constraint-set.hh
   include/hpp/constraints/locked-joint.hh
@@ -107,11 +109,14 @@ SET (${PROJECT_NAME}_SOURCES
   src/explicit-constraint-set.cc
   src/implicit.cc
   src/explicit.cc
+  src/explicit/convex-shape-contact.cc
   src/explicit/implicit-function.cc
+  src/explicit/input-configurations.hh
   src/explicit/relative-transformation.cc
   src/explicit/relative-pose.cc
   src/function/of-parameter-subset.cc
   src/function/difference.cc
+  src/implicit/convex-shape-contact.cc
   src/implicit/relative-pose.cc
   src/locked-joint.cc
   src/solver/by-substitution.cc

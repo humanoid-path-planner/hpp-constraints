@@ -111,6 +111,191 @@ namespace hpp {
                                         (j->rankInVelocity(), j->numberDof()));
         }
       } // namespace relativePose
+      namespace contact {
+        // Compute input configuration variables of
+        // explicit_::ConvexShapeContact.
+        inline BlockIndex::segments_t inputConfVariables
+        (const DevicePtr_t& robot, const JointAndShapes_t& floorSurfaces,
+         const JointAndShapes_t& objectSurfaces)
+        {
+          std::vector<bool> res (robot->configSize(), false);
+          assert(objectSurfaces.size()>0);
+          JointPtr_t objectJoint = objectSurfaces.front().first;
+          for (JointAndShapes_t::const_iterator it(floorSurfaces.begin());
+               it != floorSurfaces.end(); ++it)
+          {
+            JointPtr_t joint1(it->first);
+            std::vector<bool> conf (robot->configSize(), false);
+            while (joint1 && joint1->index() != 0) {
+              for (size_type i = 0; i < joint1->configSize(); ++i)
+                conf[joint1->rankInConfiguration() + i] =
+                  !conf[joint1->rankInConfiguration() + i];
+              hppDout (info, "Adding joint1 " << joint1->name ()
+                       << " as input variable to ConvexShapeContact explicit "
+                       "constraint.");
+              joint1 = joint1->parentJoint();
+            }
+            JointPtr_t joint2(objectJoint->parentJoint());
+            while (joint2 && joint2->index() != 0) {
+              for (size_type i = 0; i < joint2->configSize(); ++i)
+                conf[joint2->rankInConfiguration() + i] =
+                  !conf[joint2->rankInConfiguration() + i];
+              hppDout (info, "Adding joint2 " << joint2->name ()
+                       << " as input variable to ConvexShapeContact explicit "
+                       "constraint.");
+              joint2 = joint2->parentJoint();
+            }
+            for (std::size_t i=0; i<res.size(); ++i)
+            {
+              if (conf[i]) res[i] = true;
+            }
+          }
+          return vectorOfBoolToIntervals(res);
+        }
+
+        // Compute size of input configuration variables of
+        // explicit_::ConvexShapeContact.
+        inline size_type inputSize
+        (const DevicePtr_t& robot, const JointAndShapes_t& floorSurfaces,
+         const JointAndShapes_t& objectSurfaces)
+        {
+          JointPtr_t objectJoint;
+          std::vector<bool> inputConf (robot->configSize(), false);
+          for (JointAndShapes_t::const_iterator it(objectSurfaces.begin());
+               it != objectSurfaces.end(); ++it)
+          {
+            if (!objectJoint)
+            {
+              objectJoint = it->first;
+              assert ((*objectJoint->configurationSpace () ==
+                       *pinocchio::LiegroupSpace::SE3 ()) ||
+                      (*objectJoint->configurationSpace () ==
+                       *pinocchio::LiegroupSpace::R3xSO3 ()));
+            }
+            else if (objectJoint != it->first)
+            {
+              throw std::logic_error("in explicit_::ConvexShapeContact: object "
+                                     "contact surfaces should be hold by the "
+                                     "same object");
+            }
+          }
+          for (JointAndShapes_t::const_iterator it(floorSurfaces.begin());
+               it != floorSurfaces.end(); ++it)
+          {
+            JointPtr_t joint1(it->first);
+            std::vector<bool> conf (robot->configSize(), false);
+            while (joint1 && joint1->index() != 0) {
+              for (size_type i = 0; i < joint1->configSize(); ++i)
+                conf[joint1->rankInConfiguration() + i] =
+                  !conf[joint1->rankInConfiguration() + i];
+              hppDout (info, "Adding joint1 " << joint1->name ()
+                       << " as input variable to ConvexShapeContact explicit "
+                       "constraint.");
+              joint1 = joint1->parentJoint();
+            }
+            JointPtr_t joint2(objectJoint->parentJoint());
+            while (joint2 && joint2->index() != 0) {
+              for (size_type i = 0; i < joint2->configSize(); ++i)
+                conf[joint2->rankInConfiguration() + i] =
+                  !conf[joint2->rankInConfiguration() + i];
+              hppDout (info, "Adding joint2 " << joint2->name ()
+                       << " as input variable to ConvexShapeContact explicit "
+                       "constraint.");
+              joint2 = joint2->parentJoint();
+            }
+            for (std::size_t i=0; i<inputConf.size(); ++i)
+            {
+              if (conf[i]) inputConf[i] = true;
+            }
+          }
+          size_type res(0);
+          for (std::size_t i=0; i<inputConf.size(); ++i)
+          {
+            if (inputConf[i]) ++res;
+          }
+          return res;
+        }
+        // Compute input configuration variables of
+        // explicit_::ConvexShapeContact.
+        inline BlockIndex::segments_t inputVelocityVariables
+        (const DevicePtr_t& robot, const JointAndShapes_t& floorSurfaces,
+         const JointAndShapes_t& objectSurfaces)
+        {
+          std::vector<bool> res (robot->numberDof(), false);
+          assert(objectSurfaces.size()>0);
+          JointPtr_t objectJoint = objectSurfaces.front().first;
+          for (JointAndShapes_t::const_iterator it(floorSurfaces.begin());
+               it != floorSurfaces.end(); ++it)
+          {
+            JointPtr_t joint1(it->first);
+            std::vector<bool> conf (robot->numberDof(), false);
+            while (joint1 && joint1->index() != 0) {
+              for (size_type i = 0; i < joint1->numberDof(); ++i)
+                conf[joint1->rankInVelocity() + i] =
+                  !conf[joint1->rankInVelocity() + i];
+              hppDout (info, "Adding joint1 " << joint1->name ()
+                       << " as input variable.");
+              joint1 = joint1->parentJoint();
+            }
+            JointPtr_t joint2(objectJoint->parentJoint());
+            while (joint2 && joint2->index() != 0) {
+              for (size_type i = 0; i < joint2->numberDof(); ++i)
+                conf[joint2->rankInVelocity() + i] =
+                  !conf[joint2->rankInVelocity() + i];
+              hppDout (info, "Adding joint2 " << joint2->name ()
+                       << " as input variable.");
+              joint2 = joint2->parentJoint();
+            }
+            for (std::size_t i=0; i<res.size(); ++i)
+            {
+              if (conf[i]) res[i] = true;
+            }
+          }
+          return vectorOfBoolToIntervals(res);
+        }
+        inline size_type inputDerivSize
+        (const DevicePtr_t& robot, const JointAndShapes_t& floorSurfaces,
+         const JointAndShapes_t& objectSurfaces)
+        {
+          std::vector<bool> inputVel (robot->numberDof(), false);
+          assert(objectSurfaces.size()>0);
+          JointPtr_t objectJoint = objectSurfaces.front().first;
+          for (JointAndShapes_t::const_iterator it(floorSurfaces.begin());
+               it != floorSurfaces.end(); ++it)
+          {
+            JointPtr_t joint1(it->first);
+            std::vector<bool> conf (robot->numberDof(), false);
+            while (joint1 && joint1->index() != 0) {
+              for (size_type i = 0; i < joint1->numberDof(); ++i)
+                conf[joint1->rankInVelocity() + i] =
+                  !conf[joint1->rankInVelocity() + i];
+              hppDout (info, "Adding joint1 " << joint1->name ()
+                       << " as input variable to ConvexShapeContact explicit "
+                       "constraint.");
+              joint1 = joint1->parentJoint();
+            }
+            JointPtr_t joint2(objectJoint->parentJoint());
+            while (joint2 && joint2->index() != 0) {
+              for (size_type i = 0; i < joint2->numberDof(); ++i)
+                conf[joint2->rankInVelocity() + i] =
+                  !conf[joint2->rankInVelocity() + i];
+              hppDout (info, "Adding joint2 " << joint2->name ()
+                       << " as input variable to ConvexShapeContact explicit "
+                       "constraint.");
+              joint2 = joint2->parentJoint();
+            }
+            for (std::size_t i=0; i<inputVel.size(); ++i)
+            {
+              if (conf[i]) inputVel[i] = true;
+            }
+          }
+          size_type res(0);
+          for (std::size_t i=0; i<inputVel.size(); ++i)
+          {
+            if (inputVel[i]) ++res;
+          }
+          return res;
+        }
       }
     } // namespace explicit_
   } // namespace constraints

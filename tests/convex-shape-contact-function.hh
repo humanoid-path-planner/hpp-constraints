@@ -33,22 +33,19 @@ hpp::constraints::ConvexShapeContactPtr_t createConvexShapeContact_punctual (hpp
   std::vector <vector3_t> square(4);
   square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
   square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
 
   std::vector <vector3_t> penta(5);
   penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
   penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
   penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
 
   std::vector <vector3_t> point(1, vector3_t (0,0,0));
-  ConvexShape pointCs (point, j);
 
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (pointCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
+  JointAndShapes_t os; os.push_back(JointAndShape_t(j, point));
+  JointAndShapes_t fs;
+  fs.push_back(JointAndShape_t(JointPtr_t(),square));
+  fs.push_back(JointAndShape_t(JointPtr_t(),penta));
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d, fs, os);
   return fptr;
 }
 
@@ -64,7 +61,7 @@ hpp::constraints::ConvexShapeContactPtr_t createConvexShapeContact_convex (hpp::
    *    \ /
    *     +
    *
-   *  Object = point
+   *  Object = trapezium
    *  +--+
    *  |   \
    *  +----+
@@ -72,24 +69,22 @@ hpp::constraints::ConvexShapeContactPtr_t createConvexShapeContact_convex (hpp::
   std::vector <vector3_t> square(4);
   square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
   square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
 
   std::vector <vector3_t> penta(5);
   penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
   penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
   penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
 
   std::vector <vector3_t> trapeze(4);
   trapeze[0] = vector3_t (-0.1, 0.1,0); trapeze[1] = vector3_t ( 0.1, 0.1,0);
   trapeze[2] = vector3_t ( 0.2,-0.1,0); trapeze[3] = vector3_t (-0.1,-0.1,0);
   ConvexShape tCs (trapeze, j);
 
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (tCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
+  JointAndShapes_t os; os.push_back(JointAndShape_t(j, trapeze));
+  JointAndShapes_t fs;
+  fs.push_back(JointAndShape_t(JointPtr_t(),square));
+  fs.push_back(JointAndShape_t(JointPtr_t(),penta));
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d, fs, os);
   return fptr;
 }
 
@@ -113,23 +108,20 @@ hpp::constraints::ConvexShapeContactPtr_t createConvexShapeContact_triangles (hp
   std::vector <vector3_t> square(4);
   square[0] = vector3_t ( 5, 5,0); square[1] = vector3_t ( 5,-5,0);
   square[2] = vector3_t ( 0,-5,0); square[3] = vector3_t ( 0, 5,0);
-  ConvexShape sCs (square);
 
   std::vector <vector3_t> penta(5);
   penta[0] = vector3_t ( 0, 5,0); penta[1] = vector3_t ( 0,-5,0);
   penta[2] = vector3_t (-2,-6,0); penta[3] = vector3_t (-5, 0,0);
   penta[4] = vector3_t (-2, 6,0);
-  ConvexShape pCs (penta);
 
   std::vector <vector3_t> trapeze(4);
   trapeze[0] = vector3_t (-0.1, 0.1,0); trapeze[1] = vector3_t ( 0.1, 0.1,0);
   trapeze[2] = vector3_t ( 0.2,-0.1,0); trapeze[3] = vector3_t (-0.1,-0.1,0);
-  ConvexShape tCs (trapeze, j);
 
-  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d);
-  ConvexShapeContact& f = *fptr;
-  f.addObject (tCs);
-  f.addFloor (sCs);
-  f.addFloor (pCs);
+  JointAndShapes_t os; os.push_back(JointAndShape_t(j, trapeze));
+  JointAndShapes_t fs;
+  fs.push_back(JointAndShape_t(JointPtr_t(),square));
+  fs.push_back(JointAndShape_t(JointPtr_t(),penta));
+  ConvexShapeContactPtr_t fptr = ConvexShapeContact::create (name, d, fs, os);
   return fptr;
 }

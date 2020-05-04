@@ -83,6 +83,35 @@ namespace hpp {
         virtual void jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
                                          f_value, vectorIn_t rhs,
                                          matrixOut_t jacobian) const;
+      protected:
+        /// Constructor
+        ///
+        /// \param name the name of the constraints,
+        /// \param robot the robot the constraints is applied to,
+        /// \param joint1 the first joint the transformation of which is
+        ///               constrained,
+        /// \param joint2 the second joint the transformation of which is
+        ///               constrained,
+        /// \param frame1 position of a fixed frame in joint 1,
+        /// \param frame2 position of a fixed frame in joint 2,
+        /// \param mask vector of 6 boolean defining which coordinates of the
+        ///        error vector to take into account.
+        /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
+        ///       frame.
+        RelativePose (const std::string& name, const DevicePtr_t& robot,
+                      const JointConstPtr_t& joint1,
+                      const JointConstPtr_t& joint2,
+                      const Transform3f& frame1, const Transform3f& frame2,
+                      std::vector <bool> mask = std::vector<bool>(6,true),
+                      ComparisonTypes_t comp = std::vector <ComparisonType> (),
+                      vectorIn_t rhs = vector_t ());
+
+        /// Copy constructor
+        RelativePose (const RelativePose& other);
+
+        /// Store weak pointer to itself
+        void init (RelativePoseWkPtr_t weak);
+      private:
         /** Convert right hand side
 
             \param implicitRhs right hand side of implicit formulation,
@@ -125,35 +154,6 @@ namespace hpp {
             \exp_{SE(3)} (rhs_{expl})  F_{2/J_2}\right)
             \f}
         */
-      protected:
-        /// Constructor
-        ///
-        /// \param name the name of the constraints,
-        /// \param robot the robot the constraints is applied to,
-        /// \param joint1 the first joint the transformation of which is
-        ///               constrained,
-        /// \param joint2 the second joint the transformation of which is
-        ///               constrained,
-        /// \param frame1 position of a fixed frame in joint 1,
-        /// \param frame2 position of a fixed frame in joint 2,
-        /// \param mask vector of 6 boolean defining which coordinates of the
-        ///        error vector to take into account.
-        /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
-        ///       frame.
-        RelativePose (const std::string& name, const DevicePtr_t& robot,
-                      const JointConstPtr_t& joint1,
-                      const JointConstPtr_t& joint2,
-                      const Transform3f& frame1, const Transform3f& frame2,
-                      std::vector <bool> mask = std::vector<bool>(6,true),
-                      ComparisonTypes_t comp = std::vector <ComparisonType> (),
-                      vectorIn_t rhs = vector_t ());
-
-        /// Copy constructor
-        RelativePose (const RelativePose& other);
-
-        /// Store weak pointer to itself
-        void init (RelativePoseWkPtr_t weak);
-      private:
         void explicitToImplicitRhs (vectorIn_t explicitRhs,
                                     vectorOut_t implicitRhs) const;
         // Create LiegroupSpace instances to avoid useless allocation.
