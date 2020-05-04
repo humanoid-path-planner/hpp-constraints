@@ -177,7 +177,7 @@ namespace hpp {
 
       /// Function that maps input to output
       /// \return function \f$f\f$.
-      virtual DifferentiableFunctionPtr_t explicitFunction() const
+      DifferentiableFunctionPtr_t explicitFunction() const
       {
         return inputToOutput_;
       }
