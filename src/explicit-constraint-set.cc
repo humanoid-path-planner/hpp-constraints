@@ -113,6 +113,16 @@ namespace hpp {
       return false;
     }
 
+    size_type size(const segments_t& intervals)
+    {
+      size_type res = 0;
+      for (std::size_t i=0; i < intervals.size(); ++i)
+      {
+        res += intervals[i].second;
+      }
+      return res;
+    }
+
     ExplicitConstraintSet::Data::Data
     (const ExplicitPtr_t& _constraint) :
       constraint (_constraint), rhs_implicit
@@ -202,6 +212,7 @@ namespace hpp {
       RowBlockIndices (constraint->outputVelocity ()).lview(derFunction_).
         setConstant(idx);
       data_.push_back (Data (constraint));
+      errorSize_ += data_.back().rhs_implicit.size();
 
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);

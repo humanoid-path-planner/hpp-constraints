@@ -112,6 +112,14 @@ namespace hpp {
         /// \param arg input vector
         bool isSatisfied (vectorIn_t arg) const;
 
+        /// Size of error vector
+        /// \note that this size may differ from size of \link
+        ///       ExplicitConstraintSet::outDers outDers output\endlink,
+        size_type errorSize() const
+        {
+          return errorSize_;
+        }
+
         /// Whether input vector satisfies the constraints of the solver
         /// \param arg input vector
         /// \retval error the constraint errors
@@ -162,6 +170,7 @@ namespace hpp {
           , argFunction_ (Eigen::VectorXi::Constant(space->nq (), -1))
           , derFunction_ (Eigen::VectorXi::Constant(space->nv (), -1))
           , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
+          , errorSize_(0)
           // , Jg (nv, nv)
           , arg_ (space->nq ()), diff_(space->nv ()), diffSmall_()
         {
@@ -490,6 +499,7 @@ namespace hpp {
         /// function in data_.
         Eigen::VectorXi argFunction_, derFunction_;
         value_type squaredErrorThreshold_;
+        size_type errorSize_;
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;
     }; // class ExplicitConstraintSet
