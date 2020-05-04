@@ -61,11 +61,6 @@ namespace hpp {
       return rhs_;
     }
 
-    vectorOut_t Implicit::nonConstRightHandSide ()
-    {
-      return rhs_;
-    }
-
     void Implicit::rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF)
     {
       if (rhsF) {
@@ -89,11 +84,6 @@ namespace hpp {
       return rightHandSide();
     }
 
-    size_type Implicit::rhsSize () const
-    {
-      return rhs_.size ();
-    }
-
     size_type Implicit::parameterSize () const
     {
       return parameterSize_;
@@ -106,17 +96,6 @@ namespace hpp {
     const ComparisonTypes_t& Implicit::comparisonType () const
     {
       return comparison_;
-    }
-
-    bool Implicit::constantRightHandSide () const
-    {
-      for (std::size_t i = 0; i < comparison_.size(); ++i)
-        if (comparison_[i] == constraints::Equality) {
-          assert (parameterSize_ != 0);
-          return false;
-        }
-      assert (parameterSize_ == 0);
-      return true;
     }
 
     void Implicit::comparisonType (const ComparisonTypes_t& comp)

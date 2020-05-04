@@ -116,23 +116,6 @@ namespace hpp {
         static ConvexShapeContactPtr_t create (
             const DevicePtr_t& robot);
 
-        /// Use addObject(const ConvexShape&) instead.
-        /// Add a triangle to the object contact surface
-        /// \param t triangle,
-        /// \param joint Joint to which the triangle is attached.
-        void addObjectTriangle (const fcl::TriangleP& t,
-				const JointPtr_t& joint)
-          HPP_CONSTRAINTS_DEPRECATED;
-
-        /// Use addFloor(const ConvexShape&) instead.
-        /// Add a triangle to the floor contact surface
-        /// \param t triangle,
-        /// joint Joint to which the triangle is attached if the contact surface
-        ///       belongs to a robot.
-        void addFloorTriangle (const fcl::TriangleP& t,
-			       const JointPtr_t& joint)
-          HPP_CONSTRAINTS_DEPRECATED;
-
         /// Add a ConvexShape as an object.
         void addObject (const ConvexShape& t);
 

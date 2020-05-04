@@ -209,22 +209,6 @@ namespace hpp {
 
         /// Set \f$i\overline{n\cup ou}t\f$ of other configuration variables
         ///
-        /// \deprecated use \ref notOutArgs
-        const RowBlockIndices& freeArgs () const HPP_CONSTRAINTS_DEPRECATED
-        {
-          return notOutArgs_;
-        }
-
-        /// Set \f$i\overline{n\cup ou}t\f$ of other velocity variables
-        ///
-        /// \deprecated use \ref notOutDers
-        const ColBlockIndices& freeDers () const HPP_CONSTRAINTS_DEPRECATED
-        {
-          return notOutDers_;
-        }
-
-        /// Set \f$i\overline{n\cup ou}t\f$ of other configuration variables
-        ///
         /// Configuration variables that are not output variables
         const RowBlockIndices& notOutArgs () const
         {
@@ -281,20 +265,6 @@ namespace hpp {
           return outDers_;
         }
 
-        /// The number of configuration variables
-        /// \deprecated use \ref nq instead.
-        std::size_t argSize () const HPP_CONSTRAINTS_DEPRECATED
-        {
-          return configSpace_->nq ();
-        }
-
-        /// The number of derivative variables
-        /// \deprecated use \ref nv instead.
-        std::size_t derSize () const HPP_CONSTRAINTS_DEPRECATED
-        {
-          return configSpace_->nv ();
-        }
-
         /// The Lie group on which constraints are defined
         LiegroupSpacePtr_t configSpace () const
         {
@@ -314,16 +284,6 @@ namespace hpp {
         }
 
         /// \}
-
-        /// Return Jacobian matrix of output variable wrt not output variables
-        /// \deprecated use \ref jacobianNotOutToOut instead.
-        inline MatrixBlockView viewJacobian(matrix_t& jacobian) const
-          HPP_CONSTRAINTS_DEPRECATED
-        {
-          return MatrixBlockView(jacobian,
-              outDers_.nbIndices() , outDers_.indices(),
-              notOutDers_.nbIndices(), notOutDers_.indices());
-        }
 
         /// Return Jacobian matrix of output variable wrt not output variables
         ///

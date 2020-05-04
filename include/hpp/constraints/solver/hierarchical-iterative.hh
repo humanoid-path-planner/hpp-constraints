@@ -23,7 +23,6 @@
 
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
-#include <hpp/constraints/deprecated.hh>
 
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/implicit-constraint-set.hh>
@@ -211,26 +210,6 @@ namespace hpp {
         /// function names. This means that two constraints with the
         /// same function names are considered as equal.
         virtual bool contains (const ImplicitPtr_t& numericalConstraint) const;
-
-        /// Add an implicit equality constraint
-        ///
-        /// \param f differentiable function from the robot configuration space
-        ///          to a Lie group (See hpp::pinocchio::LiegroupSpace),
-        /// \param priority level of priority of the constraint: priority are
-        ///        in decreasing order: 0 is the highest priority level.
-        ///
-        /// Constraint is defined by \f$f (\mathbf{q}) = 0\f$.
-        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority) HPP_CONSTRAINTS_DEPRECATED;
-
-        /// Add an implicit constraint
-        ///
-        /// \param f differentiable function from the robot configuration space
-        ///          to a Lie group (See hpp::pinocchio::LiegroupSpace),
-        /// \param priority level of priority of the constraint: priority are
-        ///        in decreasing order: 0 is the highest priority level,
-        /// \param comp comparison type. See class documentation for details.
-        void add (const DifferentiableFunctionPtr_t& f, const std::size_t& priority,
-                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Add an implicit constraint
         ///
@@ -635,16 +614,6 @@ namespace hpp {
       }; // class HierarchicalIterative
       /// \}
     } // namespace solver
-    namespace lineSearch {
-      typedef ::hpp::constraints::solver::lineSearch::Constant Constant
-      HPP_CONSTRAINTS_DEPRECATED;
-      typedef ::hpp::constraints::solver::lineSearch::Backtracking Backtracking
-      HPP_CONSTRAINTS_DEPRECATED;
-      typedef ::hpp::constraints::solver::lineSearch::FixedSequence
-      FixedSequence HPP_CONSTRAINTS_DEPRECATED;
-      typedef ::hpp::constraints::solver::lineSearch::ErrorNormBased
-      ErrorNormBased HPP_CONSTRAINTS_DEPRECATED;
-    } // namespace lineSearch
   } // namespace constraints
 } // namespace hpp
 

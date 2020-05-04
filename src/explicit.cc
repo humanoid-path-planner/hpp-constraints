@@ -64,23 +64,6 @@ namespace hpp {
     }
 
     ExplicitPtr_t Explicit::create
-    (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
-     const segments_t& inputConf,
-     const segments_t& outputConf,
-     const segments_t& inputVelocity,
-     const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp)
-    {
-      Explicit* ptr = new Explicit
-	(robot->configSpace(), function, inputConf, outputConf, inputVelocity, outputVelocity,
-         defaultCompTypes(outputVelocity,comp));
-      ExplicitPtr_t shPtr (ptr);
-      ExplicitWkPtr_t wkPtr (shPtr);
-      ptr->init (wkPtr);
-      return shPtr;
-    }
-
-    ExplicitPtr_t Explicit::create
     (const LiegroupSpacePtr_t& configSpace,
      const DifferentiableFunctionPtr_t& function,
      const segments_t& inputConf,
@@ -114,24 +97,6 @@ namespace hpp {
       return createCopy (weak_.lock ());
     }
 
-    Explicit::Explicit
-    (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& explicitFunction,
-     const segments_t& inputConf,
-     const segments_t& outputConf,
-     const segments_t& inputVelocity,
-     const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp) :
-      Implicit (explicit_::ImplicitFunction::create
-                (robot->configSpace(), explicitFunction, inputConf, outputConf, inputVelocity,
-                 outputVelocity),
-                comp),
-      inputToOutput_ (explicitFunction),
-      inputConf_ (inputConf),
-      outputConf_ (outputConf),
-      inputVelocity_ (inputVelocity),
-      outputVelocity_ (outputVelocity)
-    {
-    }
 
     Explicit::Explicit
     (const LiegroupSpacePtr_t& configSpace,

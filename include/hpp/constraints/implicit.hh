@@ -145,12 +145,6 @@ namespace hpp {
         /// Return the right hand side of the equation.
         vectorIn_t rightHandSide () const;
 
-        /// Return the dimension of the left hand side function tangent output
-        /// space
-        ///
-        /// \deprecated Use function ()->outputSpace ()->nv () instead.
-        size_type rhsSize () const HPP_CONSTRAINTS_DEPRECATED;
-
         /// Get size of parameter defining the right hand side of the constraint
         ///
         /// See class documentation for details.
@@ -167,18 +161,10 @@ namespace hpp {
 	/// Set the comparison type
 	void comparisonType (const ComparisonTypes_t& comp);
 
-        /// Whether right hand side is constant
-        /// \deprecated use (parameterSize () == 0) instead
-        bool constantRightHandSide () const HPP_CONSTRAINTS_DEPRECATED;
-
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated In future versions, right hand side will not be a member
         ///             of the class anymore.
         vectorOut_t rightHandSide ();
-
-        /// Return a modifiable reference to right hand side of equation.
-        /// \deprecated use rightHandSide instead.
-        vectorOut_t nonConstRightHandSide () HPP_CONSTRAINTS_DEPRECATED;
 
         /// Set time-varying right hand side
         /// \param rhsF Mapping from \f$\mathbf{R}\f$ to output space

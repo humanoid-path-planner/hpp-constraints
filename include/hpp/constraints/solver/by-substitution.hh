@@ -68,28 +68,6 @@ namespace hpp {
 
         virtual ~BySubstitution () {}
 
-        /// \name deprecated
-        /// \{
-
-        /// \deprecated Use explicitConstraintSet instead
-        ExplicitConstraintSet& explicitSolver() HPP_CONSTRAINTS_DEPRECATED
-        {
-          return explicit_;
-        }
-
-        /// \deprecated Use explicitConstraintSet instead
-        const ExplicitConstraintSet& explicitSolver () const HPP_CONSTRAINTS_DEPRECATED
-        {
-          return explicit_;
-        }
-
-        /// \deprecated call explicitConstraintSetHasChanged instead
-        void explicitSolverHasChanged() HPP_CONSTRAINTS_DEPRECATED
-        {
-          return explicitConstraintSetHasChanged ();
-        }
-        /// \}
-
         /// Add a numerical constraints
         ///
         /// \param numericalConstraint The numerical constraint.

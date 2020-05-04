@@ -37,26 +37,7 @@ namespace hpp {
     class ImplicitFunction : public DifferentiableFunction
     {
     public:
-      /// create instance and return shared pointer
-      /// \deprecated used create method that takes a LiegroupSpace instead
-      ///             of a robot as input.
       typedef boost::shared_ptr <ImplicitFunction> Ptr_t;
-      static Ptr_t create
-      (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
-       const segments_t& inputConf, const segments_t& outputConf,
-       const segments_t& inputVelocity, const segments_t& outputVelocity)
-        HPP_CONSTRAINTS_DEPRECATED;
-
-      /// create instance and return shared pointer
-      /// \deprecated used create method that takes a LiegroupSpace instead
-      ///             of a robot as input.
-      static Ptr_t create
-      (const DevicePtr_t& robot, const DifferentiableFunctionPtr_t& function,
-       const DifferentiableFunctionPtr_t& g,
-       const segments_t& inputConf, const segments_t& outputConf,
-       const segments_t& inputVelocity, const segments_t& outputVelocity)
-        HPP_CONSTRAINTS_DEPRECATED;
-
       /// create instance and return shared pointer
       ///
       /// \param configSpace input space of this function - usually a robot
@@ -78,17 +59,6 @@ namespace hpp {
       const DifferentiableFunctionPtr_t& inputToOutput () const;
 
     protected:
-      /// Constructor
-      /// \deprecated used constructor that takes a LiegroupSpace instead
-      ///             of a robot as input.
-      ImplicitFunction (const DevicePtr_t& robot,
-			const DifferentiableFunctionPtr_t& function,
-			const segments_t& inputConf,
-                        const segments_t& outputConf,
-			const segments_t& inputVelocity,
-			const segments_t& outputVelocity)
-        HPP_CONSTRAINTS_DEPRECATED;
-
       /// Constructor
       /// \param configSpace input space of this function - usually a robot
       ///                    configuration space,

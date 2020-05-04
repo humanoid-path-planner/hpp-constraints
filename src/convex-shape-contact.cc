@@ -51,22 +51,6 @@ namespace hpp {
 					  (name, robot));
     }
 
-    ConvexShapeContactPtr_t ConvexShapeContact::create
-    (const DevicePtr_t& robot)
-    {
-      return create ("ConvexShapeContact", robot);
-    }
-
-    void ConvexShapeContact::addObjectTriangle (const fcl::TriangleP& t,
-						    const JointPtr_t& joint)
-    {
-      addObject (ConvexShape (t, joint));
-    }
-
-    void ConvexShapeContact::addFloorTriangle (const fcl::TriangleP& t,
-						   const JointPtr_t& joint)
-    {
-      addFloor (ConvexShape (t, joint));
     }
 
     void ConvexShapeContact::addObject (const ConvexShape& t)
