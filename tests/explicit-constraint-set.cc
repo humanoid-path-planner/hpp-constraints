@@ -656,9 +656,9 @@ BOOST_AUTO_TEST_CASE(RelativePose)
       hpp::constraints::ExplicitConstraintSet ecs(device->configSpace());
       size_type res(ecs.add(constraint));
       BOOST_CHECK (res != -1);
-      // Get value of function h for initial value of q -> rhs0_impl
+      // Initialize right hand side with initial value of q -> rhs0_impl
       LiegroupElement rhs0_impl (constraint->function().outputSpace());
-      constraint->function().value(rhs0_impl, q);
+      rhs0_impl.vector() = ecs.rightHandSideFromInput(q);
 
       // Solve constraint
       ecs.solve(q);
