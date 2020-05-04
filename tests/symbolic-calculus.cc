@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE (MatrixOfExpTest) {
 
 BOOST_AUTO_TEST_CASE (FunctionExpTest) {
   typedef Eigen::Matrix <value_type, 3, 1> Config;
-  AffineFunctionPtr_t func (new AffineFunction(matrix3_t::Identity()));
+  AffineFunctionPtr_t func (AffineFunction::create(matrix3_t::Identity()));
   boost::shared_ptr<FunctionExp<AffineFunction> > funcExp = FunctionExp<AffineFunction>::create(func);
   for (size_t i = 0; i < 100; i++) {
     Config cfg = Config::Random ();

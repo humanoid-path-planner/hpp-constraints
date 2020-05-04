@@ -189,7 +189,8 @@ struct test_affine_opt : test_base <LineSearch>
     BOOST_REQUIRE_EQUAL (A.rows(), 1);
     BOOST_TEST_MESSAGE(A);
     BOOST_TEST_MESSAGE(B);
-    AffineFunctionPtr_t f (new AffineFunction (A, vector_t::Constant(1,-1)));
+    AffineFunctionPtr_t f (AffineFunction::create
+                           (A, vector_t::Constant(1,-1)));
     Quadratic::Ptr_t cost (new Quadratic (B));
     ImplicitPtr_t f_constraint
       (Implicit::create (f, ComparisonTypes_t

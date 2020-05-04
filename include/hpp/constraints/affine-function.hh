@@ -64,7 +64,20 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI AffineFunction
       : public DifferentiableFunction
     {
-      public:
+    public:
+      static AffineFunctionPtr_t create
+        (const matrixIn_t& J, const std::string name = "LinearFunction")
+      {
+        return AffineFunctionPtr_t(new AffineFunction(J, name));
+      }
+
+      static AffineFunctionPtr_t create
+        (const matrixIn_t& J, const vectorIn_t& b,
+         const std::string name = "LinearFunction")
+      {
+        return AffineFunctionPtr_t(new AffineFunction(J, b, name));
+      }
+      protected:
         AffineFunction (const matrixIn_t& J,
             const std::string name = "LinearFunction")
           : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
@@ -113,7 +126,22 @@ namespace hpp {
     struct HPP_CONSTRAINTS_DLLAPI ConstantFunction
       : public DifferentiableFunction
     {
-      public:
+    public:
+      static ConstantFunctionPtr_t create
+        (const vector_t& constant, const size_type& sizeIn,
+         const size_type& sizeInDer, const std::string name="ConstantFunction")
+      {
+        return ConstantFunctionPtr_t(new ConstantFunction(constant, sizeIn,
+                                                          sizeInDer, name));
+      }
+      static ConstantFunctionPtr_t create
+        (const LiegroupElement& element, const size_type& sizeIn,
+         const size_type& sizeInDer, const std::string name="ConstantFunction")
+      {
+        return ConstantFunctionPtr_t(new ConstantFunction(element, sizeIn,
+                                                          sizeInDer, name));
+      }
+    protected:
         ConstantFunction (const vector_t& constant,
                           const size_type& sizeIn,
                           const size_type& sizeInDer,

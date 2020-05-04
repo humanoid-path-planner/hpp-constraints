@@ -268,9 +268,9 @@ BOOST_AUTO_TEST_CASE(order)
   // dof     :  0 -> 1 -> 2 -> 3
   // function:    f0   f1   f2
   AffineFunctionPtr_t f[] = {
-    AffineFunctionPtr_t (new AffineFunction (M)),
-    AffineFunctionPtr_t (new AffineFunction (M)),
-    AffineFunctionPtr_t (new AffineFunction (M))
+    AffineFunction::create (M),
+    AffineFunction::create (M),
+    AffineFunction::create (M)
   };
   segment_t s[] = { segment_t (0, 1), segment_t (1, 1), segment_t (2, 1), segment_t (3, 1) };
   segments_t inArgs = list_of(s[0]).convert_to_container<segments_t>(),
@@ -304,9 +304,9 @@ BOOST_AUTO_TEST_CASE(jacobian1)
   // dof     :  0 -> 1 -> 2 -> 3
   // function:    f0   f1   f2
   AffineFunctionPtr_t f[] = {
-    AffineFunctionPtr_t (new AffineFunction (J[0])),
-    AffineFunctionPtr_t (new AffineFunction (J[1])),
-    AffineFunctionPtr_t (new AffineFunction (J[2]))
+    AffineFunction::create(J[0]),
+    AffineFunction::create(J[1]),
+    AffineFunction::create(J[2])
   };
   segments_t s[] = { segments_t (1, segment_t (0, 1)),
                      segments_t (1, segment_t (1, 1)),
@@ -353,9 +353,9 @@ BOOST_AUTO_TEST_CASE(jacobian2)
    *                f1
    */
   AffineFunctionPtr_t f[] = {
-      AffineFunctionPtr_t (new AffineFunction (J[0]))
-    , AffineFunctionPtr_t (new AffineFunction (J[1]))
-    , AffineFunctionPtr_t (new AffineFunction (J[2]))
+    AffineFunction::create (J[0])
+    , AffineFunction::create(J[1])
+    , AffineFunction::create(J[2])
   };
   std::vector<segments_t> s(6);
   s[0] = (list_of(segment_t (1, 2)).convert_to_container<segments_t>());

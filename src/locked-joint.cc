@@ -40,8 +40,8 @@ namespace hpp {
         DifferentiableFunctionPtr_t makeFunction (
             const LiegroupElement& lge, const std::string& name)
         {
-          return DifferentiableFunctionPtr_t
-            (new ConstantFunction (lge, 0, 0, "LockedJoint " + name + ' ' + numToStr(lge.vector().transpose())));
+          return ConstantFunction::create(lge, 0, 0, "LockedJoint "+name+' '+
+                                          numToStr(lge.vector().transpose()));
         }
     }
 

@@ -111,7 +111,7 @@ void test_quadratic ()
   B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
   segments_t in; in.push_back (segment_t (N1 + N2, N3));
   segments_t out; out.push_back (segment_t (N1, N2));
-  AffineFunctionPtr_t affine (new AffineFunction (B));
+  AffineFunctionPtr_t affine (AffineFunction::create (B));
   ExplicitPtr_t expl (Explicit::create (LiegroupSpace::Rn (N),
                                         affine, in, out, in, out));
 
@@ -173,7 +173,7 @@ void test_quadratic2 ()
   B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
   segments_t in1;  in1.push_back (segment_t (N1 + N2, N3));
   segments_t out1; out1.push_back (segment_t (N1, N2));
-  AffineFunctionPtr_t affine1 (new AffineFunction (B));
+  AffineFunctionPtr_t affine1 (AffineFunction::create (B));
   ExplicitPtr_t expl1 (Explicit::create (LiegroupSpace::Rn (N),
                                          affine1, in1, out1, in1, out1));
 
@@ -183,7 +183,7 @@ void test_quadratic2 ()
   C.topLeftCorner (Ninf2, Ninf2) = randomPositiveDefiniteMatrix(Ninf2);
   segments_t in2; in2.push_back (segment_t (N1 + N2 + N3, N4));
   segments_t out2; out2.push_back (segment_t (N1 + N2, N3));
-  AffineFunctionPtr_t affine2 (new AffineFunction (C));
+  AffineFunctionPtr_t affine2 (AffineFunction::create (C));
   ExplicitPtr_t expl2 (Explicit::create (LiegroupSpace::Rn (N),
                                          affine2, in2, out2, in2, out2));
 
@@ -248,7 +248,7 @@ void test_quadratic3 ()
   B.topLeftCorner (Ninf, Ninf) = randomPositiveDefiniteMatrix(Ninf);
   segments_t in1; in1.push_back (segment_t (N1 + N2, N3 + N4));
   segments_t out1; out1.push_back (segment_t (N1, N2));
-  AffineFunctionPtr_t affine1 (new AffineFunction (B));
+  AffineFunctionPtr_t affine1 (AffineFunction::create (B));
   ExplicitPtr_t expl1 (Explicit::create (LiegroupSpace::Rn (N),
                                          affine1, in1, out1, in1, out1));
 
@@ -258,14 +258,14 @@ void test_quadratic3 ()
   C.topLeftCorner (Ninf2, Ninf2) = randomPositiveDefiniteMatrix(Ninf2);
   segments_t in2; in2.push_back (segment_t (N1 + N2 + N3, N4));
   segments_t out2; out2.push_back (segment_t (N1 + N2, N3));
-  AffineFunctionPtr_t affine2 (new AffineFunction (C));
+  AffineFunctionPtr_t affine2 (AffineFunction::create (C));
   ExplicitPtr_t expl2 (Explicit::create (LiegroupSpace::Rn (N),
                                          affine2, in2, out2, in2, out2));
 
   // z[0] = d
   vector_t d (vector_t::Random (1));
   segments_t in3; segments_t out3; out3.push_back (segment_t (N1 + N2 + N3, 1));
-  ConstantFunctionPtr_t constant3 (new ConstantFunction (d, 0, 0));
+  ConstantFunctionPtr_t constant3 (ConstantFunction::create (d, 0, 0));
   ExplicitPtr_t expl3 (Explicit::create (LiegroupSpace::Rn (N),
                        constant3 , in3, out3, in3, out3));
 
@@ -553,8 +553,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
   // f
   ImplicitPtr_t impl (Implicit::create
-                      (AffineFunctionPtr_t (new AffineFunction
-                                            (matrix_t::Identity(2,3)))));
+                      (AffineFunction::create(matrix_t::Identity(2,3))));
   solver.add (impl);
   // Test inclusion of manifolds
   solver1.add (impl->copy ());
@@ -569,7 +568,7 @@ BOOST_AUTO_TEST_CASE(functions1)
   Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
   segments_t in; in.push_back (segment_t (2, 1));
   segments_t out; out.push_back (segment_t (0, 1));
-  AffineFunctionPtr_t affine (new AffineFunction (matrix_t::Ones(1,1)));
+  AffineFunctionPtr_t affine (AffineFunction::create (matrix_t::Ones(1,1)));
   ExplicitPtr_t expl (Explicit::create (LiegroupSpace::R3 (),affine ,
                                         in, out, in, out));
   solver.add(expl);
@@ -577,8 +576,7 @@ BOOST_AUTO_TEST_CASE(functions1)
   BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
   solver1.add (expl->copy ());
   // q2 = C
-  affine = AffineFunctionPtr_t (new AffineFunction
-                                (matrix_t(1,0), vector_t::Zero(1)));
+  affine = AffineFunction::create(matrix_t(1,0), vector_t::Zero(1));
   in.clear (); out.clear ();
   out.push_back (segment_t(1,1));
   expl = Explicit::create (LiegroupSpace::R3 (), affine,
@@ -589,7 +587,7 @@ BOOST_AUTO_TEST_CASE(functions1)
 
   // h
   matrix_t h (1,3); h << 0, 1, 0;
-  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (h))));
+  solver.add(Implicit::create (AffineFunction::create(h)));
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
   BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
@@ -608,7 +606,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::Matrix<value_type, 2, 3> Jf;
   Jf << 1, 0, 0,
         0, 0, 1;
-  solver.add(Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jf))));
+  solver.add(Implicit::create (AffineFunction::create (Jf)));
 
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -616,7 +614,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::RowBlockIndices outArg; outArg.addRow (1,1);
   ExplicitPtr_t expl (Explicit::create
                       (LiegroupSpace::R3 (),
-                       AffineFunctionPtr_t (new AffineFunction (Jg)),
+                       AffineFunction::create(Jg),
                        inArg.indices (), outArg.indices (),
                        inDer.indices (), outArg.indices ()));
   ImplicitPtr_t c1 (expl);
@@ -630,7 +628,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   // This function should not be removed from the system.
   Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
   ImplicitPtr_t impl
-    (Implicit::create (AffineFunctionPtr_t(new AffineFunction (Jh))));
+  (Implicit::create (AffineFunction::create (Jh)));
   ImplicitPtr_t c2 (impl);
   c2->comparisonType (ComparisonTypes_t (1, Equality));
   solver.add(impl);
@@ -642,7 +640,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   segments_t out; out.push_back (segment_t (2, 1));
   expl = Explicit::create
     (LiegroupSpace::R3 (),
-     AffineFunctionPtr_t (new AffineFunction (matrix_t (1, 0), C)),
+     AffineFunction::create(matrix_t (1, 0), C),
      segments_t(), out, segments_t(), out);
   ImplicitPtr_t c3 (expl);
   c3->comparisonType (ComparisonTypes_t (1, Equality));
@@ -865,7 +863,7 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
   for (size_type i=0; i<1000; ++i) {
     size_type N (10);
     matrix_t A (randomPositiveDefiniteMatrix((int) N));
-    AffineFunctionPtr_t affine (new AffineFunction (A));
+    AffineFunctionPtr_t affine (AffineFunction::create (A));
     vector_t b (vector_t::Random(N));
     ComparisonTypes_t comp (N, Equality);
     comp [1] = comp [3] = comp [5] = comp [6] = EqualToZero;
