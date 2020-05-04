@@ -47,24 +47,18 @@ namespace hpp {
         size. Some degrees of freedom may indeed be neither input nor output.
 
         Then the differential function is of the form
-        \f{equation*}{
-        \left(\begin{array}{c}
-        q_{oc_{1}} \\ \vdots \\ q_{oc_{n_{oc}}}
-        \end{array}\right) -
-        f \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right)
+        \f{eqnarray*}{
+        \mathbf{q}_{out} - f \left(\mathbf{q}_{in}\right)
+        \ \ &\mbox{with}&
+        \mathbf{q}_{out} = \left(q_{oc_{1}} \cdots q_{oc_{n_{oc}}}\right)^T,
+        \ \ \ \mathbf{q}_{in} = (q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T
         \f}
         It is straightforward that an equality constraint with this function can
         solved explicitely:
         \f{align*}{
-        \left(\begin{array}{c}
-        q_{oc_{1}} \\ \vdots \\ q_{oc_{n_{oc}}}
-        \end{array}\right) &-
-        f \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right) = rhs \\
+        \mathbf{q}_{out} &- f \left(\mathbf{q}_{in}\right) = rhs \\
         & \mbox {if and only if}\\
-        \left(\begin{array}{c}
-        q_{oc_{1}} \\ \vdots \\ q_{oc_{n_{oc}}}
-        \end{array}\right) &=
-        f \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right) + rhs \\
+        \mathbf{q}_{out} &= f \left(\mathbf{q}_{in}\right) + rhs \\
         \f}
 	If function \f$f\f$ takes values in a Lie group (SO(2), SO(3)),
         the above "+" between a Lie group element and a tangent vector
