@@ -55,6 +55,34 @@ namespace hpp {
 
         static RelativePosePtr_t createCopy (const RelativePosePtr_t& other);
 
+        /// Compute the value of the output configuration variables
+        /// \param qin input configuration variables,
+        /// \param rhs right hand side of constraint
+        ///
+        /// \f{equation}
+        /// f \left(\mathbf{q}_{in}\right) + rhs_{expl}
+        /// \f}
+        /// where \f$rhs_{expl}\f$ is the explicit right hand side converted
+        /// using the following expression:
+        /// \f{equation}
+        /// rhs_{expl} = \log_{SE(3)}\left( F_{2/J_2}\exp_{\mathbf{R}^3\times
+        /// SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
+        /// \f}
+        virtual void outputValue(LiegroupElementRef result, vectorIn_t qin,
+                                 vectorIn_t rhs) const;
+
+        /// Compute Jacobian of output value
+        ///
+        /// \f{eqnarray*}
+        /// J &=& \frac{\partial}{\partial\mathbf{q}_{in}}\left(
+        ///       f(\mathbf{q}_{in}) + rhs\right).
+        /// \f}
+        /// \param qin vector of input variables,
+        /// \param f_value \f$f(\mathbf{q}_{in})\f$ to avoid recomputation,
+        /// \param rhs right hand side (of implicit formulation).
+        virtual void jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
+                                         f_value, vectorIn_t rhs,
+                                         matrixOut_t jacobian) const;
         /** Convert right hand side
 
             \param implicitRhs right hand side of implicit formulation,
@@ -75,8 +103,8 @@ namespace hpp {
             SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
             \f}
         */
-        virtual void implicitToExplicitRhs (vectorIn_t implicitRhs,
-                                            vectorOut_t explicitRhs) const;
+        void implicitToExplicitRhs (vectorIn_t implicitRhs,
+                                    vectorOut_t explicitRhs) const;
         /** Convert right hand side
 
             \param explicitRhs right hand side of explicit formulation,
@@ -97,8 +125,6 @@ namespace hpp {
             \exp_{SE(3)} (rhs_{expl})  F_{2/J_2}\right)
             \f}
         */
-        virtual void explicitToImplicitRhs (vectorIn_t explicitRhs,
-                                            vectorOut_t implicitRhs) const;
       protected:
         /// Constructor
         ///
@@ -128,6 +154,8 @@ namespace hpp {
         /// Store weak pointer to itself
         void init (RelativePoseWkPtr_t weak);
       private:
+        void explicitToImplicitRhs (vectorIn_t explicitRhs,
+                                    vectorOut_t implicitRhs) const;
         // Create LiegroupSpace instances to avoid useless allocation.
         static LiegroupSpacePtr_t SE3;
         static LiegroupSpacePtr_t R3xSO3;

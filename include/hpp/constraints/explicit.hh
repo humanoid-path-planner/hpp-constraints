@@ -202,42 +202,30 @@ namespace hpp {
       {
 	return inputVelocity_;
       }
-      /// Convert right hand side
+      /// Compute the value of the output configuration variables
+      /// \param qin input configuration variables,
+      /// \param rhs right hand side of constraint
       ///
-      /// \param implicitRhs right hand side of implicit formulation,
-      /// \retval explicitRhs right hand side of explicit formulation.
-      ///
-      /// When implicit formulation is different from explicit formulation,
-      ///\sa hpp::constraints::explicit_::RelativePose, right hand side are
-      /// also different. This method converts right hand side from implicit
-      /// to explicit formulation.
-      ///
-      /// When implicit formulation derives from explicit one, this method
-      /// copies the first argument to the second one.
-      virtual void implicitToExplicitRhs (vectorIn_t implicitRhs,
-                                          vectorOut_t explicitRhs) const
-      {
-        explicitRhs = implicitRhs;
-      }
+      /// The default implementation computes
+      /// \f{equation}
+      /// f \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right) + rhs
+      /// \f}
+      virtual void outputValue(LiegroupElementRef result, vectorIn_t qin,
+                               vectorIn_t rhs) const;
 
-      /// Convert right hand side
+      /// Compute Jacobian of output value
       ///
-      /// \param explicitRhs right hand side of explicit formulation.
-      /// \retval implicitRhs right hand side of implicit formulation,
-      ///
-      /// When implicit formulation is different from explicit formulation,
-      ///\sa hpp::constraints::explicit_::RelativePose, right hand side are
-      /// also different. This method converts right hand side from explicit
-      /// to implicit formulation.
-      ///
-      /// When implicit formulation derives from explicit one, this method
-      /// copies the first argument to the second one.
-      virtual void explicitToImplicitRhs (vectorIn_t explicitRhs,
-                                          vectorOut_t implicitRhs) const
-      {
-        implicitRhs = explicitRhs;
-      }
-
+      /// \f{eqnarray*}
+      /// J &=& \frac{\partial}{\partial\mathbf{q}_{in}}\left(f(\mathbf{q}_{in})
+      ///       + rhs\right).
+      /// \f}
+      /// \param qin vector of input variables,
+      /// \param f_value \f$f(\mathbf{q}_{in})\f$ provided to avoid
+      ///        recomputation,
+      /// \param rhs right hand side (of implicit formulation).
+      virtual void jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
+                                       f_value, vectorIn_t rhs,
+                                       matrixOut_t jacobian) const;
     protected:
       /// Constructor
       ///

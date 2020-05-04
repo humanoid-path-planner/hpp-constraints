@@ -659,21 +659,12 @@ BOOST_AUTO_TEST_CASE(RelativePose)
       // Get value of function h for initial value of q -> rhs0_impl
       LiegroupElement rhs0_impl (constraint->function().outputSpace());
       constraint->function().value(rhs0_impl, q);
-      // Set right hand side from q
-      LiegroupElement rhs1_impl (constraint->function().outputSpace());
-      // Get right hand side from q in implicit form -> rhs1_impl
-      constraint->explicitToImplicitRhs(ecs.rightHandSideFromInput(q),
-                                        rhs1_impl.vector());
 
       // Solve constraint
       ecs.solve(q);
       // Get value of function h for new value of q -> rhs2_impl
       LiegroupElement rhs2_impl (constraint->function().outputSpace());
       constraint->function().value(rhs2_impl, q);
-      // Get right hand side in implicit form -> rhs3_impl
-      LiegroupElement rhs3_impl (constraint->function().outputSpace());
-      constraint->explicitToImplicitRhs(ecs.rightHandSide(),
-                                        rhs3_impl.vector());
       std::cout << "            \t";
       for (size_type j=0; j < (size_type)comp.size(); ++j) {
         std::cout << (comp[j] == hpp::constraints::Equality ? " = \t" :
@@ -683,8 +674,8 @@ BOOST_AUTO_TEST_CASE(RelativePose)
       std::cout << "rhs0_impl = " << rhs0_impl.vector().transpose() << std::endl;
       std::cout << "rhs2_impl = " << rhs2_impl.vector().transpose() << std::endl;
       // For each coordinate check that
-      // rhs3_impl [j] == 0 if comp[i] is EqualToZero
-      // rhs3_impl [j] == rhs1_impl [j] if comp[i] is Equality
+      // rhs2_impl [j] == 0 if comp[i] is EqualToZero
+      // rhs2_impl [j] == rhs0_impl [j] if comp[i] is Equality
       for (size_type j=0; j<6; ++j){
         BOOST_CHECK(((comp[j] == hpp::constraints::EqualToZero) &&
                      (fabs(rhs2_impl.vector()[j]) < 1e-10))
@@ -692,11 +683,6 @@ BOOST_AUTO_TEST_CASE(RelativePose)
                         (fabs(rhs2_impl.vector()[j] - rhs0_impl.vector()[j])
                          < 1e-10)));
       }
-      // Test conversions from explicit to implicit
-      vector_t rhs_expl(6), rhs_impl(6);
-      constraint->implicitToExplicitRhs(rhs0_impl.vector(), rhs_expl);
-      constraint->explicitToImplicitRhs(rhs_expl, rhs_impl);
-      BOOST_CHECK((rhs_impl - rhs0_impl.vector()).squaredNorm() < 1e-10);
     }
   }
 }

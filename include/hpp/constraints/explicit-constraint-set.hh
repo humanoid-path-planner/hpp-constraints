@@ -473,7 +473,6 @@ namespace hpp {
           ExplicitPtr_t constraint;
           RowBlockIndices equalityIndices;
           vector_t rhs_implicit;
-          vector_t rhs_explicit;
           // implicit formulation
           mutable LiegroupElement h_value;
           // explicit formulation

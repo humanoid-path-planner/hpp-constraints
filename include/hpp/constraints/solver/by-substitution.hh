@@ -248,12 +248,12 @@ namespace hpp {
         ///         the tail of the vector corresponds to explicit constraints.
         bool isSatisfied (vectorIn_t arg, vectorOut_t error) const
         {
-          assert (error.size() == dimension() + explicit_.outDers().nbIndices());
+          assert (error.size() == dimension() + explicit_.errorSize());
           bool iterative =
             solver::HierarchicalIterative::isSatisfied (arg);
           residualError(error.head(dimension()));
           bool _explicit =
-            explicit_.isSatisfied (arg, error.tail(explicit_.outDers().nbIndices()));
+            explicit_.isSatisfied (arg, error.tail(explicit_.errorSize()));
           return iterative && _explicit;
         }
 

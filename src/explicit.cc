@@ -92,11 +92,29 @@ namespace hpp {
       return shPtr;
     }
 
+    void Explicit::outputValue(LiegroupElementRef result, vectorIn_t qin,
+                               vectorIn_t rhs) const
+    {
+      explicitFunction ()->value(result, qin);
+      result += rhs;
+    }
+
+    void Explicit::jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
+                                       f_value, vectorIn_t rhs,
+                                       matrixOut_t jacobian) const
+    {
+      explicitFunction ()->jacobian(jacobian, qin);
+      if (!rhs.isZero())
+      {
+        explicitFunction ()->outputSpace ()->dIntegrate_dq
+          <pinocchio::DerivativeTimesInput> (f_value, rhs, jacobian);
+      }
+    }
+
     ImplicitPtr_t Explicit::copy () const
     {
       return createCopy (weak_.lock ());
     }
-
 
     Explicit::Explicit
     (const LiegroupSpacePtr_t& configSpace,

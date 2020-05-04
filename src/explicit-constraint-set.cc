@@ -127,7 +127,6 @@ namespace hpp {
     (const ExplicitPtr_t& _constraint) :
       constraint (_constraint), rhs_implicit
       (vector_t::Zero(_constraint->functionPtr ()->outputSpace()->nv())),
-      rhs_explicit (rhs_implicit),
       h_value (_constraint->functionPtr ()->outputSpace()),
       f_value (_constraint->explicitFunction()->outputSpace ()),
       res_qout (_constraint->explicitFunction ()->outputSpace ())
@@ -268,9 +267,7 @@ namespace hpp {
       const Data& d = data_[iF];
       // Compute this function
       d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
-      d.constraint->explicitFunction ()->value(d.f_value, d.qin);
-      d.f_value += d.rhs_explicit;
-      d.res_qout.vector() = d.f_value.vector();
+      d.constraint->outputValue(d.res_qout, d.qin, d.rhs_implicit);
       RowBlockIndices (d.constraint->outputConf ()).lview(arg) =
         d.res_qout.vector();
     }
@@ -286,11 +283,10 @@ namespace hpp {
       for(std::size_t i = 0; i < data_.size(); ++i) {
         const Data& d = data_[i];
         d.qin = RowBlockIndices (d.constraint->inputConf ()).rview(arg);
-        d.constraint->explicitFunction ()->jacobian(d.jacobian, d.qin);
-        if (d.equalityIndices.nbIndices() > 0)
-          d.constraint->explicitFunction ()->outputSpace ()
-            ->dIntegrate_dq <pinocchio::DerivativeTimesInput>
-            (d.f_value, d.rhs_explicit, d.jacobian);
+        // Compute Jacobian of f(qin) + rhs
+        // with respect to qin.
+        d.constraint->jacobianOutputValue(d.qin, d.f_value, d.rhs_implicit,
+                                          d.jacobian);
       }
       for(std::size_t i = 0; i < data_.size(); ++i) {
         computeJacobian(computationOrder_[i], jacobian);
@@ -362,7 +358,6 @@ namespace hpp {
       d.constraint->function ().value (d.h_value, arg);
       vector_t rhs = d.h_value.vector ();
       d.equalityIndices.lview(d.rhs_implicit) = d.equalityIndices.rview(rhs);
-      d.constraint->implicitToExplicitRhs(d.rhs_implicit, d.rhs_explicit);
     }
 
     void ExplicitConstraintSet::rightHandSide (vectorIn_t rhs)
@@ -378,7 +373,6 @@ namespace hpp {
           assert (ct [i] == Equality || rhs [row + i] == 0);
         }
         row += d.rhs_implicit.size ();
-        d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
       }
       assert (row == rhs.size());
     }
@@ -402,7 +396,6 @@ namespace hpp {
 	const Data& d = data_[i];
 	if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
 	  rhs = d.rhs_implicit;
-	  // d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
 	  return true;
 	}
       }
@@ -422,7 +415,6 @@ namespace hpp {
         assert (ct [i] == Equality ||
                 rhs [i] * rhs [i] < squaredErrorThreshold_);
       }
-      d.constraint->implicitToExplicitRhs (d.rhs_implicit, d.rhs_explicit);
     }
 
     vector_t ExplicitConstraintSet::rightHandSide () const
@@ -462,7 +454,6 @@ namespace hpp {
            << " -> "
            << RowBlockIndices (d.constraint->outputConf ())
           << incendl << *d.constraint->explicitFunction ()
-          << iendl << "Rhs explicit: " << condensed(d.rhs_explicit)
           << iendl << "Rhs implicit: " << condensed(d.rhs_implicit)
           << iendl << "Equality: " << d.equalityIndices
           << decindent;

@@ -139,6 +139,31 @@ namespace hpp {
         return createCopy (weak_.lock ());
       }
 
+      void RelativePose::outputValue(LiegroupElementRef result, vectorIn_t qin,
+                                     vectorIn_t rhs) const
+      {
+        vector_t rhsExplicit(explicitFunction()->outputSpace()->nv());
+        implicitToExplicitRhs(rhs, rhsExplicit);
+        explicitFunction ()->value(result, qin);
+        result += rhsExplicit;
+      }
+
+      void RelativePose::jacobianOutputValue
+      (vectorIn_t qin, LiegroupElementConstRef f_value, vectorIn_t rhs,
+       matrixOut_t jacobian) const
+      {
+        // Todo: suppress dynamic allocation.
+        vector_t rhsExplicit(explicitFunction()->outputSpace()->nv());
+        explicitFunction ()->jacobian(jacobian, qin);
+        if (!rhs.isZero())
+        {
+          implicitToExplicitRhs(rhs, rhsExplicit);
+          explicitFunction ()->outputSpace ()->dIntegrate_dq
+            <pinocchio::DerivativeTimesInput>
+            (f_value, rhsExplicit, jacobian);
+        }
+      }
+
       void RelativePose::implicitToExplicitRhs (vectorIn_t implicitRhs,
                                                 vectorOut_t explicitRhs) const
       {
