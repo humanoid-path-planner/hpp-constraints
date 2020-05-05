@@ -81,7 +81,7 @@ namespace hpp {
         << pretty_print (BlockIndex::fromLogicalExpression (activeParameters_)) << incindent
         << iendl << "Joint1: "         << ((IsRelative && joint1()) ? joint1()->name() : "World")
         << iendl << "Frame in joint 1" << incindent << iendl; pinocchio::display(os, frame1InJoint1()) << decindent
-        << iendl << "Joint2: "         << joint2()->name()
+        << iendl << "Joint2: "         << (joint2() ? joint2()->name() : "World")
         << iendl << "Frame in joint 2" << incindent << iendl; pinocchio::display(os, frame2InJoint2()) << decindent
         << iendl << "mask: ";
       for (size_type i=0; i<DerSize; ++i) os << mask_ [i] << ", ";

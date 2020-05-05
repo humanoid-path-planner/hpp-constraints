@@ -157,6 +157,9 @@ BOOST_AUTO_TEST_CASE (multithread) {
   functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)     );
   functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2));
   functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, JointPtr_t(), tf1)     );
+  functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, JointPtr_t(), tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, JointPtr_t(), tf1, tf2));
 
   const int N = 10;
   Configuration_t q = *cs.shoot();
