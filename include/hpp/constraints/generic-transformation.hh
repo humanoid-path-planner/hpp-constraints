@@ -22,6 +22,8 @@
 
 # include <pinocchio/spatial/se3.hpp>
 
+# include <hpp/util/serialization-fwd.hh>
+
 # include <hpp/pinocchio/joint.hh>
 
 # include <hpp/constraints/fwd.hh>
@@ -312,6 +314,9 @@ namespace hpp {
       Eigen::RowBlockIndices Vindices_;
       const std::vector <bool> mask_;
       WkPtr_t self_;
+
+      GenericTransformation() : m_ (0) {}
+      HPP_SERIALIZABLE();
     }; // class GenericTransformation
     /// \}
   } // namespace constraints

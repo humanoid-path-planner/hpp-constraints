@@ -16,10 +16,16 @@
 
 #include <hpp/constraints/generic-transformation.hh>
 
+#include <boost/serialization/vector.hpp>
+
+#include <pinocchio/serialization/se3.hpp>
+
 #include <hpp/util/indent.hh>
+#include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/serialization.hh>
 
 #include <hpp/constraints/macros.hh>
 
@@ -238,6 +244,19 @@ namespace hpp {
 #endif
     }
 
+    template<int _Options>
+    template<class Archive>
+    void GenericTransformation<_Options>::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & boost::serialization::make_nvp("base",
+          boost::serialization::base_object<DifferentiableFunction> (*this));
+      ar & BOOST_SERIALIZATION_NVP(robot_);
+      ar & BOOST_SERIALIZATION_NVP(m_);
+      ar & boost::serialization::make_nvp("mask_", const_cast<std::vector<bool>&>(mask_));
+      ar & BOOST_SERIALIZATION_NVP(self_);
+    }
+
     /// Force instanciation of relevant classes
     template class GenericTransformation<               PositionBit | OrientationBit >;
     template class GenericTransformation<               PositionBit                  >;
@@ -253,5 +272,62 @@ namespace hpp {
     // template class GenericTransformation< OutputSE3Bit | RelativeBit | PositionBit                  >;
     template class GenericTransformation< OutputSE3Bit | RelativeBit |               OrientationBit >;
 
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::Position);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::Orientation);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::Transformation);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativePosition);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeOrientation);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeTransformation);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::TransformationSE3);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeTransformationSE3);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::OrientationSO3);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeOrientationSO3);
   } // namespace constraints
 } // namespace hpp
+
+namespace boost {
+namespace serialization {
+using hpp::constraints::GenericTransformationModel;
+
+#define _make_nvp(attr) make_nvp(#attr, m.attr)
+template<class Archive>
+inline void serialize(Archive & ar, GenericTransformationModel<false>& m,
+    const unsigned int version)
+{
+  (void) version;
+  ar & _make_nvp(joint2);
+  ar & _make_nvp(R1isID);
+  ar & _make_nvp(R2isID);
+  ar & _make_nvp(t1isZero);
+  ar & _make_nvp(t2isZero);
+  ar & _make_nvp(F1inJ1);
+  ar & _make_nvp(F2inJ2);
+  ar & _make_nvp(fullPos);
+  ar & _make_nvp(fullOri);
+  ar & _make_nvp(rowOri);
+  ar & make_nvp("cols", const_cast<hpp::constraints::size_type&>(m.cols));
+}
+
+template<class Archive>
+inline void serialize(Archive & ar,
+    GenericTransformationModel<true>& m,
+    const unsigned int version)
+{
+  (void) version;
+  ar & make_nvp("base",
+      boost::serialization::base_object<GenericTransformationModel<false> > (m));
+  ar & _make_nvp(joint1);
+}
+} // namespace serialization
+} // namespace boost
+
+BOOST_CLASS_EXPORT(hpp::constraints::Position)
+BOOST_CLASS_EXPORT(hpp::constraints::Orientation)
+BOOST_CLASS_EXPORT(hpp::constraints::Transformation)
+BOOST_CLASS_EXPORT(hpp::constraints::RelativePosition)
+BOOST_CLASS_EXPORT(hpp::constraints::RelativeOrientation)
+BOOST_CLASS_EXPORT(hpp::constraints::RelativeTransformation)
+BOOST_CLASS_EXPORT(hpp::constraints::TransformationSE3)
+BOOST_CLASS_EXPORT(hpp::constraints::RelativeTransformationSE3)
+BOOST_CLASS_EXPORT(hpp::constraints::OrientationSO3)
+BOOST_CLASS_EXPORT(hpp::constraints::RelativeOrientationSO3)
