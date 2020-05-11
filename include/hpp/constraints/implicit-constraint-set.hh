@@ -140,6 +140,8 @@ namespace hpp {
         ComparisonTypes_t comparison_;
         std::vector<std::size_t> inequalityIndices_;
         Eigen::RowBlockIndices equalityIndices_;
+
+        HPP_SERIALIZABLE();
     }; // class ImplicitConstraintSet
     /// \}
   } // namespace constraints
