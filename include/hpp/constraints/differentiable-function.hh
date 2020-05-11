@@ -23,6 +23,8 @@
 # include <hpp/constraints/config.hh>
 # include <hpp/pinocchio/liegroup-element.hh>
 
+# include <hpp/util/serialization-fwd.hh>
+
 namespace hpp {
   namespace constraints {
 
@@ -223,6 +225,11 @@ namespace hpp {
       std::string context_;
 
       friend class DifferentiableFunctionSet;
+
+    protected:
+      DifferentiableFunction() {}
+    private:
+      HPP_SERIALIZABLE();
     }; // class DifferentiableFunction
     inline std::ostream&
     operator<< (std::ostream& os, const DifferentiableFunction& f)
