@@ -42,7 +42,7 @@ namespace hpp {
         case 0: return SO3;
         case 1: return LiegroupSpace::R1() * SO3;
         case 2: return LiegroupSpace::R2() * SO3;
-        case 3: return LiegroupSpace::R3() * SO3;
+        case 3: return LiegroupSpace::R3xSO3();
         default: throw std::logic_error ("This should not happend. Invalid mask.");
       }
     }
