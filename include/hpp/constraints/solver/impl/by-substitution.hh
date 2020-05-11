@@ -40,7 +40,7 @@ namespace hpp {
       value_type initSquaredNorm = 0;
 
       // Variables for optimization only
-      value_type previousCost;
+      value_type previousCost = 0;
       value_type scaling = 1.;
       bool onlyLineSearch = false;
       vector_t qopt;
