@@ -40,7 +40,7 @@ namespace hpp {
       value_type initSquaredNorm = 0;
 
       // Variables for optimization only
-      value_type previousCost = numeric_limits::infinity();
+      value_type previousCost;
       value_type scaling = 1.;
       bool onlyLineSearch = false;
       vector_t qopt;
@@ -48,6 +48,8 @@ namespace hpp {
       // Fill value and Jacobian
       computeValue<true> (arg);
       computeError();
+      if (optimize)
+        previousCost = datas_.back().error.squaredNorm();
 
       bool errorWasBelowThr = (squaredNorm_ < squaredErrorThreshold_);
       vector_t initArg;
