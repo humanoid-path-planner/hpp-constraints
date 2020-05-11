@@ -64,12 +64,24 @@ namespace hpp {
     void Implicit::rightHandSideFunction (const DifferentiableFunctionPtr_t& rhsF)
     {
       if (rhsF) {
-        assert (rhsF->inputSize() == 1);
-        assert (rhsF->inputDerivativeSize() == 1);
-        assert (*rhsF->outputSpace() == *function_->outputSpace());
+        if (rhsF->inputSize() != 1 || rhsF->inputDerivativeSize() != 1) {
+          HPP_THROW(std::invalid_argument, "Right hand side functions must take"
+              "only one real value as input. Got " << rhsF->inputSize() <<
+              " and " << rhsF->inputDerivativeSize());
+        }
+        if (*rhsF->outputSpace() != *function_->outputSpace()) {
+          HPP_THROW(std::invalid_argument, "The right hand side function output"
+              " space (" << *rhsF->outputSpace() << ") differs from the function"
+              " output space (" << *function_->outputSpace() << ").");
+        }
         // Check that the right hand side is non-constant on all axis.
-        for (std::size_t i = 0; i < comparison_.size(); ++i)
-          assert (comparison_[i] == constraints::Equality);
+        for (std::size_t i = 0; i < comparison_.size(); ++i) {
+          if (comparison_[i] != constraints::Equality) {
+            HPP_THROW(std::invalid_argument, "The comparison type of implicit "
+                "constraint with right hand side function should be Equality "
+                "on all dimensions.");
+          }
+        }
       }
 
       rhsFunction_ = rhsF;
