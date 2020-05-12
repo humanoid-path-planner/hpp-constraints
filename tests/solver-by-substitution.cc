@@ -18,6 +18,11 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
 
+#include <sstream>
+#include <boost/archive/polymorphic_xml_iarchive.hpp>
+#include <boost/archive/polymorphic_xml_oarchive.hpp>
+#include <hpp/pinocchio/serialization.hh>
+
 #include <hpp/constraints/solver/by-substitution.hh>
 #include <hpp/constraints/explicit/relative-pose.hh>
 
@@ -72,6 +77,7 @@ using hpp::constraints::Orientation;
 using hpp::constraints::ComparisonTypes_t;
 using hpp::constraints::EqualToZero;
 using hpp::constraints::Equality;
+using hpp::constraints::LockedJoint;
 using hpp::constraints::solver::lineSearch::Backtracking;
 using hpp::constraints::solver::lineSearch::ErrorNormBased;
 using hpp::constraints::solver::lineSearch::FixedSequence;
@@ -344,55 +350,6 @@ BOOST_AUTO_TEST_CASE(quadratic)
   test_quadratic3<1, 4, 2, 6> ();
 }
 
-class LockedJoint : public DifferentiableFunction
-{
-  public:
-    size_type idx_, length_;
-    vector_t value_;
-
-    LockedJoint(size_type idx, size_type length, vector_t value)
-      : DifferentiableFunction(0, 0, LiegroupSpace::Rn (length), "LockedJoint"),
-        idx_ (idx), length_ (length), value_ (value)
-    {}
-
-    ExplicitConstraintSet::RowBlockIndices inArg () const
-    {
-      ExplicitConstraintSet::RowBlockIndices ret;
-      return ret;
-    }
-
-    ExplicitConstraintSet::RowBlockIndices outArg () const
-    {
-      ExplicitConstraintSet::RowBlockIndices ret;
-      ret.addRow (idx_, length_);
-      return ret;
-    }
-
-    ExplicitConstraintSet::ColBlockIndices inDer () const
-    {
-      ExplicitConstraintSet::ColBlockIndices ret;
-      return ret;
-    }
-
-    ExplicitConstraintSet::RowBlockIndices outDer () const
-    {
-      ExplicitConstraintSet::RowBlockIndices ret;
-      ret.addRow (idx_ - 1, length_);
-      return ret;
-    }
-
-    void impl_compute (LiegroupElementRef result, vectorIn_t) const
-    {
-      result.vector () = value_;
-    }
-
-    void impl_jacobian (matrixOut_t,
-                        vectorIn_t ) const
-    {
-      // jacobian.setIdentity();
-    }
-};
-
 void se3ToConfig (const Transform3f& oMi, vectorOut_t v)
 {
   assert (v.size() == 7);
@@ -540,7 +497,6 @@ class ExplicitTransformation : public DifferentiableFunction
     }
 };
 
-typedef boost::shared_ptr<LockedJoint> LockedJointPtr_t;
 typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(functions1)
@@ -757,6 +713,72 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   dq.setRandom();
   qrand = tmp;
   solver.projectVectorOnKernel (qrand, dq, tmp);
+}
+
+struct iarchive :
+  boost::archive::polymorphic_xml_iarchive, hpp::serialization::archive_device_wrapper
+{
+  iarchive(std::istream& is) : boost::archive::polymorphic_xml_iarchive (is) {}
+};
+
+BOOST_AUTO_TEST_CASE(by_substitution_serialization)
+{
+  DevicePtr_t device (makeDevice (HumanoidRomeo));
+  BOOST_REQUIRE (device);
+  device->rootJoint()->lowerBound (0, -1);
+  device->rootJoint()->lowerBound (1, -1);
+  device->rootJoint()->lowerBound (2, -1);
+  device->rootJoint()->upperBound (0,  1);
+  device->rootJoint()->upperBound (1,  1);
+  device->rootJoint()->upperBound (2,  1);
+  JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
+             ee2 = device->getJointByName ("RAnkleRoll"),
+             ee3 = device->getJointByName ("LWristPitch");
+
+  Configuration_t q = device->currentConfiguration (),
+                  qrand = ::pinocchio::randomConfiguration(device->model());
+
+  BySubstitution solver(device->configSpace ());
+  solver.maxIterations(20);
+  solver.errorThreshold(1e-3);
+  solver.saturation(boost::make_shared<saturation::Device>(device));
+
+  device->currentConfiguration (q);
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
+  Transform3f tf3 (ee3->currentTransformation ());
+
+  solver.add
+    (Implicit::create
+     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2)));
+  solver.add
+     (Implicit::create
+      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3)));
+  solver.add
+    (LockedJoint::create
+     (ee1, ee1->configurationSpace ()->neutral ()));
+
+  BOOST_CHECK(solver.numberStacks() == 1);
+
+  std::stringstream ss;
+  {
+    boost::archive::polymorphic_xml_oarchive oa(ss);
+    oa << boost::serialization::make_nvp("solver", solver);
+  }
+
+  BySubstitution r_solver (device->configSpace ());
+  {
+    iarchive ia(ss);
+    ia.device = device;
+    //boost::archive::polymorphic_xml_iarchive ia(ss);
+    ia >> boost::serialization::make_nvp("solver", r_solver);
+  }
+
+  std::ostringstream ss_result, ss_expect;
+  ss_expect << solver << '\n';
+  ss_result << r_solver << '\n';
+  BOOST_CHECK_EQUAL(ss_expect.str(), ss_result.str());
 }
 
 BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
@@ -1003,7 +1025,7 @@ BOOST_AUTO_TEST_CASE (merge)
   ImplicitPtr_t c1 (Implicit::create(h, comp1));
   u << 1.2, 0, -1;
   tf2.translation (u);
-  ImplicitPtr_t c2 (hpp::constraints::LockedJoint::create
+  ImplicitPtr_t c2 (LockedJoint::create
                     (ee1, ee1->configurationSpace ()->neutral ()));
 
   ImplicitPtr_t c3 (hpp::constraints::explicit_::RelativePose::create
