@@ -385,7 +385,7 @@ size_type max_iter = 100;
 HierarchicalIterative createSolver (Data& data)
 {
   HierarchicalIterative solver (LiegroupSpace::Rn(Nv));
-  solver.saturation (saturation);
+  solver.saturation (boost::make_shared<solver::saturation::Function>(saturation));
   solver.inequalityThreshold (ineq_thr);
   solver.maxIterations (max_iter);
   solver.add (data.O_inside_1, 0);

@@ -81,6 +81,8 @@ using hpp::pinocchio::unittest::makeDevice;
 using hpp::pinocchio::displayConfig;
 using boost::assign::list_of;
 
+namespace saturation = hpp::constraints::solver::saturation;
+
 matrix_t randomPositiveDefiniteMatrix (int N)
 {
   matrix_t A (matrix_t::Random(N,N));
@@ -119,7 +121,8 @@ void test_quadratic ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(simpleSaturation<-1,1>);
+  solver.saturation(boost::make_shared<saturation::Bounds>(
+        -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad));
   solver.add (expl);
@@ -192,7 +195,8 @@ void test_quadratic2 ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(simpleSaturation<-1,1>);
+  solver.saturation(boost::make_shared<saturation::Bounds>(
+        -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad));
   solver.add (expl1);
@@ -277,7 +281,8 @@ void test_quadratic3 ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(simpleSaturation<-1,1>);
+  solver.saturation(boost::make_shared<saturation::Bounds>(
+        -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad));
   solver.add (expl1);
@@ -693,7 +698,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
+  solver.saturation(boost::make_shared<saturation::Device>(device));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();
@@ -802,7 +807,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
+  solver.saturation(boost::make_shared<saturation::Device>(device));
 
   solver.add (constraint);
 
