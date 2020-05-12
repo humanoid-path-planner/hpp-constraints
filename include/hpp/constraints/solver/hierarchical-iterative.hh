@@ -243,7 +243,6 @@ namespace hpp {
         /// Check whether a numerical constraint has been added
         /// \param numericalConstraint numerical constraint
         /// \return true if numerical constraint is already in the solver
-        ///         whatever the passive dofs are.
         /// \note Comparison between constraints is performed by
         /// function names. This means that two constraints with the
         /// same function names are considered as equal.
@@ -254,7 +253,7 @@ namespace hpp {
         /// \param constraint implicit constraint
         /// \param priority level of priority of the constraint: priority are
         ///        in decreasing order: 0 is the highest priority level,
-        void add (const ImplicitPtr_t& constraint, const std::size_t& priority);
+        virtual void add (const ImplicitPtr_t& constraint, const std::size_t& priority);
 
         /// add constraints of another solver
         /// \param other other solver
