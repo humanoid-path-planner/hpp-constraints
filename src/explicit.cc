@@ -137,6 +137,24 @@ namespace hpp {
     }
 
     Explicit::Explicit
+    (const LiegroupSpacePtr_t& configSpace,
+     const DifferentiableFunctionPtr_t& implicitFunction,
+     const DifferentiableFunctionPtr_t& explicitFunction,
+     const segments_t& inputConf,
+     const segments_t& outputConf,
+     const segments_t& inputVelocity,
+     const segments_t& outputVelocity,
+     const ComparisonTypes_t& comp) :
+      Implicit (implicitFunction, comp),
+      inputToOutput_ (explicitFunction),
+      inputConf_ (inputConf),
+      outputConf_ (outputConf),
+      inputVelocity_ (inputVelocity),
+      outputVelocity_ (outputVelocity)
+    {
+    }
+
+    Explicit::Explicit
     (const Explicit& other) :
       Implicit (other), inputToOutput_ (other.inputToOutput_),
       inputConf_ (other.inputConf_), outputConf_ (other.outputConf_),
