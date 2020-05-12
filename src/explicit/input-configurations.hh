@@ -172,11 +172,15 @@ namespace hpp {
                       (*objectJoint->configurationSpace () ==
                        *pinocchio::LiegroupSpace::R3xSO3 ()));
             }
-            else if (objectJoint != it->first)
+            else if (*objectJoint != *(it->first))
             {
-              throw std::logic_error("in explicit_::ConvexShapeContact: object "
-                                     "contact surfaces should be hold by the "
-                                     "same object");
+              std::ostringstream oss;
+              oss << "In explicit_::ConvexShapeContact: object "
+                  << "contact surfaces should be hold by the "
+                  << "same object. Found joints" << std::endl;
+              oss << " \"" << objectJoint->name() << "\", and" << std::endl;
+              oss << " \"" << it->first->name() << "\".";
+              throw std::logic_error(oss.str().c_str());
             }
           }
           for (JointAndShapes_t::const_iterator it(floorSurfaces.begin());
