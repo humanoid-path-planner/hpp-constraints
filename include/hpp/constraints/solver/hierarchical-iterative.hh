@@ -87,6 +87,60 @@ namespace hpp {
         };
       } // namespace lineSearch
 
+      namespace saturation {
+        /// \brief Base class for box constraints.
+        /// To prevent configuration variables to get out of joint limits during
+        /// Newton Raphson iterations, the user may provide an object derived
+        /// from this type to HierarchicalIterative using setter and getter
+        /// HierarchicalIterative::saturation.
+        ///
+        /// This class implements no saturation.
+        struct Base {
+          /// This function checks which degrees of freedom are saturated.
+          ///
+          /// \param q a configuration,
+          /// \retval qSat configuration after saturing values out of bounds
+          /// \retval saturation vector: for each degree of freedom, saturation
+          ///         is set to
+          /// \li -1 if the lower bound is reached,
+          /// \li  1 if the upper bound is reached,
+          /// \li  0 otherwise.
+          /// \return true if and only if at least one degree of freedom has been
+          ///         saturated
+          virtual bool saturate(vectorIn_t q, vectorOut_t qSat,
+              Eigen::VectorXi& saturation);
+          virtual ~Base() {}
+        };
+        /// \brief saturation from a boost::function.
+        struct Function : Base {
+          typedef boost::function<bool (vectorIn_t, vectorOut_t, Eigen::VectorXi&)> function_t;
+          bool saturate(vectorIn_t q, vectorOut_t qSat,
+              Eigen::VectorXi& saturation) {
+            return function(q, qSat, saturation);
+          }
+          Function () {}
+          Function (const function_t& function) : function(function) {}
+          function_t function;
+        };
+        /// \brief simple box constraints
+        struct Bounds : Base {
+          bool saturate(vectorIn_t q, vectorOut_t qSat,
+              Eigen::VectorXi& saturation);
+          Bounds () {}
+          Bounds (const vector_t& lb, const vector_t& ub) : lb(lb), ub(ub) {}
+          vector_t lb, ub;
+        };
+        /// \brief Box constraints use a Device joint limits.
+        struct Device : Base {
+          /// \todo write a visitor.
+          bool saturate(vectorIn_t q, vectorOut_t qSat,
+              Eigen::VectorXi& saturation);
+          Device() {}
+          Device(const DevicePtr_t& device) : device (device) {}
+          DevicePtr_t device;
+        };
+      }
+
       /// Solve a system of non-linear equations on a robot configuration
       ///
       /// The non-linear system of equations is built by adding equations with
@@ -135,10 +189,7 @@ namespace hpp {
       ///
       /// \note Saturation
       ///
-      /// To prevent configuration variables to get out of joint limits during
-      /// Newton Raphson iterations, the user may provide a method of type
-      /// HierarchicalIterative::Saturation_t using setter and getter
-      /// HierarchicalIterative::saturation.
+      /// \copydoc saturate::Base
       ///
       /// \note Right hand side and comparison types
       ///
@@ -173,20 +224,7 @@ namespace hpp {
           INFEASIBLE,
           SUCCESS
         };
-        /// This function checks which degrees of freedom are saturated.
-        ///
-        /// \param q a configuration,
-        /// \retval qSat configuration after saturing values out of bounds
-        /// \retval saturation vector: for each degree of freedom, saturation
-        ///         is set to
-        /// \li -1 if the lower bound is reached,
-        /// \li  1 if the upper bound is reached,
-        /// \li  0 otherwise.
-        /// \return true if and only if at least one degree of freedom has been
-        ///         saturated
-        typedef boost::function<bool (vectorIn_t q, vectorOut_t qSat,
-                                      Eigen::VectorXi& saturation)>
-          Saturation_t;
+        typedef boost::shared_ptr<saturation::Base> Saturation_t;
 
         HierarchicalIterative (const LiegroupSpacePtr_t& configSpace);
 

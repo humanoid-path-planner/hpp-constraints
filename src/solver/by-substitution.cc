@@ -282,7 +282,7 @@ namespace hpp {
         projectVectorOnKernel (from, OM_, OP_);
 
         Lge_t P (O + OP_);
-        saturate_ (P.vector (), result, saturation_);
+        saturate_->saturate (P.vector (), result, saturation_);
       }
 
       std::ostream& BySubstitution::print (std::ostream& os) const
