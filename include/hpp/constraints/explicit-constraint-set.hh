@@ -501,6 +501,29 @@ namespace hpp {
         size_type errorSize_;
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;
+
+        /// Constructor for serialization
+        ExplicitConstraintSet() 
+          :  inArgs_ (), notOutArgs_ ()
+          ,  inDers_ (), notOutDers_ ()
+          , outArgs_ (),  outDers_ ()
+          , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
+          , errorSize_(0)
+        {}
+        /// Initialization for serialization
+        void init(const LiegroupSpacePtr_t& space)
+        {
+          configSpace_ = space;
+          argFunction_ = Eigen::VectorXi::Constant(space->nq (), -1);
+          derFunction_ = Eigen::VectorXi::Constant(space->nv (), -1);
+          arg_.resize(space->nq ());
+          diff_.resize(space->nv ());
+
+          notOutArgs_.addRow(0, space->nq ());
+          notOutDers_.addCol(0, space->nv ());
+        }
+        
+        friend class solver::BySubstitution;
     }; // class ExplicitConstraintSet
     /// \}
   } // namespace constraints

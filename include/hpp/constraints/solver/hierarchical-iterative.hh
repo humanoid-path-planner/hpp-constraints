@@ -21,6 +21,8 @@
 
 #include <hpp/util/serialization-fwd.hh>
 
+#include <hpp/util/serialization-fwd.hh>
+
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 
@@ -645,6 +647,11 @@ namespace hpp {
         mutable vector_t OP_;
 
         friend struct lineSearch::Backtracking;
+
+      protected:
+        HierarchicalIterative() {}
+      private:
+        HPP_SERIALIZABLE_SPLIT();
       }; // class HierarchicalIterative
       /// \}
     } // namespace solver

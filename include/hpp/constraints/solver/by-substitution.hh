@@ -320,6 +320,9 @@ namespace hpp {
 
         ExplicitConstraintSet explicit_;
         mutable matrix_t Je_, JeExpanded_;
+
+        BySubstitution() {}
+        HPP_SERIALIZABLE_SPLIT();
       }; // class BySubstitution
       /// \}
 

@@ -15,15 +15,19 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #include <hpp/constraints/solver/by-substitution.hh>
-#include <hpp/constraints/solver/impl/by-substitution.hh>
-#include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
-#include <hpp/constraints/active-set-differentiable-function.hh>
+
+#include <boost/serialization/nvp.hpp>
+
+#include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/configuration.hh>
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
+#include <hpp/constraints/active-set-differentiable-function.hh>
+#include <hpp/constraints/solver/impl/by-substitution.hh>
+#include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 
 namespace hpp {
   namespace constraints {
@@ -359,6 +363,28 @@ namespace hpp {
                                                 constraintFound);
       }
 
+      template<class Archive>
+      void BySubstitution::load(Archive & ar, const unsigned int version)
+      {
+        using namespace boost::serialization;
+        (void) version;
+        LiegroupSpacePtr_t space;
+        ar & BOOST_SERIALIZATION_NVP(space);
+        explicit_.init(space);
+        ar & make_nvp("base", base_object<HierarchicalIterative>(*this));
+      }
+
+      template<class Archive>
+      void BySubstitution::save(Archive & ar, const unsigned int version) const
+      {
+        using namespace boost::serialization;
+        (void) version;
+        LiegroupSpacePtr_t space (explicit_.configSpace());
+        ar & BOOST_SERIALIZATION_NVP(space);
+        ar & make_nvp("base", base_object<HierarchicalIterative>(*this));
+      }
+
+      HPP_SERIALIZATION_SPLIT_IMPLEMENT(BySubstitution);
 
       template BySubstitution::Status BySubstitution::impl_solve
       (vectorOut_t arg, bool optimize, lineSearch::Constant       lineSearch) const;
@@ -371,3 +397,5 @@ namespace hpp {
     } // namespace solver
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::solver::BySubstitution)
