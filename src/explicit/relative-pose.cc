@@ -29,11 +29,11 @@ namespace hpp {
         (const std::string& name, const DevicePtr_t& robot,
          const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
          const Transform3f& frame1, const Transform3f& frame2,
-         std::vector <bool> mask, ComparisonTypes_t comp, vectorIn_t rhs)
+         std::vector <bool> mask, ComparisonTypes_t comp)
       {
         RelativePose* ptr (new RelativePose
                            (name, robot, joint1, joint2, frame1, frame2,
-                            mask, comp, rhs));
+                            mask, comp));
         RelativePosePtr_t shPtr (ptr);
         RelativePoseWkPtr_t wkPtr (shPtr);
         ptr->init (wkPtr);
@@ -124,21 +124,18 @@ namespace hpp {
       (const std::string& name, const DevicePtr_t& robot,
        const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
        const Transform3f& frame1, const Transform3f& frame2,
-       std::vector <bool> mask, ComparisonTypes_t comp, vectorIn_t rhs) :
-        Implicit (GenericTransformation
+       std::vector <bool> mask, ComparisonTypes_t comp) :
+        Explicit (robot->configSpace (), GenericTransformation
                   <RelativeBit | PositionBit | OrientationBit>::create
                   (name, robot, joint1, joint2, frame1, frame2, mask),
-                  comp, rhs),
-        Explicit (robot->configSpace (), RelativeTransformation::create
+                  RelativeTransformation::create
                   (name, robot, joint1, joint2, frame1, frame2),
                   relativePose::inputConfVariables (robot, joint1, joint2),
                   relativePose::jointConfInterval (joint2),
                   relativePose::inputVelocityVariables (robot, joint1, joint2),
                   relativePose::jointVelInterval (joint2), comp),
-        implicit::RelativePose (name, robot, joint1, joint2, frame1, frame2,
-                                mask, comp, rhs),
-        frame1_ (frame1), frame2_ (frame2)
-        {
+        joint1_ (joint1), joint2_ (joint2), frame1_ (frame1), frame2_ (frame2)
+      {
           assert ((*joint2->configurationSpace () ==
                    *pinocchio::LiegroupSpace::SE3 ()) ||
                   (*joint2->configurationSpace () ==
@@ -146,16 +143,15 @@ namespace hpp {
         }
 
       RelativePose::RelativePose (const RelativePose& other) :
-        Implicit (other), Explicit (other), implicit::RelativePose (other),
+        Explicit (other),
+        joint1_ (other.joint1_), joint2_ (other.joint2_),
         frame1_ (other.frame1_), frame2_ (other.frame2_)
       {
       }
 
       void RelativePose::init (RelativePoseWkPtr_t weak)
       {
-        Implicit::init (weak);
         Explicit::init (weak);
-        implicit::RelativePose::init (weak);
         weak_ = weak;
       }
     } // namespace explicit_

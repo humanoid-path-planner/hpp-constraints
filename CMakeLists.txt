@@ -77,8 +77,6 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/explicit/convex-shape-contact.hh
   include/hpp/constraints/explicit/relative-transformation.hh
   include/hpp/constraints/implicit.hh
-  include/hpp/constraints/implicit/convex-shape-contact.hh
-  include/hpp/constraints/implicit/relative-pose.hh
   include/hpp/constraints/implicit-constraint-set.hh
   include/hpp/constraints/locked-joint.hh
   include/hpp/constraints/solver/hierarchical-iterative.hh
@@ -116,8 +114,6 @@ SET (${PROJECT_NAME}_SOURCES
   src/explicit/relative-pose.cc
   src/function/of-parameter-subset.cc
   src/function/difference.cc
-  src/implicit/convex-shape-contact.cc
-  src/implicit/relative-pose.cc
   src/locked-joint.cc
   src/solver/by-substitution.cc
   src/solver/hierarchical-iterative.cc

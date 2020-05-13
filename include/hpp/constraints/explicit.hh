@@ -115,7 +115,7 @@ namespace hpp {
 
 
     **/
-    class HPP_CONSTRAINTS_DLLAPI Explicit : public virtual Implicit
+    class HPP_CONSTRAINTS_DLLAPI Explicit : public Implicit
     {
     public:
       /// Copy object and return shared pointer to copy

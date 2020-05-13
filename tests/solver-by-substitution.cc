@@ -907,9 +907,11 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   Transform3f tf1; // Identity
   vector3_t u; u << 0, -.2, 0;
   Transform3f tf2; tf2.translation (u);
-  ImplicitPtr_t c1 (hpp::constraints::implicit::RelativePose::create
-                    ("RelativeTransformation", device, ee1, ee2, tf1, tf2,
-                     std::vector <bool> (6, true), comp1));
+
+  DifferentiableFunctionPtr_t
+    h(RelativeTransformation::create("RelativeTransformation", device, ee1, ee2,
+                                     tf1, tf2, std::vector <bool> (6, true)));
+  ImplicitPtr_t c1 (Implicit::create(h, comp1));
   u << 1.2, 0, -1;
   tf2.translation (u);
   ImplicitPtr_t c2 (hpp::constraints::explicit_::RelativePose::create
@@ -990,9 +992,10 @@ BOOST_AUTO_TEST_CASE (merge)
   Transform3f tf1; // Identity
   vector3_t u; u << 0, -.2, 0;
   Transform3f tf2; tf2.translation (u);
-  ImplicitPtr_t c1 (hpp::constraints::implicit::RelativePose::create
-                    ("RelativeTransformation", device, ee1, ee2, tf1, tf2,
-                     std::vector <bool> (6, true), comp1));
+  DifferentiableFunctionPtr_t h
+    (RelativeTransformation::create("RelativeTransformation",device, ee1, ee2,
+                                    tf1, tf2, std::vector <bool> (6, true)));
+  ImplicitPtr_t c1 (Implicit::create(h, comp1));
   u << 1.2, 0, -1;
   tf2.translation (u);
   ImplicitPtr_t c2 (hpp::constraints::LockedJoint::create
