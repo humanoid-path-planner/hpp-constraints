@@ -63,7 +63,7 @@ namespace hpp {
       }
 
       bool BySubstitution::add (const ImplicitPtr_t& nm,
-                                const std::size_t priority)
+                                const std::size_t& priority)
       {
         if (contains (nm)) {
           hppDout (error, "Constraint " << nm->functionPtr()->name ()

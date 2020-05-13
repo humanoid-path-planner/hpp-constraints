@@ -255,7 +255,7 @@ namespace hpp {
         /// \param constraint implicit constraint
         /// \param priority level of priority of the constraint: priority are
         ///        in decreasing order: 0 is the highest priority level,
-        virtual void add (const ImplicitPtr_t& constraint, const std::size_t& priority);
+        virtual bool add (const ImplicitPtr_t& constraint, const std::size_t& priority);
 
         /// add constraints of another solver
         /// \param other other solver

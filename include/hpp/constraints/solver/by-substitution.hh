@@ -74,7 +74,7 @@ namespace hpp {
         /// inserted constraints, it is added as explicit. Otherwise, it is
         /// added as implicit.
         bool add (const ImplicitPtr_t& numericalConstraint,
-                  const std::size_t priority = 0);
+                  const std::size_t& priority = 0);
 
         /// \deprecated use add(const ImplicitPtr_t&, const std::size_t)
         bool add (const ImplicitPtr_t& numericalConstraint,

@@ -240,7 +240,7 @@ namespace hpp {
         return false;
       }
 
-      void HierarchicalIterative::add (const ImplicitPtr_t& constraint,
+      bool HierarchicalIterative::add (const ImplicitPtr_t& constraint,
                                        const std::size_t& priority)
       {
         DifferentiableFunctionPtr_t f (constraint->functionPtr ());
@@ -288,6 +288,7 @@ namespace hpp {
         constraints_.push_back (constraint);
         update();
 
+        return true;
       }
 
       void HierarchicalIterative::merge (const HierarchicalIterative& other)
