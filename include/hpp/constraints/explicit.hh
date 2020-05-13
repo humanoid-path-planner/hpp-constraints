@@ -276,26 +276,12 @@ namespace hpp {
 	 const segments_t& outputVelocity,
          const ComparisonTypes_t& comp);
 
-      /// Constructor
-      ///
-      /// \param configSpace Configuration space on which the constraint is
-      ///        defined,
+      /// \copydoc Explicit (const LiegroupSpacePtr_t&, const DifferentiableFunctionPtr_t&, const segments_t& inputConf, const segments_t& outputConf, const segments_t& inputVelocity, const segments_t&, const ComparisonTypes_t&);
       /// \param implicitFunction differentiable function of the implicit
       ///        formulation if different from default expression
       ///        \f{equation}{
       ///        \mathbf{q}_{out} - f \left(\mathbf{q}_{in}\right),
       ///        \f}
-      /// \param function relation between input configuration variables and
-      ///        output configuration variables,
-      /// \param inputConf set of integer intervals defining indices
-      ///            \f$(ic_{1}, \cdots, ic_{n_{ic}})\f$,
-      /// \param outputConf set of integer intervals defining indices
-      ///            \f$(oc_{1}, \cdots, oc_{n_{oc}})\f$,
-      /// \param inputVelocity set of integer defining indices
-      ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
-      /// \param outputVelocity set of integer defining indices
-      ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \note comparison type for this constraint is always equality
       Explicit
 	(const LiegroupSpacePtr_t& configSpace,
          const DifferentiableFunctionPtr_t& implicitFunction,
