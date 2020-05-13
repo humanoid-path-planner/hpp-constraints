@@ -125,7 +125,7 @@ namespace hpp {
        const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
        const Transform3f& frame1, const Transform3f& frame2,
        std::vector <bool> mask, ComparisonTypes_t comp) :
-        Explicit (robot->configSpace (), GenericTransformation
+        Explicit (GenericTransformation
                   <RelativeBit | PositionBit | OrientationBit>::create
                   (name, robot, joint1, joint2, frame1, frame2, mask),
                   RelativeTransformation::create

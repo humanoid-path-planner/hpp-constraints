@@ -132,7 +132,7 @@ namespace hpp {
        const JointAndShapes_t& floorSurfaces,
        const JointAndShapes_t& objectSurfaces,
        const value_type& margin) :
-        Explicit(robot->configSpace(), ConvexShapeContactHold::create
+        Explicit(ConvexShapeContactHold::create
                  (name, robot, floorSurfaces, objectSurfaces),
                  ConstantFunction::create
                  (pinocchio::LiegroupSpace::SE3()->neutral(),

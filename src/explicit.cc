@@ -137,8 +137,7 @@ namespace hpp {
     }
 
     Explicit::Explicit
-    (const LiegroupSpacePtr_t& configSpace,
-     const DifferentiableFunctionPtr_t& implicitFunction,
+    (const DifferentiableFunctionPtr_t& implicitFunction,
      const DifferentiableFunctionPtr_t& explicitFunction,
      const segments_t& inputConf,
      const segments_t& outputConf,

@@ -283,8 +283,7 @@ namespace hpp {
       ///        \mathbf{q}_{out} - f \left(\mathbf{q}_{in}\right),
       ///        \f}
       Explicit
-	(const LiegroupSpacePtr_t& configSpace,
-         const DifferentiableFunctionPtr_t& implicitFunction,
+	(const DifferentiableFunctionPtr_t& implicitFunction,
          const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
 	 const segments_t& outputConf,
