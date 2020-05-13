@@ -19,7 +19,7 @@
 
 #include <boost/function.hpp>
 
-#include <hpp/statistics/success-bin.hh>
+#include <hpp/util/serialization-fwd.hh>
 
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
@@ -606,9 +606,6 @@ namespace hpp {
         mutable SVD_t svd_;
         mutable vector_t OM_;
         mutable vector_t OP_;
-
-
-        mutable ::hpp::statistics::SuccessStatistics statistics_;
 
         friend struct lineSearch::Backtracking;
       }; // class HierarchicalIterative

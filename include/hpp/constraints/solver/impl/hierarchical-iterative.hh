@@ -17,6 +17,9 @@
 #ifndef HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
 #define HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
 
+#include <hpp/util/debug.hh>
+
+#include <hpp/constraints/config.hh>
 #include <hpp/constraints/svd.hh>
 
 namespace hpp {

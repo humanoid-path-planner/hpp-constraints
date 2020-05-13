@@ -117,8 +117,7 @@ namespace hpp {
         sigma_ (0), dq_ (), dqSmall_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
-        svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ()),
-        statistics_ ("HierarchicalIterative")
+        svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ())
       {
         // Initialize freeVariables_ to all indices.
         freeVariables_.addRow (0, configSpace_->nv ());
@@ -142,7 +141,7 @@ namespace hpp {
         reducedSaturation_ (other.reducedSaturation_), qSat_ (other.qSat_),
         tmpSat_ (other.tmpSat_), squaredNorm_ (other.squaredNorm_),
         datas_ (other.datas_), svd_ (other.svd_), OM_ (other.OM_),
-	OP_ (other.OP_), statistics_ (other.statistics_)
+	OP_ (other.OP_)
       {
         for (std::size_t i = 0; i < constraints_.size(); ++i)
           constraints_[i] = other.constraints_[i]->copy();
