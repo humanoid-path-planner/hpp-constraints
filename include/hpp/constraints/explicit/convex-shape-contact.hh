@@ -17,15 +17,12 @@
 #ifndef HPP_CONSTRAINTS_EXPLICIT_CONVEX_SHAPE_CONTACT_HH
 #define HPP_CONSTRAINTS_EXPLICIT_CONVEX_SHAPE_CONTACT_HH
 
-#include <hpp/constraints/implicit/convex-shape-contact.hh>
 #include <hpp/constraints/explicit.hh>
 
 namespace hpp {
   namespace constraints {
     namespace explicit_ {
-      typedef implicit::ConvexShapeContact Parent;
-      class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact :
-        public Explicit, public Parent
+      class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact : public Explicit
       {
       public:
         typedef std::tuple<ImplicitPtr_t, ImplicitPtr_t, ExplicitPtr_t>

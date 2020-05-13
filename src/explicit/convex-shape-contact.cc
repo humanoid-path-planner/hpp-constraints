@@ -132,11 +132,9 @@ namespace hpp {
        const JointAndShapes_t& floorSurfaces,
        const JointAndShapes_t& objectSurfaces,
        const value_type& margin) :
-        Implicit(ConvexShapeContactHold::create(name, robot, floorSurfaces,
-                                                objectSurfaces),
-                 list_of(EqualToZero)(EqualToZero)(EqualToZero)(EqualToZero)
-                 (EqualToZero)(Equality)(Equality)(Equality)),
-        Explicit(robot->configSpace(), ConstantFunction::create
+        Explicit(robot->configSpace(), ConvexShapeContactHold::create
+                 (name, robot, floorSurfaces, objectSurfaces),
+                 ConstantFunction::create
                  (pinocchio::LiegroupSpace::SE3()->neutral(),
                   contact::inputSize(robot, floorSurfaces, objectSurfaces),
                   contact::inputDerivSize(robot,floorSurfaces,objectSurfaces)),
@@ -147,8 +145,7 @@ namespace hpp {
                  (robot, floorSurfaces, objectSurfaces),
                  relativePose::jointVelInterval(objectSurfaces.front().first),
                  list_of(EqualToZero)(EqualToZero)(EqualToZero)(EqualToZero)
-                 (EqualToZero)(Equality)(Equality)(Equality)),
-        implicit::ConvexShapeContact(name, robot, floorSurfaces, objectSurfaces)
+                 (EqualToZero)(Equality)(Equality)(Equality))
       {
         assert(HPP_DYNAMIC_PTR_CAST(ConvexShapeContactHold, functionPtr()));
         ConvexShapeContactHoldPtr_t f
@@ -177,9 +174,7 @@ namespace hpp {
       }
       void ConvexShapeContact::init (ConvexShapeContactWkPtr_t weak)
       {
-        Implicit::init (weak);
         Explicit::init (weak);
-        implicit::ConvexShapeContact::init (weak);
         weak_ = weak;
       }
     } // namespace explicit_

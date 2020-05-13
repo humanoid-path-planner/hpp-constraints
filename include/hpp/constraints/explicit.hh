@@ -115,7 +115,7 @@ namespace hpp {
 
 
     **/
-    class HPP_CONSTRAINTS_DLLAPI Explicit : public virtual Implicit
+    class HPP_CONSTRAINTS_DLLAPI Explicit : public Implicit
     {
     public:
       /// Copy object and return shared pointer to copy
@@ -269,6 +269,22 @@ namespace hpp {
       /// \note comparison type for this constraint is always equality
       Explicit
 	(const LiegroupSpacePtr_t& configSpace,
+         const DifferentiableFunctionPtr_t& function,
+	 const segments_t& inputConf,
+	 const segments_t& outputConf,
+	 const segments_t& inputVelocity,
+	 const segments_t& outputVelocity,
+         const ComparisonTypes_t& comp);
+
+      /// \copydoc Explicit (const LiegroupSpacePtr_t&, const DifferentiableFunctionPtr_t&, const segments_t& inputConf, const segments_t& outputConf, const segments_t& inputVelocity, const segments_t&, const ComparisonTypes_t&);
+      /// \param implicitFunction differentiable function of the implicit
+      ///        formulation if different from default expression
+      ///        \f{equation}{
+      ///        \mathbf{q}_{out} - f \left(\mathbf{q}_{in}\right),
+      ///        \f}
+      Explicit
+	(const LiegroupSpacePtr_t& configSpace,
+         const DifferentiableFunctionPtr_t& implicitFunction,
          const DifferentiableFunctionPtr_t& function,
 	 const segments_t& inputConf,
 	 const segments_t& outputConf,

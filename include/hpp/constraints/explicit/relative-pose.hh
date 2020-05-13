@@ -18,15 +18,13 @@
 # define HPP_CONSTRAINTS_EXPLICIT_RELATIVE_POSE_HH
 
 # include <hpp/constraints/explicit.hh>
-# include <hpp/constraints/implicit/relative-pose.hh>
 # include <pinocchio/spatial/se3.hpp>
 
 namespace hpp {
   namespace constraints {
     namespace explicit_ {
       /// Constraint of relative pose between two frames on a kinematic chain
-      class HPP_CONSTRAINTS_DLLAPI RelativePose :
-        public Explicit, public implicit::RelativePose
+      class HPP_CONSTRAINTS_DLLAPI RelativePose : public Explicit
       {
       public:
         /// Copy object and return shared pointer to copy
@@ -43,6 +41,7 @@ namespace hpp {
         /// \param frame2 position of a fixed frame in joint 2,
         /// \param mask vector of 6 boolean defining which coordinates of the
         ///        error vector to take into account.
+        /// \param comp vector of comparison types
         /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
         ///       frame.
         static RelativePosePtr_t create
@@ -50,8 +49,7 @@ namespace hpp {
            const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
            const Transform3f& frame1, const Transform3f& frame2,
            std::vector <bool> mask = std::vector<bool>(6,true),
-           ComparisonTypes_t comp = std::vector <ComparisonType> (),
-           vectorIn_t rhs = vector_t ());
+           ComparisonTypes_t comp = std::vector <ComparisonType>());
 
         static RelativePosePtr_t createCopy (const RelativePosePtr_t& other);
 
@@ -96,6 +94,7 @@ namespace hpp {
         /// \param frame2 position of a fixed frame in joint 2,
         /// \param mask vector of 6 boolean defining which coordinates of the
         ///        error vector to take into account.
+        /// \param comp vector of comparison types
         /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
         ///       frame.
         RelativePose (const std::string& name, const DevicePtr_t& robot,
@@ -103,8 +102,7 @@ namespace hpp {
                       const JointConstPtr_t& joint2,
                       const Transform3f& frame1, const Transform3f& frame2,
                       std::vector <bool> mask = std::vector<bool>(6,true),
-                      ComparisonTypes_t comp = std::vector <ComparisonType> (),
-                      vectorIn_t rhs = vector_t ());
+                      ComparisonTypes_t comp = std::vector <ComparisonType> ());
 
         /// Copy constructor
         RelativePose (const RelativePose& other);
@@ -159,6 +157,7 @@ namespace hpp {
         // Create LiegroupSpace instances to avoid useless allocation.
         static LiegroupSpacePtr_t SE3;
         static LiegroupSpacePtr_t R3xSO3;
+        JointConstPtr_t joint1_, joint2_;
         Transform3f frame1_;
         Transform3f frame2_;
         RelativePoseWkPtr_t weak_;
