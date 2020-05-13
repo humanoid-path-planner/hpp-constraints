@@ -18,9 +18,13 @@
 #include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 
 #include <limits>
+#include <pinocchio/multibody/model.hpp>
+
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
 
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 
@@ -99,12 +103,72 @@ namespace hpp {
           (const HierarchicalIterative& solver, vectorOut_t arg, vectorOut_t darg);
       }
 
-      static bool noSaturation (vectorIn_t q, vectorOut_t qSat,
-                                Eigen::VectorXi& saturation)
-      {
-        qSat = q;
-        saturation.setZero ();
-        return false;
+      namespace saturation {
+        bool Base::saturate(vectorIn_t q, vectorOut_t qSat, Eigen::VectorXi& saturation)
+        {
+          qSat = q;
+          saturation.setZero ();
+          return false;
+        }
+
+        bool clamp(const value_type& lb, const value_type& ub,
+            const value_type& v, value_type& vsat, int& s)
+        {
+          if (v <= lb) {
+            vsat = lb;
+            s = -1;
+            return true;
+          } else if (v >= ub) {
+            vsat = ub;
+            s = 1;
+            return true;
+          } else {
+            vsat = v;
+            s = 0;
+            return false;
+          }
+        }
+
+        bool Bounds::saturate(vectorIn_t q, vectorOut_t qSat,
+            Eigen::VectorXi& saturation)
+        {
+          bool sat = false;
+          for (size_type i = 0; i < q.size(); ++i)
+            if (clamp(lb[i], ub[i], q[i], qSat[i], saturation[i]))
+              sat = true;
+          return sat;
+        }
+
+        bool Device::saturate (vectorIn_t q, vectorOut_t qSat, Eigen::VectorXi& sat)
+        {
+          bool ret = false;
+          const pinocchio::Model& m = device->model();
+
+          for (std::size_t i = 1; i < m.joints.size(); ++i) {
+            const size_type nq = m.joints[i].nq();
+            const size_type nv = m.joints[i].nv();
+            const size_type idx_q = m.joints[i].idx_q();
+            const size_type idx_v = m.joints[i].idx_v();
+            for (size_type j = 0; j < nq; ++j) {
+              const size_type iq = idx_q + j;
+              const size_type iv = idx_v + std::min(j,nv-1);
+              if (clamp(m.lowerPositionLimit[iq], m.upperPositionLimit[iq],
+                    q[iq], qSat[iq], sat[iv]))
+                ret = true;
+            }
+          }
+
+          const hpp::pinocchio::ExtraConfigSpace& ecs = device->extraConfigSpace();
+          const size_type& d = ecs.dimension();
+
+          for (size_type k = 0; k < d; ++k) {
+            const size_type iq = m.nq + k;
+            const size_type iv = m.nv + k;
+            if (clamp(ecs.lower(k), ecs.upper(k), q[iq], qSat[iq], sat[iv]))
+              ret = true;
+          }
+          return ret;
+        }
       }
 
       HierarchicalIterative::HierarchicalIterative
@@ -112,13 +176,12 @@ namespace hpp {
         squaredErrorThreshold_ (0), inequalityThreshold_ (0),
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
-        freeVariables_ (), saturate_ (noSaturation), constraints_ (),
+        freeVariables_ (), saturate_ (new saturation::Base()), constraints_ (),
         iq_ (), iv_ (), priority_ (),
         sigma_ (0), dq_ (), dqSmall_ (), reducedJ_ (),
         saturation_ (configSpace->nv ()), reducedSaturation_ (),
         qSat_ (configSpace_->nq ()), tmpSat_ (), squaredNorm_ (0), datas_(),
-        svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ()),
-        statistics_ ("HierarchicalIterative")
+        svd_ (), OM_ (configSpace->nv ()), OP_ (configSpace->nv ())
       {
         // Initialize freeVariables_ to all indices.
         freeVariables_.addRow (0, configSpace_->nv ());
@@ -142,7 +205,7 @@ namespace hpp {
         reducedSaturation_ (other.reducedSaturation_), qSat_ (other.qSat_),
         tmpSat_ (other.tmpSat_), squaredNorm_ (other.squaredNorm_),
         datas_ (other.datas_), svd_ (other.svd_), OM_ (other.OM_),
-	OP_ (other.OP_), statistics_ (other.statistics_)
+	OP_ (other.OP_)
       {
         for (std::size_t i = 0; i < constraints_.size(); ++i)
           constraints_[i] = other.constraints_[i]->copy();
@@ -572,8 +635,7 @@ namespace hpp {
 
       void HierarchicalIterative::computeSaturation (vectorIn_t config) const
       {
-        bool applySaturate;
-        applySaturate = saturate_ (config, qSat_, saturation_);
+        bool applySaturate = saturate_->saturate (config, qSat_, saturation_);
         if (!applySaturate) return;
 
         reducedSaturation_ = freeVariables_.rview (saturation_);
@@ -643,7 +705,7 @@ namespace hpp {
         result = from;
         LgeRef_t M(result, configSpace_);
         M += velocity;
-        return saturate_ (result, result, saturation_);
+        return saturate_->saturate (result, result, saturation_);
       }
 
       void HierarchicalIterative::residualError (vectorOut_t error) const

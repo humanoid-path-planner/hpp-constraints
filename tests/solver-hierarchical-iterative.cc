@@ -16,6 +16,7 @@
 
 #define BOOST_TEST_MODULE HIERARCHICAL_ITERATIVE_SOLVER
 #include <boost/test/unit_test.hpp>
+#include <boost/make_shared.hpp>
 
 #include <hpp/constraints/solver/hierarchical-iterative.hh>
 
@@ -35,6 +36,8 @@
 #include <../tests/util.hh>
 
 using namespace hpp::constraints;
+namespace saturation = hpp::constraints::solver::saturation;
+
 const value_type test_precision = 1e-5;
 
 #define VECTOR2(x0, x1) ((hpp::constraints::vector_t (2) << x0, x1).finished())
@@ -52,7 +55,8 @@ struct test_base
   {
     solver.maxIterations(20);
     solver.errorThreshold(test_precision);
-    solver.saturation(simpleSaturation<0,1>);
+    solver.saturation(boost::make_shared<saturation::Bounds>(
+          vector_t::Zero(2), vector_t::Ones(2)));
   }
 
   vector_t success (value_type x0, value_type x1)
@@ -150,7 +154,7 @@ BOOST_AUTO_TEST_CASE(one_layer)
   solver::HierarchicalIterative solver(device->configSpace());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
+  solver.saturation(boost::make_shared<solver::saturation::Device>(device));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();

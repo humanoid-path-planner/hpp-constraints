@@ -137,7 +137,6 @@ namespace hpp {
         
       private:
         Implicits_t constraints_;
-        mutable std::vector <LiegroupElement> result_;
         ComparisonTypes_t comparison_;
         std::vector<std::size_t> inequalityIndices_;
         Eigen::RowBlockIndices equalityIndices_;

@@ -68,26 +68,25 @@ namespace hpp {
 
         virtual ~BySubstitution () {}
 
-        /// Add a numerical constraints
-        ///
-        /// \param numericalConstraint The numerical constraint.
-        /// \param passiveDofs degrees of freedom that are not modified during
-        ///        implicit constraint resolution: column indices of the
-        ///        Jacobian vector that will are set to zero before
-        ///        pseudo-inversion,
-        /// \param priority priority of the function. The last level might be
-        ///        optional,
-        /// \return false if numerical constraint had already been inserted.
+        /// \copydoc HierarchicalIterative::add
         ///
         /// If the constraint is explicit and compatible with previously
         /// inserted constraints, it is added as explicit. Otherwise, it is
         /// added as implicit.
-        ///
-        /// \note The intervals are interpreted as a list of couple
-        /// (index_start, length) and NOT as (index_start, index_end).
         bool add (const ImplicitPtr_t& numericalConstraint,
-                  const segments_t& passiveDofs = segments_t (0),
                   const std::size_t priority = 0);
+
+        /// \deprecated use add(const ImplicitPtr_t&, const std::size_t)
+        bool add (const ImplicitPtr_t& numericalConstraint,
+                  const segments_t& passiveDofs,
+                  const std::size_t priority = 0) HPP_CONSTRAINTS_DEPRECATED
+        {
+          if(passiveDofs.size() > 0)
+            throw std::invalid_argument("Passive dof in the solver are not "
+                "supported anymore. You must build an "
+                "ActiveSetDifferentiableFunction yourself.");
+          return add (numericalConstraint, priority);
+        }
 
         /// Add an implicit constraint
         ///
@@ -99,7 +98,6 @@ namespace hpp {
         ///
         /// \deprecated Use bool BySubstitution::add (const
         ///          ImplicitPtr_t& numericalConstraint, const
-        ///          segments_t& passiveDofs = segments_t (0), const
         ///          std::size_t priority = 0) instead.
         void add (const DifferentiableFunctionPtr_t& f,
                   const std::size_t& priority,
@@ -125,8 +123,7 @@ namespace hpp {
 
         /// Check whether a numerical constraint has been added
         /// \param numericalConstraint numerical constraint
-        /// \return true if numerical constraint is already in the solver
-        ///         whatever the passive dofs are.
+        /// \return true if numerical constraint is already in the solver.
         /// \note Comparison between constraints is performed by
         /// function names. This means that two constraints with the
         /// same function names are considered as equal.

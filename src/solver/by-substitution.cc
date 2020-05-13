@@ -42,17 +42,6 @@ namespace hpp {
           (const BySubstitution& solver, vectorOut_t arg, vectorOut_t darg);
       } // namespace lineSearch
 
-      ImplicitPtr_t activeSetFunction
-      (const ImplicitPtr_t& cimp,
-       const segments_t& pdofs)
-      {
-        if (pdofs.empty()) return cimp;
-        ActiveSetDifferentiableFunctionPtr_t f
-          (new ActiveSetDifferentiableFunction(cimp->functionPtr(), pdofs));
-        ImplicitPtr_t c (Implicit::create (f, cimp->comparisonType()));
-        return c;
-      }
-
       BySubstitution::BySubstitution (const LiegroupSpacePtr_t& configSpace) :
         HierarchicalIterative(configSpace),
         explicit_ (configSpace),
@@ -70,7 +59,6 @@ namespace hpp {
       }
 
       bool BySubstitution::add (const ImplicitPtr_t& nm,
-                                const segments_t& passiveDofs,
                                 const std::size_t priority)
       {
         if (contains (nm)) {
@@ -105,13 +93,8 @@ namespace hpp {
                    << "output vel " << Eigen::RowBlockIndices
                    (enm->outputVelocity()));
           explicitConstraintSetHasChanged();
-        } else {
-          ImplicitPtr_t constraint = activeSetFunction (nm, passiveDofs);
-          HierarchicalIterative::add (constraint, priority);
-          // add (Implicit::create
-          //      (activeSetFunction(nm->functionPtr(), passiveDofs), types),
-          //      segments_t (0), priority);
-        }
+        } else
+          HierarchicalIterative::add (nm, priority);
         hppDout (info, "Constraint has dimension "
                  << dimension());
 
@@ -282,7 +265,7 @@ namespace hpp {
         projectVectorOnKernel (from, OM_, OP_);
 
         Lge_t P (O + OP_);
-        saturate_ (P.vector (), result, saturation_);
+        saturate_->saturate (P.vector (), result, saturation_);
       }
 
       std::ostream& BySubstitution::print (std::ostream& os) const

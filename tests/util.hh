@@ -73,54 +73,6 @@
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/constraints/matrix-view.hh>
 
-bool saturate (const hpp::pinocchio::DevicePtr_t& robot,
-    hpp::pinocchio::vectorIn_t q, hpp::pinocchio::vectorOut_t qSat,
-    Eigen::VectorXi& sat)
-{
-  using hpp::pinocchio::size_type;
-  bool ret = false;
-  qSat = q;
-  const hpp::pinocchio::Model& model = robot->model();
-
-  for (std::size_t i = 1; i < model.joints.size(); ++i) {
-    const size_type nq = model.joints[i].nq();
-    const size_type nv = model.joints[i].nv();
-    const size_type idx_q = model.joints[i].idx_q();
-    const size_type idx_v = model.joints[i].idx_v();
-    for (size_type j = 0; j < nq; ++j) {
-      const size_type iq = idx_q + j;
-      const size_type iv = idx_v + std::min(j,nv-1);
-      if        (q[iq] >= model.upperPositionLimit[iq]) {
-        sat[iv] =  1;
-        qSat [iq] = model.upperPositionLimit[iq];
-        ret = true;
-      } else if (q[iq] <= model.lowerPositionLimit[iq]) {
-        sat[iv] = -1;
-        qSat [iq] = model.lowerPositionLimit[iq];
-        ret = true;
-      } else
-        sat[iv] =  0;
-    }
-  }
-
-  const hpp::pinocchio::ExtraConfigSpace& ecs = robot->extraConfigSpace();
-  const size_type& d = ecs.dimension();
-
-  for (size_type k = 0; k < d; ++k) {
-    const size_type iq = model.nq + k;
-    const size_type iv = model.nv + k;
-    if        (q[iq] >= ecs.upper(k)) {
-      sat[iv] =  1;
-      ret = true;
-    } else if (q[iq] <= ecs.lower(k)) {
-      sat[iv] = -1;
-      ret = true;
-    } else
-      sat[iv] =  0;
-  }
-  return ret;
-}
-
 void randomConfig (const hpp::pinocchio::DevicePtr_t& d, hpp::pinocchio::Configuration_t& q)
 {
   using namespace hpp::constraints;
@@ -144,30 +96,6 @@ void randomConfig (const hpp::pinocchio::DevicePtr_t& d, hpp::pinocchio::Configu
     }
     q [offset + i] = lower + (upper - lower) * rand ()/RAND_MAX;
   }
-}
-
-template <int Lower, int Upper>
-bool simpleSaturation (hpp::constraints::vectorIn_t x,
-                       hpp::constraints::vectorOut_t xSat,
-                       Eigen::VectorXi& sat)
-{
-  bool ret = false;
-  xSat = x;
-  for (hpp::constraints::size_type i = 0; i < x.size(); ++i) {
-    if (x[i] <= Lower) {
-      sat[i] = -1;
-      xSat [i] = Lower;
-      ret = true;
-    }
-    else if (x[i] >= Upper) {
-      sat[i] =  1;
-      xSat [i] = Upper;
-      ret = true;
-    } else {
-      sat[i] = 0;
-    }
-  }
-  return ret;
 }
 
 // This is an ugly fix to make BOOST_CHECK_EQUAL able to print segments_t

@@ -81,6 +81,8 @@ using hpp::pinocchio::unittest::makeDevice;
 using hpp::pinocchio::displayConfig;
 using boost::assign::list_of;
 
+namespace saturation = hpp::constraints::solver::saturation;
+
 matrix_t randomPositiveDefiniteMatrix (int N)
 {
   matrix_t A (matrix_t::Random(N,N));
@@ -119,7 +121,8 @@ void test_quadratic ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(simpleSaturation<-1,1>);
+  solver.saturation(boost::make_shared<saturation::Bounds>(
+        -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad));
   solver.add (expl);
@@ -192,7 +195,8 @@ void test_quadratic2 ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(simpleSaturation<-1,1>);
+  solver.saturation(boost::make_shared<saturation::Bounds>(
+        -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad));
   solver.add (expl1);
@@ -277,7 +281,8 @@ void test_quadratic3 ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(simpleSaturation<-1,1>);
+  solver.saturation(boost::make_shared<saturation::Bounds>(
+        -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad));
   solver.add (expl1);
@@ -693,7 +698,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
+  solver.saturation(boost::make_shared<saturation::Device>(device));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();
@@ -802,7 +807,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::bind(saturate, device, _1, _2, _3));
+  solver.saturation(boost::make_shared<saturation::Device>(device));
 
   solver.add (constraint);
 
@@ -904,9 +909,9 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   ComparisonTypes_t comp2 (6, Equality);
   comp2 [1] = comp2 [2] = EqualToZero;
   // Create two relative transformation constraints
-  Transform3f tf1; // Identity
+  Transform3f tf1 (Transform3f::Identity());
   vector3_t u; u << 0, -.2, 0;
-  Transform3f tf2; tf2.translation (u);
+  Transform3f tf2 (Transform3f::Identity()); tf2.translation (u);
 
   DifferentiableFunctionPtr_t
     h(RelativeTransformation::create("RelativeTransformation", device, ee1, ee2,
@@ -989,9 +994,9 @@ BOOST_AUTO_TEST_CASE (merge)
   ComparisonTypes_t comp2 (6, Equality);
   comp2 [1] = comp2 [2] = EqualToZero;
   // Create two relative transformation constraints
-  Transform3f tf1; // Identity
+  Transform3f tf1 (Transform3f::Identity());
   vector3_t u; u << 0, -.2, 0;
-  Transform3f tf2; tf2.translation (u);
+  Transform3f tf2 (Transform3f::Identity()); tf2.translation (u);
   DifferentiableFunctionPtr_t h
     (RelativeTransformation::create("RelativeTransformation",device, ee1, ee2,
                                     tf1, tf2, std::vector <bool> (6, true)));
@@ -1033,23 +1038,27 @@ BOOST_AUTO_TEST_CASE (merge)
   vector_t error1 (c1->function ().outputSpace ()->nv ());
   vector_t error2 (c2->function ().outputSpace ()->nv ());
   vector_t error3 (c3->function ().outputSpace ()->nv ());
-  bool satisfied (solver3.isSatisfied (q, error));
-  bool found;
-  bool satisfied1 (solver3.isConstraintSatisfied (c1, q, error1, found));
-  BOOST_CHECK (found);
-  bool satisfied2 (solver3.isConstraintSatisfied (c2, q, error2, found));
-  BOOST_CHECK (found);
-  bool satisfied3 (solver3.isConstraintSatisfied (c3, q, error3, found));
-  BOOST_CHECK (found);
-  BOOST_CHECK (satisfied == (satisfied1 && satisfied2 && satisfied3));
-  size_type row = 0, nRows = error1.size ();
-  BOOST_CHECK (error1 == error.segment (row, nRows));
-  row += nRows;
-  nRows = error3.size ();
-  BOOST_CHECK (error3 == error.segment (row, nRows));
-  row += nRows;
-  nRows = error2.size ();
-  BOOST_CHECK (error2 == error.segment (row, nRows));
+  for (int i = 0; i < 2; ++i) {
+    bool satisfied (solver3.isSatisfied (q, error));
+    bool found;
+    bool satisfied1 (solver3.isConstraintSatisfied (c1, q, error1, found));
+    BOOST_CHECK (found);
+    bool satisfied2 (solver3.isConstraintSatisfied (c2, q, error2, found));
+    BOOST_CHECK (found);
+    bool satisfied3 (solver3.isConstraintSatisfied (c3, q, error3, found));
+    BOOST_CHECK (found);
+    BOOST_CHECK_EQUAL (satisfied, (satisfied1 && satisfied2 && satisfied3));
+    size_type row = 0, nRows = error1.size ();
+    BOOST_CHECK (error1 == error.segment (row, nRows));
+    row += nRows;
+    nRows = error2.size ();
+    BOOST_CHECK (error2 == error.segment (row, nRows));
+    row += nRows;
+    nRows = error3.size ();
+    BOOST_CHECK (error3 == error.segment (row, nRows));
+
+    q = ::pinocchio::randomConfiguration(device->model());
+  }
 
   BySubstitution solver5 (device->configSpace ());
   solver5.add (c3);
