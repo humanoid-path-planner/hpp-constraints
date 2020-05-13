@@ -19,8 +19,10 @@
 #include <sstream>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 
 #include <hpp/util/debug.hh>
+#include <hpp/util/serialization.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
@@ -232,5 +234,21 @@ namespace hpp {
 	return false;
       }
     }
+
+    template<class Archive>
+    void LockedJoint::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & boost::serialization::make_nvp("base",
+           boost::serialization::base_object<Explicit>(*this));
+      ar & BOOST_SERIALIZATION_NVP(jointName_);
+      ar & BOOST_SERIALIZATION_NVP(joint_);
+      ar & BOOST_SERIALIZATION_NVP(configSpace_);
+      ar & BOOST_SERIALIZATION_NVP(weak_);
+    }
+
+    HPP_SERIALIZATION_IMPLEMENT(LockedJoint);
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::LockedJoint)

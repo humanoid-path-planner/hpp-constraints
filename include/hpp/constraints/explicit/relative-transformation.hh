@@ -130,6 +130,9 @@ namespace hpp {
       // Tmp variables
       mutable vector_t qsmall_, q_;
       mutable matrix_t tmpJac_, J2_parent_minus_J1_;
+
+      RelativeTransformation() {}
+      HPP_SERIALIZABLE();
     }; // class RelativeTransformation
     /// \}
 

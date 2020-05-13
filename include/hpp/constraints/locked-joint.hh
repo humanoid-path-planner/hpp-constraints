@@ -159,6 +159,8 @@ namespace hpp {
       /// Weak pointer to itself
       LockedJointWkPtr_t weak_;
 
+      LockedJoint() {}
+      HPP_SERIALIZABLE();
     }; // class LockedJoint
 
     /// \}

@@ -16,10 +16,19 @@
 
 #include <hpp/constraints/explicit/relative-transformation.hh>
 
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+
 #include <pinocchio/spatial/explog.hpp>
 #include <pinocchio/spatial/skew.hpp>
+#include <pinocchio/serialization/se3.hpp>
+
+#include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/device.hh>
+
+#include <hpp/constraints/serialization.hh>
 
 namespace hpp {
   namespace constraints {
@@ -218,6 +227,31 @@ namespace hpp {
         }
       }
     }
+
+    template<class Archive>
+    void RelativeTransformation::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & boost::serialization::make_nvp("base",
+          boost::serialization::base_object<DifferentiableFunction>(*this));
+      ar & BOOST_SERIALIZATION_NVP(robot_);
+      ar & BOOST_SERIALIZATION_NVP(parentJoint_);
+      ar & BOOST_SERIALIZATION_NVP(joint1_);
+      ar & BOOST_SERIALIZATION_NVP(joint2_);
+      ar & BOOST_SERIALIZATION_NVP(frame1_);
+      ar & BOOST_SERIALIZATION_NVP(frame2_);
+
+      ar & BOOST_SERIALIZATION_NVP(inConf_);
+      ar & BOOST_SERIALIZATION_NVP(inVel_);
+      ar & BOOST_SERIALIZATION_NVP(outConf_);
+      ar & BOOST_SERIALIZATION_NVP(outVel_);
+      ar & BOOST_SERIALIZATION_NVP(F1inJ1_invF2inJ2_);
+      ar & BOOST_SERIALIZATION_NVP(weak_);
+    }
+
+    HPP_SERIALIZATION_IMPLEMENT(RelativeTransformation);
     } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::explicit_::RelativeTransformation)

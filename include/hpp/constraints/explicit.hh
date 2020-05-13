@@ -303,8 +303,12 @@ namespace hpp {
       segments_t outputConf_;
       segments_t inputVelocity_;
       segments_t outputVelocity_;
+
+      Explicit() {}
     private:
       ExplicitWkPtr_t weak_;
+
+      HPP_SERIALIZABLE();
     }; // class Explicit
     /// \}
   } // namespace constraints

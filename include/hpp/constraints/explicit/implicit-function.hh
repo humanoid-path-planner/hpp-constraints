@@ -95,6 +95,9 @@ namespace hpp {
       mutable LiegroupElement result_;
       // Jacobian of explicit function
       mutable matrix_t Jf_;
+
+      ImplicitFunction() {}
+      HPP_SERIALIZABLE();
     }; // class ImplicitFunction
 
     } // namespace explicit_
