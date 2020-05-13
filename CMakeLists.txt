@@ -91,6 +91,7 @@ SET(${PROJECT_NAME}_HEADERS
   )
 
 SET (${PROJECT_NAME}_SOURCES
+  src/affine-function.cc
   src/differentiable-function.cc
   src/differentiable-function-set.cc
   src/generic-transformation.cc
