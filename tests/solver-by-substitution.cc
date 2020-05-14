@@ -760,16 +760,16 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
 {
   using namespace hpp::constraints;
 
-  DevicePtr_t device (makeDevice (ManipulatorArm2));
+  DevicePtr_t device (makeDevice (HumanoidRomeo));
   BOOST_REQUIRE (device);
 
   Configuration_t q, qrand;
 
-  JointPtr_t left = device->getJointByName ("left_w2");
+  JointPtr_t left = device->getJointByName ("LWristPitch");
   TransformationSE3::Ptr_t frame (TransformationSE3::create
-      ("left_w2", device, left, Transform3f::Identity()));
+      ("LWristPitch", device, left, Transform3f::Identity()));
   Transformation::Ptr_t logFrame (Transformation::create
-      ("left_w2", device, left, Transform3f::Identity()));
+      ("LWristPitch", device, left, Transform3f::Identity()));
 
   // Check the logFrame if the log6 of frame.
   LiegroupElement valueFrame (frame->outputSpace()),
