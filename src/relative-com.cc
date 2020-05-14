@@ -19,8 +19,13 @@
 
 #include <hpp/constraints/relative-com.hh>
 
+#include <boost/serialization/vector.hpp>
+
+#include <pinocchio/serialization/eigen.hpp>
+
 #include <hpp/util/indent.hh>
 #include <hpp/util/debug.hh>
+#include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/device.hh>
@@ -28,6 +33,7 @@
 #include <hpp/pinocchio/center-of-mass-computation.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <hpp/pinocchio/configuration.hh>
+#include <hpp/pinocchio/serialization.hh>
 
 #include <hpp/constraints/macros.hh>
 
@@ -163,5 +169,24 @@ namespace hpp {
       hppDnum (info, "Jw = " << std::endl << Jjoint.bottomRows<3>());
       hppDnum (info, "Jv = " << std::endl << Jjoint.topRows<3>());
     }
+
+    template<class Archive>
+    void RelativeCom::serialize(Archive & ar, const unsigned int version)
+    {
+      using namespace boost::serialization;
+      (void) version;
+      ar & make_nvp("base", base_object<DifferentiableFunction>(*this));
+      ar & BOOST_SERIALIZATION_NVP(robot_);
+      ar & BOOST_SERIALIZATION_NVP(comc_);
+      ar & BOOST_SERIALIZATION_NVP(joint_);
+      ar & BOOST_SERIALIZATION_NVP(reference_);
+      ar & BOOST_SERIALIZATION_NVP(mask_);
+      if (!Archive::is_saving::value)
+        nominalCase_ = (mask_[0] && mask_[1] && mask_[2]);
+    }
+
+    HPP_SERIALIZATION_IMPLEMENT(RelativeCom);
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::RelativeCom)
