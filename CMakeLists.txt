@@ -65,6 +65,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/manipulability.hh
   include/hpp/constraints/convex-shape.hh
   include/hpp/constraints/convex-shape-contact.hh
+  include/hpp/constraints/static-stability.hh
   include/hpp/constraints/symbolic-calculus.hh
   include/hpp/constraints/symbolic-function.hh
   include/hpp/constraints/relative-com.hh
@@ -124,7 +125,6 @@ SET (${PROJECT_NAME}_SOURCES
 IF(USE_QPOASES)
   SET(${PROJECT_NAME}_HEADERS
     ${${PROJECT_NAME}_HEADERS}
-    include/hpp/constraints/static-stability.hh
     include/hpp/constraints/qp-static-stability.hh
     )
   PKG_CONFIG_APPEND_CFLAGS(-DHPP_CONSTRAINTS_USE_QPOASES)
