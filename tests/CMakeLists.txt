@@ -37,6 +37,7 @@ IF(OPENMP_FOUND)
   ADD_TESTCASE(multithread)
 ENDIF()
 
+ADD_TESTCASE(comparison-types)
 ADD_TESTCASE(logarithm)
 ADD_TESTCASE(matrix-view)
 ADD_TESTCASE(svd)

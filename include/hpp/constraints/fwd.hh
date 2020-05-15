@@ -174,13 +174,9 @@ namespace hpp {
     typedef boost::shared_ptr <ImplicitConstraintSet>
     ImplicitConstraintSetPtr_t;
 
-    enum ComparisonType {
-      Equality,
-      EqualToZero,
-      Superior,
-      Inferior
-    };
-    typedef std::vector<ComparisonType> ComparisonTypes_t;
+    struct ComparisonType;
+    class ComparisonTypes;
+    typedef ComparisonTypes ComparisonTypes_t HPP_CONSTRAINTS_DEPRECATED;
 
     HPP_PREDEF_CLASS (Explicit);
     typedef boost::shared_ptr <Explicit> ExplicitPtr_t;

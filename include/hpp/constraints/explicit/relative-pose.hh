@@ -48,8 +48,7 @@ namespace hpp {
           (const std::string& name, const DevicePtr_t& robot,
            const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
            const Transform3f& frame1, const Transform3f& frame2,
-           std::vector <bool> mask = std::vector<bool>(6,true),
-           ComparisonTypes_t comp = std::vector <ComparisonType>());
+           ComparisonTypes comp);
 
         static RelativePosePtr_t createCopy (const RelativePosePtr_t& other);
 
@@ -102,7 +101,7 @@ namespace hpp {
                       const JointConstPtr_t& joint2,
                       const Transform3f& frame1, const Transform3f& frame2,
                       std::vector <bool> mask = std::vector<bool>(6,true),
-                      ComparisonTypes_t comp = std::vector <ComparisonType> ());
+                      ComparisonTypes comp = ComparisonTypes());
 
         /// Copy constructor
         RelativePose (const RelativePose& other);

@@ -89,7 +89,7 @@ struct test_quadratic : test_base <LineSearch>
     Quadratic::Ptr_t f (new Quadratic (A, -1));
 
     this->solver.add (Implicit::create
-                      (f, ComparisonTypes_t (f->outputDerivativeSize (),
+                      (f, ComparisonTypes::nTimes(f->outputDerivativeSize (),
                                              Equality)), 0);
     BOOST_CHECK(this->solver.numberStacks() == 1);
   }
@@ -161,12 +161,17 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
 
-  solver.add(Implicit::create
-             (Orientation::create ("Orientation", device, ee2, tf2),
-              ComparisonTypes_t (3, Equality)), 0);
-  solver.add(Implicit::create
-             (Position::create    ("Position"   , device, ee2, tf2),
-              ComparisonTypes_t (3, Equality)), 0);
+  ImplicitPtr_t constraint(Implicit::create
+                  (Orientation::create ("Orientation", device, ee2, tf2),
+                   3 * Equality));
+  BOOST_CHECK(constraint->comparisonType() ==
+              ComparisonTypes::nTimes(3, Equality));
+  solver.add(constraint, 0);
+  constraint = Implicit::create
+    (Position::create    ("Position"   , device, ee2, tf2), 3 * Equality);
+  BOOST_CHECK(constraint->comparisonType() ==
+              ComparisonTypes::nTimes(3, Equality));
+  solver.add(constraint, 0);
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
@@ -197,10 +202,10 @@ struct test_affine_opt : test_base <LineSearch>
                            (A, vector_t::Constant(1,-1)));
     Quadratic::Ptr_t cost (new Quadratic (B));
     ImplicitPtr_t f_constraint
-      (Implicit::create (f, ComparisonTypes_t
+      (Implicit::create (f, ComparisonTypes::nTimes
                          (f->outputDerivativeSize (), Equality)));
     ImplicitPtr_t cost_constraint
-      (Implicit::create (cost, ComparisonTypes_t
+      (Implicit::create (cost, ComparisonTypes::nTimes
                          (f->outputDerivativeSize (), Equality)));
     this->solver.add(f_constraint, 0);
     this->solver.add(cost_constraint, 1);

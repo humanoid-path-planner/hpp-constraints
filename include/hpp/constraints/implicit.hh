@@ -20,6 +20,7 @@
 
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
+# include <hpp/constraints/comparison-types.hh>
 
 # include <hpp/util/serialization-fwd.hh>
 
@@ -106,19 +107,20 @@ namespace hpp {
         virtual ImplicitPtr_t copy () const;
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create
-          (const DifferentiableFunctionPtr_t& function);
+        /// \deprecated Use method with comparison types
+        static ImplicitPtr_t create(const DifferentiableFunctionPtr_t& function)
+          HPP_CONSTRAINTS_DEPRECATED;
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
         static ImplicitPtr_t create
-          (const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp);
+          (const DifferentiableFunctionPtr_t& function, ComparisonTypes comp);
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
         static ImplicitPtr_t create
           (const DifferentiableFunctionPtr_t& function,
-           ComparisonTypes_t comp, vectorIn_t rhs);
+           ComparisonTypes comp, vectorIn_t rhs);
 
 	/// Create a copy and return shared pointer
 	static ImplicitPtr_t createCopy (const ImplicitPtr_t& other);
@@ -134,7 +136,7 @@ namespace hpp {
         /// constraints
         /// \param config the input configuration.
         ///
-        /// \warning Only values of the right hand side corresponding to 
+        /// \warning Only values of the right hand side corresponding to
         /// \link Equality "equality constraints" \endlink are set. As a
         /// result, the input configuration may not satisfy the other
         /// constraints.
@@ -158,10 +160,10 @@ namespace hpp {
         size_type rightHandSideSize () const;
 
         /// Return the ComparisonType
-        const ComparisonTypes_t& comparisonType () const;
+        const ComparisonTypes& comparisonType () const;
 
 	/// Set the comparison type
-	void comparisonType (const ComparisonTypes_t& comp);
+	void comparisonType (const ComparisonTypes& comp);
 
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated In future versions, right hand side will not be a member
@@ -208,7 +210,7 @@ namespace hpp {
         /// \precond size of comp should be equal to size of tangent space to
         ///          function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp);
+            ComparisonTypes comp);
 
         /// Constructor
         /// \param function the differentiable function,
@@ -217,7 +219,7 @@ namespace hpp {
         /// \precond size of comp and size of rhs should be equal to size of
         ///          tangent space to function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp, vectorIn_t rhs);
+            ComparisonTypes comp, vectorIn_t rhs);
 
 	/// Copy constructor
 	Implicit (const Implicit& other);
@@ -235,7 +237,7 @@ namespace hpp {
 
         friend class ImplicitConstraintSet;
       private:
-        ComparisonTypes_t comparison_;
+        ComparisonTypes comparison_;
         vector_t rhs_;
         size_type parameterSize_;
         DifferentiableFunctionPtr_t function_;

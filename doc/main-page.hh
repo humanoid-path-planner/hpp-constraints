@@ -12,7 +12,7 @@
 /// hpp::pinocchio::LiegroupSpace Lie group\endlink;
 /// \li \link hpp::constraints::Implicit implicit constraints\endlink
 /// are composed of a left hand side that is a differentiable
-/// function, a \link hpp::constraints::ComparisonTypes_t comparison
+/// function, a \link hpp::constraints::ComparisonTypes comparison
 /// vector\endlink, and a right hand side;
 /// \li \link hpp::constraints::Explicit explicit constraints\endlink are
 /// numerical constraints that can be solved by computing some input

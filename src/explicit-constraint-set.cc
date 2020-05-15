@@ -134,14 +134,8 @@ namespace hpp {
       jacobian.resize(_constraint->explicitFunction ()->outputDerivativeSize(),
                       _constraint->explicitFunction ()->inputDerivativeSize());
       for (std::size_t i = 0; i < constraint->comparisonType ().size(); ++i) {
-        switch (constraint->comparisonType ()[i]) {
-          case Equality:
-            equalityIndices.addRow(i, 1);
-            break;
-          case Superior:
-          case Inferior:
-          default:
-            break;
+        if (constraint->comparisonType ()[i] == Equality) {
+          equalityIndices.addRow(i, 1);
         }
       }
       equalityIndices.updateRows<true, true, true>();
@@ -176,7 +170,7 @@ namespace hpp {
             throw std::logic_error (oss.str ().c_str ());
         }
       // Sanity check: Comparison type must be either EqualToZero or Equality
-      const ComparisonTypes_t& comp (constraint->comparisonType ());
+      const ComparisonTypes& comp (constraint->comparisonType ());
       assert (comp.size() ==
               (std::size_t) constraint->function ().outputDerivativeSize());
       for (std::size_t i = 0; i < comp.size(); ++i)
@@ -368,7 +362,7 @@ namespace hpp {
 
         d.equalityIndices.lview(d.rhs_implicit) =
           d.equalityIndices.rview (rhs.segment(row, d.rhs_implicit.size ()));
-        ComparisonTypes_t ct (d.constraint->comparisonType ());
+        ComparisonTypes ct (d.constraint->comparisonType ());
         for (std::size_t i=0; i < ct.size (); ++i) {
           assert (ct [i] == Equality || rhs [row + i] == 0);
         }
@@ -410,7 +404,7 @@ namespace hpp {
       Data& d = data_[i];
       d.equalityIndices.lview (d.rhs_implicit) =
         d.equalityIndices.rview (rhs);
-      ComparisonTypes_t ct (d.constraint->comparisonType ());
+      ComparisonTypes ct (d.constraint->comparisonType ());
       for (std::size_t i=0; i < ct.size (); ++i) {
         assert (ct [i] == Equality ||
                 rhs [i] * rhs [i] < squaredErrorThreshold_);

@@ -70,7 +70,7 @@ namespace hpp {
                    << " already in BySubstitution solver." << std::endl);
           return false;
         }
-        ComparisonTypes_t types = nm->comparisonType();
+        ComparisonTypes types = nm->comparisonType();
 
         bool addedAsExplicit = false;
         ExplicitPtr_t enm (HPP_DYNAMIC_PTR_CAST (Explicit, nm));
@@ -108,7 +108,7 @@ namespace hpp {
 
       void BySubstitution::add (const DifferentiableFunctionPtr_t& f,
                                 const std::size_t& priority,
-                                const ComparisonTypes_t& comp)
+                                const ComparisonTypes& comp)
       {
         HierarchicalIterative::add (Implicit::create (f, comp), priority);
       }

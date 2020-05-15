@@ -133,7 +133,7 @@ namespace hpp {
                 segments_t(), // input vel
                 list_of(segment_t (joint->rankInVelocity     (),
                                    joint->numberDof ())), // output vel
-                ComparisonTypes_t (joint->numberDof(), Equality)),
+                ComparisonTypes::nTimes(joint->numberDof(), Equality)),
       jointName_ (joint->name ()),
       configSpace_ (joint->configurationSpace ())
     {
@@ -156,7 +156,7 @@ namespace hpp {
                                    joint->configSize()-index)), // output conf
                 list_of(segment_t (joint->rankInVelocity     (),
                                    joint->numberDof ()-index)), // output vel
-                ComparisonTypes_t(joint->numberDof()-index, Equality)),
+                ComparisonTypes::nTimes(joint->numberDof()-index, Equality)),
       jointName_ ("partial_" + joint->name ()),
       joint_ (joint),
       configSpace_ (LiegroupSpace::Rn (joint->configSize () - index))
@@ -182,7 +182,7 @@ namespace hpp {
                 list_of(segment_t (dev->numberDof ()  -
                                    dev->extraConfigSpace().dimension() + index,
                                    value.size())), // output vel
-                ComparisonTypes_t(value.size(), Equality)),
+                ComparisonTypes::nTimes(value.size(), Equality)),
       jointName_ (dev->name() + "_extraDof" + numToStr (index)),
       joint_ (JointPtr_t ()), configSpace_ (LiegroupSpace::Rn (value.size ()))
     {

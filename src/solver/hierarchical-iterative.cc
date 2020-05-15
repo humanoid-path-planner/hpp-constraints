@@ -60,19 +60,20 @@ namespace hpp {
         }
 
         template <bool ComputeJac>
-        void applyComparison (const ComparisonTypes_t comparison,
+        void applyComparison (const ComparisonTypes comparison,
                               const std::vector<std::size_t>& indices,
                               vector_t& value, matrix_t& jacobian,
                               const value_type& thr)
         {
           for (std::size_t i = 0; i < indices.size(); ++i) {
             const std::size_t j = indices[i];
-            switch (comparison[j]) {
-            case Superior: compare<true , ComputeJac>
-                (value[j], jacobian.row(j), thr); break;
-            case Inferior: compare<false, ComputeJac>
-                (value[j], jacobian.row(j), thr); break;
-            default: break;
+            if (comparison[j] == Superior)
+            {
+              compare<true , ComputeJac>(value[j], jacobian.row(j), thr);
+            }
+            else if (comparison[j] == Inferior)
+            {
+              compare<false, ComputeJac>(value[j], jacobian.row(j), thr);
             }
           }
         }
@@ -251,10 +252,10 @@ namespace hpp {
           throw std::logic_error (oss.str ().c_str ());
         }
         priority_ [f] = priority;
-        const ComparisonTypes_t comp (constraint->comparisonType ());
+        const ComparisonTypes comp (constraint->comparisonType ());
         assert ((size_type)comp.size() == f->outputDerivativeSize());
         assert ((f->outputSpace ()->isVectorSpace ()) ||
-                (comp == ComparisonTypes_t (comp.size (), Equality)));
+                (comp == ComparisonTypes::nTimes (comp.size (), Equality)));
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
           stacks_.resize (minSize, ImplicitConstraintSet ());
@@ -271,16 +272,13 @@ namespace hpp {
         // therefore be done after the previous lines.
         stacks_ [priority].add (constraint);
         for (std::size_t i = 0; i < comp.size(); ++i) {
-          switch (comp[i]) {
-          case Superior:
-          case Inferior:
+          if ((comp[i] == Superior) || (comp[i] == Inferior))
+          {
             d.inequalityIndices.push_back (d.comparison.size());
-            break;
-          case Equality:
+          }
+          else if (comp[i] == Equality)
+          {
             d.equalityIndices.addRow(d.comparison.size(), 1);
-            break;
-          default:
-            break;
           }
           d.comparison.push_back (comp[i]);
         }

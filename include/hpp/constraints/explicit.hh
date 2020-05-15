@@ -145,7 +145,7 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp = ComparisonTypes_t())
+         const ComparisonTypes& comp = ComparisonTypes())
         HPP_CONSTRAINTS_DEPRECATED;
 
       /// Create instance and return shared pointer
@@ -170,7 +170,7 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp = ComparisonTypes_t());
+         const ComparisonTypes& comp = ComparisonTypes());
 
       /// Create a copy and return shared pointer
       static ExplicitPtr_t createCopy (const ExplicitPtr_t& other);
@@ -250,7 +250,7 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
+         const ComparisonTypes& comp) HPP_CONSTRAINTS_DEPRECATED;
 
       /// Constructor
       ///
@@ -274,9 +274,9 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp);
+         const ComparisonTypes& comp);
 
-      /// \copydoc Explicit (const LiegroupSpacePtr_t&, const DifferentiableFunctionPtr_t&, const segments_t& inputConf, const segments_t& outputConf, const segments_t& inputVelocity, const segments_t&, const ComparisonTypes_t&);
+      /// \copydoc Explicit (const LiegroupSpacePtr_t&, const DifferentiableFunctionPtr_t&, const segments_t& inputConf, const segments_t& outputConf, const segments_t& inputVelocity, const segments_t&, const ComparisonTypes&);
       /// \param implicitFunction differentiable function of the implicit
       ///        formulation if different from default expression
       ///        \f{equation}{
@@ -289,7 +289,7 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp);
+         const ComparisonTypes& comp);
 
       /// Copy constructor
       Explicit (const Explicit& other);

@@ -101,7 +101,7 @@ namespace hpp {
         ///          std::size_t priority = 0) instead.
         void add (const DifferentiableFunctionPtr_t& f,
                   const std::size_t& priority,
-                  const ComparisonTypes_t& comp) HPP_CONSTRAINTS_DEPRECATED;
+                  const ComparisonTypes& comp) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Get the numerical constraints implicit and explicit
         const NumericalConstraints_t& numericalConstraints () const

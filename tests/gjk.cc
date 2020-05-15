@@ -182,11 +182,11 @@ typedef ScalarProduct<ACD_AD_t,PointA> ACD_AD_OA_t;
 typedef ScalarProduct<ADB_AD_t,PointA> ADB_AD_OA_t;
 typedef ScalarProduct<ADB_AB_t,PointA> ADB_AB_OA_t;
 
-//ComparisonTypes_t negative (1, Inferior);
+//ComparisonTypes negative (1, Inferior);
 
 template <typename Expression>
 ImplicitPtr_t implicitConstraint (const std::string& name,
-    const shared_ptr<Expression>& expr, ComparisonTypes_t comp)
+    const shared_ptr<Expression>& expr, ComparisonTypes comp)
 {
   typedef SymbolicFunction<Expression> SF_t;
   return Implicit::create (SF_t::create (name, Nv, Nv, 1, expr), comp);
@@ -280,8 +280,8 @@ struct Data
     ADB_AD_OA =(ADB_AD*A);
     ADB_AB_OA =(ADB_AB*A);
 
-    ComparisonTypes_t negative (1, Inferior);
-    ComparisonTypes_t positive (1, Superior);
+    ComparisonTypes negative (Inferior);
+    ComparisonTypes positive (Superior);
 
     c1_AB_OA     = implicitConstraint ("AB.AO >= 0"    , AB_OA    , negative);
     c1_CB_OA     = implicitConstraint ("CB.AO >= 0"    , CB_OA    , negative);

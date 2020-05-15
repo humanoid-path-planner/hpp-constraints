@@ -586,7 +586,7 @@ namespace hpp {
 
           mutable size_type maxRank;
 
-          ComparisonTypes_t comparison;
+          ComparisonTypes comparison;
           std::vector<std::size_t> inequalityIndices;
           Eigen::RowBlockIndices equalityIndices;
           Eigen::MatrixBlocks<false,false> activeRowsOfJ;

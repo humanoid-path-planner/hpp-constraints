@@ -27,19 +27,12 @@
 
 namespace hpp {
   namespace constraints {
-    size_type computeParameterSize (const ComparisonTypes_t& comp)
+    size_type computeParameterSize (const ComparisonTypes& comp)
     {
       size_type size = 0;
       for (std::size_t i = 0; i < comp.size(); ++i) {
-        switch (comp[i]) {
-        case Superior:
-        case Inferior:
-          break;
-        case Equality:
+        if (comp[i] == Equality) {
           ++size;
-          break;
-        default:
-          break;
         }
       }
       return size;
@@ -113,46 +106,47 @@ namespace hpp {
     {
       return function_->outputSpace ()->nq ();
     }
-    const ComparisonTypes_t& Implicit::comparisonType () const
+    const ComparisonTypes& Implicit::comparisonType () const
     {
       return comparison_;
     }
 
-    void Implicit::comparisonType (const ComparisonTypes_t& comp)
+    void Implicit::comparisonType (const ComparisonTypes& comp)
     {
       comparison_ = comp;
       parameterSize_ = computeParameterSize (comparison_);
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
-                        ComparisonTypes_t comp) :
+                        ComparisonTypes comp) :
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
       parameterSize_ (computeParameterSize (comparison_)),
       function_ (function)
     {
-      if (comp.size () == 0) {
-        // Argument was probably not provided, set to Equality
-        comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
-                                         Equality);
+      // This constructor used to set comparison types to Equality if an
+      // empty vector was given as input. Now you should provide the
+      // comparison type at construction.
+      if (function_->outputDerivativeSize () != (size_type)comparison_.size ())
+      {
+        abort();
       }
-      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
-                        ComparisonTypes_t comp, vectorIn_t rhs) :
+                        ComparisonTypes comp, vectorIn_t rhs) :
       comparison_ (comp), rhs_ (rhs), function_ (function)
     {
       if (rhs_.size () == 0) {
         rhs_ = vector_t::Zero (function->outputSize ());
       }
-      if (comp.size () == 0) {
-        // Argument was probably not provided, set to Equality
-        comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
-                                         Equality);
+      // This constructor used to set comparison types to Equality if an
+      // empty vector was given as input. Now you should provide the
+      // comparison type at construction.
+      if (function_->outputDerivativeSize () != (size_type)comparison_.size ())
+      {
+        abort();
       }
       parameterSize_ = computeParameterSize (comparison_);
-      assert (function_->outputDerivativeSize () ==
-              (size_type)comparison_.size ());
       assert (function->outputDerivativeSize () == (size_type) rhs_.size ());
     }
 
@@ -176,7 +170,8 @@ namespace hpp {
     ImplicitPtr_t Implicit::create (
         const DifferentiableFunctionPtr_t& function)
     {
-      ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+      ComparisonTypes comp (ComparisonTypes::nTimes
+         (function->outputDerivativeSize(), constraints::EqualToZero));
 
       Implicit* ptr = new Implicit (function, comp);
       ImplicitPtr_t shPtr (ptr);
@@ -186,7 +181,7 @@ namespace hpp {
     }
 
     ImplicitPtr_t Implicit::create (
-        const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp)
+        const DifferentiableFunctionPtr_t& function, ComparisonTypes comp)
     {
       Implicit* ptr = new Implicit (function, comp);
       ImplicitPtr_t shPtr (ptr);
@@ -197,7 +192,7 @@ namespace hpp {
 
     ImplicitPtr_t Implicit::create (
         const DifferentiableFunctionPtr_t& function,
-        ComparisonTypes_t comp, vectorIn_t rhs)
+        ComparisonTypes comp, vectorIn_t rhs)
     {
       Implicit* ptr = new Implicit (function, comp, rhs);
       ImplicitPtr_t shPtr (ptr);

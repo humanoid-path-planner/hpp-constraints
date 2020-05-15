@@ -76,9 +76,11 @@ using hpp::constraints::Device;
 using hpp::constraints::Configuration_t;
 using hpp::constraints::value_type;
 using hpp::constraints::Equality;
-using hpp::constraints::ComparisonTypes_t;
+using hpp::constraints::ComparisonTypes;
 using hpp::constraints::LockedJoint;
 using hpp::constraints::LockedJointPtr_t;
+using hpp::constraints::EqualToZero;
+using hpp::constraints::Equality;
 
 namespace Eigen {
   namespace internal {
@@ -631,7 +633,8 @@ BOOST_AUTO_TEST_CASE(RelativePose)
   // explicit relative pose
   hpp::constraints::ExplicitPtr_t constraint
     (hpp::constraints::explicit_::RelativePose::create
-     ("explicit-relative-pose", device, joint1, joint2, frame1, frame2));
+     ("explicit-relative-pose", device, joint1, joint2, frame1, frame2,
+      6 * Equality));
   assert(constraint->inputConf().size() == 1);
   assert(constraint->inputConf()[0].first == 0);
   assert(constraint->inputConf()[0].second == 7);
@@ -642,13 +645,13 @@ BOOST_AUTO_TEST_CASE(RelativePose)
     for (size_type i=0; i<64; ++i) {
       vector_t q (q_rand);
       size_type m = 1;
-      hpp::constraints::ComparisonTypes_t comp(6);
+      hpp::constraints::ComparisonTypes comp(6 * EqualToZero);
       for (size_type j=0; j<6; ++j) {
         // m = 2^(j+1)
         if ((m & i) == 0) {
-          comp [j] = hpp::constraints::Equality;
+          comp [j] = Equality;
         } else {
-          comp [j] = hpp::constraints::EqualToZero;
+          comp [j] = EqualToZero;
         }
         m *= 2;
       }
@@ -667,7 +670,7 @@ BOOST_AUTO_TEST_CASE(RelativePose)
       constraint->function().value(rhs2_impl, q);
       std::cout << "            \t";
       for (size_type j=0; j < (size_type)comp.size(); ++j) {
-        std::cout << (comp[j] == hpp::constraints::Equality ? " = \t" :
+        std::cout << (comp[j] == Equality ? " = \t" :
                       " =0\t");
       }
       std::cout << std::endl;
@@ -677,9 +680,9 @@ BOOST_AUTO_TEST_CASE(RelativePose)
       // rhs2_impl [j] == 0 if comp[i] is EqualToZero
       // rhs2_impl [j] == rhs0_impl [j] if comp[i] is Equality
       for (size_type j=0; j<6; ++j){
-        BOOST_CHECK(((comp[j] == hpp::constraints::EqualToZero) &&
+        BOOST_CHECK(((comp[j] == EqualToZero) &&
                      (fabs(rhs2_impl.vector()[j]) < 1e-10))
-                    || ((comp[j] == hpp::constraints::Equality) &&
+                    || ((comp[j] == Equality) &&
                         (fabs(rhs2_impl.vector()[j] - rhs0_impl.vector()[j])
                          < 1e-10)));
       }

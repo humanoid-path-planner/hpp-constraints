@@ -53,6 +53,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/differentiable-function-set.hh
   include/hpp/constraints/active-set-differentiable-function.hh
   include/hpp/constraints/affine-function.hh
+  include/hpp/constraints/comparison-types.hh
   include/hpp/constraints/distance-between-bodies.hh
   include/hpp/constraints/fwd.hh
   include/hpp/constraints/svd.hh
@@ -98,6 +99,7 @@ SET (${PROJECT_NAME}_SOURCES
   src/generic-transformation.cc
   src/relative-com.cc
   src/com-between-feet.cc
+  src/comparison-types.cc
   src/distance-between-bodies.cc
   src/distance-between-points-in-bodies.cc
   src/configuration-constraint.cc

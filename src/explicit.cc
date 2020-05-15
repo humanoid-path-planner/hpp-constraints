@@ -59,14 +59,14 @@ namespace hpp {
       }
     }
 
-    inline ComparisonTypes_t defaultCompTypes (
+    inline ComparisonTypes defaultCompTypes (
         const segments_t& outputVelocity,
-        const ComparisonTypes_t& comp)
+        const ComparisonTypes& comp)
     {
       if (comp.size() == 0) {
         size_type n = Eigen::BlockIndex::cardinal (outputVelocity);
         if (n > 0)
-          return ComparisonTypes_t(n, constraints::EqualToZero);
+          return ComparisonTypes::nTimes(n, constraints::EqualToZero);
       }
       return comp;
     }
@@ -78,7 +78,7 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& inputVelocity,
      const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp)
+     const ComparisonTypes& comp)
     {
       Explicit* ptr = new Explicit
 	(configSpace, function, inputConf, outputConf, inputVelocity,
@@ -131,7 +131,7 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& inputVelocity,
      const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp) :
+     const ComparisonTypes& comp) :
       Implicit (explicit_::ImplicitFunction::create
                 (configSpace, explicitFunction, inputConf,
                  outputConf, inputVelocity, outputVelocity),
@@ -151,7 +151,7 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& inputVelocity,
      const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp) :
+     const ComparisonTypes& comp) :
       Implicit (implicitFunction, comp),
       inputToOutput_ (explicitFunction),
       inputConf_ (inputConf),

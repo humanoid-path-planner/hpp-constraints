@@ -60,18 +60,15 @@ namespace hpp {
           functions->add (constraint->functionPtr ());
           constraints_.push_back(constraint);
           // Handle comparison types
-          const ComparisonTypes_t& comp (constraint->comparisonType ());
+          const ComparisonTypes& comp (constraint->comparisonType ());
           for (std::size_t i = 0; i < comp.size(); ++i) {
-            switch (comp[i]) {
-            case Superior:
-            case Inferior:
+            if ((comp[i] == Superior) && (comp[i] == Inferior))
+            {
               inequalityIndices_.push_back (comparison_.size());
-              break;
-            case Equality:
+            }
+            else if (comp[i] == Equality)
+            {
               equalityIndices_.addRow(comparison_.size(), 1);
-              break;
-            default:
-              break;
             }
             comparison_.push_back (comp[i]);
           }
@@ -116,18 +113,18 @@ namespace hpp {
         /// \param name the name of the constraints,
         ImplicitConstraintSet (const std::string& name)
           : Implicit (DifferentiableFunctionSet::create (name),
-                      ComparisonTypes_t ())
+                      ComparisonTypes ())
         {
         }
 
         ImplicitConstraintSet ()
           : Implicit (DifferentiableFunctionSet::create ("Stack"),
-                      ComparisonTypes_t ())
+                      ComparisonTypes ())
           {}
 
         ImplicitConstraintSet (const ImplicitConstraintSet& o)
           : Implicit (DifferentiableFunctionSet::create ("Stack"),
-                      ComparisonTypes_t ())
+                      ComparisonTypes ())
           {
             const Implicits_t& constraints = o.constraints();
             for (Implicits_t::const_iterator constraint = constraints.begin();
@@ -137,7 +134,7 @@ namespace hpp {
         
       private:
         Implicits_t constraints_;
-        ComparisonTypes_t comparison_;
+        ComparisonTypes comparison_;
         std::vector<std::size_t> inequalityIndices_;
         Eigen::RowBlockIndices equalityIndices_;
 
