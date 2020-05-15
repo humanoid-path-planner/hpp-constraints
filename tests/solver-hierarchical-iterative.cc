@@ -89,7 +89,7 @@ struct test_quadratic : test_base <LineSearch>
     Quadratic::Ptr_t f (new Quadratic (A, -1));
 
     this->solver.add (Implicit::create
-                      (f, ComparisonTypes_t (f->outputDerivativeSize (),
+                      (f, ComparisonTypes_t(f->outputDerivativeSize (),
                                              Equality)), 0);
     BOOST_CHECK(this->solver.numberStacks() == 1);
   }
@@ -161,12 +161,15 @@ BOOST_AUTO_TEST_CASE(one_layer)
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
 
-  solver.add(Implicit::create
-             (Orientation::create ("Orientation", device, ee2, tf2),
-              ComparisonTypes_t (3, Equality)), 0);
-  solver.add(Implicit::create
-             (Position::create    ("Position"   , device, ee2, tf2),
-              ComparisonTypes_t (3, Equality)), 0);
+  ImplicitPtr_t constraint(Implicit::create
+                  (Orientation::create ("Orientation", device, ee2, tf2),
+                   3 * Equality));
+  BOOST_CHECK(constraint->comparisonType() == 3 * Equality);
+  solver.add(constraint, 0);
+  constraint = Implicit::create
+    (Position::create    ("Position"   , device, ee2, tf2), 3 * Equality);
+  BOOST_CHECK(constraint->comparisonType() == 3 * Equality);
+  solver.add(constraint, 0);
 
   BOOST_CHECK(solver.numberStacks() == 1);
 

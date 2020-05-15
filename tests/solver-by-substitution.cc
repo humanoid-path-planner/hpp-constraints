@@ -130,7 +130,7 @@ void test_quadratic ()
   solver.saturation(boost::make_shared<saturation::Bounds>(
         -vector_t::Ones(N), vector_t::Ones(N)));
 
-  solver.add (Implicit::create (quad));
+  solver.add (Implicit::create(quad, ComparisonTypes_t(1, EqualToZero)));
   solver.add (expl);
 
   matrix_t M (N, N1 + N3);
@@ -204,7 +204,7 @@ void test_quadratic2 ()
   solver.saturation(boost::make_shared<saturation::Bounds>(
         -vector_t::Ones(N), vector_t::Ones(N)));
 
-  solver.add (Implicit::create (quad));
+  solver.add (Implicit::create (quad, ComparisonTypes_t(1, EqualToZero)));
   solver.add (expl1);
   solver.add (expl2);
   solver.explicitConstraintSetHasChanged();
@@ -290,7 +290,7 @@ void test_quadratic3 ()
   solver.saturation(boost::make_shared<saturation::Bounds>(
         -vector_t::Ones(N), vector_t::Ones(N)));
 
-  solver.add (Implicit::create (quad));
+  solver.add (Implicit::create (quad, ComparisonTypes_t(1, Equality)));
   solver.add (expl1);
   solver.add (expl2);
   solver.add (expl3);
@@ -514,7 +514,8 @@ BOOST_AUTO_TEST_CASE(functions1)
 
   // f
   ImplicitPtr_t impl (Implicit::create
-                      (AffineFunction::create(matrix_t::Identity(2,3))));
+                      (AffineFunction::create(matrix_t::Identity(2,3)),
+                       2*EqualToZero));
   solver.add (impl);
   // Test inclusion of manifolds
   solver1.add (impl->copy ());
@@ -548,7 +549,8 @@ BOOST_AUTO_TEST_CASE(functions1)
 
   // h
   matrix_t h (1,3); h << 0, 1, 0;
-  solver.add(Implicit::create (AffineFunction::create(h)));
+  solver.add(Implicit::create (AffineFunction::create(h),
+                               ComparisonTypes_t(1, EqualToZero)));
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
   BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
@@ -567,7 +569,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   Eigen::Matrix<value_type, 2, 3> Jf;
   Jf << 1, 0, 0,
         0, 0, 1;
-  solver.add(Implicit::create (AffineFunction::create (Jf)));
+  solver.add(Implicit::create (AffineFunction::create (Jf), 2*EqualToZero));
 
   Eigen::Matrix<value_type,1,1> Jg; Jg (0,0) = 1;
   Eigen::RowBlockIndices inArg; inArg.addRow (2,1);
@@ -589,9 +591,10 @@ BOOST_AUTO_TEST_CASE(functions2)
   // This function should not be removed from the system.
   Eigen::Matrix<value_type, 1, 3> Jh; Jh << 0, 0, 1;
   ImplicitPtr_t impl
-  (Implicit::create (AffineFunction::create (Jh)));
+    (Implicit::create (AffineFunction::create (Jh),
+                       ComparisonTypes_t(1, EqualToZero)));
   ImplicitPtr_t c2 (impl);
-  c2->comparisonType (ComparisonTypes_t (1, Equality));
+  c2->comparisonType (ComparisonTypes_t(1, Equality));
   solver.add(impl);
   BOOST_CHECK_EQUAL(solver.dimension(), 3);
 
@@ -604,7 +607,7 @@ BOOST_AUTO_TEST_CASE(functions2)
      AffineFunction::create(matrix_t (1, 0), C),
      segments_t(), out, segments_t(), out);
   ImplicitPtr_t c3 (expl);
-  c3->comparisonType (ComparisonTypes_t (1, Equality));
+  c3->comparisonType (ComparisonTypes_t(1, Equality));
   solver.add (expl);
 
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
@@ -664,10 +667,12 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
 
   solver.add
     (Implicit::create
-     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2)));
+     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2),
+      3*EqualToZero));
   solver.add
      (Implicit::create
-      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3)));
+      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3),
+       3*EqualToZero));
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
@@ -751,10 +756,12 @@ BOOST_AUTO_TEST_CASE(by_substitution_serialization)
 
   solver.add
     (Implicit::create
-     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2)));
+     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2),
+      3 * Equality));
   solver.add
      (Implicit::create
-      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3)));
+      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3),
+       3 * Equality));
   solver.add
     (LockedJoint::create
      (ee1, ee1->configurationSpace ()->neutral ()));
@@ -823,8 +830,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
   }
 
   // Check that the solver can handle constraints with SE3 outputs.
-  ImplicitPtr_t constraint (Implicit::create (frame,
-        ComparisonTypes_t (6, Equality)));
+  ImplicitPtr_t constraint (Implicit::create (frame, 6 * Equality));
 
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
@@ -926,10 +932,14 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
 
-  ComparisonTypes_t comp1 (6, Equality);
-  comp1 [0] = comp1 [2] = comp1 [4] = EqualToZero;
-  ComparisonTypes_t comp2 (6, Equality);
-  comp2 [1] = comp2 [2] = EqualToZero;
+  ComparisonTypes_t comp1
+    (EqualToZero<<Equality<<EqualToZero<<Equality<<EqualToZero<<Equality);
+  assert(comp1 [0] ==  EqualToZero);
+  assert(comp1 [2] ==  EqualToZero);
+  assert(comp1 [4] == EqualToZero);
+  ComparisonTypes_t comp2(Equality<<EqualToZero<<EqualToZero<<3*Equality);
+  assert(comp2 [1] == EqualToZero);
+  assert(comp2 [2] == EqualToZero);
   // Create two relative transformation constraints
   Transform3f tf1 (Transform3f::Identity());
   vector3_t u; u << 0, -.2, 0;
@@ -943,7 +953,7 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   tf2.translation (u);
   ImplicitPtr_t c2 (hpp::constraints::explicit_::RelativePose::create
                     ("Transformation", device, JointPtr_t (), root, tf2, tf1,
-                     std::vector <bool> (6, true), comp2));
+                     comp2));
 
   BySubstitution solver (device->configSpace ());
   solver.maxIterations(20);
@@ -1011,9 +1021,9 @@ BOOST_AUTO_TEST_CASE (merge)
              ee2 = device->getJointByName ("rleg5_joint");
   BOOST_REQUIRE (device);
   Configuration_t q (device->configSpace ()->neutral ().vector ());
-  ComparisonTypes_t comp1 (6, Equality);
+  ComparisonTypes_t comp1 (6 * Equality);
   comp1 [0] = comp1 [2] = comp1 [4] = EqualToZero;
-  ComparisonTypes_t comp2 (6, Equality);
+  ComparisonTypes_t comp2 (6 * Equality);
   comp2 [1] = comp2 [2] = EqualToZero;
   // Create two relative transformation constraints
   Transform3f tf1 (Transform3f::Identity());
@@ -1030,7 +1040,7 @@ BOOST_AUTO_TEST_CASE (merge)
 
   ImplicitPtr_t c3 (hpp::constraints::explicit_::RelativePose::create
                     ("Transformation root", device, JointPtr_t (), root, tf2,
-                     tf1, std::vector <bool> (6, true), comp2));
+                     tf1, comp2));
 
   BySubstitution solver1 (device->configSpace ());
   BySubstitution solver2 (device->configSpace ());

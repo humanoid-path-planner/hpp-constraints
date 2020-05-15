@@ -133,7 +133,7 @@ namespace hpp {
                 segments_t(), // input vel
                 list_of(segment_t (joint->rankInVelocity     (),
                                    joint->numberDof ())), // output vel
-                ComparisonTypes_t (joint->numberDof(), Equality)),
+                ComparisonTypes_t(joint->numberDof(), Equality)),
       jointName_ (joint->name ()),
       configSpace_ (joint->configurationSpace ())
     {

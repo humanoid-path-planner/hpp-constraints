@@ -33,11 +33,11 @@ namespace hpp {
         (const std::string& name, const DevicePtr_t& robot,
          const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
          const Transform3f& frame1, const Transform3f& frame2,
-         std::vector <bool> mask, ComparisonTypes_t comp)
+         ComparisonTypes_t comp)
       {
         RelativePose* ptr (new RelativePose
                            (name, robot, joint1, joint2, frame1, frame2,
-                            mask, comp));
+                            std::vector<bool>(6,true), comp));
         RelativePosePtr_t shPtr (ptr);
         RelativePoseWkPtr_t wkPtr (shPtr);
         ptr->init (wkPtr);
