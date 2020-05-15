@@ -1055,7 +1055,7 @@ BOOST_AUTO_TEST_CASE (merge)
   BOOST_CHECK (solver3.rightHandSideFromConfig (c3, q));
 
   // Check computation of errors by constraint
-  // order is c1 c3 c2
+  // order is c1 c2 c3
   vector_t error (solver3.errorSize ());
   vector_t error1 (c1->function ().outputSpace ()->nv ());
   vector_t error2 (c2->function ().outputSpace ()->nv ());
