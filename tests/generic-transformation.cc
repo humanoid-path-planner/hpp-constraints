@@ -18,6 +18,10 @@
 
 #include "hpp/constraints/generic-transformation.hh"
 
+#include <sstream>
+#include <boost/archive/polymorphic_xml_iarchive.hpp>
+#include <boost/archive/polymorphic_xml_oarchive.hpp>
+
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
 #include <hpp/pinocchio/device.hh>
@@ -25,6 +29,7 @@
 #include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
+#include <hpp/pinocchio/serialization.hh>
 
 #include "hpp/constraints/tools.hh"
 
@@ -178,5 +183,60 @@ BOOST_AUTO_TEST_CASE (multithread) {
       BOOST_CHECK_EQUAL (vs[0].vector(), vs[j].vector());
       BOOST_CHECK_EQUAL (Js[0]         , Js[j]);
     }
+  }
+}
+
+struct iarchive :
+  boost::archive::polymorphic_xml_iarchive, hpp::serialization::archive_device_wrapper
+{
+  iarchive(std::istream& is) : boost::archive::polymorphic_xml_iarchive (is) {}
+};
+
+BOOST_AUTO_TEST_CASE (serialization) {
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
+  device->numberDeviceData (4);
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
+  BOOST_REQUIRE (device);
+
+  device->currentConfiguration (device->neutralConfiguration());
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
+
+  std::vector<DifferentiableFunctionPtr_t> functions;
+  functions.push_back(Orientation::create            ("Orientation"           , device, ee2, tf2)          );
+  functions.push_back(Position::create               ("Position"              , device, ee2, tf2, tf1)     );
+  functions.push_back(Transformation::create         ("Transformation"        , device, ee1, tf1)          );
+  functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1)     );
+  functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, JointPtr_t(), tf1)     );
+  functions.push_back(RelativePosition::create       ("RelativePosition"      , device, ee1, JointPtr_t(), tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, JointPtr_t(), tf1, tf2));
+
+  for (std::size_t i = 0; i < functions.size(); ++i) {
+    DifferentiableFunctionPtr_t f = functions[i];
+
+    DifferentiableFunctionPtr_t f_restored;
+
+    std::stringstream ss;
+    {
+      boost::archive::polymorphic_xml_oarchive oa(ss);
+      oa << boost::serialization::make_nvp("function", f);
+    }
+
+    {
+      iarchive ia(ss);
+      ia.device = device;
+      ia >> boost::serialization::make_nvp("function", f_restored);
+    }
+
+    std::ostringstream oss1, oss2;
+    oss1 << *f;
+    oss2 << *f_restored;
+
+    BOOST_CHECK_EQUAL(oss1.str(), oss2.str());
   }
 }

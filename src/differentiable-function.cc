@@ -16,13 +16,20 @@
 
 #include <hpp/constraints/differentiable-function.hh>
 
+#include <boost/serialization/string.hpp>
+
 #include <pinocchio/multibody/liegroup/liegroup.hpp>
+
+#include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/liegroup.hh>
+#include <hpp/pinocchio/serialization.hh>
+
+BOOST_CLASS_EXPORT(hpp::constraints::DifferentiableFunction)
 
 namespace hpp {
   namespace constraints {
@@ -225,5 +232,20 @@ namespace hpp {
     {
       return o << "Differentiable function: " << name ();
     }
+
+    template<class Archive>
+    void DifferentiableFunction::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & BOOST_SERIALIZATION_NVP(inputSize_);
+      ar & BOOST_SERIALIZATION_NVP(inputDerivativeSize_);
+      ar & BOOST_SERIALIZATION_NVP(outputSpace_);
+      ar & BOOST_SERIALIZATION_NVP(activeParameters_);
+      ar & BOOST_SERIALIZATION_NVP(activeDerivativeParameters_);
+      ar & BOOST_SERIALIZATION_NVP(name_);
+      ar & BOOST_SERIALIZATION_NVP(context_);
+    }
+
+    HPP_SERIALIZATION_IMPLEMENT(DifferentiableFunction);
   } // namespace constraints
 } // namespace hpp

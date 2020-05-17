@@ -55,6 +55,10 @@ namespace hpp {
         {
           J.setIdentity();
         }
+
+      private:
+        Identity() {}
+        HPP_SERIALIZABLE();
     }; // class Identity
 
     /// Affine function
@@ -117,6 +121,9 @@ namespace hpp {
 
         const matrix_t J_;
         const vector_t b_;
+
+        AffineFunction() {}
+        HPP_SERIALIZABLE();
     }; // class AffineFunction
 
     /// Constant function
@@ -165,6 +172,10 @@ namespace hpp {
         void impl_jacobian (matrixOut_t J, vectorIn_t) const { J.setZero(); }
 
         const LiegroupElement c_;
+
+    private:
+        ConstantFunction () {}
+        HPP_SERIALIZABLE();
     }; // class ConstantFunction
 
     /// \}

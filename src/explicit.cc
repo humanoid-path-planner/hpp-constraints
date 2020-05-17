@@ -14,10 +14,18 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#include <hpp/constraints/explicit.hh>
+
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+
+#include <hpp/util/serialization.hh>
+
 #include <hpp/pinocchio/device.hh>
+
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/constraints/matrix-view.hh>
-#include <hpp/constraints/explicit.hh>
 #include <hpp/constraints/explicit/implicit-function.hh>
 
 namespace hpp {
@@ -166,5 +174,23 @@ namespace hpp {
       Implicit::init (weak);
       weak_ = weak;
     }
+
+    template<class Archive>
+    void Explicit::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & boost::serialization::make_nvp("base",
+           boost::serialization::base_object<Implicit>(*this));
+      ar & BOOST_SERIALIZATION_NVP(inputToOutput_);
+      ar & BOOST_SERIALIZATION_NVP(inputConf_);
+      ar & BOOST_SERIALIZATION_NVP(outputConf_);
+      ar & BOOST_SERIALIZATION_NVP(inputVelocity_);
+      ar & BOOST_SERIALIZATION_NVP(outputVelocity_);
+      ar & BOOST_SERIALIZATION_NVP(weak_);
+    }
+
+    HPP_SERIALIZATION_IMPLEMENT(Explicit);
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::Explicit)

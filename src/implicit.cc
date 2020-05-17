@@ -15,6 +15,14 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #include "hpp/constraints/implicit.hh"
+
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+#include <pinocchio/serialization/eigen.hpp>
+
+#include <hpp/util/serialization.hh>
+
 #include <hpp/constraints/differentiable-function.hh>
 
 namespace hpp {
@@ -230,5 +238,19 @@ namespace hpp {
         rhs += error;
       }
     }
+
+    template<class Archive>
+    void Implicit::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & BOOST_SERIALIZATION_NVP(comparison_);
+      ar & BOOST_SERIALIZATION_NVP(rhs_);
+      ar & BOOST_SERIALIZATION_NVP(parameterSize_);
+      ar & BOOST_SERIALIZATION_NVP(function_);
+      ar & BOOST_SERIALIZATION_NVP(rhsFunction_);
+      ar & BOOST_SERIALIZATION_NVP(weak_);
+    }
+
+    HPP_SERIALIZATION_IMPLEMENT(Implicit);
   } // namespace constraints
 } // namespace hpp

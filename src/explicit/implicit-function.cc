@@ -14,17 +14,22 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#include <hpp/constraints/explicit/implicit-function.hh>
+
 #include <Eigen/Geometry>
 
 #include <boost/type_traits/conditional.hpp>
 
+#include <hpp/util/serialization.hh>
+
 #include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/serialization.hh>
 #include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/tools.hh>
-
 #include <hpp/constraints/explicit/implicit-function.hh>
+#include <hpp/constraints/serialization.hh>
 
 namespace hpp {
   namespace constraints {
@@ -268,6 +273,37 @@ namespace hpp {
           ++rank;
         }
       }
+
+      template<class Archive>
+      void ImplicitFunction::serialize(Archive & ar, const unsigned int version)
+      {
+        (void) version;
+        ar & boost::serialization::make_nvp("base",
+            boost::serialization::base_object<DifferentiableFunction>(*this));
+        ar & BOOST_SERIALIZATION_NVP(robot_);
+        ar & BOOST_SERIALIZATION_NVP(inputToOutput_);
+        ar & BOOST_SERIALIZATION_NVP(inputConfIntervals_);
+        ar & BOOST_SERIALIZATION_NVP(outputConfIntervals_);
+        ar & BOOST_SERIALIZATION_NVP(inputDerivIntervals_);
+        ar & BOOST_SERIALIZATION_NVP(outputDerivIntervals_);
+        ar & BOOST_SERIALIZATION_NVP(outJacobian_);
+        ar & BOOST_SERIALIZATION_NVP(inJacobian_);
+
+        if (!Archive::is_saving::value) { // loading
+          f_qIn_ = LiegroupElement(inputToOutput_->outputSpace ());
+          qOut_ = LiegroupElement(inputToOutput_->outputSpace ());
+          result_ = LiegroupElement(outputSpace ());
+          qIn_.resize (inputToOutput_->inputSize ());
+          Jf_.resize (inputToOutput_->outputDerivativeSize (),
+                      inputToOutput_->inputDerivativeSize ());
+          // should we recompute them instead of storing them ?
+          // computeJacobianBlocks ();
+        }
+      }
+
+      HPP_SERIALIZATION_IMPLEMENT(ImplicitFunction);
     } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::explicit_::ImplicitFunction)

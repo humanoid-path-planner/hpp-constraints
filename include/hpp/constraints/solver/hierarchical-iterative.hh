@@ -21,6 +21,8 @@
 
 #include <hpp/util/serialization-fwd.hh>
 
+#include <hpp/util/serialization-fwd.hh>
+
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 
@@ -253,7 +255,7 @@ namespace hpp {
         /// \param constraint implicit constraint
         /// \param priority level of priority of the constraint: priority are
         ///        in decreasing order: 0 is the highest priority level,
-        virtual void add (const ImplicitPtr_t& constraint, const std::size_t& priority);
+        virtual bool add (const ImplicitPtr_t& constraint, const std::size_t& priority);
 
         /// add constraints of another solver
         /// \param other other solver
@@ -645,6 +647,11 @@ namespace hpp {
         mutable vector_t OP_;
 
         friend struct lineSearch::Backtracking;
+
+      protected:
+        HierarchicalIterative() {}
+      private:
+        HPP_SERIALIZABLE_SPLIT();
       }; // class HierarchicalIterative
       /// \}
     } // namespace solver

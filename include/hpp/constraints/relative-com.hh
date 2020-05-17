@@ -106,6 +106,9 @@ namespace hpp {
       std::vector <bool> mask_;
       bool nominalCase_;
       mutable ComJacobian_t jacobian_;
+
+      RelativeCom() {}
+      HPP_SERIALIZABLE();
     }; // class RelativeCom
     /// \}
   } // namespace constraints

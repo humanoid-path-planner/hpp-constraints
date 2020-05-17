@@ -161,6 +161,9 @@ namespace hpp {
         Transform3f frame1_;
         Transform3f frame2_;
         RelativePoseWkPtr_t weak_;
+
+        RelativePose() {}
+        HPP_SERIALIZABLE();
       }; // class RelativePose
     } // namespace explicit_
   } // namespace constraints

@@ -18,15 +18,21 @@
 #include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 
 #include <limits>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include <pinocchio/multibody/model.hpp>
+#include <pinocchio/serialization/eigen.hpp>
 
 #include <hpp/util/debug.hh>
 #include <hpp/util/timer.hh>
+#include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/util.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
+#include <hpp/pinocchio/serialization.hh>
 
 #include <hpp/constraints/svd.hh>
 #include <hpp/constraints/macros.hh>
@@ -234,7 +240,7 @@ namespace hpp {
         return false;
       }
 
-      void HierarchicalIterative::add (const ImplicitPtr_t& constraint,
+      bool HierarchicalIterative::add (const ImplicitPtr_t& constraint,
                                        const std::size_t& priority)
       {
         DifferentiableFunctionPtr_t f (constraint->functionPtr ());
@@ -282,6 +288,7 @@ namespace hpp {
         constraints_.push_back (constraint);
         update();
 
+        return true;
       }
 
       void HierarchicalIterative::merge (const HierarchicalIterative& other)
@@ -869,6 +876,86 @@ namespace hpp {
       (vectorOut_t arg, lineSearch::FixedSequence  lineSearch) const;
       template HierarchicalIterative::Status HierarchicalIterative::solve
       (vectorOut_t arg, lineSearch::ErrorNormBased lineSearch) const;
+
+      template<class Archive>
+      void HierarchicalIterative::load(Archive & ar, const unsigned int version)
+      {
+        (void) version;
+        ar & BOOST_SERIALIZATION_NVP(squaredErrorThreshold_);
+        ar & BOOST_SERIALIZATION_NVP(inequalityThreshold_);
+        ar & BOOST_SERIALIZATION_NVP(maxIterations_);
+        ar & BOOST_SERIALIZATION_NVP(configSpace_);
+        ar & BOOST_SERIALIZATION_NVP(lastIsOptional_);
+        ar & BOOST_SERIALIZATION_NVP(saturate_);
+
+        saturation_.resize(configSpace_->nq());
+        qSat_.resize(configSpace_->nq ());
+        OM_.resize(configSpace_->nv ());
+        OP_.resize(configSpace_->nv ());
+        // Initialize freeVariables_ to all indices.
+        freeVariables_.addRow (0, configSpace_->nv ());
+
+        NumericalConstraints_t constraints;
+        std::vector<std::size_t> priorities;
+        ar & boost::serialization::make_nvp("constraints_", constraints);
+        ar & BOOST_SERIALIZATION_NVP(priorities);
+
+        for (std::size_t i = 0; i < constraints.size(); ++i)
+          add (constraints[i], priorities[i]);
+        // TODO load the right hand side.
+      }
+
+      template<class Archive>
+      void HierarchicalIterative::save(Archive & ar, const unsigned int version) const
+      {
+        (void) version;
+        ar & BOOST_SERIALIZATION_NVP(squaredErrorThreshold_);
+        ar & BOOST_SERIALIZATION_NVP(inequalityThreshold_);
+        ar & BOOST_SERIALIZATION_NVP(maxIterations_);
+        ar & BOOST_SERIALIZATION_NVP(configSpace_);
+        ar & BOOST_SERIALIZATION_NVP(lastIsOptional_);
+        ar & BOOST_SERIALIZATION_NVP(saturate_);
+        ar & BOOST_SERIALIZATION_NVP(constraints_);
+        std::vector<std::size_t> priorities(constraints_.size());
+        for (std::size_t i = 0; i < constraints_.size(); ++i) {
+          auto c = priority_.find(constraints_[i]->functionPtr());
+          if (c == priority_.end())
+            priorities[i] = 0;
+          else
+            priorities[i] = c->second;
+        }
+        ar & BOOST_SERIALIZATION_NVP(priorities);
+        // TODO save the right hand side.
+      }
+
+      HPP_SERIALIZATION_SPLIT_IMPLEMENT(HierarchicalIterative);
     } // namespace solver
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::solver::saturation::Bounds)
+BOOST_CLASS_EXPORT(hpp::constraints::solver::saturation::Device)
+
+namespace boost {
+namespace serialization {
+using namespace hpp::constraints::solver;
+
+template<class Archive>
+void serialize(Archive &, saturation::Base&, const unsigned int) {}
+template<class Archive>
+void serialize(Archive & ar, saturation::Device& o, const unsigned int version)
+{
+  (void) version;
+  ar & make_nvp("base", base_object<saturation::Base>(o));
+  ar & make_nvp("device", o.device);
+}
+template<class Archive>
+void serialize(Archive & ar, saturation::Bounds& o, const unsigned int version)
+{
+  (void) version;
+  ar & make_nvp("base", base_object<saturation::Base>(o));
+  ar & make_nvp("lb", o.lb);
+  ar & make_nvp("ub", o.ub);
+}
+} // namespace serialization
+} // namespace boost

@@ -21,6 +21,8 @@
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 
+# include <hpp/util/serialization-fwd.hh>
+
 namespace hpp {
   namespace constraints {
     /**
@@ -239,6 +241,11 @@ namespace hpp {
         DifferentiableFunctionPtr_t function_;
         DifferentiableFunctionPtr_t rhsFunction_;
 	ImplicitWkPtr_t weak_;
+
+      protected:
+        Implicit () {}
+      private:
+        HPP_SERIALIZABLE();
     }; // class Implicit
     /// \}
   } // namespace constraints

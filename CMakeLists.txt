@@ -78,6 +78,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/constraints/implicit.hh
   include/hpp/constraints/implicit-constraint-set.hh
   include/hpp/constraints/locked-joint.hh
+  include/hpp/constraints/serialization.hh
   include/hpp/constraints/solver/hierarchical-iterative.hh
   include/hpp/constraints/solver/by-substitution.hh
 
@@ -91,6 +92,7 @@ SET(${PROJECT_NAME}_HEADERS
   )
 
 SET (${PROJECT_NAME}_SOURCES
+  src/affine-function.cc
   src/differentiable-function.cc
   src/differentiable-function-set.cc
   src/generic-transformation.cc

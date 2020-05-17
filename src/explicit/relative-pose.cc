@@ -14,8 +14,12 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <hpp/pinocchio/device.hh>
 #include <hpp/constraints/explicit/relative-pose.hh>
+
+#include <boost/serialization/weak_ptr.hpp>
+#include <pinocchio/serialization/se3.hpp>
+#include <hpp/util/serialization.hh>
+#include <hpp/pinocchio/device.hh>
 #include <hpp/constraints/explicit/relative-transformation.hh>
 #include "../src/explicit/input-configurations.hh"
 
@@ -154,6 +158,21 @@ namespace hpp {
         Explicit::init (weak);
         weak_ = weak;
       }
+
+      template<class Archive>
+      void RelativePose::serialize(Archive & ar, const unsigned int version)
+      {
+        (void) version;
+        ar & boost::serialization::make_nvp("base",
+            boost::serialization::base_object<Explicit>(*this));
+        ar & BOOST_SERIALIZATION_NVP(frame1_);
+        ar & BOOST_SERIALIZATION_NVP(frame2_);
+        ar & BOOST_SERIALIZATION_NVP(weak_);
+      }
+
+      HPP_SERIALIZATION_IMPLEMENT(RelativePose);
     } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT(hpp::constraints::explicit_::RelativePose)
