@@ -106,13 +106,6 @@ namespace hpp {
         return true;
       }
 
-      void BySubstitution::add (const DifferentiableFunctionPtr_t& f,
-                                const std::size_t& priority,
-                                const ComparisonTypes_t& comp)
-      {
-        HierarchicalIterative::add (Implicit::create (f, comp), priority);
-      }
-
       void BySubstitution::explicitConstraintSetHasChanged()
       {
         // set free variables to indices that are not output of the explicit
