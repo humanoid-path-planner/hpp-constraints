@@ -15,11 +15,32 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+#include <pinocchio/serialization/eigen.hpp>
+#include <hpp/util/serialization.hh>
 #include <hpp/constraints/comparison-types.hh>
 
 namespace hpp {
   namespace constraints {
-    //ComparisonType Equality(0), EqualToZero(1), Superior(2), Inferior(3);
+
+    template<class Archive>
+    void ComparisonType::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & BOOST_SERIALIZATION_NVP(value);
+    }
+    HPP_SERIALIZATION_IMPLEMENT(ComparisonType);
+
+    template<class Archive>
+    void ComparisonTypes::serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & BOOST_SERIALIZATION_NVP(vector_);
+    }
+    HPP_SERIALIZATION_IMPLEMENT(ComparisonTypes);
+
 
     ComparisonTypes ComparisonTypes::nTimes(std::size_t n, ComparisonType c)
     {

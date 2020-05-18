@@ -21,6 +21,7 @@
 
 #include <hpp/constraints/config.hh>
 #include <hpp/constraints/fwd.hh>
+#include <hpp/util/serialization-fwd.hh>
 
 namespace hpp {
   namespace constraints {
@@ -39,7 +40,12 @@ namespace hpp {
         return value != other.value;
       }
       int value;
+    protected:
+      ComparisonType() {}
+    private:
+      HPP_SERIALIZABLE();
     }; // struct ComparisonType
+
     static ComparisonType Equality(0), EqualToZero(1), Superior(2), Inferior(3);
 
     /// Vector of ComparisonType.
@@ -86,6 +92,7 @@ namespace hpp {
       /// \}
     private:
       Vector_t vector_;
+      HPP_SERIALIZABLE();
     }; // class ComparisonTypes
     bool operator==(const ComparisonTypes& lhs, const ComparisonTypes& rhs);
     bool operator!=(const ComparisonTypes& lhs, const ComparisonTypes& rhs);
