@@ -88,21 +88,6 @@ namespace hpp {
           return add (numericalConstraint, priority);
         }
 
-        /// Add an implicit constraint
-        ///
-        /// \param f differentiable function from the robot configuration space
-        ///          to a Lie group (See hpp::pinocchio::LiegroupSpace),
-        /// \param priority level of priority of the constraint: priority are
-        ///        in decreasing order: 0 is the highest priority level,
-        /// \param comp comparison type. See class documentation for details.
-        ///
-        /// \deprecated Use bool BySubstitution::add (const
-        ///          ImplicitPtr_t& numericalConstraint, const
-        ///          std::size_t priority = 0) instead.
-        void add (const DifferentiableFunctionPtr_t& f,
-                  const std::size_t& priority,
-                  const ComparisonTypes& comp) HPP_CONSTRAINTS_DEPRECATED;
-
         /// Get the numerical constraints implicit and explicit
         const NumericalConstraints_t& numericalConstraints () const
         {

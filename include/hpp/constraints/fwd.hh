@@ -130,13 +130,6 @@ namespace hpp {
     typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
     typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
-    typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeContact StaticStabilityGravity;
-    typedef HPP_CONSTRAINTS_DEPRECATED ConvexShapeContactComplement StaticStabilityGravityComplement;
-    typedef HPP_CONSTRAINTS_DEPRECATED
-      ConvexShapeContactPtr_t StaticStabilityGravityPtr_t;
-    typedef HPP_CONSTRAINTS_DEPRECATED
-      ConvexShapeContactComplementPtr_t StaticStabilityGravityComplementPtr_t;
-
     template <int _Options> class GenericTransformation;
 
     /// \cond DEVEL
@@ -210,10 +203,6 @@ namespace hpp {
       HPP_PREDEF_CLASS (OfParameterSubset);
       typedef boost::shared_ptr <OfParameterSubset> OfParameterSubsetPtr_t;
     } // namespace function
-    typedef ExplicitConstraintSet ExplicitSolver HPP_CONSTRAINTS_DEPRECATED;
-    typedef solver::HierarchicalIterative HierarchicalIterativeSolver
-    HPP_CONSTRAINTS_DEPRECATED;
-    typedef solver::BySubstitution HybridSolver HPP_CONSTRAINTS_DEPRECATED;
   } // namespace constraints
 } // namespace hpp
 
