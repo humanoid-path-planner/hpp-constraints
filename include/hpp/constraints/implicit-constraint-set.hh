@@ -62,16 +62,13 @@ namespace hpp {
           // Handle comparison types
           const ComparisonTypes_t& comp (constraint->comparisonType ());
           for (std::size_t i = 0; i < comp.size(); ++i) {
-            switch (comp[i]) {
-            case Superior:
-            case Inferior:
+            if ((comp[i] == Superior) && (comp[i] == Inferior))
+            {
               inequalityIndices_.push_back (comparison_.size());
-              break;
-            case Equality:
+            }
+            else if (comp[i] == Equality)
+            {
               equalityIndices_.addRow(comparison_.size(), 1);
-              break;
-            default:
-              break;
             }
             comparison_.push_back (comp[i]);
           }

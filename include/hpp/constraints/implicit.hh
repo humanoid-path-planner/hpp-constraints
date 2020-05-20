@@ -20,6 +20,7 @@
 
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
+# include <hpp/constraints/comparison-types.hh>
 
 # include <hpp/util/serialization-fwd.hh>
 
@@ -106,8 +107,9 @@ namespace hpp {
         virtual ImplicitPtr_t copy () const;
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        static ImplicitPtr_t create
-          (const DifferentiableFunctionPtr_t& function);
+        /// \deprecated Use method with comparison types
+        static ImplicitPtr_t create(const DifferentiableFunctionPtr_t& function)
+          HPP_CONSTRAINTS_DEPRECATED;
 
         /// Create a shared pointer to a new instance.
         /// \sa constructors
@@ -134,7 +136,7 @@ namespace hpp {
         /// constraints
         /// \param config the input configuration.
         ///
-        /// \warning Only values of the right hand side corresponding to 
+        /// \warning Only values of the right hand side corresponding to
         /// \link Equality "equality constraints" \endlink are set. As a
         /// result, the input configuration may not satisfy the other
         /// constraints.

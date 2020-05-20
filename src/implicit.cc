@@ -31,15 +31,8 @@ namespace hpp {
     {
       size_type size = 0;
       for (std::size_t i = 0; i < comp.size(); ++i) {
-        switch (comp[i]) {
-        case Superior:
-        case Inferior:
-          break;
-        case Equality:
+        if (comp[i] == Equality) {
           ++size;
-          break;
-        default:
-          break;
         }
       }
       return size;
@@ -130,12 +123,11 @@ namespace hpp {
       parameterSize_ (computeParameterSize (comparison_)),
       function_ (function)
     {
-      if (comp.size () == 0) {
-        // Argument was probably not provided, set to Equality
-        comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
-                                         Equality);
-      }
-      assert (function_->outputDerivativeSize () == (size_type)comparison_.size ());
+      // This constructor used to set comparison types to Equality if an
+      // empty vector was given as input. Now you should provide the
+      // comparison type at construction.
+      assert
+        (function_->outputDerivativeSize () == (size_type)comparison_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
@@ -145,14 +137,12 @@ namespace hpp {
       if (rhs_.size () == 0) {
         rhs_ = vector_t::Zero (function->outputSize ());
       }
-      if (comp.size () == 0) {
-        // Argument was probably not provided, set to Equality
-        comparison_ = ComparisonTypes_t (function->outputDerivativeSize (),
-                                         Equality);
-      }
+      // This constructor used to set comparison types to Equality if an
+      // empty vector was given as input. Now you should provide the
+      // comparison type at construction.
+      assert
+        (function_->outputDerivativeSize () == (size_type)comparison_.size ());
       parameterSize_ = computeParameterSize (comparison_);
-      assert (function_->outputDerivativeSize () ==
-              (size_type)comparison_.size ());
       assert (function->outputDerivativeSize () == (size_type) rhs_.size ());
     }
 
@@ -176,7 +166,8 @@ namespace hpp {
     ImplicitPtr_t Implicit::create (
         const DifferentiableFunctionPtr_t& function)
     {
-      ComparisonTypes_t comp (function->outputDerivativeSize(), constraints::EqualToZero);
+      ComparisonTypes_t comp
+        (function->outputDerivativeSize(), constraints::EqualToZero);
 
       Implicit* ptr = new Implicit (function, comp);
       ImplicitPtr_t shPtr (ptr);

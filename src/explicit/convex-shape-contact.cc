@@ -56,11 +56,11 @@ namespace hpp {
                     (name, robot, floorSurfaces, objectSurfaces));
         functions.first->setNormalMargin(margin);
         // Contact constraint (= 0)
-        std::get<0>(result) = Implicit::create(functions.first);
+        std::get<0>(result) = Implicit::create(functions.first, 5*EqualToZero);
         // Contact constraint complement (= rhs)
-        std::get<1>(result) = Implicit::create(functions.second,
-          ComparisonTypes_t(functions.second->outputSize(),
-                            constraints::Equality));
+        std::get<1>(result) = Implicit::create
+          (functions.second, ComparisonTypes_t(functions.second->outputSize(),
+            constraints::Equality));
         std::get<2>(result) = create(name + "/hold", robot, floorSurfaces,
                                      objectSurfaces, margin);
         return result;
@@ -144,8 +144,7 @@ namespace hpp {
                  contact::inputVelocityVariables
                  (robot, floorSurfaces, objectSurfaces),
                  relativePose::jointVelInterval(objectSurfaces.front().first),
-                 list_of(EqualToZero)(EqualToZero)(EqualToZero)(EqualToZero)
-                 (EqualToZero)(Equality)(Equality)(Equality))
+                 (5 * EqualToZero << 3 * Equality))
       {
         assert(HPP_DYNAMIC_PTR_CAST(ConvexShapeContactHold, functionPtr()));
         ConvexShapeContactHoldPtr_t f
@@ -166,9 +165,12 @@ namespace hpp {
           hppDout(info, "posInJoint" << posInJoint);
           for (std::size_t i=0; i<os.size(); ++i)
           {
+            // Create explicit relative pose for each combination
+            // (floor surface, object surface)
             pose_.push_back(RelativePose::create
                             ("",robot, fs[j].joint_, os[i].joint_,
-                             posInJoint, os[i].positionInJoint()));
+                             posInJoint, os[i].positionInJoint(),
+                             6 * Equality));
           }
         }
       }

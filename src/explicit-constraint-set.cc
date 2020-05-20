@@ -134,14 +134,8 @@ namespace hpp {
       jacobian.resize(_constraint->explicitFunction ()->outputDerivativeSize(),
                       _constraint->explicitFunction ()->inputDerivativeSize());
       for (std::size_t i = 0; i < constraint->comparisonType ().size(); ++i) {
-        switch (constraint->comparisonType ()[i]) {
-          case Equality:
-            equalityIndices.addRow(i, 1);
-            break;
-          case Superior:
-          case Inferior:
-          default:
-            break;
+        if (constraint->comparisonType ()[i] == Equality) {
+          equalityIndices.addRow(i, 1);
         }
       }
       equalityIndices.updateRows<true, true, true>();
