@@ -137,7 +137,8 @@ namespace hpp {
                  ConstantFunction::create
                  (pinocchio::LiegroupSpace::SE3()->neutral(),
                   contact::inputSize(robot, floorSurfaces, objectSurfaces),
-                  contact::inputDerivSize(robot,floorSurfaces,objectSurfaces)),
+                  contact::inputDerivSize(robot,floorSurfaces,objectSurfaces),
+                  name),
                  contact::inputConfVariables
                  (robot, floorSurfaces, objectSurfaces),
                  relativePose::jointConfInterval(objectSurfaces.front().first),
