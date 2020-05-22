@@ -14,7 +14,6 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#define HPP_DEBUG
 #include <boost/assign/list_of.hpp>
 #include <hpp/constraints/convex-shape-contact.hh>
 #include <hpp/constraints/explicit/convex-shape-contact.hh>
