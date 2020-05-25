@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(quadratic)
 
 BOOST_AUTO_TEST_CASE(one_layer)
 {
-  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidRomeo);
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice (hpp::pinocchio::unittest::HumanoidSimple);
   BOOST_REQUIRE (device);
   device->rootJoint()->lowerBound (0, -1);
   device->rootJoint()->lowerBound (1, -1);
@@ -145,8 +145,8 @@ BOOST_AUTO_TEST_CASE(one_layer)
   device->rootJoint()->upperBound (0,  1);
   device->rootJoint()->upperBound (1,  1);
   device->rootJoint()->upperBound (2,  1);
-  JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
-             ee2 = device->getJointByName ("RAnkleRoll");
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
 
   Configuration_t q = device->currentConfiguration (),
                   qrand = ::pinocchio::randomConfiguration(device->model());

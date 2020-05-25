@@ -81,7 +81,7 @@ using hpp::constraints::LockedJoint;
 using hpp::constraints::solver::lineSearch::Backtracking;
 using hpp::constraints::solver::lineSearch::ErrorNormBased;
 using hpp::constraints::solver::lineSearch::FixedSequence;
-using hpp::pinocchio::unittest::HumanoidRomeo;
+using hpp::pinocchio::unittest::HumanoidSimple;
 using hpp::pinocchio::unittest::ManipulatorArm2;
 using hpp::pinocchio::unittest::makeDevice;
 using hpp::pinocchio::displayConfig;
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(functions2)
 
 BOOST_AUTO_TEST_CASE(hybrid_solver)
 {
-  DevicePtr_t device (makeDevice (HumanoidRomeo));
+  DevicePtr_t device (makeDevice (HumanoidSimple));
   BOOST_REQUIRE (device);
   device->rootJoint()->lowerBound (0, -1);
   device->rootJoint()->lowerBound (1, -1);
@@ -647,9 +647,9 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   device->rootJoint()->upperBound (0,  1);
   device->rootJoint()->upperBound (1,  1);
   device->rootJoint()->upperBound (2,  1);
-  JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
-             ee2 = device->getJointByName ("RAnkleRoll"),
-             ee3 = device->getJointByName ("LWristPitch");
+  JointPtr_t ee1 = device->getJointByName ("rleg5_joint"),
+             ee2 = device->getJointByName ("lleg5_joint"),
+             ee3 = device->getJointByName ("larm5_joint");
 
   Configuration_t q = device->currentConfiguration (),
                   qrand = ::pinocchio::randomConfiguration(device->model());
@@ -728,7 +728,7 @@ struct iarchive :
 
 BOOST_AUTO_TEST_CASE(by_substitution_serialization)
 {
-  DevicePtr_t device (makeDevice (HumanoidRomeo));
+  DevicePtr_t device (makeDevice (HumanoidSimple));
   BOOST_REQUIRE (device);
   device->rootJoint()->lowerBound (0, -1);
   device->rootJoint()->lowerBound (1, -1);
@@ -736,9 +736,9 @@ BOOST_AUTO_TEST_CASE(by_substitution_serialization)
   device->rootJoint()->upperBound (0,  1);
   device->rootJoint()->upperBound (1,  1);
   device->rootJoint()->upperBound (2,  1);
-  JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
-             ee2 = device->getJointByName ("RAnkleRoll"),
-             ee3 = device->getJointByName ("LWristPitch");
+  JointPtr_t ee1 = device->getJointByName ("rleg5_joint"),
+             ee2 = device->getJointByName ("lleg5_joint"),
+             ee3 = device->getJointByName ("larm5_joint");
 
   Configuration_t q = device->currentConfiguration (),
                   qrand = ::pinocchio::randomConfiguration(device->model());
@@ -925,8 +925,7 @@ BOOST_AUTO_TEST_CASE (rightHandSide)
 BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
 {
   // Create a kinematic chain
-  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
-      hpp::pinocchio::unittest::HumanoidSimple);
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(HumanoidSimple);
   JointPtr_t root = device->rootJoint (),
              ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
@@ -1014,8 +1013,7 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
 BOOST_AUTO_TEST_CASE (merge)
 {
   // Create a kinematic chain
-  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
-      hpp::pinocchio::unittest::HumanoidSimple);
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(HumanoidSimple);
   JointPtr_t root = device->rootJoint (),
              ee1 = device->getJointByName ("lleg5_joint"),
              ee2 = device->getJointByName ("rleg5_joint");
