@@ -29,6 +29,7 @@
 #include <hpp/pinocchio/device.hh>
 
 #include <hpp/constraints/serialization.hh>
+#include "../serialization.hh"
 
 namespace hpp {
   namespace constraints {
@@ -235,9 +236,9 @@ namespace hpp {
       ar & boost::serialization::make_nvp("base",
           boost::serialization::base_object<DifferentiableFunction>(*this));
       ar & BOOST_SERIALIZATION_NVP(robot_);
-      ar & BOOST_SERIALIZATION_NVP(parentJoint_);
-      ar & BOOST_SERIALIZATION_NVP(joint1_);
-      ar & BOOST_SERIALIZATION_NVP(joint2_);
+      internal::serialize_joint (ar, "parentJoint_", parentJoint_);
+      internal::serialize_joint (ar, "joint1_",      joint1_);
+      internal::serialize_joint (ar, "joint2_",      joint2_);
       ar & BOOST_SERIALIZATION_NVP(frame1_);
       ar & BOOST_SERIALIZATION_NVP(frame2_);
 

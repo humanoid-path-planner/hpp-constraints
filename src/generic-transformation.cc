@@ -29,7 +29,8 @@
 
 #include <hpp/constraints/macros.hh>
 
-#include <../src/generic-transformation/helper.hh>
+#include "generic-transformation/helper.hh"
+#include "serialization.hh"
 
 namespace hpp {
   namespace constraints {
@@ -295,7 +296,7 @@ inline void serialize(Archive & ar, GenericTransformationModel<false>& m,
     const unsigned int version)
 {
   (void) version;
-  ar & _make_nvp(joint2);
+  hpp::constraints::internal::serialize_joint (ar, "joint2", m.joint2);
   ar & _make_nvp(R1isID);
   ar & _make_nvp(R2isID);
   ar & _make_nvp(t1isZero);
@@ -316,7 +317,7 @@ inline void serialize(Archive & ar,
   (void) version;
   ar & make_nvp("base",
       boost::serialization::base_object<GenericTransformationModel<false> > (m));
-  ar & _make_nvp(joint1);
+  hpp::constraints::internal::serialize_joint (ar, "joint1", m.joint1);
 }
 } // namespace serialization
 } // namespace boost

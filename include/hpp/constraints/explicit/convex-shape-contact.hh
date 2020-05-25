@@ -18,6 +18,7 @@
 #define HPP_CONSTRAINTS_EXPLICIT_CONVEX_SHAPE_CONTACT_HH
 
 #include <hpp/constraints/explicit.hh>
+#include <boost/tuple/tuple.hpp>
 
 namespace hpp {
   namespace constraints {
@@ -25,7 +26,7 @@ namespace hpp {
       class HPP_CONSTRAINTS_DLLAPI ConvexShapeContact : public Explicit
       {
       public:
-        typedef std::tuple<ImplicitPtr_t, ImplicitPtr_t, ExplicitPtr_t>
+        typedef boost::tuple<ImplicitPtr_t, ImplicitPtr_t, ExplicitPtr_t>
           Constraints_t;
         /// Copy object and return shared pointer to copy
         virtual ImplicitPtr_t copy () const;

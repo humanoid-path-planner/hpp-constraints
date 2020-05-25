@@ -55,12 +55,12 @@ namespace hpp {
                     (name, robot, floorSurfaces, objectSurfaces));
         functions.first->setNormalMargin(margin);
         // Contact constraint (= 0)
-        std::get<0>(result) = Implicit::create(functions.first, 5*EqualToZero);
+        boost::get<0>(result) = Implicit::create(functions.first, 5*EqualToZero);
         // Contact constraint complement (= rhs)
-        std::get<1>(result) = Implicit::create
+        boost::get<1>(result) = Implicit::create
           (functions.second, ComparisonTypes_t(functions.second->outputSize(),
             constraints::Equality));
-        std::get<2>(result) = create(name + "/hold", robot, floorSurfaces,
+        boost::get<2>(result) = create(name + "/hold", robot, floorSurfaces,
                                      objectSurfaces, margin);
         return result;
       }

@@ -916,7 +916,8 @@ namespace hpp {
         ar & BOOST_SERIALIZATION_NVP(constraints_);
         std::vector<std::size_t> priorities(constraints_.size());
         for (std::size_t i = 0; i < constraints_.size(); ++i) {
-          auto c = priority_.find(constraints_[i]->functionPtr());
+          std::map<DifferentiableFunctionPtr_t, std::size_t>::const_iterator c =
+            priority_.find(constraints_[i]->functionPtr());
           if (c == priority_.end())
             priorities[i] = 0;
           else
