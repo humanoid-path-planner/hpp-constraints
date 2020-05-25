@@ -46,7 +46,7 @@ using Eigen::RowBlockIndices;
 using Eigen::ColBlockIndices;
 using Eigen::BlockIndex;
 
-using hpp::pinocchio::unittest::HumanoidRomeo;
+using hpp::pinocchio::unittest::HumanoidSimple;
 using hpp::pinocchio::unittest::makeDevice;
 using hpp::constraints::AffineFunction;
 using hpp::constraints::size_type;
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(jacobian2)
 
 BOOST_AUTO_TEST_CASE(locked_joints)
 {
-  DevicePtr_t device (makeDevice (HumanoidRomeo));
+  DevicePtr_t device (makeDevice (HumanoidSimple));
   device->controlComputation((hpp::pinocchio::Computation_t) (hpp::pinocchio::JOINT_POSITION | hpp::pinocchio::JACOBIAN));
 
   BOOST_REQUIRE (device);
@@ -438,9 +438,9 @@ BOOST_AUTO_TEST_CASE(locked_joints)
   device->rootJoint()->upperBound (1,  1);
   device->rootJoint()->upperBound (2,  1);
 
-  JointPtr_t ee1 = device->getJointByName ("LAnkleRoll"),
-             ee2 = device->getJointByName ("RAnkleRoll"),
-             ee3 = device->getJointByName ("RAnklePitch");
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint"),
+             ee3 = device->getJointByName ("rleg4_joint");
 
   LockedJointPtr_t l1 (LockedJoint::create
                        (ee1, ee1->configurationSpace ()->neutral ()));
