@@ -19,8 +19,8 @@
 #include "hpp/constraints/generic-transformation.hh"
 
 #include <sstream>
-#include <boost/archive/polymorphic_xml_iarchive.hpp>
-#include <boost/archive/polymorphic_xml_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
@@ -187,9 +187,9 @@ BOOST_AUTO_TEST_CASE (multithread) {
 }
 
 struct iarchive :
-  boost::archive::polymorphic_xml_iarchive, hpp::serialization::archive_device_wrapper
+  boost::archive::xml_iarchive, hpp::serialization::archive_device_wrapper
 {
-  iarchive(std::istream& is) : boost::archive::polymorphic_xml_iarchive (is) {}
+  iarchive(std::istream& is) : boost::archive::xml_iarchive (is) {}
 };
 
 BOOST_AUTO_TEST_CASE (serialization) {
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE (serialization) {
 
     std::stringstream ss;
     {
-      boost::archive::polymorphic_xml_oarchive oa(ss);
+      boost::archive::xml_oarchive oa(ss);
       oa << boost::serialization::make_nvp("function", f);
     }
 
