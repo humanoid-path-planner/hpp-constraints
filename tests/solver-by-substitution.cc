@@ -731,15 +731,11 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   BOOST_CHECK(solver.isSatisfied(q0));
 
   vector_t v (vector_t::Random(device->numberDof()));
-  std::cout << "v=" << hpp::pinocchio::displayConfig(v) << std::endl;
   v *= .1;
-  std::cout << "v=" << hpp::pinocchio::displayConfig(v) << std::endl;
   Configuration_t qrand(q0);
   LiegroupElement g(qrand, device->configSpace());
   g += v;
   qrand = g.vector();
-  std::cout << "q0=" << hpp::pinocchio::displayConfig(q0) << std::endl;
-  std::cout << "qrand=" << hpp::pinocchio::displayConfig(qrand) << std::endl;
   BOOST_CHECK_EQUAL(solver.solve<Backtracking  >(qrand),
                     BySubstitution::SUCCESS);
   qrand = g.vector();
