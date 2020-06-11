@@ -409,13 +409,26 @@ matrix3_t exponential (const vector3_t& aa)
   return R;
 }
 
+// Pose of a joint in root joint frame
+//
+// This differentiable function returns as ouput an element of R3xSO3
+// corresponding to the pose of a joint J in the root joint frame of a robot.
+//
 class ExplicitTransformation : public DifferentiableFunction
 {
   public:
     JointPtr_t joint_;
     size_type in_, inDer_;
+    // log_{SO(3)} (rootJoint^{-1}.joint)
     RelativeTransformationPtr_t rt_;
 
+    // Constructor
+    // joint: joint J the pose of which is computed with respect to root joint.
+    // [in:in+l]         : interval of robot configuration variables that
+    //                     modify the position of J with respect to the root
+    //                     joint.
+    // [inDer:inDer+lDer]: interval of robot velocity variables that modify the
+    //                     position of J with respect to the root joint.
     ExplicitTransformation(JointPtr_t joint, size_type in, size_type l,
                            size_type inDer, size_type lDer)
       : DifferentiableFunction(l, lDer,
@@ -456,7 +469,7 @@ class ExplicitTransformation : public DifferentiableFunction
       ret.addRow (0, 6);
       return ret;
     }
-
+    // Fill input variables with arg. Other variables are set to neutral
     vector_t config (vectorIn_t arg) const
     {
       vector_t q = joint_->robot()->neutralConfiguration();
@@ -466,6 +479,9 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
+    // Compute relative position of joint_ wrt root joint
+    // arg: input variables,
+    // result: R3xSO3 element containing the result
     void impl_compute (LiegroupElementRef result,
                        vectorIn_t arg) const
     {
@@ -667,7 +683,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
 
   solver.add
     (Implicit::create
-     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2),
+     (Orientation::create ("Orientation LAnkleRoll" , device, ee2, tf2),
       3*EqualToZero));
   solver.add
      (Implicit::create
@@ -693,6 +709,10 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
           parent->rankInVelocity()      + parent->numberDof () - 6));
   }
 
+  // Add an explicit constraint that computes the pose of the root joint (FF)
+  // output variables are [0:7] for configurations and [0:6] for velocities
+  // output value is equal to relative pose of "lleg6_joint" with respect to
+  // the root joint.
   BOOST_CHECK(solver.explicitConstraintSet().add
               (Explicit::create (device->configSpace (),
                                  et, et->inArg().indices (),
