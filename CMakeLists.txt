@@ -145,7 +145,7 @@ ENDIF(USE_QPOASES)
 INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
 
 SEARCH_FOR_BOOST()
-find_package(Boost REQUIRED COMPONENTS math unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 ADD_SUBDIRECTORY(tests)
 
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
