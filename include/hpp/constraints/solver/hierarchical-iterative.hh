@@ -17,6 +17,7 @@
 #ifndef HPP_CONSTRAINTS_SOLVER_HIERARCHICAL_ITERATIVE_HH
 #define HPP_CONSTRAINTS_SOLVER_HIERARCHICAL_ITERATIVE_HH
 
+#include <map>
 #include <boost/function.hpp>
 
 #include <hpp/util/serialization-fwd.hh>
