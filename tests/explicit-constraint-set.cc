@@ -100,7 +100,7 @@ namespace Eigen {
 
 // Explicit expression of variables
 //   - [idxOut:idxOut+length] with respect to
-//   - [idxOut:idxOut+length]
+//   - [idxIn:idxIn+length]
 class TestFunction : public AffineFunction
 {
   public:
