@@ -15,6 +15,7 @@
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
 #define BOOST_TEST_MODULE SOLVER_BY_SUBSTITUTION
+#include <Eigen/Geometry>
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
 
@@ -79,6 +80,7 @@ using hpp::constraints::EqualToZero;
 using hpp::constraints::Equality;
 using hpp::constraints::LockedJoint;
 using hpp::constraints::solver::lineSearch::Backtracking;
+using hpp::constraints::solver::lineSearch::Constant;
 using hpp::constraints::solver::lineSearch::ErrorNormBased;
 using hpp::constraints::solver::lineSearch::FixedSequence;
 using hpp::pinocchio::unittest::HumanoidSimple;
@@ -409,13 +411,27 @@ matrix3_t exponential (const vector3_t& aa)
   return R;
 }
 
+// Pose of a joint in root joint frame
+//
+// This differentiable function returns as ouput an element of R3xSO3
+// corresponding to the pose of a joint J in the root joint frame of a robot.
+// The input is the vector of configuration variables that move the joint with
+// respect to the root joint.
 class ExplicitTransformation : public DifferentiableFunction
 {
   public:
     JointPtr_t joint_;
     size_type in_, inDer_;
+    // log_{SO(3)} (rootJoint^{-1}.joint)
     RelativeTransformationPtr_t rt_;
 
+    // Constructor
+    // joint: joint J the pose of which is computed with respect to root joint.
+    // [in:in+l]         : interval of robot configuration variables that
+    //                     modify the position of J with respect to the root
+    //                     joint.
+    // [inDer:inDer+lDer]: interval of robot velocity variables that modify the
+    //                     position of J with respect to the root joint.
     ExplicitTransformation(JointPtr_t joint, size_type in, size_type l,
                            size_type inDer, size_type lDer)
       : DifferentiableFunction(l, lDer,
@@ -456,7 +472,7 @@ class ExplicitTransformation : public DifferentiableFunction
       ret.addRow (0, 6);
       return ret;
     }
-
+    // Fill input variables with arg. Other variables are set to neutral
     vector_t config (vectorIn_t arg) const
     {
       vector_t q = joint_->robot()->neutralConfiguration();
@@ -466,6 +482,9 @@ class ExplicitTransformation : public DifferentiableFunction
       // joint_->robot()->computeForwardKinematics();
     }
 
+    // Compute relative position of joint_ wrt root joint
+    // arg: vector of configuration variables that move joint_ in root joint.
+    // result: R3xSO3 element containing the result
     void impl_compute (LiegroupElementRef result,
                        vectorIn_t arg) const
     {
@@ -641,25 +660,41 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
 {
   DevicePtr_t device (makeDevice (HumanoidSimple));
   BOOST_REQUIRE (device);
+  BOOST_CHECK_EQUAL(device->rootJoint()->positionInParentFrame(),
+                    Transform3f::Identity());
   device->rootJoint()->lowerBound (0, -1);
   device->rootJoint()->lowerBound (1, -1);
   device->rootJoint()->lowerBound (2, -1);
   device->rootJoint()->upperBound (0,  1);
   device->rootJoint()->upperBound (1,  1);
   device->rootJoint()->upperBound (2,  1);
-  JointPtr_t ee1 = device->getJointByName ("rleg5_joint"),
-             ee2 = device->getJointByName ("lleg5_joint"),
-             ee3 = device->getJointByName ("larm5_joint");
+  JointPtr_t ee1 = device->getJointByName ("rleg6_joint"),
+             ee2 = device->getJointByName ("lleg6_joint"),
+             ee3 = device->getJointByName ("larm6_joint");
 
-  Configuration_t q = device->currentConfiguration (),
-                  qrand = ::pinocchio::randomConfiguration(device->model());
+  Configuration_t q0 = device->neutralConfiguration ();
+  device->currentConfiguration (q0);
+  device->computeForwardKinematics ();
+
+  JointPtr_t lleg6Joint (device->getJointByName("lleg6_joint"));
+  BOOST_CHECK_EQUAL(lleg6Joint->rankInConfiguration(), 12);
+  BOOST_CHECK_EQUAL(lleg6Joint->rankInVelocity()     , 11);
+  BOOST_CHECK_EQUAL(lleg6Joint->configSize()         ,  1);
+  BOOST_CHECK_EQUAL(lleg6Joint->numberDof()          ,  1);
+  // Compute a configuration that satisfies the constaints.
+  // Compute relative position of "lleg6_joint" wrt root
+  Transform3f Mlleg6(lleg6Joint->currentTransformation());
+  Transform3f Mroot(device->rootJoint()->currentTransformation());
+  Transform3f M (Mroot.inverse()*Mlleg6);
+  q0.segment<3>(0) = M.translation();
+  q0.segment<4>(3) = Eigen::Quaternion<value_type>(M.rotation()).coeffs();
 
   BySubstitution solver(device->configSpace ());
-  solver.maxIterations(20);
-  solver.errorThreshold(1e-3);
+  solver.maxIterations(40);
+  solver.errorThreshold(1e-4);
   solver.saturation(boost::make_shared<saturation::Device>(device));
 
-  device->currentConfiguration (q);
+  device->currentConfiguration (q0);
   device->computeForwardKinematics ();
   Transform3f tf1 (ee1->currentTransformation ());
   Transform3f tf2 (ee2->currentTransformation ());
@@ -667,32 +702,23 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
 
   solver.add
     (Implicit::create
-     (Orientation::create ("Orientation RAnkleRoll" , device, ee2, tf2),
+     (Orientation::create ("Orientation lleg6_joint" , device, ee2, tf2),
       3*EqualToZero));
   solver.add
      (Implicit::create
-      (Orientation::create ("Orientation LWristPitch", device, ee3, tf3),
+      (Orientation::create ("Orientation larm6_joint", device, ee3, tf3),
        3*EqualToZero));
 
   BOOST_CHECK(solver.numberStacks() == 1);
 
   ExplicitTransformationPtr_t et;
   {
-    // Find a joint such that the config parameters for the chain from the root
-    // joint to it are the n first parameters (i.e. q.segment(0, n)).
-    // We take the one which gives the longest block
-    JointPtr_t parent = device->rootJoint(), current = device->getJointAtConfigRank(7);
-    while (current->parentJoint()->index() == parent->index()) {
-      parent = current;
-      current = device->getJointAtConfigRank(current->rankInConfiguration() + current->configSize());
-    }
-    // std::cout << parent->name() << std::endl;
-
-    et.reset (new ExplicitTransformation (parent, 7, 6,
-          parent->rankInConfiguration() + parent->configSize() - 7,
-          parent->rankInVelocity()      + parent->numberDof () - 6));
+    et.reset (new ExplicitTransformation (lleg6Joint, 7, 6, 6, 6));
   }
-
+  // Add an explicit constraint that computes the pose of the root joint (FF)
+  // output variables are [0:7] for configurations and [0:6] for velocities
+  // output value is equal to relative pose of "lleg6_joint" with respect to
+  // the root joint.
   BOOST_CHECK(solver.explicitConstraintSet().add
               (Explicit::create (device->configSpace (),
                                  et, et->inArg().indices (),
@@ -702,22 +728,24 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   solver.explicitConstraintSetHasChanged();
   BOOST_TEST_MESSAGE(solver << '\n');
 
-  // BOOST_CHECK_EQUAL(solver.solve<lineSearch::Backtracking  >(q), BySubstitution::SUCCESS);
+  BOOST_CHECK(solver.isSatisfied(q0));
 
-  Configuration_t tmp = qrand;
+  vector_t v (vector_t::Random(device->numberDof()));
+  v *= .1;
+  Configuration_t qrand(q0);
+  LiegroupElement g(qrand, device->configSpace());
+  g += v;
+  qrand = g.vector();
   BOOST_CHECK_EQUAL(solver.solve<Backtracking  >(qrand),
                     BySubstitution::SUCCESS);
-  qrand = tmp;
+  qrand = g.vector();
   BOOST_CHECK_EQUAL(solver.solve<ErrorNormBased>(qrand),
                     BySubstitution::SUCCESS);
-  qrand = tmp;
+  qrand = g.vector();
   BOOST_CHECK_EQUAL(solver.solve<FixedSequence>(qrand),
                     BySubstitution::SUCCESS);
-
-  vector_t dq (device->numberDof());
-  dq.setRandom();
-  qrand = tmp;
-  solver.projectVectorOnKernel (qrand, dq, tmp);
+  BOOST_CHECK_EQUAL(solver.solve<Constant>(qrand),
+                    BySubstitution::SUCCESS);
 }
 
 struct iarchive :

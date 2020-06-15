@@ -98,6 +98,9 @@ namespace Eigen {
   }
 } // namespace Eigen
 
+// Explicit expression of variables
+//   - [idxOut:idxOut+length] with respect to
+//   - [idxIn:idxIn+length]
 class TestFunction : public AffineFunction
 {
   public:
@@ -108,6 +111,7 @@ class TestFunction : public AffineFunction
         idxIn_ (idxIn), idxOut_ (idxOut), length_ (length)
     {}
 
+    // return configuration input interval
     ExplicitConstraintSet::RowBlockIndices inArg () const
     {
       ExplicitConstraintSet::RowBlockIndices ret;
@@ -115,6 +119,7 @@ class TestFunction : public AffineFunction
       return ret;
     }
 
+    // return configuration output interval
     ExplicitConstraintSet::RowBlockIndices outArg () const
     {
       ExplicitConstraintSet::RowBlockIndices ret;
@@ -122,6 +127,7 @@ class TestFunction : public AffineFunction
       return ret;
     }
 
+    // return velocity input interval
     ExplicitConstraintSet::ColBlockIndices inDer () const
     {
       ExplicitConstraintSet::ColBlockIndices ret;
@@ -129,6 +135,7 @@ class TestFunction : public AffineFunction
       return ret;
     }
 
+    // return velocity output interval
     ExplicitConstraintSet::RowBlockIndices outDer () const
     {
       ExplicitConstraintSet::RowBlockIndices ret;

@@ -186,7 +186,7 @@ namespace hpp {
       append(inArg, idxArg);
       while (!idxArg.empty()) {
         // iArg must be computed before f
-        size_type iArg = idxArg.back();
+        size_type iArg = idxArg.front();
         idxArg.pop();
         // iArg is an output of the new function -> new function should be
         // computed earlier -> incompatible.
