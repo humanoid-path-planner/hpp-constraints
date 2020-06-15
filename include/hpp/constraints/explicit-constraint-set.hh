@@ -323,8 +323,8 @@ namespace hpp {
             as a projector that maps to any \f$\mathbf{p}\in\mathcal{C}\f$,
             \f$\mathbf{q} = E(\mathbf{p})\f$ defined by
             \f{eqnarray}
-            \mathbf{q}_{\bar{out}} &=& \mathbf{p}_{out} \\
-            \mathbf{q}_{out} &=& g^{-1} (f (\mathbf{p}_{in}) + rhs)
+            \mathbf{q}_{\bar{out}} &=& \mathbf{p}_{\bar{out}} \\
+            \mathbf{q}_{out} &=& f (\mathbf{p}_{in}) + rhs
             \f}
 
             \warning it is assumed solve(q) has been called before.
