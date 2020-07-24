@@ -1,5 +1,14 @@
                                                                 -*- outline -*-
-New in ...
+New in 4.10.0
+* ConvexShapeContact classes have been improved.
+  - stable position of objects is now unique for any right hand side value of
+    the complement constraint.
+* Use cmake to handle dependencies (cmake submodule).
+* Architecture of constraint classes has been simplified.
+* Use Romeo instead of Baxter in tests.
+* Enable users to use GenericTransformation with a joint2 equal to 0x0.
+* Add serialization functions.
+New in 4.9.0
 * Computation of constraint right hand side have been fixed
   - in ExplicitConstraintSet, the computation was wrong, it has been fixed,
   - in Implicit, the computation has been made similar to the one in
