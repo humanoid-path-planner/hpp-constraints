@@ -39,8 +39,6 @@ namespace hpp {
         ///               constrained,
         /// \param frame1 position of a fixed frame in joint 1,
         /// \param frame2 position of a fixed frame in joint 2,
-        /// \param mask vector of 6 boolean defining which coordinates of the
-        ///        error vector to take into account.
         /// \param comp vector of comparison types
         /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
         ///       frame.
@@ -91,8 +89,6 @@ namespace hpp {
         ///               constrained,
         /// \param frame1 position of a fixed frame in joint 1,
         /// \param frame2 position of a fixed frame in joint 2,
-        /// \param mask vector of 6 boolean defining which coordinates of the
-        ///        error vector to take into account.
         /// \param comp vector of comparison types
         /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
         ///       frame.
@@ -100,7 +96,6 @@ namespace hpp {
                       const JointConstPtr_t& joint1,
                       const JointConstPtr_t& joint2,
                       const Transform3f& frame1, const Transform3f& frame2,
-                      std::vector <bool> mask = std::vector<bool>(6,true),
                       ComparisonTypes_t comp = ComparisonTypes_t());
 
         /// Copy constructor
