@@ -242,8 +242,8 @@ namespace hpp {
       ///         the relative pose constraint corresponding to contact of
       ///         surfaces ifloor with iobject.
       void computeRelativePoseRightHandSide
-        (vectorIn_t rhs, std::size_t& ifloor, std::size_t& iobject,
-         vectorOut_t relativePoseRhs) const;
+        (LiegroupElementConstRef rhs, std::size_t& ifloor, std::size_t& iobject,
+         LiegroupElementRef relativePoseRhs) const;
     protected:
       /// Constructor
       /// \param name name of the sibling ConvexShapeContact constraint,

@@ -101,21 +101,23 @@ namespace hpp {
     }
 
     void Explicit::outputValue(LiegroupElementRef result, vectorIn_t qin,
-                               vectorIn_t rhs) const
+                               LiegroupElementConstRef rhs) const
     {
       explicitFunction ()->value(result, qin);
-      result += rhs;
+      assert(rhs.space()->isVectorSpace());
+      result += rhs.vector();
     }
 
     void Explicit::jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
-                                       f_value, vectorIn_t rhs,
+                                       f_value, LiegroupElementConstRef rhs,
                                        matrixOut_t jacobian) const
     {
+      assert(rhs.space()->isVectorSpace());
       explicitFunction ()->jacobian(jacobian, qin);
-      if (!rhs.isZero())
+      if (!rhs.vector().isZero())
       {
         explicitFunction ()->outputSpace ()->dIntegrate_dq
-          <pinocchio::DerivativeTimesInput> (f_value, rhs, jacobian);
+          <pinocchio::DerivativeTimesInput> (f_value, rhs.vector(), jacobian);
       }
     }
 

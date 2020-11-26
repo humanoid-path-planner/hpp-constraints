@@ -211,7 +211,7 @@ namespace hpp {
       /// f \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right) + rhs
       /// \f}
       virtual void outputValue(LiegroupElementRef result, vectorIn_t qin,
-                               vectorIn_t rhs) const;
+                               LiegroupElementConstRef rhs) const;
 
       /// Compute Jacobian of output value
       ///
@@ -224,7 +224,7 @@ namespace hpp {
       ///        recomputation,
       /// \param rhs right hand side (of implicit formulation).
       virtual void jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
-                                       f_value, vectorIn_t rhs,
+                                       f_value, LiegroupElementConstRef rhs,
                                        matrixOut_t jacobian) const;
     protected:
       /// Constructor

@@ -33,6 +33,7 @@ namespace hpp {
       assert (!arg.hasNaN());
 
       explicit_.solve(arg);
+      assert (!arg.hasNaN());
 
       size_type errorDecreased = 3, iter = 0;
       value_type previousSquaredNorm;
@@ -91,6 +92,7 @@ namespace hpp {
         // 3. Apply line search algorithm for the computed step
         lineSearch (*this, arg, dq_);
         explicit_.solve(arg);
+	assert (!arg.hasNaN());
 
         // 4. Evaluate the error at the new point.
 	computeValue<true> (arg);

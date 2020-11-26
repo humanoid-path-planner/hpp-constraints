@@ -632,8 +632,8 @@ BOOST_AUTO_TEST_CASE(RelativePose)
   // Set joint bounds
   hpp::pinocchio::JointPtr_t joint1 (device->jointAt(0));
   hpp::pinocchio::JointPtr_t joint2 (device->jointAt(1));
-  vector_t low (device->configSize()); low.fill(-0.0001);
-  vector_t  up (device->configSize());  up.fill( 0.0001);
+  vector_t low (device->configSize()); low.fill(-1);
+  vector_t  up (device->configSize());  up.fill( 1);
 
   hpp::constraints::Transform3f frame1(pinocchio::SE3::Random());
   hpp::constraints::Transform3f frame2(pinocchio::SE3::Random());
@@ -675,22 +675,18 @@ BOOST_AUTO_TEST_CASE(RelativePose)
       // Get value of function h for new value of q -> rhs2_impl
       LiegroupElement rhs2_impl (constraint->function().outputSpace());
       constraint->function().value(rhs2_impl, q);
-      std::cout << "            \t";
-      for (size_type j=0; j < (size_type)comp.size(); ++j) {
-        std::cout << (comp[j] == Equality ? " = \t" :
-                      " =0\t");
-      }
-      std::cout << std::endl;
-      std::cout << "rhs0_impl = " << rhs0_impl.vector().transpose() << std::endl;
-      std::cout << "rhs2_impl = " << rhs2_impl.vector().transpose() << std::endl;
+      vector_t logRhs0_impl = log(rhs0_impl);
+      vector_t logRhs2_impl = log(rhs2_impl);
+      assert(logRhs0_impl.size()==6);
+      assert(logRhs2_impl.size()==6);
       // For each coordinate check that
       // rhs2_impl [j] == 0 if comp[i] is EqualToZero
       // rhs2_impl [j] == rhs0_impl [j] if comp[i] is Equality
       for (size_type j=0; j<6; ++j){
         BOOST_CHECK(((comp[j] == EqualToZero) &&
-                     (fabs(rhs2_impl.vector()[j]) < 1e-10))
+                     (fabs(logRhs2_impl[j]) < 1e-10))
                     || ((comp[j] == Equality) &&
-                        (fabs(rhs2_impl.vector()[j] - rhs0_impl.vector()[j])
+                        (fabs(logRhs2_impl[j] - logRhs0_impl[j])
                          < 1e-10)));
       }
     }

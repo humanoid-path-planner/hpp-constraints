@@ -354,35 +354,39 @@ namespace hpp {
     }
 
     void ConvexShapeContactComplement::computeRelativePoseRightHandSide
-    (vectorIn_t rhs, std::size_t& ifloor, std::size_t& iobject,
-     vectorOut_t relativePoseRhs) const
+    (LiegroupElementConstRef rhs, std::size_t& ifloor, std::size_t& iobject,
+     LiegroupElementRef relativePoseRhs) const
     {
+      assert(*(rhs.space()) == *LiegroupSpace::Rn(8));
       value_type M(sibling_->radius());
-      relativePoseRhs.fill(sqrt(-1));
+      vector8_t logRhs(log(rhs));
+      vector6_t logRelativePoseRhs; logRelativePoseRhs.fill(sqrt(-1));
       // x
-      relativePoseRhs[0] = rhs[0];
+      logRelativePoseRhs[0] = logRhs[0];
       // ry, rz
-      relativePoseRhs.segment<2>(4) = rhs.segment<2>(3);
+      logRelativePoseRhs.segment<2>(4) = logRhs.segment<2>(3);
       // rx
-      relativePoseRhs[3] = rhs[7];
-      value_type Y(rhs[5]);
-      value_type Z(rhs[6]);
+      logRelativePoseRhs[3] = logRhs[7];
+      value_type Y(logRhs[5]);
+      value_type Z(logRhs[6]);
       assert(floor(Y/(2*M) + .5) >= 0);
       ifloor = (std::size_t)(floor(Y/(2*M) + .5));
       assert(floor(Z/(2*M) + .5) >= 0);
       iobject = (std::size_t)(floor(Z/(2*M) + .5));
-      if ((rhs[1] == 0) && (rhs[2] == 0))
+      if ((logRhs[1] == 0) && (logRhs[2] == 0))
       {
         // inside
-        relativePoseRhs[1] = Y - (value_type)(2*ifloor)*M;
-        relativePoseRhs[2] = Z - (value_type)(2*iobject)*M;
+        logRelativePoseRhs[1] = Y - (value_type)(2*ifloor)*M;
+        logRelativePoseRhs[2] = Z - (value_type)(2*iobject)*M;
       }
       else
       {
         // outside
-        relativePoseRhs.segment<2>(1) = rhs.segment<2>(1);
+        logRelativePoseRhs.segment<2>(1) = logRhs.segment<2>(1);
       }
-      assert(!relativePoseRhs.hasNaN());
+      assert(!logRelativePoseRhs.hasNaN());
+      relativePoseRhs = LiegroupSpace::R3xSO3()->exp(logRelativePoseRhs);
+      assert(*(relativePoseRhs.space()) == *LiegroupSpace::R3xSO3());
     }
         
 

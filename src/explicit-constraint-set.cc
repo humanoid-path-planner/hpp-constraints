@@ -72,9 +72,8 @@ namespace hpp {
         const DifferentiableFunction& h (d.constraint->function ());
         h.value (d.h_value, arg);
         size_type nRows (h.outputSpace ()->nv ());
-        assert (*(d.h_value.space ()) == *(LiegroupSpace::Rn
-                                           (d.rhs_implicit.size ())));
-        error.segment (row, nRows) = d.h_value.vector () - d.rhs_implicit;
+        assert (*(d.h_value.space ()) == *(d.rhs_implicit.space ()));
+        error.segment (row, nRows) = d.h_value - d.rhs_implicit;
         squaredNorm = std::max(squaredNorm,
             error.segment (row, nRows).squaredNorm ());
         row += nRows;
@@ -102,9 +101,8 @@ namespace hpp {
           const DifferentiableFunction& h (d.constraint->function ());
           h.value (d.h_value, arg);
           assert (error.size () == h.outputSpace ()->nv ());
-          assert (*(d.h_value.space ()) == *(LiegroupSpace::Rn
-                                             (d.rhs_implicit.size ())));
-          error = d.h_value.vector () - d.rhs_implicit;
+          assert (*(d.h_value.space ()) == *(d.rhs_implicit.space ()));
+          error = d.h_value - d.rhs_implicit;
           squaredNorm = error.squaredNorm ();
           constraintFound = true;
           return squaredNorm < squaredErrorThreshold_;
@@ -126,7 +124,7 @@ namespace hpp {
     ExplicitConstraintSet::Data::Data
     (const ExplicitPtr_t& _constraint) :
       constraint (_constraint), rhs_implicit
-      (vector_t::Zero(_constraint->functionPtr ()->outputSpace()->nv())),
+      (_constraint->functionPtr ()->outputSpace()->neutral()),
       h_value (_constraint->functionPtr ()->outputSpace()),
       f_value (_constraint->explicitFunction()->outputSpace ()),
       res_qout (_constraint->explicitFunction ()->outputSpace ())
@@ -205,7 +203,7 @@ namespace hpp {
       RowBlockIndices (constraint->outputVelocity ()).lview(derFunction_).
         setConstant(idx);
       data_.push_back (Data (constraint));
-      errorSize_ += data_.back().rhs_implicit.size();
+      errorSize_ += data_.back().rhs_implicit.space()->nv();
 
       // Update the free dofs
       outArgs_.addRow(outIdx.first, outIdx.second);
@@ -264,6 +262,7 @@ namespace hpp {
       d.constraint->outputValue(d.res_qout, d.qin, d.rhs_implicit);
       RowBlockIndices (d.constraint->outputConf ()).lview(arg) =
         d.res_qout.vector();
+      assert (!arg.hasNaN());
     }
 
     void ExplicitConstraintSet::jacobian
@@ -350,8 +349,12 @@ namespace hpp {
       // compute right hand side of implicit formulation that might be
       // different (RelativePose)
       d.constraint->function ().value (d.h_value, arg);
-      vector_t rhs = d.h_value.vector ();
-      d.equalityIndices.lview(d.rhs_implicit) = d.equalityIndices.rview(rhs);
+      vector_t logRhs(log(d.h_value));
+      // Equality indices apply on the log of the right hand side
+      // This is necessary for constraints built with RelativeTransformationSE3.
+      vector_t logRhsImplicit(vector_t::Zero(d.rhs_implicit.space()->nv()));
+      d.equalityIndices.lview(logRhsImplicit) = d.equalityIndices.rview(logRhs);
+      d.rhs_implicit = d.rhs_implicit.space()->exp(logRhsImplicit);
     }
 
     void ExplicitConstraintSet::rightHandSide (vectorIn_t rhs)
@@ -359,14 +362,21 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < data_.size (); ++i) {
         Data& d = data_[i];
-
-        d.equalityIndices.lview(d.rhs_implicit) =
-          d.equalityIndices.rview (rhs.segment(row, d.rhs_implicit.size ()));
+	// comparison types are applied to the log of the right hand side.
+	// Initialize a zero vector of velocity size.
+	vector_t logRhsImplicit(vector_t::Zero(d.rhs_implicit.space()->nv()));
+	// Build liegroupElement from value extracted from input rhs
+	LiegroupElementConstRef inputRhs
+	  (rhs.segment(row, d.rhs_implicit.space()->nq()),
+	   d.rhs_implicit.space());
+        d.equalityIndices.lview(logRhsImplicit) =
+          d.equalityIndices.rview (log(inputRhs));
         ComparisonTypes_t ct (d.constraint->comparisonType ());
         for (std::size_t i=0; i < ct.size (); ++i) {
-          assert (ct [i] == Equality || rhs [row + i] == 0);
+          assert (ct [i] == Equality || logRhsImplicit[i] == 0);
         }
-        row += d.rhs_implicit.size ();
+	d.rhs_implicit = d.rhs_implicit.space()->exp(logRhsImplicit);
+        row += d.rhs_implicit.space()->nq();
       }
       assert (row == rhs.size());
     }
@@ -389,7 +399,7 @@ namespace hpp {
       for (std::size_t i = 0; i < data_.size (); ++i) {
 	const Data& d = data_[i];
 	if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
-	  rhs = d.rhs_implicit;
+	  rhs = d.rhs_implicit.vector();
 	  return true;
 	}
       }
@@ -402,12 +412,16 @@ namespace hpp {
     {
       assert (i < (size_type) data_.size());
       Data& d = data_[i];
-      d.equalityIndices.lview (d.rhs_implicit) =
-        d.equalityIndices.rview (rhs);
+      LiegroupElementConstRef rhs_lge(rhs, d.rhs_implicit.space());
+      vector_t logRhsImplicit(vector_t::Zero(d.rhs_implicit.space()->nv()));
+      vector_t logRhsInput(log(rhs_lge));
+      d.equalityIndices.lview (logRhsImplicit) =
+	d.equalityIndices.rview (logRhsInput);
+      d.rhs_implicit = d.rhs_implicit.space()->exp(logRhsImplicit);
       ComparisonTypes_t ct (d.constraint->comparisonType ());
       for (std::size_t i=0; i < ct.size (); ++i) {
         assert (ct [i] == Equality ||
-                rhs [i] * rhs [i] < squaredErrorThreshold_);
+                logRhsInput [i] * logRhsInput [i] < squaredErrorThreshold_);
       }
     }
 
@@ -417,9 +431,9 @@ namespace hpp {
       size_type row = 0;
       for (std::size_t i = 0; i < data_.size (); ++i) {
         const Data& d = data_[i];
-        const size_type nRows = d.rhs_implicit.size ();
+        const size_type nRows = d.rhs_implicit.space()->nq();
         vector_t::SegmentReturnType seg = rhs.segment(row, nRows);
-        seg = d.rhs_implicit;
+        seg = d.rhs_implicit.vector();
         row += nRows;
       }
       assert (row == rhs.size());
@@ -430,7 +444,7 @@ namespace hpp {
     {
       size_type rhsSize = 0;
       for (std::size_t i = 0; i < data_.size (); ++i)
-        rhsSize += data_[i].rhs_implicit.size ();
+        rhsSize += data_[i].rhs_implicit.space()->nq();
       return rhsSize;
     }
 
@@ -448,7 +462,7 @@ namespace hpp {
            << " -> "
            << RowBlockIndices (d.constraint->outputConf ())
           << incendl << *d.constraint->explicitFunction ()
-          << iendl << "Rhs implicit: " << condensed(d.rhs_implicit)
+	   << iendl << "Rhs implicit: " << condensed(d.rhs_implicit.vector())
           << iendl << "Equality: " << d.equalityIndices
           << decindent;
       }

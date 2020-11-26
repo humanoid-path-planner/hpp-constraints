@@ -80,14 +80,14 @@ namespace hpp {
         return createCopy (weak_.lock ());
       }
 
-       void ConvexShapeContact::outputValue
-       (LiegroupElementRef result, vectorIn_t qin, vectorIn_t rhs) const
+       void ConvexShapeContact::outputValue(LiegroupElementRef result,
+	                   vectorIn_t qin, LiegroupElementConstRef rhs) const
        {
         assert(HPP_DYNAMIC_PTR_CAST(ConvexShapeContactHold, functionPtr()));
         ConvexShapeContactHoldPtr_t f(HPP_STATIC_PTR_CAST
                                       (ConvexShapeContactHold, functionPtr()));
         std::size_t ifloor, iobject;
-        vector6_t relativePoseRhs;
+        LiegroupElement relativePoseRhs(LiegroupSpace::R3xSO3());
         f->complement()->computeRelativePoseRightHandSide
           (rhs, ifloor, iobject, relativePoseRhs);
         // Extract input configuration of relative pose from qin
@@ -102,14 +102,14 @@ namespace hpp {
        }
 
       void ConvexShapeContact::jacobianOutputValue
-      (vectorIn_t qin, LiegroupElementConstRef, vectorIn_t rhs,
+      (vectorIn_t qin, LiegroupElementConstRef, LiegroupElementConstRef rhs,
        matrixOut_t jacobian) const
       {
         assert(HPP_DYNAMIC_PTR_CAST(ConvexShapeContactHold, functionPtr()));
         ConvexShapeContactHoldPtr_t f(HPP_STATIC_PTR_CAST
                                       (ConvexShapeContactHold, functionPtr()));
         std::size_t ifloor, iobject;
-        vector6_t relativePoseRhs;
+        LiegroupElement relativePoseRhs(LiegroupSpace::R3xSO3());
         f->complement()->computeRelativePoseRightHandSide
           (rhs, ifloor, iobject, relativePoseRhs);
         // Extract input configuration of relative pose from qin
@@ -120,7 +120,7 @@ namespace hpp {
         Eigen::RowBlockIndices relPosInputIndices(relativePose->inputConf());
         vector_t qinRelPose = relPosInputIndices.rview(q);
         assert(!qinRelPose.hasNaN());
-        LiegroupElement outputRelPose(LiegroupSpace::SE3());
+        LiegroupElement outputRelPose(LiegroupSpace::R3xSO3());
         relativePose->outputValue(outputRelPose, qinRelPose, relativePoseRhs);
         relativePose->jacobianOutputValue(qinRelPose, outputRelPose,
                                           relativePoseRhs, jacobian);

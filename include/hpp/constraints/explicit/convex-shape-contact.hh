@@ -68,13 +68,13 @@ namespace hpp {
           (const ConvexShapeContactPtr_t& other);
         /// Compute the object pose with respect
         /// \param qin input configuration variables,
-        /// \param rhs right hand side of constraint
+        /// \param rhs right hand side of constraint (of implicit formulation).
         ///
         /// The right hand side contains the following information:
         /// \li which floor surface is in contact with with object surface,
         /// \li the relative position of those surfaces.
         virtual void outputValue(LiegroupElementRef result, vectorIn_t qin,
-                                 vectorIn_t rhs) const;
+                                 LiegroupElementConstRef rhs) const;
 
         /// Compute Jacobian of output value
         ///
@@ -88,7 +88,7 @@ namespace hpp {
         /// \param rhs right hand side (of implicit formulation).
         virtual void jacobianOutputValue
           (vectorIn_t qin, LiegroupElementConstRef f_value,
-           vectorIn_t rhs, matrixOut_t jacobian) const;
+           LiegroupElementConstRef rhs, matrixOut_t jacobian) const;
       protected:
         /// Constructor
         /// \param robot the robot holding the floor and object contact

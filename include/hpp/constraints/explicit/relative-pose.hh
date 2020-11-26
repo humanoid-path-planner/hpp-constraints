@@ -60,11 +60,11 @@ namespace hpp {
         /// where \f$rhs_{expl}\f$ is the explicit right hand side converted
         /// using the following expression:
         /// \f{equation}
-        /// rhs_{expl} = \log_{SE(3)}\left( F_{2/J_2}\exp_{\mathbf{R}^3\times
-        /// SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
+        /// rhs_{expl} = \log_{SE(3)}\left( F_{2/J_2} rhs_{impl} F_{2/J_2}^{-1}
+	///              \right)
         /// \f}
         virtual void outputValue(LiegroupElementRef result, vectorIn_t qin,
-                                 vectorIn_t rhs) const;
+                                 LiegroupElementConstRef rhs) const;
 
         /// Compute Jacobian of output value
         ///
@@ -76,7 +76,7 @@ namespace hpp {
         /// \param f_value \f$f(\mathbf{q}_{in})\f$ to avoid recomputation,
         /// \param rhs right hand side (of implicit formulation).
         virtual void jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
-                                         f_value, vectorIn_t rhs,
+                                         f_value, LiegroupElementConstRef rhs,
                                          matrixOut_t jacobian) const;
       protected:
         /// Constructor
@@ -106,8 +106,10 @@ namespace hpp {
       private:
         /** Convert right hand side
 
-            \param implicitRhs right hand side of implicit formulation,
-            \retval explicitRhs right hand side of explicit formulation.
+            \param implicitRhs right hand side of implicit formulation, this
+	           is an element of $SE(3)$
+            \retval explicitRhs right hand side of explicit formulation, this
+                    is an element of $\mathbf{R}^6$.
 
             For this constraint, the implicit formulation does not derive
             from  the explicit formulation. The explicit form writes
@@ -115,16 +117,15 @@ namespace hpp {
             \f{eqnarray}
             rhs_{expl} &=& \log_{SE(3)} \left(F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1}
             J_2\right)\\
-            rhs_{impl} &=& \log_{\mathbf{R}^3\times SO(3)} \left(F_{1/J_1}^{-1}
-            J_1^{-1}J_2 F_{2/J_2}\right)
+            rhs_{impl} &=& F_{1/J_1}^{-1} J_1^{-1}J_2 F_{2/J_2}
             \f}
             Thus
             \f{equation}
-            rhs_{expl} = \log_{SE(3)}\left( F_{2/J_2}\exp_{\mathbf{R}^3\times
-            SO(3)} (rhs_{impl})  F_{2/J_2}^{-1}\right)
+            rhs_{expl} = \log_{SE(3)}\left( F_{2/J_2}rhs_{impl}
+            F_{2/J_2}^{-1}\right)
             \f}
         */
-        void implicitToExplicitRhs (vectorIn_t implicitRhs,
+        void implicitToExplicitRhs (LiegroupElementConstRef implicitRhs,
                                     vectorOut_t explicitRhs) const;
         /** Convert right hand side
 
@@ -137,17 +138,15 @@ namespace hpp {
             \f{eqnarray}
             rhs_{expl} &=& \log_{SE(3)} \left(F_{2/J_2} F_{1/J_1}^{-1} J_1^{-1}
             J_2\right)\\
-            rhs_{impl} &=& \log_{\mathbf{R}^3\times SO(3)} \left(F_{1/J_1}^{-1}
-            J_1^{-1}J_2 F_{2/J_2}\right)
+            rhs_{impl} &=& F_{1/J_1}^{-1} J_1^{-1}J_2 F_{2/J_2}
             \f}
             Thus
             \f{equation}
-            rhs_{impl} = \log_{\mathbf{R}^3\times SO(3)}\left( F_{2/J_2}^{-1}
-            \exp_{SE(3)} (rhs_{expl})  F_{2/J_2}\right)
+            rhs_{impl} = F_{2/J_2}^{-1} \exp_{SE(3)}(rhs_{expl}) F_{2/J_2}
             \f}
         */
         void explicitToImplicitRhs (vectorIn_t explicitRhs,
-                                    vectorOut_t implicitRhs) const;
+                                    LiegroupElementRef implicitRhs) const;
         // Create LiegroupSpace instances to avoid useless allocation.
         static LiegroupSpacePtr_t SE3;
         static LiegroupSpacePtr_t R3xSO3;

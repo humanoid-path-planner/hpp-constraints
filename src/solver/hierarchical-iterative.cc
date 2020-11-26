@@ -254,8 +254,6 @@ namespace hpp {
         priority_ [f] = priority;
         const ComparisonTypes_t comp (constraint->comparisonType ());
         assert ((size_type)comp.size() == f->outputDerivativeSize());
-        assert ((f->outputSpace ()->isVectorSpace ()) ||
-                (comp == ComparisonTypes_t (comp.size (), Equality)));
         const std::size_t minSize = priority + 1;
         if (stacks_.size() < minSize) {
           stacks_.resize (minSize, ImplicitConstraintSet ());
@@ -452,12 +450,12 @@ namespace hpp {
         assert (d.error.size () >= nv);
         // d.error is used here as an intermediate storage. The value
         // computed is not exactly the error
-        d.error.head (nv) = output - rhs;
+        d.error.head (nv) = log(output);
         for (size_type k = 0; k < nv; ++k) {
           if (d.comparison[iv + k] != Equality)
             d.error[k] = 0;
         }
-        rhs += d.error.head (nv);
+        rhs = rhs.space()->exp(d.error.head (nv));
         return true;
       }
 
@@ -477,18 +475,18 @@ namespace hpp {
         std::size_t i = priority_ [f];
         Data& d = datas_[i];
         assert (d.error.size () >= nv);
-        pinocchio::LiegroupElementConstRef output
+        pinocchio::LiegroupElementConstRef inRhs
           (space->elementConstRef (rightHandSide));
         LiegroupElementRef rhs (space->elementRef
                                 (d.rightHandSide.vector ().segment(iq, nq)));
         // d.error is used here as an intermediate storage. The value
         // computed is not the error
-        d.error.head (nv) = output - space->neutral (); // log (rightHandSide)
+        d.error.head (nv) = log(inRhs); // log (rightHandSide)
         for (size_type k = 0; k < nv; ++k) {
           if (d.comparison[iv + k] != Equality)
-            assert (d.error[k] == 0);
+            assert(d.error[k] == 0);
         }
-        rhs = space->neutral () + d.error.head (nv); // exp (d.error)
+        rhs = space->exp(d.error.head (nv)); // exp (d.error)
         return true;
       }
 

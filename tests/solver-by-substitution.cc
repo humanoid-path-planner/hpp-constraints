@@ -959,9 +959,13 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   assert(comp1 [0] ==  EqualToZero);
   assert(comp1 [2] ==  EqualToZero);
   assert(comp1 [4] == EqualToZero);
-  ComparisonTypes_t comp2(Equality<<EqualToZero<<EqualToZero<<3*Equality);
-  assert(comp2 [1] == EqualToZero);
+  ComparisonTypes_t comp2(2*Equality<<2*EqualToZero<<2*Equality);
+  assert(comp2 [0] == Equality);
+  assert(comp2 [1] == Equality);
   assert(comp2 [2] == EqualToZero);
+  assert(comp2 [3] == EqualToZero);
+  assert(comp2 [4] == Equality);
+  assert(comp2 [5] == Equality);
   // Create two relative transformation constraints
   Transform3f tf1 (Transform3f::Identity());
   vector3_t u; u << 0, -.2, 0;
@@ -995,6 +999,7 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   //           rhs [9]
   //           rhs [10]
   //           rhs [11]
+  //           rhs [12]
   for (size_type i=0; i<1000; ++i) {
     Configuration_t q (device->configSize ()); q.setRandom ();
     bool success;
@@ -1006,8 +1011,8 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
     // Store right hand side for each constraint
     vector_t rhs1 (6); rhs1.setZero ();
     vector_t rhs1_ (6); rhs1_.setZero ();
-    vector_t rhs2 (6); rhs2.setZero ();
-    vector_t rhs2_ (6); rhs2_.setZero ();
+    vector_t rhs2 (7); rhs2.setZero ();
+    vector_t rhs2_ (7); rhs2_.setZero ();
     success = solver.getRightHandSide (c1, rhs1);
     BOOST_CHECK (success);
     success = solver.getRightHandSide (c2, rhs2);
@@ -1028,8 +1033,8 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
     BOOST_CHECK (success);
     success = solver.getRightHandSide (c2, rhs2_);
     BOOST_CHECK (success);
-    BOOST_CHECK_EQUAL (rhs1, rhs1_);
-    BOOST_CHECK_EQUAL (rhs2, rhs2_);
+    BOOST_CHECK ((rhs1 - rhs1_).norm() < 1e-10);
+    BOOST_CHECK ((rhs2 - rhs2_).norm() < 1e-10);
   }
 }
 

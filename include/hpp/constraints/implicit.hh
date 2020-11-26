@@ -32,7 +32,8 @@ namespace hpp {
     */
     /**
         This class represents a parameterizable numerical constraint that
-        compares the output of a function \f$h\f$ to a right hand side vector.
+        compares the output of a function \f$h\f$ to a right hand side Lie
+	group element.
 
         \par Definition
         \li The function \f$h\f$ takes input in a configuration space
@@ -44,7 +45,7 @@ namespace hpp {
         enum hpp::contraints::ComparisonType = {
         \f$\mathbf{Equality}\f$, \f$\mathbf{EqualToZero}\f$,
         \f$\mathbf{Inferior}\f$, \f$\mathbf{Superior}\f$ }.
-        \li The right hand side is a vector of dimension \f$n_q\f$.
+        \li The right hand side is Lie group element of dimension \f$n_q\f$.
 
         \par Error
         A configuration \f$\mathbf{q}\f$ is said to satisfy the constraint for
