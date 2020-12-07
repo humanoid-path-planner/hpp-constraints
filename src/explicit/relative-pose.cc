@@ -175,4 +175,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-BOOST_CLASS_EXPORT(hpp::constraints::explicit_::RelativePose)
+BOOST_CLASS_EXPORT_IMPLEMENT(hpp::constraints::explicit_::RelativePose)

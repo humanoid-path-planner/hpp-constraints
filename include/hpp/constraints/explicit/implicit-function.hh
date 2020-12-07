@@ -104,4 +104,6 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
+BOOST_CLASS_EXPORT_KEY(hpp::constraints::explicit_::ImplicitFunction)
+
 #endif // HPP_CONSTRAINTS_EXPLICIT_IMPLICIT_FUNCTION_HH

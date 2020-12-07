@@ -251,4 +251,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-BOOST_CLASS_EXPORT(hpp::constraints::LockedJoint)
+BOOST_CLASS_EXPORT_IMPLEMENT(hpp::constraints::LockedJoint)

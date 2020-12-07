@@ -170,4 +170,6 @@ namespace hpp {
     }
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT_KEY(hpp::constraints::LockedJoint)
 #endif // HPP_CONSTRAINTS_LOCKED_JOINT_HH

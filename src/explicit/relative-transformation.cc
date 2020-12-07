@@ -255,4 +255,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-BOOST_CLASS_EXPORT(hpp::constraints::explicit_::RelativeTransformation)
+BOOST_CLASS_EXPORT_IMPLEMENT(hpp::constraints::explicit_::RelativeTransformation)

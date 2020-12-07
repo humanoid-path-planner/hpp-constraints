@@ -167,4 +167,7 @@ namespace hpp {
     } // namespace explicit_
   } // namespace constraints
 } // namespace hpp
+
+BOOST_CLASS_EXPORT_KEY(hpp::constraints::explicit_::RelativePose)
+
 #endif //HPP_CONSTRAINTS_EXPLICIT_RELATIVE_POSE_HH

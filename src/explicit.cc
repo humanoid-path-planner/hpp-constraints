@@ -193,4 +193,4 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
-BOOST_CLASS_EXPORT(hpp::constraints::Explicit)
+BOOST_CLASS_EXPORT_IMPLEMENT(hpp::constraints::Explicit)

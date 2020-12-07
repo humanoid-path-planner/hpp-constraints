@@ -140,4 +140,6 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
+BOOST_CLASS_EXPORT_KEY(hpp::constraints::explicit_::RelativeTransformation)
+
 #endif // HPP_CONSTRAINTS_EXPLICIT_RELATIVE_TRANSFORMATION_HH
