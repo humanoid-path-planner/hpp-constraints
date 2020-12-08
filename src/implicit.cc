@@ -236,7 +236,8 @@ namespace hpp {
       (void) version;
       ar & BOOST_SERIALIZATION_NVP(comparison_);
       ar & BOOST_SERIALIZATION_NVP(rhs_);
-      ar & BOOST_SERIALIZATION_NVP(parameterSize_);
+      if (!Archive::is_saving::value)
+        parameterSize_ = computeParameterSize (comparison_);
       ar & BOOST_SERIALIZATION_NVP(function_);
       ar & BOOST_SERIALIZATION_NVP(rhsFunction_);
       ar & BOOST_SERIALIZATION_NVP(weak_);

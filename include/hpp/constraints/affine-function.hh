@@ -155,7 +155,7 @@ namespace hpp {
                           const std::string name = "ConstantFunction") :
           DifferentiableFunction (sizeIn, sizeInDer, LiegroupSpace::Rn
                                   (constant.rows()), name),
-          c_ (constant, LiegroupSpace::Rn (constant.rows()))
+          c_ (constant, outputSpace())
         {}
 
         ConstantFunction (const LiegroupElement& element,

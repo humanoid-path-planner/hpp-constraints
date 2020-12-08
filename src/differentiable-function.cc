@@ -240,8 +240,10 @@ namespace hpp {
       ar & BOOST_SERIALIZATION_NVP(inputSize_);
       ar & BOOST_SERIALIZATION_NVP(inputDerivativeSize_);
       ar & BOOST_SERIALIZATION_NVP(outputSpace_);
-      ar & BOOST_SERIALIZATION_NVP(activeParameters_);
-      ar & BOOST_SERIALIZATION_NVP(activeDerivativeParameters_);
+      if (inputSize_ > 0)
+        ar & BOOST_SERIALIZATION_NVP(activeParameters_);
+      if (inputDerivativeSize_ > 0)
+        ar & BOOST_SERIALIZATION_NVP(activeDerivativeParameters_);
       ar & BOOST_SERIALIZATION_NVP(name_);
       ar & BOOST_SERIALIZATION_NVP(context_);
     }

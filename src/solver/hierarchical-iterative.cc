@@ -953,8 +953,8 @@ void serialize(Archive & ar, saturation::Bounds& o, const unsigned int version)
 {
   (void) version;
   ar & make_nvp("base", base_object<saturation::Base>(o));
-  ar & make_nvp("lb", o.lb);
-  ar & make_nvp("ub", o.ub);
+  hpp::serialization::remove_duplicate::serialize_vector(ar, "lb", o.lb, version);
+  hpp::serialization::remove_duplicate::serialize_vector(ar, "ub", o.ub, version);
 }
 } // namespace serialization
 } // namespace boost
