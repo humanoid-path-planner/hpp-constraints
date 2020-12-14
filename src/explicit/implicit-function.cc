@@ -280,7 +280,7 @@ namespace hpp {
         (void) version;
         ar & boost::serialization::make_nvp("base",
             boost::serialization::base_object<DifferentiableFunction>(*this));
-        ar & BOOST_SERIALIZATION_NVP(robot_);
+        //ar & BOOST_SERIALIZATION_NVP(robot_);
         ar & BOOST_SERIALIZATION_NVP(inputToOutput_);
         ar & BOOST_SERIALIZATION_NVP(inputConfIntervals_);
         ar & BOOST_SERIALIZATION_NVP(outputConfIntervals_);

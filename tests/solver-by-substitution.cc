@@ -20,8 +20,6 @@
 #include <boost/assign/list_of.hpp>
 
 #include <sstream>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
 #include <hpp/pinocchio/serialization.hh>
 
 #include <hpp/constraints/solver/by-substitution.hh>
@@ -749,12 +747,6 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
                     BySubstitution::SUCCESS);
 }
 
-struct iarchive :
-  boost::archive::xml_iarchive, hpp::serialization::archive_device_wrapper
-{
-  iarchive(std::istream& is) : boost::archive::xml_iarchive (is) {}
-};
-
 BOOST_AUTO_TEST_CASE(by_substitution_serialization)
 {
   DevicePtr_t device (makeDevice (HumanoidSimple));
@@ -799,15 +791,17 @@ BOOST_AUTO_TEST_CASE(by_substitution_serialization)
 
   std::stringstream ss;
   {
-    boost::archive::xml_oarchive oa(ss);
+    hpp::serialization::xml_oarchive oa(ss);
+    oa.insert(device->name(), device.get());
     oa << boost::serialization::make_nvp("solver", solver);
   }
 
+  BOOST_TEST_MESSAGE(ss.str());
+
   BySubstitution r_solver (device->configSpace ());
   {
-    iarchive ia(ss);
-    ia.device = device;
-    //boost::archive::xml_iarchive ia(ss);
+    hpp::serialization::xml_iarchive ia(ss);
+    ia.insert(device->name(), device.get());
     ia >> boost::serialization::make_nvp("solver", r_solver);
   }
 

@@ -19,9 +19,6 @@
 #include "hpp/constraints/generic-transformation.hh"
 
 #include <sstream>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
 #include <hpp/pinocchio/device.hh>
@@ -186,12 +183,6 @@ BOOST_AUTO_TEST_CASE (multithread) {
   }
 }
 
-struct iarchive :
-  boost::archive::xml_iarchive, hpp::serialization::archive_device_wrapper
-{
-  iarchive(std::istream& is) : boost::archive::xml_iarchive (is) {}
-};
-
 BOOST_AUTO_TEST_CASE (serialization) {
   DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
       hpp::pinocchio::unittest::HumanoidSimple);
@@ -223,13 +214,14 @@ BOOST_AUTO_TEST_CASE (serialization) {
 
     std::stringstream ss;
     {
-      boost::archive::xml_oarchive oa(ss);
+      hpp::serialization::xml_oarchive oa(ss);
+      oa.insert(device->name(), device.get());
       oa << boost::serialization::make_nvp("function", f);
     }
 
     {
-      iarchive ia(ss);
-      ia.device = device;
+      hpp::serialization::xml_iarchive ia(ss);
+      ia.insert(device->name(), device.get());
       ia >> boost::serialization::make_nvp("function", f_restored);
     }
 
