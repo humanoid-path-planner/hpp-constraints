@@ -18,7 +18,6 @@
 
 #include <sstream>
 
-#include <boost/assign/list_of.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 
 #include <hpp/util/debug.hh>
@@ -32,7 +31,6 @@
 
 namespace hpp {
   namespace constraints {
-    using boost::assign::list_of;
     namespace {
         template <typename T>
 	std::string numToStr (const T& v) {
@@ -128,11 +126,11 @@ namespace hpp {
                                          joint->name()+' '+
                                          numToStr(value.vector().transpose())),
                 segments_t(), // input conf
-                list_of(segment_t (joint->rankInConfiguration(),
-                                   joint->configSize())), // output conf
+                { segment_t (joint->rankInConfiguration(),
+                             joint->configSize())}, // output conf
                 segments_t(), // input vel
-                list_of(segment_t (joint->rankInVelocity     (),
-                                   joint->numberDof ())), // output vel
+                { segment_t (joint->rankInVelocity     (),
+                             joint->numberDof ())}, // output vel
                 ComparisonTypes_t(joint->numberDof(), Equality)),
       jointName_ (joint->name ()),
       configSpace_ (joint->configurationSpace ())
@@ -152,10 +150,10 @@ namespace hpp {
                  "partial " + joint->name()),
                 segments_t(), // input conf
                 segments_t(), // input vel
-                list_of(segment_t (joint->rankInConfiguration(),
-                                   joint->configSize()-index)), // output conf
-                list_of(segment_t (joint->rankInVelocity     (),
-                                   joint->numberDof ()-index)), // output vel
+                { segment_t (joint->rankInConfiguration(),
+                             joint->configSize()-index) }, // output conf
+                { segment_t (joint->rankInVelocity     (),
+                             joint->numberDof ()-index) }, // output vel
                 ComparisonTypes_t(joint->numberDof()-index, Equality)),
       jointName_ ("partial_" + joint->name ()),
       joint_ (joint),
@@ -176,12 +174,12 @@ namespace hpp {
                  dev->name() + "_extraDof" + numToStr (index)),
                 segments_t(), // input conf
                 segments_t(), // input vel
-                list_of(segment_t (dev->configSize () -
-                                   dev->extraConfigSpace().dimension() + index,
-                                   value.size())), // output conf
-                list_of(segment_t (dev->numberDof ()  -
-                                   dev->extraConfigSpace().dimension() + index,
-                                   value.size())), // output vel
+                { segment_t (dev->configSize () -
+                             dev->extraConfigSpace().dimension() + index,
+                             value.size()) }, // output conf
+                { segment_t (dev->numberDof ()  -
+                             dev->extraConfigSpace().dimension() + index,
+                             value.size()) }, // output vel
                 ComparisonTypes_t(value.size(), Equality)),
       jointName_ (dev->name() + "_extraDof" + numToStr (index)),
       joint_ (JointPtr_t ()), configSpace_ (LiegroupSpace::Rn (value.size ()))

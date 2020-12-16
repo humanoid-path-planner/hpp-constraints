@@ -25,7 +25,7 @@ namespace hpp {
   namespace constraints {
     namespace function {
     class Difference;
-    typedef boost::shared_ptr<Difference> DifferencePtr_t;
+    typedef shared_ptr<Difference> DifferencePtr_t;
 
     /// Compute the difference between the value of the function in two points.
     /// i.e.: \f$ f (q_0, ... , q_n) = f_{inner} (q_{left}) - f_{inner} (q_{right}) \f$
@@ -33,7 +33,7 @@ namespace hpp {
       public constraints::DifferentiableFunction
     {
       public:
-        typedef boost::shared_ptr<Difference> Ptr_t;
+        typedef shared_ptr<Difference> Ptr_t;
         Difference (const DifferentiableFunctionPtr_t& inner,
             const size_type& nArgs, const size_type& nDers,
             const segment_t& lInArgs, const segment_t& lInDers,

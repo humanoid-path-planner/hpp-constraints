@@ -20,7 +20,6 @@
 #ifndef HPP_CONSTRAINTS_COM_BETWEEN_FEET_HH
 # define HPP_CONSTRAINTS_COM_BETWEEN_FEET_HH
 
-# include <boost/assign/list_of.hpp>
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/fwd.hh>
@@ -65,7 +64,7 @@ namespace hpp {
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
             const vector3_t   pointLeft, const vector3_t   pointRight,
             const JointPtr_t& jointReference, const vector3_t pointRef,
-            std::vector <bool> mask = boost::assign::list_of (true)(true)(true)(true));
+            std::vector <bool> mask = { true, true, true, true });
 
         /// Return a shared pointer to a new instance
         static ComBetweenFeetPtr_t create (
@@ -74,7 +73,7 @@ namespace hpp {
             const JointPtr_t& jointLeft, const JointPtr_t& jointRight,
             const vector3_t   pointLeft, const vector3_t   pointRight,
             const JointPtr_t& jointReference, const vector3_t pointRef,
-            std::vector <bool> mask = boost::assign::list_of (true)(true)(true)(true));
+            std::vector <bool> mask = { true, true, true, true });
 
         virtual ~ComBetweenFeet () {}
 

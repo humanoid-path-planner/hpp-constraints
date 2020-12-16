@@ -17,8 +17,6 @@
 #ifndef HPP_CONSTRAINTS_SYMBOLIC_FUNCTION_HH
 # define HPP_CONSTRAINTS_SYMBOLIC_FUNCTION_HH
 
-# include <boost/assign/list_of.hpp>
-
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/symbolic-calculus.hh>
@@ -37,8 +35,8 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction
     {
       public:
-        typedef boost::shared_ptr<SymbolicFunction> Ptr_t;
-        typedef boost::weak_ptr<SymbolicFunction> WkPtr_t;
+        typedef shared_ptr<SymbolicFunction> Ptr_t;
+        typedef weak_ptr<SymbolicFunction> WkPtr_t;
 
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

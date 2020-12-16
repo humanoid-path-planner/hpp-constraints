@@ -19,8 +19,6 @@
 
 #include <vector>
 
-#include <boost/function.hpp>
-
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 

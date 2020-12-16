@@ -26,7 +26,7 @@
 namespace hpp {
   namespace constraints {
     HPP_PREDEF_CLASS (Manipulability);
-    typedef boost::shared_ptr <Manipulability> ManipulabilityPtr_t;
+    typedef shared_ptr <Manipulability> ManipulabilityPtr_t;
 
     /// \addtogroup constraints
     /// \{

@@ -37,7 +37,7 @@ namespace hpp {
     class ImplicitFunction : public DifferentiableFunction
     {
     public:
-      typedef boost::shared_ptr <ImplicitFunction> Ptr_t;
+      typedef shared_ptr <ImplicitFunction> Ptr_t;
       /// create instance and return shared pointer
       ///
       /// \param configSpace input space of this function - usually a robot

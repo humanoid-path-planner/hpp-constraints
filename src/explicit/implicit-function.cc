@@ -18,8 +18,6 @@
 
 #include <Eigen/Geometry>
 
-#include <boost/type_traits/conditional.hpp>
-
 #include <hpp/util/serialization.hh>
 
 #include <hpp/pinocchio/device.hh>

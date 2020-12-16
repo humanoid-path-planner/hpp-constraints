@@ -20,7 +20,6 @@
 #ifndef HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
 # define HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
 
-# include <boost/assign/list_of.hpp>
 # include <Eigen/Core>
 # include <hpp/constraints/differentiable-function.hh>
 # include <hpp/constraints/config.hh>
