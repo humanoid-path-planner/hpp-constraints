@@ -144,7 +144,7 @@ namespace hpp {
                  contact::inputVelocityVariables
                  (robot, floorSurfaces, objectSurfaces),
                  relativePose::jointVelInterval(objectSurfaces.front().first),
-                 (5 * EqualToZero << 3 * Equality))
+                 (5 * EqualToZero << 3 * Equality), std::vector<bool>(8,true))
       {
         assert(HPP_DYNAMIC_PTR_CAST(ConvexShapeContactHold, functionPtr()));
         ConvexShapeContactHoldPtr_t f
@@ -170,7 +170,7 @@ namespace hpp {
             pose_.push_back(RelativePose::create
                             ("",robot, fs[j].joint_, os[i].joint_,
                              posInJoint, os[i].positionInJoint(),
-                             6 * Equality));
+                             6 * Equality, std::vector<bool>(6, true)));
           }
         }
       }

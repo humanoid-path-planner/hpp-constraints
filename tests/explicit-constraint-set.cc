@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(RelativePose)
   hpp::constraints::ExplicitPtr_t constraint
     (hpp::constraints::explicit_::RelativePose::create
      ("explicit-relative-pose", device, joint1, joint2, frame1, frame2,
-      6 * Equality));
+      6 * Equality, std::vector<bool>(6,true)));
   assert(constraint->inputConf().size() == 1);
   assert(constraint->inputConf()[0].first == 0);
   assert(constraint->inputConf()[0].second == 7);

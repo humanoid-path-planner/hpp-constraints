@@ -33,10 +33,15 @@ namespace hpp {
         (const std::string& name, const DevicePtr_t& robot,
          const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
          const Transform3f& frame1, const Transform3f& frame2,
-         ComparisonTypes_t comp)
+         ComparisonTypes_t comp, std::vector<bool> mask)
       {
+	if (mask.empty())
+	{
+	  mask = std::vector<bool>(6,true);
+	}
         RelativePose* ptr (new RelativePose
-                           (name, robot, joint1, joint2, frame1, frame2, comp));
+                           (name, robot, joint1, joint2, frame1, frame2, comp,
+			    mask));
         RelativePosePtr_t shPtr (ptr);
         RelativePoseWkPtr_t wkPtr (shPtr);
         ptr->init (wkPtr);
@@ -125,7 +130,7 @@ namespace hpp {
       (const std::string& name, const DevicePtr_t& robot,
        const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
        const Transform3f& frame1, const Transform3f& frame2,
-       ComparisonTypes_t comp) :
+       ComparisonTypes_t comp, std::vector<bool> mask) :
         Explicit (RelativeTransformationSE3::create
                   (name, robot, joint1, joint2, frame1, frame2,
 		   std::vector<bool>(6,true)),
@@ -134,7 +139,7 @@ namespace hpp {
                   relativePose::inputConfVariables (robot, joint1, joint2),
                   relativePose::jointConfInterval (joint2),
                   relativePose::inputVelocityVariables (robot, joint1, joint2),
-                  relativePose::jointVelInterval (joint2), comp),
+                  relativePose::jointVelInterval (joint2), comp, mask),
         joint1_ (joint1), joint2_ (joint2), frame1_ (frame1), frame2_ (frame2)
       {
           assert ((*joint2->configurationSpace () ==

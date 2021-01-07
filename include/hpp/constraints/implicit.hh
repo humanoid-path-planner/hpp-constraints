@@ -36,6 +36,7 @@ namespace hpp {
 	group element.
 
         \par Definition
+
         \li The function \f$h\f$ takes input in a configuration space
         \f$\mathcal{C}\f$ and output in a Lie group \f$\mathbf{L}\f$,
         \li the dimensions of \f$\mathbf{L}\f$ and of its tangent space are
@@ -48,6 +49,7 @@ namespace hpp {
         \li The right hand side is Lie group element of dimension \f$n_q\f$.
 
         \par Error
+
         A configuration \f$\mathbf{q}\f$ is said to satisfy the constraint for
         a given right hand side if and only if the error \f$e\f$ as computed
         below is
@@ -66,7 +68,15 @@ namespace hpp {
         \f$e_i = \Delta_i\f$,
         \li if \f$c_i\f$ is \f$\mathbf{EqualToZero}\f$, \f$e_i = \Delta_i\f$.
 
+	\par Mask
+
+	A mask is a vector of Boolean values of size \f$n_v\f$. Values set to
+	false means that the corresponding component of the error defined above
+	is not taken into account to determine whether the constraint is
+	satisfied.
+
         \par Parameterizable right hand side
+
         Lines with \textbf{Equality} comparator in the above definition of the
         error need a parameter, while lines with comparators \textbf{Inferior},
         \textbf{Superior}, or \textbf{EqualToZero} do not.
@@ -115,13 +125,8 @@ namespace hpp {
         /// Create a shared pointer to a new instance.
         /// \sa constructors
         static ImplicitPtr_t create
-          (const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp);
-
-        /// Create a shared pointer to a new instance.
-        /// \sa constructors
-        static ImplicitPtr_t create
-          (const DifferentiableFunctionPtr_t& function,
-           ComparisonTypes_t comp, vectorIn_t rhs);
+          (const DifferentiableFunctionPtr_t& func, ComparisonTypes_t comp,
+	   std::vector<bool> mask = std::vector<bool>());
 
 	/// Create a copy and return shared pointer
 	static ImplicitPtr_t createCopy (const ImplicitPtr_t& other);
@@ -208,10 +213,14 @@ namespace hpp {
         /// Constructor
         /// \param function the differentiable function
         /// \param comp vector of comparison \f$\mathbf{c}\f$.
-        /// \precond size of comp should be equal to size of tangent space to
+	/// \param mask mask defining which components of the error are
+	///        taken into account to determine whether the constraint
+	///        is satisfied.
+        /// \precond sizes of comp and of mask should be equal to size of
+	///          tangent space to
         ///          function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp);
+		  ComparisonTypes_t comp, std::vector<bool> mask);
 
         /// Constructor
         /// \param function the differentiable function,
@@ -243,6 +252,7 @@ namespace hpp {
         size_type parameterSize_;
         DifferentiableFunctionPtr_t function_;
         DifferentiableFunctionPtr_t rhsFunction_;
+	std::vector<bool> mask_;
 	ImplicitWkPtr_t weak_;
 
       protected:

@@ -62,24 +62,18 @@ namespace hpp {
           // Handle comparison types
           const ComparisonTypes_t& comp (constraint->comparisonType ());
           for (std::size_t i = 0; i < comp.size(); ++i) {
-            if ((comp[i] == Superior) && (comp[i] == Inferior))
-            {
-              inequalityIndices_.push_back (comparison_.size());
-            }
-            else if (comp[i] == Equality)
+            if (comp[i] == Equality)
             {
               equalityIndices_.addRow(comparison_.size(), 1);
             }
             comparison_.push_back (comp[i]);
           }
           equalityIndices_.updateRows<true, true, true>();
+	  // Handle mask
+	  mask_.insert(mask_.end(), constraint->mask_.begin(),
+		       constraint->mask_.end());
         }
 
-        /// Get indices of constraint coordinates that are inequality
-        const std::vector<std::size_t>& inequalityIndices () const
-        {
-          return inequalityIndices_;
-        }
         /// Get indices of constraint coordinates that are equality
         const Eigen::RowBlockIndices& equalityIndices () const
         {
@@ -113,18 +107,18 @@ namespace hpp {
         /// \param name the name of the constraints,
         ImplicitConstraintSet (const std::string& name)
           : Implicit (DifferentiableFunctionSet::create (name),
-                      ComparisonTypes_t ())
+                      ComparisonTypes_t (), std::vector<bool>())
         {
         }
 
         ImplicitConstraintSet ()
           : Implicit (DifferentiableFunctionSet::create ("Stack"),
-                      ComparisonTypes_t ())
+                      ComparisonTypes_t (), std::vector<bool>())
           {}
 
         ImplicitConstraintSet (const ImplicitConstraintSet& o)
           : Implicit (DifferentiableFunctionSet::create ("Stack"),
-                      ComparisonTypes_t ())
+                      ComparisonTypes_t (), std::vector<bool>())
           {
             const Implicits_t& constraints = o.constraints();
             for (Implicits_t::const_iterator constraint = constraints.begin();
@@ -134,8 +128,6 @@ namespace hpp {
         
       private:
         Implicits_t constraints_;
-        ComparisonTypes_t comparison_;
-        std::vector<std::size_t> inequalityIndices_;
         Eigen::RowBlockIndices equalityIndices_;
 
         HPP_SERIALIZABLE();

@@ -162,7 +162,9 @@ namespace hpp {
       ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \note comparison type for this constraint is always equality
+      /// \param mask mask defining which components of the error are
+      ///        taken into account to determine whether the constraint
+      ///        is satisfied (See parent class for details).
       static ExplicitPtr_t create
         (const LiegroupSpacePtr_t& configSpace,
          const DifferentiableFunctionPtr_t& function,
@@ -170,7 +172,8 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp = ComparisonTypes_t());
+         const ComparisonTypes_t& comp = ComparisonTypes_t(),
+	 std::vector<bool> mask = std::vector<bool>());
 
       /// Create a copy and return shared pointer
       static ExplicitPtr_t createCopy (const ExplicitPtr_t& other);
@@ -266,7 +269,9 @@ namespace hpp {
       ///            \f$(iv_{1}, \cdots, iv_{n_{iv}})\f$.
       /// \param outputVelocity set of integer defining indices
       ///            \f$(ov_{1}, \cdots, ov_{n_{ov}})\f$.
-      /// \note comparison type for this constraint is always equality
+      /// \param mask mask defining which components of the error are
+      ///        taken into account to determine whether the constraint
+      ///        is satisfied (See parent class for details).
       Explicit
 	(const LiegroupSpacePtr_t& configSpace,
          const DifferentiableFunctionPtr_t& function,
@@ -274,7 +279,8 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp);
+         const ComparisonTypes_t& comp,
+	 std::vector<bool> mask);
 
       /// \copydoc Explicit (const LiegroupSpacePtr_t&, const DifferentiableFunctionPtr_t&, const segments_t& inputConf, const segments_t& outputConf, const segments_t& inputVelocity, const segments_t&, const ComparisonTypes_t&);
       /// \param implicitFunction differentiable function of the implicit
@@ -289,7 +295,8 @@ namespace hpp {
 	 const segments_t& outputConf,
 	 const segments_t& inputVelocity,
 	 const segments_t& outputVelocity,
-         const ComparisonTypes_t& comp);
+         const ComparisonTypes_t& comp,
+	 std::vector<bool> mask);
 
       /// Copy constructor
       Explicit (const Explicit& other);

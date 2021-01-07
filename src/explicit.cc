@@ -78,11 +78,15 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& inputVelocity,
      const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp)
+     const ComparisonTypes_t& comp, std::vector<bool> mask)
     {
+      if (mask.empty()){
+	mask = std::vector<bool>(Eigen::BlockIndex::cardinal (outputVelocity),
+				 true);
+      }
       Explicit* ptr = new Explicit
 	(configSpace, function, inputConf, outputConf, inputVelocity,
-         outputVelocity, defaultCompTypes(outputVelocity,comp));
+         outputVelocity, defaultCompTypes(outputVelocity,comp), mask);
       ExplicitPtr_t shPtr (ptr);
       ExplicitWkPtr_t wkPtr (shPtr);
       ptr->init (wkPtr);
@@ -133,11 +137,11 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& inputVelocity,
      const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp) :
+     const ComparisonTypes_t& comp, std::vector<bool> mask) :
       Implicit (explicit_::ImplicitFunction::create
                 (configSpace, explicitFunction, inputConf,
                  outputConf, inputVelocity, outputVelocity),
-                comp),
+                comp, mask),
       inputToOutput_ (explicitFunction),
       inputConf_ (inputConf),
       outputConf_ (outputConf),
@@ -153,8 +157,8 @@ namespace hpp {
      const segments_t& outputConf,
      const segments_t& inputVelocity,
      const segments_t& outputVelocity,
-     const ComparisonTypes_t& comp) :
-      Implicit (implicitFunction, comp),
+     const ComparisonTypes_t& comp, std::vector<bool> mask) :
+      Implicit (implicitFunction, comp, mask),
       inputToOutput_ (explicitFunction),
       inputConf_ (inputConf),
       outputConf_ (outputConf),

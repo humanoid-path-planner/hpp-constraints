@@ -40,13 +40,16 @@ namespace hpp {
         /// \param frame1 position of a fixed frame in joint 1,
         /// \param frame2 position of a fixed frame in joint 2,
         /// \param comp vector of comparison types
+	/// \param mask mask defining which components of the error are
+	///        taken into account to determine whether the constraint
+	///        is satisfied.
         /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
         ///       frame.
         static RelativePosePtr_t create
           (const std::string& name, const DevicePtr_t& robot,
            const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
            const Transform3f& frame1, const Transform3f& frame2,
-           ComparisonTypes_t comp);
+           ComparisonTypes_t comp, std::vector<bool> mask=std::vector<bool>());
 
         static RelativePosePtr_t createCopy (const RelativePosePtr_t& other);
 
@@ -90,13 +93,17 @@ namespace hpp {
         /// \param frame1 position of a fixed frame in joint 1,
         /// \param frame2 position of a fixed frame in joint 2,
         /// \param comp vector of comparison types
+	/// \param mask mask defining which components of the error are
+	///        taken into account to determine whether the constraint
+	///        is satisfied.
         /// \note if joint1 is 0x0, joint 1 frame is considered to be the global
         ///       frame.
         RelativePose (const std::string& name, const DevicePtr_t& robot,
                       const JointConstPtr_t& joint1,
                       const JointConstPtr_t& joint2,
                       const Transform3f& frame1, const Transform3f& frame2,
-                      ComparisonTypes_t comp = ComparisonTypes_t());
+                      ComparisonTypes_t comp = ComparisonTypes_t(),
+		      std::vector<bool> mask = std::vector<bool>(6, true));
 
         /// Copy constructor
         RelativePose (const RelativePose& other);

@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE (rightHandSideFromConfig)
   tf2.translation (u);
   ImplicitPtr_t c2 (hpp::constraints::explicit_::RelativePose::create
                     ("Transformation", device, JointPtr_t (), root, tf2, tf1,
-                     comp2));
+                     comp2, std::vector<bool>(6, true)));
 
   BySubstitution solver (device->configSpace ());
   solver.maxIterations(20);
@@ -1057,7 +1057,7 @@ BOOST_AUTO_TEST_CASE (merge)
   Transform3f tf2 (Transform3f::Identity()); tf2.translation (u);
   DifferentiableFunctionPtr_t h
     (RelativeTransformation::create("RelativeTransformation",device, ee1, ee2,
-                                    tf1, tf2, std::vector <bool> (6, true)));
+                                    tf1, tf2));
   ImplicitPtr_t c1 (Implicit::create(h, comp1));
   u << 1.2, 0, -1;
   tf2.translation (u);

@@ -118,16 +118,18 @@ namespace hpp {
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
-                        ComparisonTypes_t comp) :
+                        ComparisonTypes_t comp, std::vector<bool> mask) :
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
       parameterSize_ (computeParameterSize (comparison_)),
-      function_ (function)
+      function_ (function), mask_(mask)
     {
       // This constructor used to set comparison types to Equality if an
       // empty vector was given as input. Now you should provide the
       // comparison type at construction.
       assert
         (function_->outputDerivativeSize () == (size_type)comparison_.size ());
+      assert
+        (function_->outputDerivativeSize () == (size_type)mask_.size ());
     }
 
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
@@ -177,9 +179,13 @@ namespace hpp {
     }
 
     ImplicitPtr_t Implicit::create (
-        const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp)
+	const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp,
+	std::vector<bool> mask)
     {
-      Implicit* ptr = new Implicit (function, comp);
+      if (mask.empty()){
+	mask = std::vector<bool>(function->outputSpace()->nv());
+      }	
+      Implicit* ptr = new Implicit (function, comp, mask);
       ImplicitPtr_t shPtr (ptr);
       ImplicitWkPtr_t wkPtr (shPtr);
       ptr->init (wkPtr);
