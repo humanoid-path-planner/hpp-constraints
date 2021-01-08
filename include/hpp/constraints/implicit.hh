@@ -159,12 +159,6 @@ namespace hpp {
         /// This is the dimension (nq) of the output space of the function
         size_type rightHandSideSize () const;
 
-        /// Return the ComparisonType
-        const ComparisonTypes_t& comparisonType () const;
-
-	/// Set the comparison type
-	void comparisonType (const ComparisonTypes_t& comp);
-
         /// Return a modifiable reference to right hand side of equation.
         /// \deprecated In future versions, right hand side will not be a member
         ///             of the class anymore.
@@ -190,6 +184,12 @@ namespace hpp {
         vectorIn_t rightHandSideAt (const value_type& s);
 
         /// \}
+
+        /// Return the ComparisonType
+        const ComparisonTypes_t& comparisonType () const;
+
+	/// Set the comparison type
+	void comparisonType (const ComparisonTypes_t& comp);
 
         /// Return a reference to function \f$h\f$.
         DifferentiableFunction& function () const
