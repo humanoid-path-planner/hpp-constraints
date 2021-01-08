@@ -118,12 +118,6 @@ namespace hpp {
         virtual ImplicitPtr_t copy () const;
         /// Create a shared pointer to a new instance.
         /// \sa constructors
-        /// \deprecated Use method with comparison types
-        static ImplicitPtr_t create(const DifferentiableFunctionPtr_t& function)
-          HPP_CONSTRAINTS_DEPRECATED;
-
-        /// Create a shared pointer to a new instance.
-        /// \sa constructors
         static ImplicitPtr_t create
           (const DifferentiableFunctionPtr_t& func, ComparisonTypes_t comp,
 	   std::vector<bool> mask = std::vector<bool>());
@@ -221,15 +215,6 @@ namespace hpp {
         ///          function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
 		  ComparisonTypes_t comp, std::vector<bool> mask);
-
-        /// Constructor
-        /// \param function the differentiable function,
-        /// \param comp vector of comparison \f$\mathbf{c}\f$,
-        /// \param rhs the right hand side of the equation.
-        /// \precond size of comp and size of rhs should be equal to size of
-        ///          tangent space to function output space \f$\mathbf{L}\f$.
-        Implicit (const DifferentiableFunctionPtr_t& function,
-            ComparisonTypes_t comp, vectorIn_t rhs);
 
 	/// Copy constructor
 	Implicit (const Implicit& other);

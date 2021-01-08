@@ -166,19 +166,6 @@ namespace hpp {
     }
 
     ImplicitPtr_t Implicit::create (
-        const DifferentiableFunctionPtr_t& function)
-    {
-      ComparisonTypes_t comp
-        (function->outputDerivativeSize(), constraints::EqualToZero);
-
-      Implicit* ptr = new Implicit (function, comp);
-      ImplicitPtr_t shPtr (ptr);
-      ImplicitWkPtr_t wkPtr (shPtr);
-      ptr->init (wkPtr);
-      return shPtr;
-    }
-
-    ImplicitPtr_t Implicit::create (
 	const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp,
 	std::vector<bool> mask)
     {
@@ -186,17 +173,6 @@ namespace hpp {
 	mask = std::vector<bool>(function->outputSpace()->nv());
       }	
       Implicit* ptr = new Implicit (function, comp, mask);
-      ImplicitPtr_t shPtr (ptr);
-      ImplicitWkPtr_t wkPtr (shPtr);
-      ptr->init (wkPtr);
-      return shPtr;
-    }
-
-    ImplicitPtr_t Implicit::create (
-        const DifferentiableFunctionPtr_t& function,
-        ComparisonTypes_t comp, vectorIn_t rhs)
-    {
-      Implicit* ptr = new Implicit (function, comp, rhs);
       ImplicitPtr_t shPtr (ptr);
       ImplicitWkPtr_t wkPtr (shPtr);
       ptr->init (wkPtr);
