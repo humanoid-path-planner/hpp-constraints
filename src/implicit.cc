@@ -117,11 +117,16 @@ namespace hpp {
       parameterSize_ = computeParameterSize (comparison_);
     }
 
+    void Implicit::setInactiveRowsToZero(vectorOut_t error) const
+    {
+      inactiveRows_.lview(error).setZero();
+    }
+
     Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
                         ComparisonTypes_t comp, std::vector<bool> mask) :
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
       parameterSize_ (computeParameterSize (comparison_)),
-      function_ (function), mask_(mask)
+      function_ (function), mask_(mask), activeRows_(), inactiveRows_()
     {
       // This constructor used to set comparison types to Equality if an
       // empty vector was given as input. Now you should provide the
@@ -129,29 +134,30 @@ namespace hpp {
       assert
         (function_->outputDerivativeSize () == (size_type)comparison_.size ());
       assert
-        (function_->outputDerivativeSize () == (size_type)mask_.size ());
+        (function_->outputDerivativeSize () == (size_type)mask.size ());
+      computeActiveRows();
     }
 
-    Implicit::Implicit (const DifferentiableFunctionPtr_t& function,
-                        ComparisonTypes_t comp, vectorIn_t rhs) :
-      comparison_ (comp), rhs_ (rhs), function_ (function)
+    // Compute active rows
+    void Implicit::computeActiveRows()
     {
-      if (rhs_.size () == 0) {
-        rhs_ = vector_t::Zero (function->outputSize ());
+      segments_t inactiveRows;
+      for(std::size_t i=0; i<mask_.size(); ++i){
+	if (mask_[i])
+	  activeRows_.push_back(segment_t(i,1));
+	else
+	  inactiveRows.push_back(segment_t(i,1));
       }
-      // This constructor used to set comparison types to Equality if an
-      // empty vector was given as input. Now you should provide the
-      // comparison type at construction.
-      assert
-        (function_->outputDerivativeSize () == (size_type)comparison_.size ());
-      parameterSize_ = computeParameterSize (comparison_);
-      assert (function->outputDerivativeSize () == (size_type) rhs_.size ());
+      Eigen::BlockIndex::shrink(activeRows_);
+      Eigen::BlockIndex::shrink(inactiveRows);
+      inactiveRows_ = Eigen::RowBlockIndices(inactiveRows);
     }
 
     Implicit::Implicit (const Implicit& other):
       comparison_ (other.comparison_), rhs_ (other.rhs_),
       parameterSize_ (other.parameterSize_), function_ (other.function_),
-      rhsFunction_ (other.rhsFunction_)
+      rhsFunction_ (other.rhsFunction_), mask_(other.mask_),
+      activeRows_(other.activeRows_), inactiveRows_(other.inactiveRows_)
     {
     }
 
@@ -170,7 +176,7 @@ namespace hpp {
 	std::vector<bool> mask)
     {
       if (mask.empty()){
-	mask = std::vector<bool>(function->outputSpace()->nv());
+	mask = std::vector<bool>(function->outputSpace()->nv(), true);
       }	
       Implicit* ptr = new Implicit (function, comp, mask);
       ImplicitPtr_t shPtr (ptr);
@@ -222,6 +228,8 @@ namespace hpp {
         parameterSize_ = computeParameterSize (comparison_);
       ar & BOOST_SERIALIZATION_NVP(function_);
       ar & BOOST_SERIALIZATION_NVP(rhsFunction_);
+      ar & BOOST_SERIALIZATION_NVP(activeRows_);
+      ar & BOOST_SERIALIZATION_NVP(inactiveRows_);
       ar & BOOST_SERIALIZATION_NVP(weak_);
     }
 

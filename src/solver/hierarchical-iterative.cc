@@ -264,7 +264,6 @@ namespace hpp {
         iq_ [f] = datas_ [priority].output.space ()->nq ();
         // Store rank in output vector derivative
         iv_ [f] = datas_ [priority].output.space ()->nv ();
-        hppDout (info, "Adding " << f << " to solver " << this);
         // warning adding constraint to the stack modifies behind the stage
         // the dimension of datas_ [priority].output.space (). It should
         // therefore be done after the previous lines.
@@ -357,7 +356,7 @@ namespace hpp {
           const DifferentiableFunctionSet& f
             (static_cast <const DifferentiableFunctionSet&>
              (constraints.function ()));
-          dimension_ += f.outputSize();
+          dimension_ += f.outputDerivativeSize();
           reducedDimension_ += datas_[i].activeRowsOfJ.nbRows();
           datas_[i].output = LiegroupElement (f.outputSpace ());
           datas_[i].rightHandSide = LiegroupElement (f.outputSpace ());
@@ -391,7 +390,7 @@ namespace hpp {
         Data& d = datas_[iStack];
         const ImplicitConstraintSet::Implicits_t constraints
           (stacks_ [iStack].constraints ());
-        std::size_t row = 0;
+        std::size_t offset = 0;
 
         typedef Eigen::MatrixBlocks<false, false> BlockIndices;
         BlockIndices::segments_t rows;
@@ -401,10 +400,10 @@ namespace hpp {
             (constraints [i]->function ().activeDerivativeParameters().
              matrix()).eval();
           if (adp.any()) // If at least one element of adp is true
-            rows.push_back (BlockIndices::segment_t
-                            (row, constraints [i]->function ().
-                             outputDerivativeSize()));
-          row += constraints [i]->function ().outputDerivativeSize();
+	    for (const segment_t s : constraints [i]->activeRows()) {
+	      rows.push_back(segment_t(s.first+offset, s.second));
+	    }
+          offset += constraints [i]->function ().outputDerivativeSize();
         }
         d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
           (rows, freeVariables_.m_rows);
@@ -543,6 +542,7 @@ namespace hpp {
                                 f->outputSpace ());
         f->value (output, arg);
         error = output - rhs;
+	constraint->setInactiveRowsToZero(error);
         return (error.squaredNorm () < squaredErrorThreshold_);
       }
 
@@ -620,6 +620,7 @@ namespace hpp {
 
           f.value   (d.output, config);
           d.error = d.output - d.rightHandSide;
+	  constraints.setInactiveRowsToZero(d.error);
           if (ComputeJac) {
             f.jacobian(d.jacobian, config);
             d.output.space()->dDifference_dq1<pinocchio::DerivativeTimesInput>
@@ -835,7 +836,7 @@ namespace hpp {
            << "max iter: " << maxIterations() << ", error threshold: " << errorThreshold() << iendl
            << "dimension " << dimension() << iendl
            << "reduced dimension " << reducedDimension() << iendl
-           << "reduction: " << freeVariables_ << incindent;
+           << "free variables: " << freeVariables_ << incindent;
         const std::size_t end = (lastIsOptional_ ? stacks_.size() - 1 :
                                  stacks_.size());
         for (std::size_t i = 0; i < stacks_.size(); ++i) {
@@ -850,12 +851,14 @@ namespace hpp {
             const DifferentiableFunctionPtr_t& f
               (constraints [j]->functionPtr ());
             os << iendl << j << ": ["
-               << row << ", " << f->outputSize() << "],"
+               << row << ", " << f->outputDerivativeSize() << "],"
                << incindent << *f
                << iendl << "Rhs: " << condensed(d.rightHandSide.vector().segment
                                                 (row, f->outputSize()))
+	       << iendl << "active rows: "
+	       << condensed(constraints[j]->activeRows())
                << decindent;
-            row += f->outputSize();
+            row += f->outputDerivativeSize();
           }
           os << decendl;
           os << "Equality idx: " << d.equalityIndices;

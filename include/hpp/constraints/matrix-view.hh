@@ -17,10 +17,12 @@
 #ifndef HPP_CONSTRAINTS_MATRIX_VIEW_HH
 #define HPP_CONSTRAINTS_MATRIX_VIEW_HH
 
+#include <boost/serialization/nvp.hpp>
 #include <Eigen/Core>
 #include <vector>
 #include <iostream>
 #include <hpp/util/indent.hh>
+#include <hpp/util/serialization-fwd.hh>
 #include <hpp/pinocchio/util.hh>
 #include <hpp/constraints/fwd.hh>
 
@@ -38,9 +40,9 @@ namespace Eigen {
     /// Index of vector or matrix
     typedef hpp::constraints::size_type size_type;
     /// Interval of indices [first, first + second - 1]
-    typedef std::pair<size_type, size_type> segment_t;
+    typedef hpp::constraints::segment_t segment_t;
     /// vector of segments
-    typedef std::vector<segment_t> segments_t;
+    typedef hpp::constraints::segments_t segments_t;
 
     /// Return the number of indices in the vector of segments.
     /// \param a vector of segments
@@ -143,6 +145,8 @@ namespace Eigen {
         template <typename In0_t, typename In1_t> empty_struct (In0_t, In1_t) {}
         static inline Index size() { return 1; }
         inline const Index& operator[](const Index& i) const { return i; }
+	template<class Archive>
+	inline void serialize(Archive &, const unsigned int){}
       };
       template <bool If> struct get_if { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T1 run (T1 then, T2 Else) { (void)Else; return then; } };
       template <> struct get_if<false> { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T2 run (T1 then, T2 Else) { (void)then; return Else; } };
@@ -678,6 +682,16 @@ namespace Eigen {
         if (Shrink)   BlockIndex::shrink(b);
         if (Cardinal) idx = BlockIndex::cardinal(b);
       }
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+      (void) version;
+      ar & BOOST_SERIALIZATION_NVP(m_nbRows);
+      ar & BOOST_SERIALIZATION_NVP(m_nbCols);
+      ar & BOOST_SERIALIZATION_NVP(m_rows);
+      ar & BOOST_SERIALIZATION_NVP(m_cols);
+    }
+    friend class boost::serialization::access;
   }; // class MatrixBlocks
 
   /// \cond

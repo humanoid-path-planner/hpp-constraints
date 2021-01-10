@@ -21,6 +21,7 @@
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/constraints/comparison-types.hh>
+# include <hpp/constraints/matrix-view.hh>
 
 # include <hpp/util/serialization-fwd.hh>
 
@@ -73,7 +74,8 @@ namespace hpp {
 	A mask is a vector of Boolean values of size \f$n_v\f$. Values set to
 	false means that the corresponding component of the error defined above
 	is not taken into account to determine whether the constraint is
-	satisfied.
+	satisfied. The active rows of the constraint may be accessed via
+	method activeRows.
 
         \par Parameterizable right hand side
 
@@ -191,6 +193,16 @@ namespace hpp {
 	/// Set the comparison type
 	void comparisonType (const ComparisonTypes_t& comp);
 
+	const segments_t& activeRows() const
+	{
+	  return activeRows_;
+	}
+
+	/// Set inactive components of error to 0
+	/// \retval error error vector computed by substracting a right hand
+	///         side to the output to the value of the function.
+	void setInactiveRowsToZero(vectorOut_t error) const;
+
         /// Return a reference to function \f$h\f$.
         DifferentiableFunction& function () const
         {
@@ -232,12 +244,15 @@ namespace hpp {
 
         friend class ImplicitConstraintSet;
       private:
+	void computeActiveRows();
         ComparisonTypes_t comparison_;
         vector_t rhs_;
         size_type parameterSize_;
         DifferentiableFunctionPtr_t function_;
         DifferentiableFunctionPtr_t rhsFunction_;
 	std::vector<bool> mask_;
+	segments_t activeRows_;
+	Eigen::RowBlockIndices inactiveRows_;
 	ImplicitWkPtr_t weak_;
 
       protected:

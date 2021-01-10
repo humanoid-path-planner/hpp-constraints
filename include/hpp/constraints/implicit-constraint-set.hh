@@ -72,6 +72,8 @@ namespace hpp {
 	  // Handle mask
 	  mask_.insert(mask_.end(), constraint->mask_.begin(),
 		       constraint->mask_.end());
+	  // Recompute active rows
+	  computeActiveRows();
         }
 
         /// Get indices of constraint coordinates that are equality

@@ -240,3 +240,54 @@ BOOST_AUTO_TEST_CASE(affine_opt)
   EIGEN_VECTOR_IS_APPROX (test.optimize(0.5, 0.5), VECTOR2(0.5, 0.5));
 }
 
+// build an implicit constraint with values in SE3 and with non trivial mask
+BOOST_AUTO_TEST_CASE(mask)
+{
+  struct Identity : public DifferentiableFunction
+  {
+    static DifferentiableFunctionPtr_t create()
+    {
+      return DifferentiableFunctionPtr_t(new Identity());
+    }
+    Identity() : DifferentiableFunction(7, 6, LiegroupSpace::R3xSO3()) {}
+    virtual void impl_compute(LiegroupElementRef result, vectorIn_t argument)
+      const
+    {
+      result.vector() = argument;
+    }
+
+    virtual void impl_jacobian(matrixOut_t jacobian, vectorIn_t) const
+    {
+      jacobian.setIdentity();
+    }
+  }; // class Identity
+  solver::HierarchicalIterative solver(LiegroupSpace::R3xSO3());
+  solver.maxIterations(20);
+  solver.errorThreshold(1e-10);
+  std::vector<bool> mask{true, true, false, false, false, true};
+  ImplicitPtr_t c1(Implicit::create(Identity::create(), 6*Equality,
+				    mask));
+  ImplicitPtr_t c2(Implicit::create(Identity::create(), 6*Equality,
+				    mask));
+  solver.add(c1, 0);
+  solver.add(c2, 0);
+  vector_t q(7); q << 1, 2, 3, .5, .5, .5, .5;
+  solver.rightHandSideFromConfig(q);
+  bool found;
+  vector_t error(6);
+  std::cout << "q=" << q.transpose() << std::endl;
+  BOOST_CHECK(solver.isSatisfied(q));
+  BOOST_CHECK(solver.isConstraintSatisfied(c1, q, error, found));
+  std::cout << "error=" << error.transpose()  << std::endl;
+  BOOST_CHECK(solver.isConstraintSatisfied(c2, q, error, found));
+  std::cout << "error=" << error.transpose()  << std::endl;
+  BOOST_CHECK(found);
+  BOOST_CHECK(error.norm() < 1e-10);
+  std::cout << solver << std::endl;
+  q << 0,0,0,0,0,0,1;
+  std::cout << "q=" << q.transpose() << std::endl;
+  BOOST_CHECK(!solver.isConstraintSatisfied(c1, q, error, found));
+  std::cout << "error=" << error.transpose()  << std::endl;
+  BOOST_CHECK(!solver.isConstraintSatisfied(c2, q, error, found));
+  std::cout << "error=" << error.transpose()  << std::endl;
+}

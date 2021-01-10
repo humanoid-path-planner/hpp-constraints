@@ -210,10 +210,11 @@ namespace hpp {
               array().cast<bool>();
             active = adpF.any();
           }
-          if (active) // If at least one element of adp is true
-            rows.push_back (BlockIndices::segment_t
-                            (row, constraints [i]->function ().
-                             outputDerivativeSize()));
+          if (active){ // If at least one element of adp is true
+	    for (const segment_t s : constraints [i]->activeRows()) {
+	      rows.push_back(segment_t(s.first+row, s.second));
+	    }
+	  }
           row += constraints [i]->function ().outputDerivativeSize();
         }
         d.activeRowsOfJ = Eigen::MatrixBlocks<false,false>
