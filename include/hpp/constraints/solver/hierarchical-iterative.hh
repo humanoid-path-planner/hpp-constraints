@@ -655,6 +655,11 @@ namespace hpp {
         HPP_SERIALIZABLE_SPLIT();
       }; // class HierarchicalIterative
       /// \}
+      inline std::ostream& operator<< (std::ostream& os,
+				       const HierarchicalIterative& hs)
+      {
+        return hs.print(os);
+      }
     } // namespace solver
   } // namespace constraints
 } // namespace hpp

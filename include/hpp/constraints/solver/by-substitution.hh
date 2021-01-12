@@ -311,10 +311,6 @@ namespace hpp {
       }; // class BySubstitution
       /// \}
 
-      inline std::ostream& operator<< (std::ostream& os, const BySubstitution& hs)
-      {
-        return hs.print(os);
-      }
     } // namespace solver
   } // namespace constraints
 } // namespace hpp
