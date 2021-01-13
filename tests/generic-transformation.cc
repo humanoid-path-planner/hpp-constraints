@@ -17,6 +17,7 @@
 #define EIGEN_RUNTIME_NO_MALLOC
 
 #include "hpp/constraints/generic-transformation.hh"
+#include <hpp/constraints/solver/by-substitution.hh>
 
 #include <sstream>
 #include <pinocchio/algorithm/joint-configuration.hpp>
@@ -27,6 +28,7 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <hpp/pinocchio/serialization.hh>
+#include <hpp/pinocchio/urdf/util.hh>
 
 #include "hpp/constraints/tools.hh"
 
@@ -40,7 +42,10 @@ using hpp::pinocchio::ConfigurationPtr_t;
 using hpp::pinocchio::Device;
 using hpp::pinocchio::DevicePtr_t;
 using hpp::pinocchio::JointPtr_t;
+using hpp::pinocchio::LiegroupSpace;
 using hpp::pinocchio::Transform3f;
+
+using hpp::pinocchio::urdf::loadModelFromString;
 
 using namespace hpp::constraints;
 
@@ -75,7 +80,7 @@ public:
     return boost::make_shared<Configuration_t>(config);
   }
 private:
-  const DevicePtr_t& robot_;
+  DevicePtr_t robot_;
 }; // class BasicConfigurationShooter
 
 BOOST_AUTO_TEST_CASE (print) {
@@ -230,5 +235,78 @@ BOOST_AUTO_TEST_CASE (serialization) {
     oss2 << *f_restored;
 
     BOOST_CHECK_EQUAL(oss1.str(), oss2.str());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(RelativeTransformation_SE3)
+{
+  const std::string model("<robot name=\"box\">"
+                          "  <link name=\"baselink\">"
+                          "  </link>"
+                          "</robot>");
+
+  DevicePtr_t robot(Device::create("two-freeflyers"));
+  // Create two freeflying boxes
+  loadModelFromString(robot, 0, "1/", "freeflyer", model, "");
+  loadModelFromString(robot, 0, "2/", "freeflyer", model, "");
+  BOOST_CHECK(robot->configSize() == 14);
+  BOOST_CHECK(robot->numberDof() == 12);
+  BOOST_CHECK(robot->nbJoints() == 2);
+  JointPtr_t j1(robot->jointAt(0));
+  JointPtr_t j2(robot->jointAt(1));
+
+  // Set joint bounds
+  for (std::size_t i=0; i<2; ++i) {
+    vector_t l(7); l << -2,-2,-2,-1,-1,-1,-1;
+    vector_t u(7); u <<  2, 2, 2, 1, 1, 1, 1;
+    robot->jointAt(i)->lowerBounds(l);
+    robot->jointAt(i)->upperBounds(u);
+  }
+  // Create constraint
+  //
+  // Frame in joint 1
+  //   R =    0.707107, -0.707107,         0
+  //          0,         0,                1
+  //         -0.707107, -0.707107,         0
+  //   p =         0.1,       0,       -0.03
+  //
+  // Frame in joint 2
+  //   R =   1, 0, 0
+  //         0, 1, 0
+  //         0, 0, 1
+  //   p =    0,    0,    -0.2
+
+  matrix3_t R1, R2;
+  vector3_t p1, p2;
+  value_type a(sqrt(2)/2);
+  R1 << a, -a, 0,
+    0, 0, 1,
+    -a, -a, 0;
+  p1 << 0.1, 0, -0.03;
+  R2.setIdentity();
+  p2 << 0, 0, -0.2;
+  Transform3f tf1(R1, p1), tf2(R2,p2);
+  std::vector<bool> mask = {false, false, false, false, false, true};
+  ImplicitPtr_t constraint
+    (Implicit::create (RelativeTransformationSE3::create
+		       ("RelativeTransformationSE3", robot, j1, j2,
+			tf1, tf2),
+		       6 * Equality, mask));
+  BasicConfigurationShooter cs (robot);
+  solver::BySubstitution solver(robot->configSpace());
+  solver.errorThreshold(1e-10);
+  solver.add(constraint);
+  for (size_type i=0; i<10; ++i)
+  {
+    ConfigurationPtr_t q(cs.shoot());
+    LiegroupElement h(LiegroupSpace::R3xSO3());
+    vector6_t error;
+    solver.rightHandSideFromConfig(*q);
+    BOOST_CHECK(solver.isSatisfied(*q, error));
+    constraint->function().value(h, *q);
+    std::cout << "q =  " << q->transpose() << std::endl;
+    std::cout << "h(q) = " << h << std::endl;
+    std::cout << "error = " << error.transpose() << std::endl;
+    std::cout << solver << std::endl;
   }
 }
