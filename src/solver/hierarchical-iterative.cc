@@ -846,19 +846,20 @@ namespace hpp {
           os << iendl << "Level " << i;
           if (lastIsOptional_ && i == end) os << " (optional)";
           os << ": Stack of " << constraints.size () << " functions" << incindent;
-          size_type row = 0;
+          size_type rv = 0, rq = 0;
           for (std::size_t j = 0; j < constraints.size (); ++j) {
             const DifferentiableFunctionPtr_t& f
               (constraints [j]->functionPtr ());
             os << iendl << j << ": ["
-               << row << ", " << f->outputDerivativeSize() << "],"
+               << rv << ", " << f->outputDerivativeSize() << "],"
                << incindent << *f
                << iendl << "Rhs: " << condensed(d.rightHandSide.vector().segment
-                                                (row, f->outputSize()))
+                                                (rq, f->outputSize()))
 	       << iendl << "active rows: "
 	       << condensed(constraints[j]->activeRows())
                << decindent;
-            row += f->outputDerivativeSize();
+            rv += f->outputDerivativeSize();
+            rq += f->outputSize();
           }
           os << decendl;
           os << "Equality idx: " << d.equalityIndices;
