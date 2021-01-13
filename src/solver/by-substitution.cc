@@ -58,7 +58,7 @@ namespace hpp {
       {
         for (NumericalConstraints_t::iterator it (constraints_.begin ());
              it != constraints_.end (); ++it) {
-          assert (contains (*it));
+          //assert (contains (*it));
         }
       }
 

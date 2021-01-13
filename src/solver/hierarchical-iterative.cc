@@ -419,9 +419,9 @@ namespace hpp {
           ics.function ().value (d.output, config);
           d.error.setZero();
           d.equalityIndices.lview(d.error) =
-            d.equalityIndices.rview(d.output - d.rightHandSide);
+            d.equalityIndices.rview(log(d.output));
           // rhs = exp (error)
-          d.rightHandSide += d.error;
+          d.rightHandSide = d.rightHandSide.space()->exp(d.error);
         }
         return rightHandSide();
       }
