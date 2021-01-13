@@ -227,8 +227,10 @@ BOOST_AUTO_TEST_CASE(convexShapeContact)
         q1.vector() = q.head<7>();
         q2.vector() = q.tail<7>();
         q1Invq2 = SE3->exp(q2-q1);
+	// Note that error of constraint is not equivalent to relative
+	// position between objects, but between contact surface frames.
         BOOST_CHECK ((q1Invq2-q1Invq2Exp[j]).norm() <=
-                     solver2.errorThreshold());
+                     10 * solver2.errorThreshold());
       }
       else
       {
