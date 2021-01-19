@@ -16,7 +16,8 @@
 
 #define EIGEN_RUNTIME_NO_MALLOC
 
-#include "hpp/constraints/generic-transformation.hh"
+#include <hpp/constraints/generic-transformation.hh>
+#include <hpp/constraints/explicit/relative-pose.hh>
 #include <hpp/constraints/solver/by-substitution.hh>
 
 #include <sstream>
@@ -264,27 +265,33 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_SE3)
   }
   // Create constraint
   //
+  // Excerpt from romeo-placard benchmark
+  // Joint1: romeo/LWristPitch
   // Frame in joint 1
-  //   R =    0.707107, -0.707107,         0
-  //          0,         0,                1
-  //         -0.707107, -0.707107,         0
-  //   p =         0.1,       0,       -0.03
-  //
+  //   R = 0.7071067739978436073, 0.70710678837525142715, 0
+  //       -2.2663502965461253728e-09,  2.2663502504650490188e-09, -1
+  //       -0.70710678837525142715, 0.70710677399784382935, 3.2051032938795742666e-09
+  //   p = 0.099999999776482578762, -3.2051032222399330291e-11, -0.029999999776482582509
+  // Joint2: placard/root_joint
   // Frame in joint 2
   //   R =   1, 0, 0
   //         0, 1, 0
   //         0, 0, 1
-  //   p =    0,    0,    -0.2
+  //   p = 0, 0, -0.34999999403953552246
+  // mask: 1, 1, 1, 1, 1, 1,
+  // Rhs: 0, 0, 0, 0, 0, 0, 1
+              // active rows: [ 0, 5],
 
   matrix3_t R1, R2;
   vector3_t p1, p2;
   value_type a(sqrt(2)/2);
-  R1 << a, -a, 0,
-    0, 0, 1,
-    -a, -a, 0;
-  p1 << 0.1, 0, -0.03;
+  R1 << 0.7071067739978436073, 0.70710678837525142715, 0,
+    -2.2663502965461253728e-09,  2.2663502504650490188e-09, -1,
+    -0.70710678837525142715, 0.70710677399784382935, 3.2051032938795742666e-09;
+  p1 << 0.099999999776482578762, -3.2051032222399330291e-11,
+    -0.029999999776482582509;
   R2.setIdentity();
-  p2 << 0, 0, -0.2;
+  p2 << 0, 0, -0.34999999403953552246;
   Transform3f tf1(R1, p1), tf2(R2,p2);
   std::vector<bool> mask = {false, false, false, false, false, true};
   ImplicitPtr_t constraint
@@ -296,17 +303,69 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_SE3)
   solver::BySubstitution solver(robot->configSpace());
   solver.errorThreshold(1e-10);
   solver.add(constraint);
-  for (size_type i=0; i<10; ++i)
+  // Check that after setting right hand side with a configuration
+  // the configuration satisfies the constraint since comparison type is
+  // Equality.
+  for(size_type i=0; i<1000; ++i)
   {
     ConfigurationPtr_t q(cs.shoot());
-    LiegroupElement h(LiegroupSpace::R3xSO3());
     vector6_t error;
     solver.rightHandSideFromConfig(*q);
     BOOST_CHECK(solver.isSatisfied(*q, error));
-    constraint->function().value(h, *q);
-    std::cout << "q =  " << q->transpose() << std::endl;
-    std::cout << "h(q) = " << h << std::endl;
-    std::cout << "error = " << error.transpose() << std::endl;
-    std::cout << solver << std::endl;
+  }
+
+  // Create grasp constraint with one degree of freedom in rotation along z
+  mask = {true, true, true, true, true, false};
+  ImplicitPtr_t c1 (Implicit::create(RelativeTransformationSE3::create
+				     ("RelativeTransformationSE3", robot,
+				      j1, j2, tf1, tf2), 6*EqualToZero, mask));
+  solver::BySubstitution s1(robot->configSpace());
+  s1.errorThreshold(1e-10);
+  s1.add(c1);
+  // Create grasp + complement as an explicit constraint
+  ExplicitPtr_t c2(explicit_::RelativePose::create
+		   ("ExplicitRelativePose", robot, j1, j2, tf1, tf2,
+		    5 * EqualToZero << Equality));
+  solver::BySubstitution s2(robot->configSpace());
+  s2.errorThreshold(1e-4);
+  s2.add(c2);
+
+  for(size_type i=0; i<0; ++i)
+  {
+    ConfigurationPtr_t q_near(cs.shoot());
+    ConfigurationPtr_t q_new(cs.shoot());
+    if (i == 0)
+    {
+      // These configuration reproduce a numerical issue encountered with
+      // benhmark romeo-placard.
+      // If computation was exact, any configuration satisfying c2 should
+      // satisfy c1.
+      // Configuration q_new below satisfies c2 but not c1.
+      *q_near << 0.18006349590534418, 0.3627623741970175, 0.9567759630330663,
+	0.044416054309488175, 0.31532356328825556, 0.4604329042168087,
+	0.8286131819306576,
+	0.45813483973344404, 0.23514459283216355, 0.7573015903787429,
+	0.8141495491430896, 0.1383820163733335, 0.3806970356973106,
+	0.4160296818567576;
+      *q_new << 0.16026892741853033, 0.33925098736439646, 0.8976880203169203,
+	-0.040130835169737825, 0.37473431876437147, 0.4405275981290593,
+	0.8148000624051422,
+	0.43787674119234027, 0.18316291571416676, 0.7189377922181226,
+	0.7699579340925136, 0.1989432638510445, 0.35960786236482944,
+	0.4881275886709128;
+    }
+    s2.rightHandSideFromConfig(*q_near);
+    vector6_t error;
+    BOOST_CHECK(s1.isSatisfied(*q_near, error));
+    hppDout(info, error);
+    BOOST_CHECK(s2.isSatisfied(*q_near, error));
+    hppDout(info, error);
+    BOOST_CHECK(s1.isSatisfied(*q_new, error));
+    hppDout(info, error);
+    BOOST_CHECK(s2.isSatisfied(*q_new, error));
+    hppDout(info, error);
+
+    hppDout(info, s1);
+    hppDout(info, s2);
   }
 }
