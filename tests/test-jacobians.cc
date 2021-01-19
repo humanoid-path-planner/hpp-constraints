@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   functions.push_back (
       RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
   functions.push_back (
-      RelativeTransformationSE3::create ("RelativeTransformationSE3", device, ee1, ee2, tf1, tf2));
+      RelativeTransformationR3xSO3::create ("RelativeTransformationR3xSO3", device, ee1, ee2, tf1, tf2));
   functions.push_back (
       createConvexShapeContact_triangles (device, ee1, "ConvexShapeContact triangle"));
   functions.push_back (

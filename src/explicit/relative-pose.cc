@@ -131,7 +131,7 @@ namespace hpp {
        const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
        const Transform3f& frame1, const Transform3f& frame2,
        ComparisonTypes_t comp, std::vector<bool> mask) :
-        Explicit (RelativeTransformationSE3::create
+        Explicit (RelativeTransformationR3xSO3::create
                   (name, robot, joint1, joint2, frame1, frame2,
 		   std::vector<bool>(6,true)),
                   RelativeTransformation::create

@@ -351,7 +351,8 @@ namespace hpp {
       d.constraint->function ().value (d.h_value, arg);
       vector_t logRhs(log(d.h_value));
       // Equality indices apply on the log of the right hand side
-      // This is necessary for constraints built with RelativeTransformationSE3.
+      // This is necessary for constraints built with
+      // RelativeTransformationR3xSO3.
       vector_t logRhsImplicit(vector_t::Zero(d.rhs_implicit.space()->nv()));
       d.equalityIndices.lview(logRhsImplicit) = d.equalityIndices.rview(logRhs);
       d.rhs_implicit = d.rhs_implicit.space()->exp(logRhsImplicit);

@@ -295,8 +295,8 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_SE3)
   Transform3f tf1(R1, p1), tf2(R2,p2);
   std::vector<bool> mask = {false, false, false, false, false, true};
   ImplicitPtr_t constraint
-    (Implicit::create (RelativeTransformationSE3::create
-		       ("RelativeTransformationSE3", robot, j1, j2,
+    (Implicit::create (RelativeTransformationR3xSO3::create
+		       ("RelativeTransformationR3xSO3", robot, j1, j2,
 			tf1, tf2),
 		       6 * Equality, mask));
   BasicConfigurationShooter cs (robot);
@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_SE3)
 
   // Create grasp constraint with one degree of freedom in rotation along z
   mask = {true, true, true, true, true, false};
-  ImplicitPtr_t c1 (Implicit::create(RelativeTransformationSE3::create
-				     ("RelativeTransformationSE3", robot,
+  ImplicitPtr_t c1 (Implicit::create(RelativeTransformationR3xSO3::create
+				     ("RelativeTransformationR3xSO3", robot,
 				      j1, j2, tf1, tf2), 6*EqualToZero, mask));
   solver::BySubstitution s1(robot->configSpace());
   s1.errorThreshold(1e-10);
