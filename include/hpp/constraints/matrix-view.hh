@@ -17,12 +17,10 @@
 #ifndef HPP_CONSTRAINTS_MATRIX_VIEW_HH
 #define HPP_CONSTRAINTS_MATRIX_VIEW_HH
 
-#include <boost/serialization/nvp.hpp>
 #include <Eigen/Core>
 #include <vector>
 #include <iostream>
 #include <hpp/util/indent.hh>
-#include <hpp/util/serialization-fwd.hh>
 #include <hpp/pinocchio/util.hh>
 #include <hpp/constraints/fwd.hh>
 
@@ -145,8 +143,6 @@ namespace Eigen {
         template <typename In0_t, typename In1_t> empty_struct (In0_t, In1_t) {}
         static inline Index size() { return 1; }
         inline const Index& operator[](const Index& i) const { return i; }
-	template<class Archive>
-	inline void serialize(Archive &, const unsigned int){}
       };
       template <bool If> struct get_if { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T1 run (T1 then, T2 Else) { (void)Else; return then; } };
       template <> struct get_if<false> { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T2 run (T1 then, T2 Else) { (void)then; return Else; } };
