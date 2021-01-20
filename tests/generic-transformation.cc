@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE (serialization) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(RelativeTransformation_SE3)
+BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3)
 {
   const std::string model("<robot name=\"box\">"
                           "  <link name=\"baselink\">"

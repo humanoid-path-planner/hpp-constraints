@@ -119,23 +119,25 @@ namespace hpp {
         IsRelative         = _Options & RelativeBit,
         ComputeOrientation = _Options & OrientationBit,
         ComputePosition    = _Options & PositionBit,
-        OutputSE3          = _Options & OutputSE3Bit,
+        OutputR3xSO3          = _Options & OutputR3xSO3Bit,
         IsPosition         = ComputePosition  && !ComputeOrientation,
         IsOrientation      = !ComputePosition && ComputeOrientation,
         IsTransform        = ComputePosition  && ComputeOrientation;
       static constexpr int
-        ValueSize          = (ComputePosition?3:0) + (ComputeOrientation?(OutputSE3?4:3):0),
+        ValueSize          = (ComputePosition?3:0) +
+	(ComputeOrientation?(OutputR3xSO3?4:3):0),
         DerSize            = (ComputePosition?3:0) + (ComputeOrientation ?3:0);
 #else
       enum {
         IsRelative         = _Options & RelativeBit,
         ComputeOrientation = _Options & OrientationBit,
         ComputePosition    = _Options & PositionBit,
-        OutputSE3          = _Options & OutputSE3Bit,
+        OutputR3xSO3          = _Options & OutputR3xSO3Bit,
         IsPosition         = ComputePosition  && !ComputeOrientation,
         IsOrientation      = !ComputePosition && ComputeOrientation,
         IsTransform        = ComputePosition  && ComputeOrientation,
-        ValueSize          = (ComputePosition?3:0) + (ComputeOrientation?(OutputSE3?4:3):0),
+        ValueSize          = (ComputePosition?3:0) +
+	(ComputeOrientation?(OutputR3xSO3?4:3):0),
         DerSize            = (ComputePosition?3:0) + (ComputeOrientation ?3:0)
         };
 #endif

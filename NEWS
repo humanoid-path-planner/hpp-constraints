@@ -1,4 +1,6 @@
                                                                 -*- outline -*-
+* TransformationR3xSO3 and RelativeTransformationR3xSO3 return error values
+  is R3xSO3 LiegroupSpace.
 * Solvers now handle constraints with right hand sides in Lie groups.
 * A mask has been added to class Implicit to select which lines of the
   constraint should be taken into account (active rows).

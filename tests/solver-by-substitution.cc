@@ -821,7 +821,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
   Configuration_t q, qrand;
 
   JointPtr_t left = device->getJointByName ("LWristPitch");
-  TransformationSE3::Ptr_t frame (TransformationSE3::create
+  TransformationR3xSO3::Ptr_t frame (TransformationR3xSO3::create
       ("LWristPitch", device, left, Transform3f::Identity()));
   Transformation::Ptr_t logFrame (Transformation::create
       ("LWristPitch", device, left, Transform3f::Identity()));
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
     EIGEN_IS_APPROX (expectedJlogFrame, JlogFrame);
   }
 
-  // Check that the solver can handle constraints with SE3 outputs.
+  // Check that the solver can handle constraints with R3xSO3 outputs.
   ImplicitPtr_t constraint (Implicit::create (frame, 6 * Equality));
 
   BySubstitution solver(device->configSpace ());

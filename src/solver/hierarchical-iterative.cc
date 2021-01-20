@@ -401,7 +401,7 @@ namespace hpp {
              matrix()).eval();
           if (adp.any()) // If at least one element of adp is true
 	    for (const segment_t s : constraints [i]->activeRows()) {
-	      rows.push_back(segment_t(s.first+offset, s.second));
+	      rows.emplace_back(s.first+offset, s.second);
 	    }
           offset += constraints [i]->function ().outputDerivativeSize();
         }

@@ -682,16 +682,6 @@ namespace Eigen {
         if (Shrink)   BlockIndex::shrink(b);
         if (Cardinal) idx = BlockIndex::cardinal(b);
       }
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-      (void) version;
-      ar & BOOST_SERIALIZATION_NVP(m_nbRows);
-      ar & BOOST_SERIALIZATION_NVP(m_nbCols);
-      ar & BOOST_SERIALIZATION_NVP(m_rows);
-      ar & BOOST_SERIALIZATION_NVP(m_cols);
-    }
-    friend class boost::serialization::access;
   }; // class MatrixBlocks
 
   /// \cond

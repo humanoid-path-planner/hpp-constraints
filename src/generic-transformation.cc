@@ -42,7 +42,7 @@ namespace hpp {
       assert (mask[(pos ? 3 : 0) + 0]
           &&  mask[(pos ? 3 : 0) + 1]
           &&  mask[(pos ? 3 : 0) + 2]
-          && "Full orientation is necessary to output SE3 / SO3 error");
+          && "Full orientation is necessary to output R3xSO3 / SO3 error");
       const size_type nTranslation = size(mask) - 3;
       LiegroupSpacePtr_t SO3 = LiegroupSpace::SO3();
       switch (nTranslation) {
@@ -64,7 +64,7 @@ namespace hpp {
         assert (mask[(pos ? 3 : 0) + 0]
             &&  mask[(pos ? 3 : 0) + 1]
             &&  mask[(pos ? 3 : 0) + 2]
-            && "Full orientation is necessary to output SE3 / SO3 error");
+            && "Full orientation is necessary to output R3xSO3 / SO3 error");
         _mask[_mask.size()-1] = true;
       }
       return Eigen::RowBlockIndices (Eigen::BlockIndex::fromLogicalExpression (_mask));
@@ -166,11 +166,11 @@ namespace hpp {
       (const std::string& name, const DevicePtr_t& robot,
        std::vector <bool> mask) :
         DifferentiableFunction (robot->configSize (), robot->numberDof (),
-            liegroupSpace <(bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> (mask),
+            liegroupSpace <(bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3> (mask),
             name),
         robot_ (robot),
         m_(robot->numberDof()-robot->extraConfigSpace().dimension()),
-        Vindices_ (indices<(bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> (mask)),
+        Vindices_ (indices<(bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3> (mask)),
         mask_ (mask)
     {
       assert(mask.size()==DerSize);
@@ -200,11 +200,11 @@ namespace hpp {
     void GenericTransformation<_Options>::impl_compute
     (LiegroupElementRef result, ConfigurationIn_t argument) const
     {
-      GTDataV<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> data (m_, robot_);
+      GTDataV<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3> data (m_, robot_);
 
       data.device.currentConfiguration (argument);
       data.device.computeForwardKinematics ();
-      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3>::error (data);
+      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3>::error (data);
 
       result.vector() = Vindices_.rview (data.value);
     }
@@ -218,12 +218,12 @@ namespace hpp {
       // support multithreadind. To avoid it, DeviceData should provide some
       // a temporary buffer to pass to an Eigen::Map
       {
-      GTDataJ<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3> data (m_, robot_);
+      GTDataJ<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3> data (m_, robot_);
 
       data.device.currentConfiguration (arg);
       data.device.computeForwardKinematics ();
-      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3>::error (data);
-      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputSE3>::jacobian (data, jacobian, mask_);
+      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3>::error (data);
+      compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3>::jacobian (data, jacobian, mask_);
       }
 
 #ifdef CHECK_JACOBIANS
@@ -266,12 +266,12 @@ namespace hpp {
     template class GenericTransformation< RelativeBit | PositionBit                  >;
     template class GenericTransformation< RelativeBit |               OrientationBit >;
 
-    template class GenericTransformation< OutputSE3Bit |               PositionBit | OrientationBit >;
-    // template class GenericTransformation< OutputSE3Bit |               PositionBit                  >;
-    template class GenericTransformation< OutputSE3Bit |                             OrientationBit >;
-    template class GenericTransformation< OutputSE3Bit | RelativeBit | PositionBit | OrientationBit >;
-    // template class GenericTransformation< OutputSE3Bit | RelativeBit | PositionBit                  >;
-    template class GenericTransformation< OutputSE3Bit | RelativeBit |               OrientationBit >;
+    template class GenericTransformation< OutputR3xSO3Bit |               PositionBit | OrientationBit >;
+    // template class GenericTransformation< OutputR3xSO3Bit |               PositionBit                  >;
+    template class GenericTransformation< OutputR3xSO3Bit |                             OrientationBit >;
+    template class GenericTransformation< OutputR3xSO3Bit | RelativeBit | PositionBit | OrientationBit >;
+    // template class GenericTransformation< OutputR3xSO3Bit | RelativeBit | PositionBit                  >;
+    template class GenericTransformation< OutputR3xSO3Bit | RelativeBit |               OrientationBit >;
 
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::Position);
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::Orientation);
@@ -279,7 +279,7 @@ namespace hpp {
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativePosition);
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeOrientation);
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeTransformation);
-    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::TransformationSE3);
+    HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::TransformationR3xSO3);
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeTransformationR3xSO3);
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::OrientationSO3);
     HPP_SERIALIZATION_IMPLEMENT(hpp::constraints::RelativeOrientationSO3);
@@ -328,7 +328,7 @@ BOOST_CLASS_EXPORT(hpp::constraints::Transformation)
 BOOST_CLASS_EXPORT(hpp::constraints::RelativePosition)
 BOOST_CLASS_EXPORT(hpp::constraints::RelativeOrientation)
 BOOST_CLASS_EXPORT(hpp::constraints::RelativeTransformation)
-BOOST_CLASS_EXPORT(hpp::constraints::TransformationSE3)
+BOOST_CLASS_EXPORT(hpp::constraints::TransformationR3xSO3)
 BOOST_CLASS_EXPORT(hpp::constraints::RelativeTransformationR3xSO3)
 BOOST_CLASS_EXPORT(hpp::constraints::OrientationSO3)
 BOOST_CLASS_EXPORT(hpp::constraints::RelativeOrientationSO3)

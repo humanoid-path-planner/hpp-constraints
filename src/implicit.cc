@@ -228,9 +228,10 @@ namespace hpp {
         parameterSize_ = computeParameterSize (comparison_);
       ar & BOOST_SERIALIZATION_NVP(function_);
       ar & BOOST_SERIALIZATION_NVP(rhsFunction_);
-      ar & BOOST_SERIALIZATION_NVP(activeRows_);
-      ar & BOOST_SERIALIZATION_NVP(inactiveRows_);
+      ar & BOOST_SERIALIZATION_NVP(mask_);
       ar & BOOST_SERIALIZATION_NVP(weak_);
+      if (!Archive::is_saving::value)
+        computeActiveRows();
     }
 
     HPP_SERIALIZATION_IMPLEMENT(Implicit);
