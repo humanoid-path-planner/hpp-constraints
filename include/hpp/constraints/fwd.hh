@@ -97,38 +97,38 @@ namespace hpp {
     typedef pinocchio::DevicePtr_t DevicePtr_t;
     typedef pinocchio::CenterOfMassComputation CenterOfMassComputation;
     typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
-    typedef boost::shared_ptr <DifferentiableFunction>
+    typedef shared_ptr <DifferentiableFunction>
     DifferentiableFunctionPtr_t;
-    typedef boost::shared_ptr <DifferentiableFunctionSet>
+    typedef shared_ptr <DifferentiableFunctionSet>
     DifferentiableFunctionSetPtr_t;
     typedef DifferentiableFunctionSet DifferentiableFunctionStack
     HPP_CONSTRAINTS_DEPRECATED;
-    typedef boost::shared_ptr <ActiveSetDifferentiableFunction>
+    typedef shared_ptr <ActiveSetDifferentiableFunction>
     ActiveSetDifferentiableFunctionPtr_t;
-    typedef boost::shared_ptr <DistanceBetweenBodies>
+    typedef shared_ptr <DistanceBetweenBodies>
     DistanceBetweenBodiesPtr_t;
-    typedef boost::shared_ptr <DistanceBetweenPointsInBodies>
+    typedef shared_ptr <DistanceBetweenPointsInBodies>
     DistanceBetweenPointsInBodiesPtr_t;
-    typedef boost::shared_ptr<RelativeCom> RelativeComPtr_t;
-    typedef boost::shared_ptr<ComBetweenFeet> ComBetweenFeetPtr_t;
+    typedef shared_ptr<RelativeCom> RelativeComPtr_t;
+    typedef shared_ptr<ComBetweenFeet> ComBetweenFeetPtr_t;
     /// Plane polygon represented by its vertices
     /// Used to model contact surfaces for manipulation applications
     typedef std::vector<vector3_t> Shape_t;
     typedef std::pair <JointPtr_t, Shape_t> JointAndShape_t;
     typedef std::list <JointAndShape_t> JointAndShapes_t;
-    typedef boost::shared_ptr<ConvexShapeContact>
+    typedef shared_ptr<ConvexShapeContact>
       ConvexShapeContactPtr_t;
-    typedef boost::shared_ptr<ConvexShapeContactComplement>
+    typedef shared_ptr<ConvexShapeContactComplement>
       ConvexShapeContactComplementPtr_t;
-    typedef boost::shared_ptr<ConvexShapeContactHold>
+    typedef shared_ptr<ConvexShapeContactHold>
       ConvexShapeContactHoldPtr_t;
-    typedef boost::shared_ptr<StaticStability> StaticStabilityPtr_t;
-    typedef boost::shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
-    typedef boost::shared_ptr<ConfigurationConstraint>
+    typedef shared_ptr<StaticStability> StaticStabilityPtr_t;
+    typedef shared_ptr<QPStaticStability> QPStaticStabilityPtr_t;
+    typedef shared_ptr<ConfigurationConstraint>
       ConfigurationConstraintPtr_t;
-    typedef boost::shared_ptr<Identity> IdentityPtr_t;
-    typedef boost::shared_ptr<AffineFunction> AffineFunctionPtr_t;
-    typedef boost::shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
+    typedef shared_ptr<Identity> IdentityPtr_t;
+    typedef shared_ptr<AffineFunction> AffineFunctionPtr_t;
+    typedef shared_ptr<ConstantFunction> ConstantFunctionPtr_t;
 
     template <int _Options> class GenericTransformation;
 
@@ -149,22 +149,22 @@ namespace hpp {
     typedef GenericTransformation<                             OrientationBit | OutputR3xSO3Bit > OrientationSO3;
     typedef GenericTransformation< RelativeBit |               OrientationBit | OutputR3xSO3Bit > RelativeOrientationSO3;
 
-    typedef boost::shared_ptr<Position> PositionPtr_t;
-    typedef boost::shared_ptr<Orientation> OrientationPtr_t;
-    typedef boost::shared_ptr<Transformation> TransformationPtr_t;
-    typedef boost::shared_ptr<RelativePosition> RelativePositionPtr_t;
-    typedef boost::shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
-    typedef boost::shared_ptr<RelativeTransformation>
+    typedef shared_ptr<Position> PositionPtr_t;
+    typedef shared_ptr<Orientation> OrientationPtr_t;
+    typedef shared_ptr<Transformation> TransformationPtr_t;
+    typedef shared_ptr<RelativePosition> RelativePositionPtr_t;
+    typedef shared_ptr<RelativeOrientation> RelativeOrientationPtr_t;
+    typedef shared_ptr<RelativeTransformation>
       RelativeTransformationPtr_t;
 
     typedef Eigen::BlockIndex BlockIndex;
 
     HPP_PREDEF_CLASS (Implicit);
-    typedef boost::shared_ptr <Implicit> ImplicitPtr_t;
-    typedef boost::shared_ptr <const Implicit> ImplicitConstPtr_t;
+    typedef shared_ptr <Implicit> ImplicitPtr_t;
+    typedef shared_ptr <const Implicit> ImplicitConstPtr_t;
     typedef std::vector < constraints::ImplicitPtr_t > NumericalConstraints_t;
     HPP_PREDEF_CLASS (ImplicitConstraintSet);
-    typedef boost::shared_ptr <ImplicitConstraintSet>
+    typedef shared_ptr <ImplicitConstraintSet>
     ImplicitConstraintSetPtr_t;
 
     enum ComparisonType {
@@ -176,8 +176,8 @@ namespace hpp {
     typedef std::vector<ComparisonType> ComparisonTypes_t;
 
     HPP_PREDEF_CLASS (Explicit);
-    typedef boost::shared_ptr <Explicit> ExplicitPtr_t;
-    typedef boost::shared_ptr <const Explicit> ExplicitConstPtr_t;
+    typedef shared_ptr <Explicit> ExplicitPtr_t;
+    typedef shared_ptr <const Explicit> ExplicitConstPtr_t;
 
     class ExplicitConstraintSet;
     namespace solver {
@@ -188,24 +188,24 @@ namespace hpp {
     namespace explicit_ {
       class Function;
       HPP_PREDEF_CLASS (RelativePose);
-      typedef boost::shared_ptr <RelativePose> RelativePosePtr_t;
+      typedef shared_ptr <RelativePose> RelativePosePtr_t;
       HPP_PREDEF_CLASS (RelativeTransformation);
-      typedef boost::shared_ptr <RelativeTransformation>
+      typedef shared_ptr <RelativeTransformation>
       RelativeTransformationPtr_t;
       HPP_PREDEF_CLASS (ImplicitFunction);
-      typedef boost::shared_ptr <ImplicitFunction> ImplicitFunctionPtr_t;
+      typedef shared_ptr <ImplicitFunction> ImplicitFunctionPtr_t;
       HPP_PREDEF_CLASS(ConvexShapeContact);
-      typedef boost::shared_ptr<ConvexShapeContact> ConvexShapeContactPtr_t;
+      typedef shared_ptr<ConvexShapeContact> ConvexShapeContactPtr_t;
     } // namespace explicit_
 
     HPP_PREDEF_CLASS (LockedJoint);
-    typedef boost::shared_ptr <LockedJoint> LockedJointPtr_t;
-    typedef boost::shared_ptr <const LockedJoint> LockedJointConstPtr_t;
+    typedef shared_ptr <LockedJoint> LockedJointPtr_t;
+    typedef shared_ptr <const LockedJoint> LockedJointConstPtr_t;
     typedef std::vector <LockedJointPtr_t> LockedJoints_t;
 
     namespace function {
       HPP_PREDEF_CLASS (OfParameterSubset);
-      typedef boost::shared_ptr <OfParameterSubset> OfParameterSubsetPtr_t;
+      typedef shared_ptr <OfParameterSubset> OfParameterSubsetPtr_t;
     } // namespace function
   } // namespace constraints
 } // namespace hpp

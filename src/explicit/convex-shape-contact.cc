@@ -14,7 +14,6 @@
 // received a copy of the GNU Lesser General Public License along with
 // hpp-constraints. If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/assign/list_of.hpp>
 #include <hpp/constraints/convex-shape-contact.hh>
 #include <hpp/constraints/explicit/convex-shape-contact.hh>
 #include <hpp/constraints/explicit/relative-pose.hh>
@@ -25,8 +24,6 @@
 namespace hpp {
   namespace constraints {
     namespace explicit_ {
-      using boost::assign::list_of;
-
       ConvexShapeContactPtr_t ConvexShapeContact::create
       (const std::string& name, DevicePtr_t robot,
        const JointAndShapes_t& floorSurfaces,
@@ -55,12 +52,12 @@ namespace hpp {
                     (name, robot, floorSurfaces, objectSurfaces));
         functions.first->setNormalMargin(margin);
         // Contact constraint (= 0)
-        boost::get<0>(result) = Implicit::create(functions.first, 5*EqualToZero);
+        std::get<0>(result) = Implicit::create(functions.first, 5*EqualToZero);
         // Contact constraint complement (= rhs)
-        boost::get<1>(result) = Implicit::create
+        std::get<1>(result) = Implicit::create
           (functions.second, ComparisonTypes_t(functions.second->outputSize(),
             constraints::Equality));
-        boost::get<2>(result) = create(name + "/hold", robot, floorSurfaces,
+        std::get<2>(result) = create(name + "/hold", robot, floorSurfaces,
                                      objectSurfaces, margin);
         return result;
       }

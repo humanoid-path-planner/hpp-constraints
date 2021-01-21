@@ -17,8 +17,8 @@
 #ifndef HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
 #define HPP_CONSTRAINTS_SYMBOLIC_CALCULUS_HH
 
-#define HPP_CONSTRAINTS_CB_REF boost::shared_ptr
-#define HPP_CONSTRAINTS_CB_WKREF boost::shared_ptr
+#define HPP_CONSTRAINTS_CB_REF shared_ptr
+#define HPP_CONSTRAINTS_CB_WKREF shared_ptr
 
 #define HPP_CONSTRAINTS_CB_DEFINE_OPERATOR1(op, InType, OutType) \
     template < typename RhsType > \
@@ -245,10 +245,10 @@ namespace hpp {
     class Expression
     {
       public:
-        typedef boost::shared_ptr <
+        typedef shared_ptr <
           Expression < LhsValue, RhsValue >
           > Ptr_t;
-        typedef boost::weak_ptr <
+        typedef weak_ptr <
           Expression < LhsValue, RhsValue >
           > WkPtr_t;
 
@@ -752,7 +752,7 @@ namespace hpp {
     {
       public:
         typedef CalculusBase <FunctionExp<FunctionType>, vector_t, matrix_t> Parent_t;
-        typedef boost::shared_ptr<FunctionType> FunctionTypePtr_t;
+        typedef shared_ptr<FunctionType> FunctionTypePtr_t;
 
         HPP_CONSTRAINTS_CB_CREATE1 (FunctionExp<FunctionType>, const FunctionTypePtr_t&)
 

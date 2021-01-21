@@ -112,8 +112,8 @@ namespace hpp {
       public DifferentiableFunction
     {
     public:
-      typedef boost::shared_ptr <GenericTransformation> Ptr_t;
-      typedef boost::weak_ptr <GenericTransformation> WkPtr_t;
+      typedef shared_ptr <GenericTransformation> Ptr_t;
+      typedef weak_ptr <GenericTransformation> WkPtr_t;
 #if __cplusplus >= 201103L
       static constexpr bool
         IsRelative         = _Options & RelativeBit,

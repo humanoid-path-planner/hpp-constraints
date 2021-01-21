@@ -50,7 +50,6 @@ using hpp::pinocchio::JointVector_t;
 using hpp::pinocchio::BodyPtr_t;
 
 using std::numeric_limits;
-using boost::assign::list_of;
 
 typedef std::vector<bool> BoolVector_t;
 
@@ -195,7 +194,7 @@ BOOST_AUTO_TEST_CASE (jacobian) {
   stack->add (Position::create ("Position", device, ee1, MId, MId));
   stack->add (RelativeOrientation::create (
         "RelativeOrientation", device, ee1, ee2, MId,
-        list_of(false)(true)(true).convert_to_container<BoolVector_t>()));
+        BoolVector_t{ false, true, true }));
   functions.push_back (stack);
   //*/
 

@@ -127,25 +127,23 @@ namespace Eigen {
   template <bool _allRows = false, bool _allCols = false> class MatrixBlocksRef;
 
   namespace internal {
-      template <bool row> struct return_first {
-        template <typename First, typename Second>
-        static inline First& run (First& f, Second&) { return f; }
+      template <bool condition> struct static_if {
+        template <class Then, class Else> static constexpr inline Then& rr (Then& f, Else&) { return f; }
+        template <class Then, class Else> static constexpr inline Then  pp (Then  f, Else ) { return f; }
       };
-      template <> struct return_first <false> {
-        template <typename First, typename Second>
-        static inline Second& run (First&, Second& s) { return s; }
+      template <> struct static_if <false> {
+        template <class Then, class Else> static constexpr inline Else& rr (Then&, Else& s) { return s; }
+        template <class Then, class Else> static constexpr inline Else  pp (Then , Else  s) { return s; }
       };
 
       struct empty_struct {
         typedef MatrixXd::Index Index;
-        empty_struct () {}
-        template <typename In_t> empty_struct (In_t) {}
-        template <typename In0_t, typename In1_t> empty_struct (In0_t, In1_t) {}
-        static inline Index size() { return 1; }
-        inline const Index& operator[](const Index& i) const { return i; }
+        constexpr empty_struct () = default;
+        template <typename In_t> constexpr empty_struct (In_t) {}
+        template <typename In0_t, typename In1_t> constexpr empty_struct (In0_t, In1_t) {}
+        static constexpr inline Index size() { return 1; }
+        inline constexpr const Index& operator[](const Index& i) const { return i; }
       };
-      template <bool If> struct get_if { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T1 run (T1 then, T2 Else) { (void)Else; return then; } };
-      template <> struct get_if<false> { template <typename T1, typename T2> static EIGEN_STRONG_INLINE T2 run (T1 then, T2 Else) { (void)then; return Else; } };
 
     template <bool _allRows, bool _allCols>
       struct traits< MatrixBlocks <_allRows, _allCols> >
@@ -412,7 +410,7 @@ namespace Eigen {
       ///         column indices if all rows are selected.
       inline const segments_t& indices() const
       {
-        return internal::return_first<AllRows>::run(cols(), rows());
+        return internal::static_if<AllRows>::rr(cols(), rows());
       }
 
       /// Return row indices
@@ -436,7 +434,7 @@ namespace Eigen {
       ///         number of column indices if all rows are selected.
       inline const size_type& nbIndices() const
       {
-        return internal::return_first<AllRows>::run(nbCols(), nbRows());
+        return AllRows ? nbCols() : nbRows();
       }
 
       /// Return number of row indices
@@ -663,8 +661,8 @@ namespace Eigen {
       template<bool Sort, bool Shrink, bool Cardinal>
       inline void updateIndices() {
         update<Sort, Shrink, Cardinal> (
-            internal::return_first<_allRows>::run(m_cols  , m_rows  ),
-            internal::return_first<_allRows>::run(m_nbCols, m_nbRows));
+            internal::static_if<_allRows>::rr(m_cols, m_rows),
+            _allRows ? m_nbCols : m_nbRows);
       }
 
       size_type m_nbRows, m_nbCols;
@@ -830,13 +828,13 @@ namespace Eigen {
         /// <b>C</b>ol in the <b>O</b>utput matrix
         size_type co() const { return _co.value(); }
         /// <b>R</b>ow in the <b>I</b>nput matrix
-        size_type ri() const { return internal::get_if<AllRows>::run(std::make_pair(0,view.m_nbRows), view.m_rows[row]).first; }
+        size_type ri() const { return internal::static_if<AllRows>::pp(std::make_pair(0,view.m_nbRows), view.m_rows[row]).first; }
         /// <b>C</b>ol in the <b>I</b>nput matrix
-        size_type ci() const { return internal::get_if<AllCols>::run(std::make_pair(0,view.m_nbCols), view.m_cols[col]).first; }
+        size_type ci() const { return internal::static_if<AllCols>::pp(std::make_pair(0,view.m_nbCols), view.m_cols[col]).first; }
         /// number of <b>R</b>ow<b>S</b>
-        size_type rs() const { return internal::get_if<AllRows>::run(std::make_pair(0,view.m_nbRows), view.m_rows[row]).second; }
+        size_type rs() const { return internal::static_if<AllRows>::pp(std::make_pair(0,view.m_nbRows), view.m_rows[row]).second; }
         /// number of <b>C</b>ol<b>S</b>
-        size_type cs() const { return internal::get_if<AllCols>::run(std::make_pair(0,view.m_nbCols), view.m_cols[col]).second; }
+        size_type cs() const { return internal::static_if<AllCols>::pp(std::make_pair(0,view.m_nbCols), view.m_cols[col]).second; }
         // ++it
         block_iterator& operator++()
         {
@@ -853,9 +851,9 @@ namespace Eigen {
         };
         // it++
         block_iterator operator++(int) { block_iterator copy(*this); operator++(); return copy; };
-        bool valid () const {
-          return (internal::get_if<AllRows>::run(true, view.m_rows.size()>0))
-            && (col < (size_type)internal::get_if<AllCols>::run(1, view.m_cols.size()));
+        constexpr bool valid () const {
+          return (AllRows || view.m_rows.size()>0)
+            && (col < (size_type)(AllCols ? 1 : view.m_cols.size()));
         }
       };
       typedef MatrixBase< MatrixBlockView<_ArgType, _Rows, _Cols, _allRows, _allCols> > Base;

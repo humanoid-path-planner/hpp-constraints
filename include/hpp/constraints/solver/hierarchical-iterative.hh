@@ -18,7 +18,7 @@
 #define HPP_CONSTRAINTS_SOLVER_HIERARCHICAL_ITERATIVE_HH
 
 #include <map>
-#include <boost/function.hpp>
+#include <functional>
 
 #include <hpp/util/serialization-fwd.hh>
 
@@ -114,9 +114,9 @@ namespace hpp {
               Eigen::VectorXi& saturation);
           virtual ~Base() {}
         };
-        /// \brief saturation from a boost::function.
+        /// \brief saturation from a std::function.
         struct Function : Base {
-          typedef boost::function<bool (vectorIn_t, vectorOut_t, Eigen::VectorXi&)> function_t;
+          typedef std::function<bool (vectorIn_t, vectorOut_t, Eigen::VectorXi&)> function_t;
           bool saturate(vectorIn_t q, vectorOut_t qSat,
               Eigen::VectorXi& saturation) {
             return function(q, qSat, saturation);
@@ -227,7 +227,7 @@ namespace hpp {
           INFEASIBLE,
           SUCCESS
         };
-        typedef boost::shared_ptr<saturation::Base> Saturation_t;
+        typedef shared_ptr<saturation::Base> Saturation_t;
 
         HierarchicalIterative (const LiegroupSpacePtr_t& configSpace);
 
