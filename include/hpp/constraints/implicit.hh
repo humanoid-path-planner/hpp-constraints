@@ -190,18 +190,18 @@ namespace hpp {
         /// Return the ComparisonType
         const ComparisonTypes_t& comparisonType () const;
 
-	/// Set the comparison type
-	void comparisonType (const ComparisonTypes_t& comp);
+        /// Set the comparison type
+        void comparisonType (const ComparisonTypes_t& comp);
 
-	const segments_t& activeRows() const
-	{
-	  return activeRows_;
-	}
+        const segments_t& activeRows() const
+        {
+          return activeRows_;
+        }
 
-	/// Set inactive components of error to 0
-	/// \retval error error vector computed by substracting a right hand
-	///         side to the output to the value of the function.
-	void setInactiveRowsToZero(vectorOut_t error) const;
+        /// Set inactive components of error to 0
+        /// \retval error error vector computed by substracting a right hand
+        ///         side to the output to the value of the function.
+        void setInactiveRowsToZero(vectorOut_t error) const;
 
         /// Return a reference to function \f$h\f$.
         DifferentiableFunction& function () const
@@ -219,42 +219,41 @@ namespace hpp {
         /// Constructor
         /// \param function the differentiable function
         /// \param comp vector of comparison \f$\mathbf{c}\f$.
-	/// \param mask mask defining which components of the error are
-	///        taken into account to determine whether the constraint
-	///        is satisfied.
+        /// \param mask mask defining which components of the error are
+        ///        taken into account to determine whether the constraint
+        ///        is satisfied.
         /// \precond sizes of comp and of mask should be equal to size of
-	///          tangent space to
+        ///          tangent space to
         ///          function output space \f$\mathbf{L}\f$.
         Implicit (const DifferentiableFunctionPtr_t& function,
-		  ComparisonTypes_t comp, std::vector<bool> mask);
+                  ComparisonTypes_t comp, std::vector<bool> mask);
 
-	/// Copy constructor
-	Implicit (const Implicit& other);
+        /// Copy constructor
+        Implicit (const Implicit& other);
 
-	/// Test equality with other instance
-	/// \param other object to copy
-	/// \param swapAndTest whether we should also check other == this
-	virtual bool isEqual (const Implicit& other, bool swapAndTest) const;
+        /// Test equality with other instance
+        /// \param other object to copy
+        /// \param swapAndTest whether we should also check other == this
+        virtual bool isEqual (const Implicit& other, bool swapAndTest) const;
 
-	// Store weak pointer to itself
-	void init (const ImplicitWkPtr_t& weak)
-	{
-	  weak_ = weak;
-	}
+        // Store weak pointer to itself
+        void init (const ImplicitWkPtr_t& weak)
+        {
+          weak_ = weak;
+        }
 
         friend class ImplicitConstraintSet;
       private:
-	void computeActiveRows();
+        void computeActiveRows();
         ComparisonTypes_t comparison_;
         vector_t rhs_;
         size_type parameterSize_;
         DifferentiableFunctionPtr_t function_;
         DifferentiableFunctionPtr_t rhsFunction_;
-	std::vector<bool> mask_;
-	segments_t activeRows_;
-	Eigen::RowBlockIndices inactiveRows_;
-	ImplicitWkPtr_t weak_;
-
+        std::vector<bool> mask_;
+        segments_t activeRows_;
+        Eigen::RowBlockIndices inactiveRows_;
+        ImplicitWkPtr_t weak_;
       protected:
         Implicit () {}
       private:

@@ -143,10 +143,10 @@ namespace hpp {
     {
       segments_t inactiveRows;
       for(std::size_t i=0; i<mask_.size(); ++i){
-	if (mask_[i])
-	  activeRows_.push_back(segment_t(i,1));
-	else
-	  inactiveRows.push_back(segment_t(i,1));
+        if (mask_[i])
+          activeRows_.push_back(segment_t(i,1));
+        else
+          inactiveRows.push_back(segment_t(i,1));
       }
       Eigen::BlockIndex::shrink(activeRows_);
       Eigen::BlockIndex::shrink(inactiveRows);
@@ -172,12 +172,12 @@ namespace hpp {
     }
 
     ImplicitPtr_t Implicit::create (
-	const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp,
-	std::vector<bool> mask)
+        const DifferentiableFunctionPtr_t& function, ComparisonTypes_t comp,
+        std::vector<bool> mask)
     {
       if (mask.empty()){
-	mask = std::vector<bool>(function->outputSpace()->nv(), true);
-      }	
+        mask = std::vector<bool>(function->outputSpace()->nv(), true);
+      }
       Implicit* ptr = new Implicit (function, comp, mask);
       ImplicitPtr_t shPtr (ptr);
       ImplicitWkPtr_t wkPtr (shPtr);
