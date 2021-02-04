@@ -229,6 +229,7 @@ namespace hpp {
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config,
                                             LiegroupElementRef rhs)
     {
+      assert(*rhs.space() == *function_->outputSpace());
       function_->value(output_, config);
       logOutput_.setZero();
       equalityIndices_.lview(logOutput_) =

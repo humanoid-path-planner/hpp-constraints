@@ -140,6 +140,8 @@ namespace hpp {
         /// constraints
         /// \param config the input configuration.
         /// \retval rhs right hand side as a Lie group element.
+        /// \precond rhs should be initialized with the right LiegroupSpace
+        ///          (ie the output space of the function).
         ///
         /// \warning Only values of the right hand side corresponding to
         /// \link Equality "equality constraints" \endlink are set. As a
