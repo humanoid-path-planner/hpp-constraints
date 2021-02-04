@@ -25,6 +25,8 @@
 
 # include <hpp/util/serialization-fwd.hh>
 
+# include <hpp/pinocchio/liegroup-element.hh>
+
 namespace hpp {
   namespace constraints {
     /**
@@ -132,6 +134,29 @@ namespace hpp {
         /// \name Right hand side
         /// \{
 
+        /// Computes the right hand side from a configuration
+        ///
+        /// in such a way that the configuration satisfies the numerical
+        /// constraints
+        /// \param config the input configuration.
+        /// \retval rhs right hand side as a Lie group element.
+        ///
+        /// \warning Only values of the right hand side corresponding to
+        /// \link Equality "equality constraints" \endlink are set. As a
+        /// result, the input configuration may not satisfy the other
+        /// constraints.
+        void rightHandSideFromConfig (ConfigurationIn_t config,
+                                      LiegroupElementRef rhs);
+
+        /// Check right hand side with regard to comparison types
+        /// \param rhs  right hand side,
+        /// \return true if right hand side is correct
+        ///
+        /// This method checks that elements of the right hand side log
+        /// corresponding to comparison types different from Equality are equal
+        /// to 0.
+        bool checkRightHandSide(LiegroupElementConstRef rhs) const;
+
         /// Set the right hand side from a configuration
         ///
         /// in such a way that the configuration satisfies the numerical
@@ -142,14 +167,25 @@ namespace hpp {
         /// \link Equality "equality constraints" \endlink are set. As a
         /// result, the input configuration may not satisfy the other
         /// constraints.
-        void rightHandSideFromConfig (ConfigurationIn_t config);
+        ///
+        /// \deprecated storing the right hand side in the constraint is
+        /// deprecated. Users should handle themselves the right hand sides.
+        /// Note that the solvers provided in this package already do.
+        void rightHandSideFromConfig (ConfigurationIn_t config)
+          HPP_CONSTRAINTS_DEPRECATED;
 
         /// Set the right hand side of the equation.
         /// \param rhs the right hand side.
-        void rightHandSide (vectorIn_t rhs);
+        /// \deprecated storing the right hand side in the constraint is
+        /// deprecated. Users should handle themselves the right hand sides.
+        /// Note that the solvers provided in this package already do.
+        void rightHandSide (vectorIn_t rhs) HPP_CONSTRAINTS_DEPRECATED;
 
         /// Return the right hand side of the equation.
-        vectorIn_t rightHandSide () const;
+        /// \deprecated storing the right hand side in the constraint is
+        /// deprecated. Users should handle themselves the right hand sides.
+        /// Note that the solvers provided in this package already do.
+        vectorIn_t rightHandSide () const HPP_CONSTRAINTS_DEPRECATED;
 
         /// Get size of parameter defining the right hand side of the constraint
         ///
@@ -162,9 +198,10 @@ namespace hpp {
         size_type rightHandSideSize () const;
 
         /// Return a modifiable reference to right hand side of equation.
-        /// \deprecated In future versions, right hand side will not be a member
-        ///             of the class anymore.
-        vectorOut_t rightHandSide ();
+        /// \deprecated storing the right hand side in the constraint is
+        /// deprecated. Users should handle themselves the right hand sides.
+        /// Note that the solvers provided in this package already do.
+        vectorOut_t rightHandSide () HPP_CONSTRAINTS_DEPRECATED;
 
         /// Set time-varying right hand side
         /// \param rhsF Mapping from \f$\mathbf{R}\f$ to output space
@@ -196,6 +233,12 @@ namespace hpp {
         const segments_t& activeRows() const
         {
           return activeRows_;
+        }
+
+        /// Get indices of constraint coordinates that are equality
+        const Eigen::RowBlockIndices& equalityIndices () const
+        {
+          return equalityIndices_;
         }
 
         /// Set inactive components of error to 0
@@ -244,6 +287,7 @@ namespace hpp {
 
         friend class ImplicitConstraintSet;
       private:
+        void computeIndices();
         void computeActiveRows();
         ComparisonTypes_t comparison_;
         vector_t rhs_;
@@ -253,7 +297,12 @@ namespace hpp {
         std::vector<bool> mask_;
         segments_t activeRows_;
         Eigen::RowBlockIndices inactiveRows_;
+        std::vector<std::size_t> inequalityIndices_;
+        Eigen::RowBlockIndices equalityIndices_;
         ImplicitWkPtr_t weak_;
+        // To avoid dynamic memory allocation
+        mutable LiegroupElement output_;
+        mutable vector_t logOutput_;
       protected:
         Implicit () {}
       private:

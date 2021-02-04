@@ -69,7 +69,7 @@ namespace hpp {
       void value (LiegroupElementRef result,
                   vectorIn_t argument) const
       {
-	assert (result.size () == outputSize ());
+	assert (result.space()->nq() == outputSize ());
 	assert (argument.size () == inputSize ());
 	impl_compute (result, argument);
       }

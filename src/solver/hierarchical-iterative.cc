@@ -416,12 +416,7 @@ namespace hpp {
         for (std::size_t i = 0; i < stacks_.size (); ++i) {
           ImplicitConstraintSet& ics = stacks_[i];
           Data& d = datas_[i];
-          ics.function ().value (d.output, config);
-          d.error.setZero();
-          d.equalityIndices.lview(d.error) =
-            d.equalityIndices.rview(log(d.output));
-          // rhs = exp (error)
-          d.rightHandSide = d.rightHandSide.space()->exp(d.error);
+	  ics.rightHandSideFromConfig(config, d.rightHandSide);
         }
         return rightHandSide();
       }
@@ -435,26 +430,12 @@ namespace hpp {
         }
         LiegroupSpacePtr_t space (f->outputSpace());
         size_type iq = iq_ [f];
-        size_type iv = iv_ [f];
         size_type nq = space->nq ();
-        size_type nv = space->nv ();
         std::size_t i = priority_ [f];
         Data& d = datas_[i];
-        LiegroupElementRef output (space->elementRef (
-                    d.output       .vector ().segment(iq, nq)));
         LiegroupElementRef rhs    (space->elementRef (
                     d.rightHandSide.vector ().segment(iq, nq)));
-
-        f->value (output, config);
-        assert (d.error.size () >= nv);
-        // d.error is used here as an intermediate storage. The value
-        // computed is not exactly the error
-        d.error.head (nv) = log(output);
-        for (size_type k = 0; k < nv; ++k) {
-          if (d.comparison[iv + k] != Equality)
-            d.error[k] = 0;
-        }
-        rhs = rhs.space()->exp(d.error.head (nv));
+	constraint->rightHandSideFromConfig(config, rhs);
         return true;
       }
 
@@ -468,9 +449,10 @@ namespace hpp {
           return false;
         }
         size_type iq = iq_ [f];
-        size_type iv = iv_ [f];
         size_type nq = space->nq ();
+#ifndef NDEBUG
         size_type nv = space->nv ();
+#endif
         std::size_t i = priority_ [f];
         Data& d = datas_[i];
         assert (d.error.size () >= nv);
@@ -478,14 +460,8 @@ namespace hpp {
           (space->elementConstRef (rightHandSide));
         LiegroupElementRef rhs (space->elementRef
                                 (d.rightHandSide.vector ().segment(iq, nq)));
-        // d.error is used here as an intermediate storage. The value
-        // computed is not the error
-        d.error.head (nv) = log(inRhs); // log (rightHandSide)
-        for (size_type k = 0; k < nv; ++k) {
-          if (d.comparison[iv + k] != Equality)
-            assert(d.error[k] == 0);
-        }
-        rhs = space->exp(d.error.head (nv)); // exp (d.error)
+        rhs = inRhs;
+        assert(constraint->checkRightHandSide(inRhs));
         return true;
       }
 

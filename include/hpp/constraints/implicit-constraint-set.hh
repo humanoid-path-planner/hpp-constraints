@@ -62,25 +62,19 @@ namespace hpp {
           // Handle comparison types
           const ComparisonTypes_t& comp (constraint->comparisonType ());
           for (std::size_t i = 0; i < comp.size(); ++i) {
-            if (comp[i] == Equality)
-            {
-              equalityIndices_.addRow(comparison_.size(), 1);
-            }
             comparison_.push_back (comp[i]);
           }
-          equalityIndices_.updateRows<true, true, true>();
 	  // Handle mask
 	  mask_.insert(mask_.end(), constraint->mask_.begin(),
 		       constraint->mask_.end());
 	  // Recompute active rows
 	  computeActiveRows();
+	  computeIndices();
+          // Resize temporary variables
+          output_ = LiegroupElement(functions->outputSpace());
+          logOutput_.resize(functions->outputSpace()->nv());
         }
 
-        /// Get indices of constraint coordinates that are equality
-        const Eigen::RowBlockIndices& equalityIndices () const
-        {
-          return equalityIndices_;
-        }
         /// Get constraints
         const Implicits_t& constraints () const
         {
@@ -130,7 +124,6 @@ namespace hpp {
         
       private:
         Implicits_t constraints_;
-        Eigen::RowBlockIndices equalityIndices_;
 
         HPP_SERIALIZABLE();
     }; // class ImplicitConstraintSet

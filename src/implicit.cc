@@ -92,9 +92,9 @@ namespace hpp {
     {
       if (rhsFunction_) {
         vector_t S (1); S[0] = s;
-        rhsFunction_->value (rhsFunction_->outputSpace()->elementRef(rhs_), S);
+        rhsFunction_->value (output_, S);
       }
-      return rightHandSide();
+      return output_.vector();
     }
 
     size_type Implicit::parameterSize () const
@@ -115,6 +115,7 @@ namespace hpp {
     {
       comparison_ = comp;
       parameterSize_ = computeParameterSize (comparison_);
+      computeIndices();
     }
 
     void Implicit::setInactiveRowsToZero(vectorOut_t error) const
@@ -126,7 +127,11 @@ namespace hpp {
                         ComparisonTypes_t comp, std::vector<bool> mask) :
       comparison_ (comp), rhs_ (vector_t::Zero (function->outputSize ())),
       parameterSize_ (computeParameterSize (comparison_)),
-      function_ (function), mask_(mask), activeRows_(), inactiveRows_()
+      function_ (function), mask_(mask), activeRows_(), inactiveRows_(),
+      inequalityIndices_(), equalityIndices_(),
+      output_(function->outputSpace()),
+      logOutput_(function->outputSpace()->nv())
+
     {
       // This constructor used to set comparison types to Equality if an
       // empty vector was given as input. Now you should provide the
@@ -136,6 +141,7 @@ namespace hpp {
       assert
         (function_->outputDerivativeSize () == (size_type)mask.size ());
       computeActiveRows();
+      computeIndices();
     }
 
     // Compute active rows
@@ -153,11 +159,32 @@ namespace hpp {
       inactiveRows_ = Eigen::RowBlockIndices(inactiveRows);
     }
 
+    void Implicit::computeIndices()
+    {
+      inequalityIndices_.clear();
+      equalityIndices_.clearRows();
+      for (std::size_t i = 0; i < comparison_.size(); ++i) {
+        if ((comparison_[i] == Superior) || (comparison_[i] == Inferior))
+        {
+          inequalityIndices_.push_back ((size_type)i);
+        }
+        else if (comparison_[i] == Equality)
+        {
+          equalityIndices_.addRow((size_type)i, 1);
+        }
+      }
+      equalityIndices_.updateRows<true, true, true>();
+    }
+
     Implicit::Implicit (const Implicit& other):
       comparison_ (other.comparison_), rhs_ (other.rhs_),
       parameterSize_ (other.parameterSize_), function_ (other.function_),
       rhsFunction_ (other.rhsFunction_), mask_(other.mask_),
-      activeRows_(other.activeRows_), inactiveRows_(other.inactiveRows_)
+      activeRows_(other.activeRows_), inactiveRows_(other.inactiveRows_),
+      inequalityIndices_(other.inequalityIndices_),
+      equalityIndices_(other.equalityIndices_), output_(other.output_),
+      logOutput_(other.logOutput_)
+
     {
     }
 
@@ -199,6 +226,28 @@ namespace hpp {
       return createCopy (weak_.lock ());
     }
 
+    void Implicit::rightHandSideFromConfig (ConfigurationIn_t config,
+                                            LiegroupElementRef rhs)
+    {
+      function_->value(output_, config);
+      logOutput_.setZero();
+      equalityIndices_.lview(logOutput_) =
+        equalityIndices_.rview(log(output_));
+      // rhs = exp(logOutput_)
+      rhs = rhs.space()->exp(logOutput_);
+    }
+
+    bool Implicit::checkRightHandSide(LiegroupElementConstRef rhs) const
+    {
+      if (rhs.space() != function_->outputSpace()) return false;
+      logOutput_ = log(rhs);
+      for (std::size_t i=0; i<comparison_.size(); ++i)
+        if ((comparison_[i] != Equality) && (logOutput_[i] != 0))
+          return false;
+
+      return true;
+    }
+
     void Implicit::rightHandSideFromConfig (ConfigurationIn_t config)
     {
       if (parameterSize () > 0) {
@@ -230,8 +279,10 @@ namespace hpp {
       ar & BOOST_SERIALIZATION_NVP(rhsFunction_);
       ar & BOOST_SERIALIZATION_NVP(mask_);
       ar & BOOST_SERIALIZATION_NVP(weak_);
-      if (!Archive::is_saving::value)
+      if (!Archive::is_saving::value){
         computeActiveRows();
+        computeIndices();
+      }
     }
 
     HPP_SERIALIZATION_IMPLEMENT(Implicit);
