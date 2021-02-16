@@ -1,4 +1,3 @@
-#include <boost/assign/list_of.hpp>
 
 #include <hpp/pinocchio/util.hh>
 #include <hpp/constraints/symbolic-function.hh>
@@ -23,7 +22,6 @@ static const int Nv = 9;
 typedef Eigen::Matrix<value_type, Nv, 1> vector9_t;
 typedef solver::lineSearch::Backtracking LineSearch_t;
 using hpp::constraints::solver::HierarchicalIterative;
-using boost::assign::list_of;
 using hpp::shared_ptr;
 using hpp::setpyformat;
 using hpp::one_line;
@@ -483,7 +481,7 @@ T parse (char* arg)
 int main (int argc, char** argv)
 {
   int max_num_shoot = 100;
-  std::vector<int> case_, defaultCase (list_of(1)(4)(-5).convert_to_container<std::vector<int> >());
+  std::vector<int> case_, defaultCase ({ 1, 4, -5 });
 
   for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "--num-shoot") == 0)

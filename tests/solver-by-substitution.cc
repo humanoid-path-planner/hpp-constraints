@@ -17,7 +17,6 @@
 #define BOOST_TEST_MODULE SOLVER_BY_SUBSTITUTION
 #include <Eigen/Geometry>
 #include <boost/test/unit_test.hpp>
-#include <boost/assign/list_of.hpp>
 
 #include <sstream>
 #include <hpp/pinocchio/serialization.hh>
@@ -86,7 +85,6 @@ using hpp::pinocchio::unittest::HumanoidRomeo;
 using hpp::pinocchio::unittest::ManipulatorArm2;
 using hpp::pinocchio::unittest::makeDevice;
 using hpp::pinocchio::displayConfig;
-using boost::assign::list_of;
 
 namespace saturation = hpp::constraints::solver::saturation;
 
@@ -573,7 +571,7 @@ BOOST_AUTO_TEST_CASE(functions1)
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
   BOOST_CHECK (solver.definesSubmanifoldOf (solver1));
 
-  segments_t impDof = list_of(segment_t(2,1));
+  segments_t impDof { segment_t(2,1) };
   BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
 }
 
@@ -631,7 +629,7 @@ BOOST_AUTO_TEST_CASE(functions2)
   BOOST_CHECK_EQUAL(solver.       dimension(), 3);
   BOOST_CHECK_EQUAL(solver.reducedDimension(), 2);
 
-  segments_t impDof = list_of(segment_t(0,1));
+  segments_t impDof = { segment_t(0,1) };
   BOOST_CHECK_EQUAL(solver.implicitDof(), impDof);
   // test right hand side access by functions.
   vector_t rhs1 (vector_t::Zero (c1->rightHandSideSize ()));

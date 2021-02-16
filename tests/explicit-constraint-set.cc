@@ -16,7 +16,6 @@
 
 #define BOOST_TEST_MODULE EXPLICIT_CONSTRAINT_SET
 #include <boost/test/unit_test.hpp>
-#include <boost/assign/list_of.hpp>
 
 #include <hpp/constraints/explicit-constraint-set.hh>
 #include <hpp/constraints/explicit.hh>
@@ -39,8 +38,6 @@
 #include <hpp/constraints/symbolic-calculus.hh>
 
 #include <../tests/util.hh>
-
-using boost::assign::list_of;
 
 using Eigen::RowBlockIndices;
 using Eigen::ColBlockIndices;
@@ -282,23 +279,23 @@ BOOST_AUTO_TEST_CASE(order)
     AffineFunction::create (M)
   };
   segment_t s[] = { segment_t (0, 1), segment_t (1, 1), segment_t (2, 1), segment_t (3, 1) };
-  segments_t inArgs = list_of(s[0]).convert_to_container<segments_t>(),
-             outArgs = list_of(s[1])(s[2])(s[3]).convert_to_container<segments_t>();
+  segments_t inArgs { s[0] },
+             outArgs { s[1], s[2], s[3] };
   BlockIndex::shrink (outArgs);
 
   std::vector<int> order(3);
 
-  order = list_of(0)(1)(2).convert_to_container<std::vector<int> >();
+  order = { 0, 1, 2 };
   order_test<3> (f, s, order, inArgs, outArgs);
-  order = list_of(0)(2)(1).convert_to_container<std::vector<int> >();
+  order = { 0, 2, 1 };
   order_test<3> (f, s, order, inArgs, outArgs);
-  order = list_of(1)(0)(2).convert_to_container<std::vector<int> >();
+  order = { 1, 0, 2 };
   order_test<3> (f, s, order, inArgs, outArgs);
-  order = list_of(1)(2)(0).convert_to_container<std::vector<int> >();
+  order = { 1, 2, 0 };
   order_test<3> (f, s, order, inArgs, outArgs);
-  order = list_of(2)(0)(1).convert_to_container<std::vector<int> >();
+  order = { 2, 0, 1 };
   order_test<3> (f, s, order, inArgs, outArgs);
-  order = list_of(2)(1)(0).convert_to_container<std::vector<int> >();
+  order = { 2, 1, 0 };
   order_test<3> (f, s, order, inArgs, outArgs);
 }
 
@@ -367,12 +364,12 @@ BOOST_AUTO_TEST_CASE(jacobian2)
     , AffineFunction::create(J[2])
   };
   std::vector<segments_t> s(6);
-  s[0] = (list_of(segment_t (1, 2)).convert_to_container<segments_t>());
-  s[1] = (list_of(segment_t (0, 1)).convert_to_container<segments_t>());
-  s[2] = (list_of(segment_t (3, 1)).convert_to_container<segments_t>());
-  s[3] = (list_of(segment_t (4, 1)).convert_to_container<segments_t>());
-  s[4] = (list_of(segment_t (0, 1))(segment_t (3, 1)).convert_to_container<segments_t>());
-  s[5] = (list_of(segment_t (1, 1)).convert_to_container<segments_t>());
+  s[0] = { segment_t (1, 2) };
+  s[1] = { segment_t (0, 1) };
+  s[2] = { segment_t (3, 1) };
+  s[3] = { segment_t (4, 1) };
+  s[4] = { segment_t (0, 1), segment_t (3, 1) };
+  s[5] = { segment_t (1, 1) };
 
   ExplicitConstraintSet expression (LiegroupSpace::Rn (5));
   ExplicitPtr_t constraint;
@@ -398,7 +395,7 @@ BOOST_AUTO_TEST_CASE(jacobian2)
   BOOST_CHECK_EQUAL (expression.inOutDofDependencies(), inOutDependencies);
 
   segments_t inArgs = s[0],
-             outArgs = list_of(s[1][0])(s[2][0])(s[3][0]).convert_to_container<segments_t>();
+             outArgs = { s[1][0], s[2][0], s[3][0] };
   BlockIndex::shrink (outArgs);
 
   BOOST_CHECK_EQUAL( expression.inArgs().rows(), inArgs);
