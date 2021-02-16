@@ -78,7 +78,7 @@ public:
       }
       config [offset + i] = lower + (upper - lower) * rand ()/RAND_MAX;
     }
-    return boost::make_shared<Configuration_t>(config);
+    return hpp::make_shared<Configuration_t>(config);
   }
 private:
   DevicePtr_t robot_;

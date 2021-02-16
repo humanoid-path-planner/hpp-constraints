@@ -55,7 +55,7 @@ struct test_base
   {
     solver.maxIterations(20);
     solver.errorThreshold(test_precision);
-    solver.saturation(boost::make_shared<saturation::Bounds>(
+    solver.saturation(hpp::make_shared<saturation::Bounds>(
           vector_t::Zero(2), vector_t::Ones(2)));
   }
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(one_layer)
   solver::HierarchicalIterative solver(device->configSpace());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::make_shared<solver::saturation::Device>(device));
+  solver.saturation(hpp::make_shared<solver::saturation::Device>(device));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();

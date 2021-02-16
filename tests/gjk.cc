@@ -24,7 +24,7 @@ typedef Eigen::Matrix<value_type, Nv, 1> vector9_t;
 typedef solver::lineSearch::Backtracking LineSearch_t;
 using hpp::constraints::solver::HierarchicalIterative;
 using boost::assign::list_of;
-using boost::shared_ptr;
+using hpp::shared_ptr;
 using hpp::setpyformat;
 using hpp::one_line;
 
@@ -385,7 +385,7 @@ size_type max_iter = 100;
 HierarchicalIterative createSolver (Data& data)
 {
   HierarchicalIterative solver (LiegroupSpace::Rn(Nv));
-  solver.saturation (boost::make_shared<solver::saturation::Function>(saturation));
+  solver.saturation (hpp::make_shared<solver::saturation::Function>(saturation));
   solver.inequalityThreshold (ineq_thr);
   solver.maxIterations (max_iter);
   solver.add (data.O_inside_1, 0);

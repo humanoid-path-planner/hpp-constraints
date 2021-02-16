@@ -110,7 +110,7 @@ namespace std {
 class Quadratic : public hpp::constraints::DifferentiableFunction
 {
   public:
-    typedef boost::shared_ptr<Quadratic> Ptr_t;
+    typedef hpp::shared_ptr<Quadratic> Ptr_t;
     typedef hpp::constraints::DifferentiableFunction DifferentiableFunction;
     typedef hpp::constraints::matrix_t matrix_t;
     typedef hpp::constraints::matrixOut_t matrixOut_t;

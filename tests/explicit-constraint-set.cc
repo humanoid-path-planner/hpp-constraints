@@ -245,8 +245,8 @@ class ExplicitTransformation : public DifferentiableFunction
     }
 };
 
-typedef boost::shared_ptr<TestFunction> TestFunctionPtr_t;
-typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
+typedef hpp::shared_ptr<TestFunction> TestFunctionPtr_t;
+typedef hpp::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 template <int N>
 void order_test (const AffineFunctionPtr_t f[N], const segment_t s[N+1],

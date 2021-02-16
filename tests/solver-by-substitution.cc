@@ -128,7 +128,7 @@ void test_quadratic ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(boost::make_shared<saturation::Bounds>(
+  solver.saturation(hpp::make_shared<saturation::Bounds>(
         -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create(quad, ComparisonTypes_t(1, EqualToZero)));
@@ -202,7 +202,7 @@ void test_quadratic2 ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(boost::make_shared<saturation::Bounds>(
+  solver.saturation(hpp::make_shared<saturation::Bounds>(
         -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad, ComparisonTypes_t(1, EqualToZero)));
@@ -288,7 +288,7 @@ void test_quadratic3 ()
   BySubstitution solver (LiegroupSpace::Rn (N));
   solver.maxIterations(20);
   solver.errorThreshold(test_precision);
-  solver.saturation(boost::make_shared<saturation::Bounds>(
+  solver.saturation(hpp::make_shared<saturation::Bounds>(
         -vector_t::Ones(N), vector_t::Ones(N)));
 
   solver.add (Implicit::create (quad, ComparisonTypes_t(1, Equality)));
@@ -515,7 +515,7 @@ class ExplicitTransformation : public DifferentiableFunction
     }
 };
 
-typedef boost::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
+typedef hpp::shared_ptr<ExplicitTransformation> ExplicitTransformationPtr_t;
 
 BOOST_AUTO_TEST_CASE(functions1)
 {
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(40);
   solver.errorThreshold(1e-4);
-  solver.saturation(boost::make_shared<saturation::Device>(device));
+  solver.saturation(hpp::make_shared<saturation::Device>(device));
 
   device->currentConfiguration (q0);
   device->computeForwardKinematics ();
@@ -767,7 +767,7 @@ BOOST_AUTO_TEST_CASE(by_substitution_serialization)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::make_shared<saturation::Device>(device));
+  solver.saturation(hpp::make_shared<saturation::Device>(device));
 
   device->currentConfiguration (q);
   device->computeForwardKinematics ();
@@ -858,7 +858,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs)
   BySubstitution solver(device->configSpace ());
   solver.maxIterations(20);
   solver.errorThreshold(1e-3);
-  solver.saturation(boost::make_shared<saturation::Device>(device));
+  solver.saturation(hpp::make_shared<saturation::Device>(device));
 
   solver.add (constraint);
 
