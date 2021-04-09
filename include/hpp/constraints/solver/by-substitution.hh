@@ -215,7 +215,8 @@ namespace hpp {
         }
 
         /// Whether input vector satisfies the constraints of the solver
-        /// \param arg input vector
+        /// \param arg input vector.
+	/// Compares to internal error threshold.
         bool isSatisfied (vectorIn_t arg) const
         {
           return
@@ -223,6 +224,16 @@ namespace hpp {
             && explicit_.isSatisfied (arg);
         }
 
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
+	/// \param errorThreshold threshold to use instead of the value
+	///        stored in the solver.
+        bool isSatisfied (vectorIn_t arg, value_type errorThreshold) const
+        {
+          return
+            solver::HierarchicalIterative::isSatisfied (arg, errorThreshold)
+            && explicit_.isSatisfied (arg, errorThreshold);
+        }
         /// Whether input vector satisfies the constraints of the solver
         /// \param arg input vector
         /// \retval error the constraint errors dispatched in a vector,

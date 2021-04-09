@@ -61,9 +61,12 @@ namespace hpp {
       return true;
     }
 
-    bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg, vectorOut_t error)
+    bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg, vectorOut_t error,
+					     value_type errorThreshold)
       const
     {
+      // Recover default value
+      if (errorThreshold == -1) errorThreshold = errorThreshold_;
       value_type squaredNorm = 0;
 
       size_type row = 0;
@@ -80,13 +83,17 @@ namespace hpp {
       }
       assert (row == error.size());
       hppDout (info, "Max squared error norm is " << squaredNorm);
-      return squaredNorm < squaredErrorThreshold_;
+      return squaredNorm < errorThreshold*errorThreshold;
     }
 
-    bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg) const
+
+    bool ExplicitConstraintSet::isSatisfied (vectorIn_t arg,
+					     value_type errorThreshold) const
     {
+      // Recover default value
+      if (errorThreshold == -1) errorThreshold = errorThreshold_;
       diffSmall_.resize(errorSize_);
-      return isSatisfied (arg, diffSmall_);
+      return isSatisfied (arg, diffSmall_, errorThreshold);
     }
 
     bool ExplicitConstraintSet::isConstraintSatisfied
@@ -105,7 +112,7 @@ namespace hpp {
           error = d.h_value - d.rhs_implicit;
           squaredNorm = error.squaredNorm ();
           constraintFound = true;
-          return squaredNorm < squaredErrorThreshold_;
+          return squaredNorm < errorThreshold_*errorThreshold_;
         }
       }
       return false;
@@ -422,7 +429,8 @@ namespace hpp {
       ComparisonTypes_t ct (d.constraint->comparisonType ());
       for (std::size_t i=0; i < ct.size (); ++i) {
         assert (ct [i] == Equality ||
-                logRhsInput [i] * logRhsInput [i] < squaredErrorThreshold_);
+                logRhsInput [i] * logRhsInput [i] <
+		errorThreshold_*errorThreshold_);
       }
     }
 

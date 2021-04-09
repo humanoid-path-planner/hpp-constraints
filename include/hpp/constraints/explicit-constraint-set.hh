@@ -106,10 +106,6 @@ namespace hpp {
         ///         \left(f(\mathbf{q}_{in}) + rhs\right)\f$
         bool solve (vectorOut_t arg) const;
 
-        /// Whether input vector satisfies the constraints of the solver
-        /// \param arg input vector
-        bool isSatisfied (vectorIn_t arg) const;
-
         /// Size of error vector
         /// \note that this size may differ from size of \link
         ///       ExplicitConstraintSet::outDers outDers output\endlink,
@@ -120,8 +116,19 @@ namespace hpp {
 
         /// Whether input vector satisfies the constraints of the solver
         /// \param arg input vector
+	/// \param errorThreshold threshold to compare against the norms of
+	///        the constraint errors. Default value is accessible via
+	///        methods errorThreshold.
+        bool isSatisfied (vectorIn_t arg, value_type errorThreshold = -1) const;
+
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
         /// \retval error the constraint errors
-        bool isSatisfied (vectorIn_t arg, vectorOut_t error) const;
+	/// \param errorThreshold threshold to compare against the norms of
+	///        the constraint errors. Default value is accessible via
+	///        methods errorThreshold.
+        bool isSatisfied (vectorIn_t arg, vectorOut_t error,
+			  value_type errorThreshold = -1) const;
 
         /// Whether a constraint is satisfied for an input vector
         ///
@@ -167,7 +174,7 @@ namespace hpp {
           ,  outArgs_ (),  outDers_ ()
           , argFunction_ (Eigen::VectorXi::Constant(space->nq (), -1))
           , derFunction_ (Eigen::VectorXi::Constant(space->nv (), -1))
-          , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
+          , errorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
           , errorSize_(0)
           // , Jg (nv, nv)
           , arg_ (space->nq ()), diff_(space->nv ()), diffSmall_()
@@ -184,17 +191,17 @@ namespace hpp {
         /// Set error threshold
         void errorThreshold (const value_type& threshold)
         {
-          squaredErrorThreshold_ = threshold * threshold;
+          errorThreshold_ = threshold;
         }
         /// Get error threshold
         value_type errorThreshold () const
         {
-          return sqrt (squaredErrorThreshold_);
+          return errorThreshold_;
         }
         /// Get error threshold
         value_type squaredErrorThreshold () const
         {
-          return squaredErrorThreshold_;
+          return errorThreshold_*errorThreshold_;
         }
 
         /// \}
@@ -495,7 +502,7 @@ namespace hpp {
         /// -1 means that the configuration variable is not ouput of any
         /// function in data_.
         Eigen::VectorXi argFunction_, derFunction_;
-        value_type squaredErrorThreshold_;
+        value_type errorThreshold_;
         size_type errorSize_;
         // mutable matrix_t Jg;
         mutable vector_t arg_, diff_, diffSmall_;
@@ -505,7 +512,7 @@ namespace hpp {
           :  inArgs_ (), notOutArgs_ ()
           ,  inDers_ (), notOutDers_ ()
           , outArgs_ (),  outDers_ ()
-          , squaredErrorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
+          , errorThreshold_ (Eigen::NumTraits<value_type>::epsilon())
           , errorSize_(0)
         {}
         /// Initialization for serialization

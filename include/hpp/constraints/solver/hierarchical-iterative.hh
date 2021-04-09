@@ -318,11 +318,25 @@ namespace hpp {
           return solve (arg, DefaultLineSearch());
         }
 
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
+	/// Compares to internal error threshold.
         bool isSatisfied (vectorIn_t arg) const
         {
           computeValue<false>(arg);
           computeError();
           return squaredNorm_ < squaredErrorThreshold_;
+        }
+
+        /// Whether input vector satisfies the constraints of the solver
+        /// \param arg input vector
+	/// \param errorThreshold threshold to use instead of the value
+	///        stored in the solver.
+        bool isSatisfied (vectorIn_t arg, value_type errorThreshold) const
+        {
+          computeValue<false>(arg);
+          computeError();
+          return squaredNorm_ < errorThreshold*errorThreshold;
         }
 
         /// Whether a constraint is satisfied for an input vector
