@@ -26,9 +26,16 @@ ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
 # This macro will create a binary from `NAME.cc', link it against
 # Boost and add it to the test suite.
 #
+
+find_library(RT_LIB rt)
+
 MACRO(ADD_TESTCASE NAME)
   ADD_UNIT_TEST(${NAME} ${NAME}.cc)
-  TARGET_LINK_LIBRARIES(${NAME} PRIVATE Boost::unit_test_framework ${PROJECT_NAME})
+  if(RT_LIB)
+    TARGET_LINK_LIBRARIES(${NAME} PRIVATE Boost::unit_test_framework ${PROJECT_NAME} ${RT_LIB})
+  else()
+    TARGET_LINK_LIBRARIES(${NAME} PRIVATE Boost::unit_test_framework ${PROJECT_NAME})
+  endif()
 ENDMACRO(ADD_TESTCASE)
 
 FIND_PACKAGE(OpenMP)
