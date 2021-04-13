@@ -148,3 +148,5 @@ find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 ADD_SUBDIRECTORY(tests)
 
 PKG_CONFIG_APPEND_LIBS("hpp-constraints")
+
+INSTALL(FILES package.xml DESTINATION share/${PROJECT_NAME})
