@@ -580,6 +580,14 @@ namespace Eigen {
             YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
       }
 
+      MatrixBlocks& operator=(const MatrixBlocks& other)
+      {
+        m_nbRows = other.m_nbRows;
+        m_nbCols = other.m_nbCols;
+        m_rows = other.m_rows;
+        m_cols = other.m_cols;
+        return *this;
+      }
       /// Clear rows
       inline void clearRows ()
       {
