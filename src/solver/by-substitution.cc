@@ -223,7 +223,7 @@ namespace hpp {
       }
 
       void BySubstitution::projectVectorOnKernel
-      (ConfigurationIn_t arg, vectorIn_t darg, ConfigurationOut_t result) const
+      (ConfigurationIn_t arg, vectorIn_t darg, vectorOut_t result) const
       {
         if (constraints_.empty () || reducedDimension() == 0) {
           result = darg;
@@ -242,6 +242,8 @@ namespace hpp {
         vector_t tmp (getV1(svd_, rank).adjoint() * dqSmall_);
         dqSmall_.noalias() -= getV1(svd_, rank) * tmp;
 
+        // Otherwise two uninitialized values may sum up to NaN
+        result.setZero();
         freeVariables_.lview(result) = dqSmall_;
       }
 
