@@ -19,6 +19,7 @@
 #ifndef HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH
 # define HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH
 
+#include <hpp/util/debug.hh>
 # include <hpp/constraints/fwd.hh>
 # include <hpp/constraints/config.hh>
 # include <hpp/pinocchio/liegroup-element.hh>
@@ -53,6 +54,7 @@ namespace hpp {
     {
     public:
       virtual ~DifferentiableFunction () {}
+
       /// Evaluate the function at a given parameter.
       ///
       /// \note parameters should be of the correct size.
@@ -173,6 +175,19 @@ namespace hpp {
           DevicePtr_t robot = DevicePtr_t (),
           value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon())) const;
 
+      inline bool operator== (DifferentiableFunction const & other) const
+      {
+        try {
+          return isEqual(other) && other.isEqual(*this);
+        } catch (const std::bad_cast& exc) {
+          return false;
+        }
+      }
+      inline bool operator!= (DifferentiableFunction const & b) const
+      {
+        return !(*this == b);
+      }
+      //virtual bool isEqual(DifferentiableFunctionPtr_t const &, bool) const {return true;}
     protected:
       /// \brief Concrete class constructor should call this constructor.
       ///
@@ -202,6 +217,20 @@ namespace hpp {
 
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  vectorIn_t arg) const = 0;
+
+      virtual bool isEqual(const DifferentiableFunction& other) const 
+      {
+        if (name_ != other.name_)
+          return false;
+        if (inputSize_ != other.inputSize_)
+          return false;
+        if (inputDerivativeSize_ != other.inputDerivativeSize_)
+          return false;
+        if (*outputSpace_ != *(other.outputSpace_))
+          return false;
+
+        return true;
+      }
 
       /// Dimension of input vector.
       size_type inputSize_;
@@ -240,5 +269,24 @@ namespace hpp {
   } // namespace constraints
 } // namespace hpp
 
+/*
+// This will override boost::shared_ptr 's equality operator
+// between 2 DifferentiableFunctionPtr_t
+namespace boost {
+  using namespace hpp::constraints;
+  typedef DifferentiableFunction T;
+  typedef shared_ptr<T> TPtr;
+
+  template<> inline bool operator==<T, T> (TPtr const & a, TPtr const & b) BOOST_SP_NOEXCEPT
+  {
+    return *a == *b;
+  }
+
+  template<> inline bool operator!=<T, T> (TPtr const & a, TPtr const & b) BOOST_SP_NOEXCEPT
+  {
+    return !(a == b);
+  }
+}
+*/
 
 #endif // HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_HH

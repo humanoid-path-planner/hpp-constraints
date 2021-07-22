@@ -56,6 +56,14 @@ namespace hpp {
           J.setIdentity();
         }
 
+        bool isEqual(const DifferentiableFunction& other) const {
+          dynamic_cast<const Identity&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+
+          return true;
+        }
+
       private:
         Identity() {}
         HPP_SERIALIZABLE();
@@ -98,6 +106,19 @@ namespace hpp {
           J_ (J), b_ (b)
         {
           init();
+        }
+
+        bool isEqual(const DifferentiableFunction& other) const {
+          const AffineFunction& castother = dynamic_cast<const AffineFunction&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (J_ != castother.J_)
+            return false;
+          if (b_ != castother.b_)
+            return false;
+          
+          return true;
         }
 
       private:
@@ -170,6 +191,17 @@ namespace hpp {
         void impl_compute (LiegroupElementRef r, vectorIn_t) const { r = c_; }
 
         void impl_jacobian (matrixOut_t J, vectorIn_t) const { J.setZero(); }
+
+        bool isEqual(const DifferentiableFunction& other) const {
+          const ConstantFunction& castother = dynamic_cast<const ConstantFunction&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (c_.vector() == castother.c_.vector())
+            return false;
+          
+          return true;
+        }
 
         const LiegroupElement c_;
 

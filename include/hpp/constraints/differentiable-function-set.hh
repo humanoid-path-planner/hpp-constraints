@@ -126,6 +126,23 @@ namespace hpp {
             row += f.outputDerivativeSize();
           }
         }
+
+        bool isEqual(const DifferentiableFunction& other) const {
+          const DifferentiableFunctionSet& castother = dynamic_cast<const DifferentiableFunctionSet&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (functions_ != castother.functions_)
+            return false;
+          if (result_.size() != castother.result_.size())
+            return false;
+          for (std::size_t i=0; i<result_.size(); i++)
+            if (result_[i] != castother.result_[i])
+              return false;
+          
+          return true; 
+        }
+
       private:
         Functions_t functions_;
         mutable std::vector <LiegroupElement> result_;

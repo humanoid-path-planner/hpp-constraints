@@ -156,6 +156,21 @@ namespace hpp {
         /// Transform of the shape in the joint frame
         inline const Transform3f& positionInJoint () const { return MinJoint_; }
 
+        bool operator==(ConvexShape const & other) const {
+          if (Pts_ != other.Pts_) return false;
+          if (shapeDimension_ != other.shapeDimension_) return false;
+          if (C_ != other.C_) return false;
+          if (N_ != other.N_) return false;
+          if (Ns_ != other.Ns_) return false;
+          if (Us_ != other.Us_) return false;
+          if (Ls_ != other.Ls_) return false;
+          if (MinJoint_ != other.MinJoint_) return false;
+          if (joint_ != other.joint_) return false;
+        }
+        bool operator!=(ConvexShape const & other) const {
+          return !(this->operator==(other));
+        }
+
         /// The points in the joint frame. It is constant.
         std::vector <vector3_t> Pts_;
         size_t shapeDimension_;

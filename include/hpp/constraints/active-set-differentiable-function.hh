@@ -83,6 +83,19 @@ namespace hpp {
             jacobian.middleCols (_int->first, _int->second).setZero ();
         }
 
+        bool isEqual(const DifferentiableFunction& other) const {
+          const ActiveSetDifferentiableFunction& castother = dynamic_cast<const ActiveSetDifferentiableFunction&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (function_ != castother.function_)
+            return false;
+          if (intervals_ != castother.intervals_)
+            return false;
+          
+          return true;
+        }
+
         DifferentiableFunctionPtr_t function_;
         segments_t intervals_;
     }; // class ActiveSetDifferentiableFunction

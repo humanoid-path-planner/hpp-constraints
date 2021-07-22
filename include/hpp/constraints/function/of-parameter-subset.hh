@@ -79,6 +79,21 @@ namespace hpp {
                            arg.segment (sa_.first, sa_.second));
         }
 
+        bool isEqual(const DifferentiableFunction& other) const {
+          const OfParameterSubset& castother = dynamic_cast<const OfParameterSubset&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (g_ != castother.g_)
+            return false;
+          if (sa_ != castother.sa_)
+            return false;
+          if (sd_ != castother.sd_)
+            return false;
+          
+          return true;
+        }
+
         std::ostream& print (std::ostream& os) const;
 
         DifferentiableFunctionPtr_t g_;

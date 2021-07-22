@@ -112,6 +112,37 @@ namespace hpp {
 
       void impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const;
 
+      bool isEqual(const DifferentiableFunction& other) const {
+        const RelativeTransformation& castother = dynamic_cast<const RelativeTransformation&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (robot_ != castother.robot_)
+          return false;
+        if (parentJoint_ != castother.parentJoint_)
+          return false;
+        if (joint1_ != castother.joint1_)
+          return false;
+        if (joint2_ != castother.joint2_)
+          return false;
+        if (frame1_ != castother.frame1_)
+          return false;
+        if (frame2_ != castother.frame2_)
+          return false;
+        if (inConf_.rows() != castother.inConf_.rows())
+          return false;
+        if (inVel_.cols() != castother.inVel_.cols())
+          return false;
+        if (outConf_.rows() != castother.outConf_.rows())
+          return false;
+        if (outVel_.rows() != castother.outVel_.rows())
+          return false;
+        if (F1inJ1_invF2inJ2_ != castother.F1inJ1_invF2inJ2_)
+          return false;
+        
+        return true;
+      }
+
     private:
       void forwardKinematics (vectorIn_t arg) const;
 

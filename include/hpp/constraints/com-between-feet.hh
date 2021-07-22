@@ -94,6 +94,34 @@ namespace hpp {
 
         virtual void impl_jacobian (matrixOut_t jacobian,
             ConfigurationIn_t arg) const;
+
+        bool isEqual(const DifferentiableFunction& other) const {
+          const ComBetweenFeet& castother = dynamic_cast<const ComBetweenFeet&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (robot_ != castother.robot_)
+            return false;
+          if (com_->centerOfMassComputation() != castother.com_->centerOfMassComputation())
+            return false;
+          if (left_->joint() != castother.left_->joint())
+            return false;
+          if (right_->joint() != castother.right_->joint())
+            return false;
+          if (left_->local() != castother.left_->local())
+            return false;
+          if (right_->local() != castother.right_->local())
+            return false;
+          if (jointRef_ != castother.jointRef_)
+            return false;
+          if (pointRef_ != castother.pointRef_)
+            return false;
+          if (mask_ != castother.mask_)
+            return false;
+          
+          return true;
+        }
+
       private:
         DevicePtr_t robot_;
         mutable Traits<PointCom>::Ptr_t com_;

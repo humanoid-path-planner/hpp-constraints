@@ -55,6 +55,25 @@ namespace hpp {
 
       void impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const;
 
+      bool isEqual(const DifferentiableFunction& other) const {
+        const Manipulability& castother = dynamic_cast<const Manipulability&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (function_ != castother.function_)
+          return false;
+        if (robot_ != castother.robot_)
+          return false;
+        if (cols_.cols() != castother.cols_.cols())
+          return false;
+        if (J_ != castother.J_)
+          return false;
+        if (J_JT_ != castother.J_JT_)
+          return false;
+        
+        return true;
+      }
+
     private:
       DifferentiableFunctionPtr_t function_;
       DevicePtr_t robot_;

@@ -97,6 +97,25 @@ namespace hpp {
 	const;
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const;
+
+      bool isEqual(const DifferentiableFunction& other) const {
+        const RelativeCom& castother = dynamic_cast<const RelativeCom&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (robot_ != castother.robot_)
+          return false;
+        if (comc_ != castother.comc_)
+          return false;
+        if (joint_ != castother.joint_)
+          return false;
+        if (mask_ != castother.mask_)
+          return false;
+        if (nominalCase_ != castother.nominalCase_)
+          return false;
+        
+        return true;
+      }
     private:
       DevicePtr_t robot_;
       CenterOfMassComputationPtr_t comc_;

@@ -95,6 +95,25 @@ namespace hpp {
 				 ConfigurationIn_t argument) const;
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const;
+
+      bool isEqual(const DifferentiableFunction& other) const {
+        const DistanceBetweenPointsInBodies& castother = dynamic_cast<const DistanceBetweenPointsInBodies&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (robot_ != castother.robot_)
+          return false;
+        if (joint1_ != castother.joint1_)
+          return false;
+        if (joint2_ != castother.joint2_)
+          return false;
+        if (point1_ != castother.point1_)
+          return false;
+        if (point2_ != castother.point2_)
+          return false;
+        
+        return true;
+      }
     private:
       DevicePtr_t robot_;
       JointPtr_t joint1_;

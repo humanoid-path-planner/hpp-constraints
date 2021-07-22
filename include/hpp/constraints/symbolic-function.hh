@@ -149,12 +149,27 @@ namespace hpp {
         void init (const Ptr_t& self) {
           wkPtr_ = self;
         }
+
+        bool isEqual(const DifferentiableFunction& other) const {
+          const SymbolicFunction& castother = dynamic_cast<const SymbolicFunction&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (robot_ != castother.robot_)
+            return false;
+          if (expr_ != castother.expr_)
+            return false;
+          if (mask_ != castother.mask_)
+            return false;
+          
+          return true;
+        }
       private:
         WkPtr_t wkPtr_;
         DevicePtr_t robot_;
         typename Traits<Expression>::Ptr_t expr_;
         std::vector <bool> mask_;
-    }; // class ComBetweenFeet
+    }; // class SymbolicFunction
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_SYMBOLIC_FUNCTION_HH

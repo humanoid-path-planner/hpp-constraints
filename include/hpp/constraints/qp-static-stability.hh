@@ -72,7 +72,27 @@ namespace hpp {
         MatrixOfExpressions<>& phi () {
           return phi_;
         }
-
+      protected:
+        bool isEqual(const DifferentiableFunction& other) const {
+          const QPStaticStability& castother = dynamic_cast<const QPStaticStability&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (name_ != castother.name_)
+            return false;
+          if (robot_ != castother.robot_)
+            return false;
+          if (nbContacts_ != castother.nbContacts_)
+            return false;
+          if (com_ != castother.com_)
+            return false;
+          if (Zeros != castother.Zeros)
+            return false;
+          if (nWSR != castother.nWSR)
+            return false;
+          
+          return true;
+        }
       private:
         static const Eigen::Matrix <value_type, 6, 1> MinusGravity;
 
