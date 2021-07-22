@@ -167,7 +167,8 @@ namespace hpp {
             pose_.push_back(RelativePose::create
                             ("",robot, fs[j].joint_, os[i].joint_,
                              posInJoint, os[i].positionInJoint(),
-                             6 * Equality, std::vector<bool>(6, true)));
+                             EqualToZero << 3 * Equality << 2 * EqualToZero,
+                             std::vector<bool>(6, true)));
           }
         }
       }
