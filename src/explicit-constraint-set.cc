@@ -104,7 +104,8 @@ namespace hpp {
       constraintFound = false;
       for(std::size_t i = 0; i < data_.size(); ++i) {
         const Data& d (data_[i]);
-        if (d.constraint->functionPtr () == constraint->functionPtr ()) {
+        if (d.constraint->functionPtr () == constraint->functionPtr () ||
+            d.constraint->function () == constraint->function ()) {
           const DifferentiableFunction& h (d.constraint->function ());
           h.value (d.h_value, arg);
           assert (error.size () == h.outputSpace ()->nv ());
@@ -255,7 +256,9 @@ namespace hpp {
       for (std::vector<Data>::const_iterator it = data_.begin ();
            it != data_.end (); ++it) {
         if ((it->constraint == numericalConstraint) ||
-            (*(it->constraint) == *numericalConstraint)) return true;
+            (*(it->constraint) == *numericalConstraint) ||
+            (*(it->constraint->functionPtr()) == *numericalConstraint->functionPtr()))
+          return true;
       }
       return false;
     }
@@ -341,7 +344,8 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < data_.size (); ++i) {
         Data& d = data_[i];
-        if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
+        if ((d.constraint == constraint) || (*d.constraint == *constraint)
+            || d.constraint->function() == constraint->function()) {
           rightHandSideFromInput (i, arg);
           return true;
         }
@@ -394,7 +398,8 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < data_.size (); ++i) {
         Data& d = data_[i];
-        if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
+        if ((d.constraint == constraint) || (*d.constraint == *constraint)
+          || d.constraint->function() == constraint->function()) {
           rightHandSide (i, rhs);
           return true;
         }
@@ -406,7 +411,8 @@ namespace hpp {
     {
       for (std::size_t i = 0; i < data_.size (); ++i) {
 	const Data& d = data_[i];
-	if ((d.constraint == constraint) || (*d.constraint == *constraint)) {
+	if ((d.constraint == constraint) || (*d.constraint == *constraint)
+    || d.constraint->function() == constraint->function()) {
 	  rhs = d.rhs_implicit.vector();
 	  return true;
 	}

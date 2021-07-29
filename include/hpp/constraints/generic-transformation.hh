@@ -309,6 +309,19 @@ namespace hpp {
 				 ConfigurationIn_t argument) const;
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  ConfigurationIn_t arg) const;
+
+      bool isEqual(const DifferentiableFunction& other) const {
+        const GenericTransformation& castother = dynamic_cast<const GenericTransformation&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        if (robot_ != castother.robot_)
+          return false;
+        if (mask_ != castother.mask_)
+          return false;
+        
+        return true;
+      }
+
     private:
       void computeActiveParams ();
       DevicePtr_t robot_;

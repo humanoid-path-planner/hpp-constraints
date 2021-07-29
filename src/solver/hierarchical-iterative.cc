@@ -178,6 +178,9 @@ namespace hpp {
         }
       }
 
+      typedef std::pair<DifferentiableFunctionPtr_t, size_type> iqIt_t;
+      typedef std::pair<DifferentiableFunctionPtr_t, std::size_t> priorityIt_t;
+      
       HierarchicalIterative::HierarchicalIterative
       (const LiegroupSpacePtr_t& configSpace) :
         squaredErrorThreshold_ (0), inequalityThreshold_ (0),
@@ -233,7 +236,7 @@ namespace hpp {
                                   ics.functionPtr ()));
           const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
           for (std::size_t j = 0; j < fs.size(); ++j) {
-            if (f == fs[j]) {
+            if (*f == *fs[j]) {
               return true;
             }
           }
@@ -245,7 +248,9 @@ namespace hpp {
                                        const std::size_t& priority)
       {
         DifferentiableFunctionPtr_t f (constraint->functionPtr ());
-        if (priority_.find (f) != priority_.end ()) {
+        if (find_if(priority_.begin(), priority_.end(),
+                    [&f](const priorityIt_t& arg) { return *arg.first == *f; }
+                    ) != priority_.end()) {
           std::ostringstream oss;
           oss << "Contraint \"" << f->name ()
               << "\" already in solver";
@@ -293,8 +298,11 @@ namespace hpp {
                (other.constraints_.begin ()); it != other.constraints_.end ();
              ++it) {
           if (!this->contains (*it)) {
-            std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator
-              itp (other.priority_.find ((*it)->functionPtr ()));
+            const DifferentiableFunctionPtr_t& f = (*it)->functionPtr ();
+            std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp
+              (std::find_if(other.priority_.begin(), other.priority_.end(),
+                            [&f](const priorityIt_t& arg) { return *arg.first == *f; }
+                            ));
             if (itp == other.priority_.end ()) {
               // If priority is not set, constraint is explicit
               priority = 0;
@@ -425,13 +433,25 @@ namespace hpp {
       (const ImplicitPtr_t& constraint, ConfigurationIn_t config)
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
-        if (iq_.find (f) == iq_.end ()) {
+
+        std::map<DifferentiableFunctionPtr_t, size_type>::iterator iqi
+          (find_if(iq_.begin(), iq_.end(),
+                  [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                  ));
+        if (iqi == iq_.end())
           return false;
-        }
         LiegroupSpacePtr_t space (f->outputSpace());
-        size_type iq = iq_ [f];
+        size_type iq = iqi->second;
+
+        std::map<DifferentiableFunctionPtr_t, std::size_t>::iterator prioi
+          (find_if(priority_.begin(), priority_.end(),
+                  [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                  ));
+        if (prioi == priority_.end())
+          return false;
+        std::size_t i = prioi->second;
+
         size_type nq = space->nq ();
-        std::size_t i = priority_ [f];
         Data& d = datas_[i];
         LiegroupElementRef rhs    (space->elementRef (
                     d.rightHandSide.vector ().segment(iq, nq)));
@@ -445,17 +465,29 @@ namespace hpp {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
         LiegroupSpacePtr_t space (f->outputSpace());
         assert (rightHandSide.size () == space->nq ());
-        if (iq_.find (f) == iq_.end ()) {
+
+        std::map<DifferentiableFunctionPtr_t, size_type>::iterator iqi
+          (find_if(iq_.begin(), iq_.end(),
+                  [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                  ));
+        if (iqi == iq_.end())
           return false;
-        }
-        size_type iq = iq_ [f];
+        size_type iq = iqi->second;
         size_type nq = space->nq ();
+
+        std::map<DifferentiableFunctionPtr_t, std::size_t>::iterator prioi
+          (find_if(priority_.begin(), priority_.end(),
+                  [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                  ));
+        if (prioi == priority_.end())
+          return false;
+        std::size_t i = prioi->second;
+
+        Data& d = datas_[i];
 #ifndef NDEBUG
         size_type nv = space->nv ();
-#endif
-        std::size_t i = priority_ [f];
-        Data& d = datas_[i];
         assert (d.error.size () >= nv);
+#endif
         pinocchio::LiegroupElementConstRef inRhs
           (space->elementConstRef (rightHandSide));
         LiegroupElementRef rhs (space->elementRef
@@ -469,14 +501,18 @@ namespace hpp {
       (const ImplicitPtr_t& constraint,vectorOut_t rightHandSide) const
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
-        std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp;
-        itp = priority_.find (f);
+        std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp
+          (find_if(priority_.begin(), priority_.end(),
+                [&f](const priorityIt_t& arg) { return *arg.first == *f; }
+              ));
         if (itp == priority_.end ()) {
           return false;
         }
-        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIq;
-        itIq = iq_.find (f);
-        if (itIq == iq_.end ()) {
+        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIq
+          (find_if(iq_.begin(), iq_.end(),
+                      [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                      ));
+        if (itIq == iq_.end()) {
           return false;
         }
         LiegroupSpacePtr_t space (f->outputSpace());
@@ -495,18 +531,24 @@ namespace hpp {
       {
         const DifferentiableFunctionPtr_t& f (constraint->functionPtr ());
         assert (error.size () == f->outputSpace ()->nv ());
-        std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp;
-        itp = priority_.find (f);
+        std::map <DifferentiableFunctionPtr_t, std::size_t>::const_iterator itp
+          (find_if(priority_.begin(), priority_.end(),
+                  [&f](const priorityIt_t& arg) { return *arg.first == *f; }
+                  ));
         if (itp == priority_.end ()) {
           constraintFound = false;
           return false;
         }
         constraintFound = true;
-        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIq;
-        itIq = iq_.find (f);
+        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIq
+          (find_if(iq_.begin(), iq_.end(),
+                    [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                    ));
         assert (itIq != iq_.end ());
-        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIv;
-        itIv = iv_.find (f);
+        std::map <DifferentiableFunctionPtr_t, size_type>::const_iterator itIv
+          (find_if(iv_.begin(), iv_.end(),
+                    [&f](const iqIt_t& arg) { return *arg.first == *f; }
+                    ));
         assert (itIv != iv_.end ());
         size_type priority (itp->second);
         Data& d = datas_[priority];
@@ -704,16 +746,11 @@ namespace hpp {
         for (NumericalConstraints_t::const_iterator it
                (solver.constraints ().begin ());
              it != solver.constraints ().end (); ++it) {
-          bool isInThisSolver (false);
-          for (NumericalConstraints_t::const_iterator it1
-                 (this->constraints ().begin ());
-               it1 != this->constraints ().end (); ++it1) {
-            if (**it1 == **it) {
-              isInThisSolver = true;
-              break;
-            }
-          }
-          if (!isInThisSolver) return false;
+          const DifferentiableFunctionPtr_t& f = (*it)->functionPtr();
+          if (find_if(constraints_.begin(), constraints_.end(),
+                      [&f](const ImplicitPtr_t& arg) { return arg->function() == *f; }
+                      ) == constraints_.end())
+            return false;
         }
         return true;
       }
@@ -894,8 +931,11 @@ namespace hpp {
         ar & BOOST_SERIALIZATION_NVP(constraints_);
         std::vector<std::size_t> priorities(constraints_.size());
         for (std::size_t i = 0; i < constraints_.size(); ++i) {
-          std::map<DifferentiableFunctionPtr_t, std::size_t>::const_iterator c =
-            priority_.find(constraints_[i]->functionPtr());
+          const DifferentiableFunctionPtr_t& f = constraints_[i]->functionPtr();
+          std::map<DifferentiableFunctionPtr_t, std::size_t>::const_iterator c
+            (find_if(priority_.begin(), priority_.end(),
+                      [&f](const priorityIt_t& arg) { return *arg.first == *f; }
+                      ));
           if (c == priority_.end())
             priorities[i] = 0;
           else

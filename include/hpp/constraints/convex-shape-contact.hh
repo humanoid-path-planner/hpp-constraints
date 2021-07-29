@@ -154,6 +154,21 @@ namespace hpp {
                           const JointAndShapes_t& floorSurfaces,
                           const JointAndShapes_t& objectSurfaces);
 
+      bool isEqual(const DifferentiableFunction& other) const {
+        const ConvexShapeContact& castother = dynamic_cast<const ConvexShapeContact&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (robot_ != castother.robot_)
+          return false;
+        if (objectConvexShapes_.size() != castother.objectConvexShapes_.size())
+          return false;
+        for (std::size_t i = 0; i < objectConvexShapes_.size(); i++)
+          if (floorConvexShapes_[i] != castother.floorConvexShapes_[i])
+            return false;
+        
+        return true;
+      }
 
       private:
         /// Add a ConvexShape as an object.
@@ -255,7 +270,12 @@ namespace hpp {
                                     const JointAndShapes_t& floorSurfaces,
                                     const JointAndShapes_t& objectSurfaces);
 
-
+      bool isEqual(const DifferentiableFunction& other) const {
+        const ConvexShapeContactComplement& castother = dynamic_cast<const ConvexShapeContactComplement&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        return (sibling_ != castother.sibling_);
+      }
     private:
       void impl_compute (LiegroupElementRef result, ConfigurationIn_t argument) const;
 
@@ -314,6 +334,19 @@ namespace hpp {
         const;
       virtual void impl_jacobian(matrixOut_t jacobian, vectorIn_t arg)
         const;
+
+      bool isEqual(const DifferentiableFunction& other) const {
+        const ConvexShapeContactHold& castother = dynamic_cast<const ConvexShapeContactHold&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (constraint_ != castother.constraint_)
+          return false;
+        if (complement_ != castother.complement_)
+          return false;
+        
+        return true;
+      }
     private:
       ConvexShapeContactPtr_t constraint_;
       ConvexShapeContactComplementPtr_t complement_;

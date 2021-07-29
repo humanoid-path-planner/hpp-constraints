@@ -79,6 +79,27 @@ namespace hpp {
       /// Compute Jacobian of g (q_out) - f (q_in) with respect to q.
       void impl_jacobian (matrixOut_t jacobian, vectorIn_t arg) const;
 
+      bool isEqual(const DifferentiableFunction& other) const {
+        const ImplicitFunction& castother = dynamic_cast<const ImplicitFunction&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        
+        if (robot_ != castother.robot_)
+          return false;
+        if (inputToOutput_ != castother.inputToOutput_)
+          return false;
+        if (inputConfIntervals_.rows() != castother.inputConfIntervals_.rows())
+          return false;
+        if (outputConfIntervals_.rows() != castother.outputConfIntervals_.rows())
+          return false;
+        if (inputDerivIntervals_.rows() != castother.inputDerivIntervals_.rows())
+          return false;
+        if (outputDerivIntervals_.rows() != castother.outputDerivIntervals_.rows())
+          return false;
+
+        return true;
+      }
+
     private:
       void computeJacobianBlocks ();
 

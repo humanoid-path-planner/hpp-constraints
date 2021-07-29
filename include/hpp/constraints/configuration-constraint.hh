@@ -72,12 +72,27 @@ namespace hpp {
             ConfigurationIn_t arg) const;
 
         std::ostream& print (std::ostream& o) const;
+
+        bool isEqual(const DifferentiableFunction& other) const {
+          const ConfigurationConstraint& castother = dynamic_cast<const ConfigurationConstraint&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (robot_ != castother.robot_)
+            return false;
+          if (goal_.vector() != castother.goal_.vector())
+            return false;
+          if (weights_ != castother.weights_)
+            return false;
+          
+          return true;
+        }
       private:
         typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
         DevicePtr_t robot_;
         LiegroupElement goal_;
         vector_t weights_;
-    }; // class ComBetweenFeet
+    }; // class ConfigurationConstraint
   } // namespace constraints
 } // namespace hpp
 #endif // HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH

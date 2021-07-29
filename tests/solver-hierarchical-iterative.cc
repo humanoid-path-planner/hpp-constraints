@@ -260,6 +260,14 @@ BOOST_AUTO_TEST_CASE(mask)
     {
       jacobian.setIdentity();
     }
+
+    bool isEqual(const DifferentiableFunction& other) const {
+      const Identity& castother = dynamic_cast<const Identity&>(other);
+      if (!DifferentiableFunction::isEqual(other))
+        return false;
+
+      return true;
+    }
   }; // class Identity
   solver::HierarchicalIterative solver(LiegroupSpace::R3xSO3());
   solver.maxIterations(20);
@@ -270,7 +278,13 @@ BOOST_AUTO_TEST_CASE(mask)
   ImplicitPtr_t c2(Implicit::create(Identity::create(), 6*Equality,
 				    mask));
   solver.add(c1, 0);
-  solver.add(c2, 0);
+  try {
+    solver.add(c2, 0);
+    BOOST_CHECK(false);
+  } catch (const std::logic_error& err) {
+    BOOST_CHECK(std::string(err.what())
+            == std::string("Contraint \"\" already in solver"));
+  }
   vector_t q(7); q << 1, 2, 3, .5, .5, .5, .5;
   solver.rightHandSideFromConfig(q);
   bool found;
@@ -279,15 +293,11 @@ BOOST_AUTO_TEST_CASE(mask)
   BOOST_CHECK(solver.isSatisfied(q));
   BOOST_CHECK(solver.isConstraintSatisfied(c1, q, error, found));
   std::cout << "error=" << error.transpose()  << std::endl;
-  BOOST_CHECK(solver.isConstraintSatisfied(c2, q, error, found));
-  std::cout << "error=" << error.transpose()  << std::endl;
   BOOST_CHECK(found);
   BOOST_CHECK(error.norm() < 1e-10);
   std::cout << solver << std::endl;
   q << 0,0,0,0,0,0,1;
   std::cout << "q=" << q.transpose() << std::endl;
   BOOST_CHECK(!solver.isConstraintSatisfied(c1, q, error, found));
-  std::cout << "error=" << error.transpose()  << std::endl;
-  BOOST_CHECK(!solver.isConstraintSatisfied(c2, q, error, found));
   std::cout << "error=" << error.transpose()  << std::endl;
 }

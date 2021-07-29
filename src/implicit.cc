@@ -193,7 +193,7 @@ namespace hpp {
     {
       if (comparison_ != other.comparison_) return false;
       if (rhs_.size() != other.rhs_.size()) return false;
-      if (function_ != other.function_) return false;
+      if (function_ != other.function_ && *function_ != *other.function_) return false;
       if (swapAndTest) return other.isEqual (*this, false);
       return true;
     }

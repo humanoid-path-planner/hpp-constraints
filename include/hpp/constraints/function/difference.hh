@@ -58,6 +58,25 @@ namespace hpp {
           J.middleCols (rsd_.first, rsd_.second) *= -1;
         }
 
+        bool isEqual(const DifferentiableFunction& other) const {
+          const Difference& castother = dynamic_cast<const Difference&>(other);
+          if (!DifferentiableFunction::isEqual(other))
+            return false;
+          
+          if (inner_ != castother.inner_)
+            return false;
+          if (lsa_ != castother.lsa_)
+            return false;
+          if (lsd_ != castother.lsd_)
+            return false;
+          if (rsa_ != castother.rsa_)
+            return false;
+          if (rsd_ != castother.rsd_)
+            return false;
+          
+          return true;
+        }
+
         std::ostream& print (std::ostream& os) const;
 
         DifferentiableFunctionPtr_t inner_;

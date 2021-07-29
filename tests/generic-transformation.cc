@@ -368,3 +368,31 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3)
     hppDout(info, s2);
   }
 }
+
+BOOST_AUTO_TEST_CASE (equality) {
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
+  BOOST_REQUIRE (device);
+  BasicConfigurationShooter cs (device);
+
+  device->currentConfiguration (*cs.shoot ());
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
+
+  std::vector<DifferentiableFunctionPtr_t> functions;
+  functions.push_back(Orientation::create            ("Orientation"           , device, ee2, tf2)          );
+  functions.push_back(RelativeTransformation::create ("Orientation"           , device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2));
+  functions.push_back(RelativeTransformation::create ("othername_____________", device, ee1, ee2, tf1, tf2));
+  // functions[2] and functions[3] are meant to have the same value with different pointers
+
+  BOOST_CHECK (functions[2].get() != functions[3].get()); // boost implementation for ==
+  BOOST_CHECK (*functions[2] == *functions[3]); // uses operator== defined in DiffFunc
+  BOOST_CHECK (*functions[0] != *functions[2]); // a lot of things are different
+  BOOST_CHECK (*functions[2] != *functions[4]); // only the names are different
+  BOOST_CHECK (*functions[0] != *functions[1]); // only the names are equal
+}

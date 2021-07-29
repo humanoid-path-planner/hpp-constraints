@@ -124,6 +124,23 @@ namespace hpp {
           <pinocchio::DerivativeTimesInput> (f_value, rhs.vector(), jacobian);
       }
     }
+    
+    bool Explicit::isEqual (const Implicit& other, bool swapAndTest) const
+    {
+      if (swapAndTest && !Implicit::isEqual(other, swapAndTest)) return false;
+      try {
+        const Explicit& castother = dynamic_cast<const Explicit&>(other);
+        if (inputToOutput_ != castother.inputToOutput_) return false;
+        if (inputConf_ != castother.inputConf_) return false;
+        if (outputConf_ != castother.outputConf_) return false;
+        if (inputVelocity_ != castother.inputVelocity_) return false;
+        if (outputVelocity_ != castother.outputVelocity_) return false;
+        if (swapAndTest) return castother.isEqual (*this, false);
+        return true;
+      } catch (const std::bad_cast& err) {
+        return false;
+      }
+    }
 
     ImplicitPtr_t Explicit::copy () const
     {

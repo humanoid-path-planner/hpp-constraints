@@ -248,6 +248,8 @@ namespace hpp {
 
       /// Copy constructor
       Explicit (const Explicit& other);
+      
+      bool isEqual (const Implicit& other, bool swapAndTest) const;
 
       // Store weak pointer to itself
       void init (const ExplicitWkPtr_t& weak);
