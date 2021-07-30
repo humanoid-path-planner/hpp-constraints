@@ -224,24 +224,11 @@ namespace hpp {
       bool HierarchicalIterative::contains
       (const ImplicitPtr_t& numericalConstraint) const
       {
-        // Check that function is in stacks_
-        const DifferentiableFunctionPtr_t& f
-          (numericalConstraint->functionPtr ());
-        for (std::size_t i = 0; i < stacks_.size (); ++i) {
-          const ImplicitConstraintSet& ics (stacks_[i]);
-          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
-                                        ics.functionPtr ()));
-          DifferentiableFunctionSetPtr_t dfs
-            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet,
-                                  ics.functionPtr ()));
-          const DifferentiableFunctionSet::Functions_t& fs (dfs->functions ());
-          for (std::size_t j = 0; j < fs.size(); ++j) {
-            if (*f == *fs[j]) {
-              return true;
-            }
-          }
-        }
-        return false;
+        return
+          find_if(constraints_.begin(), constraints_.end(),
+                  [&numericalConstraint](const ImplicitPtr_t& arg)
+                  { return *arg == *numericalConstraint; }) !=
+          constraints_.end();
       }
 
       bool HierarchicalIterative::add (const ImplicitPtr_t& constraint,

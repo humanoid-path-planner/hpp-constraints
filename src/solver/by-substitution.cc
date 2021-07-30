@@ -113,16 +113,6 @@ namespace hpp {
         freeVariables (explicit_.notOutDers ().transpose ());
       }
 
-      bool BySubstitution::contains
-      (const ImplicitPtr_t& numericalConstraint) const
-      {
-        if (parent_t::contains (numericalConstraint)) return true;
-        ExplicitPtr_t expl (HPP_DYNAMIC_PTR_CAST (Explicit,
-                                                  numericalConstraint));
-        if (!expl) return false;
-        return explicit_.contains (expl);
-      }
-
       segments_t BySubstitution::implicitDof () const
       {
         const Eigen::MatrixXi& ioDep = explicit_.inOutDependencies();

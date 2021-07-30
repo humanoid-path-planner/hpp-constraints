@@ -106,14 +106,6 @@ namespace hpp {
           return explicit_;
         }
 
-        /// Check whether a numerical constraint has been added
-        /// \param numericalConstraint numerical constraint
-        /// \return true if numerical constraint is already in the solver.
-        /// \note Comparison between constraints is performed by
-        /// function names. This means that two constraints with the
-        /// same function names are considered as equal.
-        virtual bool contains (const ImplicitPtr_t& numericalConstraint) const;
-
         /// Return the number of free variables
         size_type numberFreeVariables () const
         {

@@ -207,6 +207,8 @@ void test_quadratic2 ()
   solver.add (expl1);
   solver.add (expl2);
   solver.explicitConstraintSetHasChanged();
+  assert(solver.contains(expl1));
+  assert(solver.contains(expl2));
 
   matrix_t M (N, N1 + N4);
   M << matrix_t::Identity(N1,N1), matrix_t::Zero(N1,N4),
