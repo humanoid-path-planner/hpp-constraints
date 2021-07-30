@@ -274,7 +274,7 @@ namespace hpp {
         const ConvexShapeContactComplement& castother = dynamic_cast<const ConvexShapeContactComplement&>(other);
         if (!DifferentiableFunction::isEqual(other))
           return false;
-        return (sibling_ != castother.sibling_);
+        return (*sibling_ != *(castother.sibling_));
       }
     private:
       void impl_compute (LiegroupElementRef result, ConfigurationIn_t argument) const;

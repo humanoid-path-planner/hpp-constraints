@@ -27,6 +27,11 @@
 
 namespace hpp {
   namespace constraints {
+    bool Implicit::operator== (const Implicit& other) const
+    {
+      bool res = isEqual (other, true);
+      return res;
+    }
     size_type computeParameterSize (const ComparisonTypes_t& comp)
     {
       size_type size = 0;

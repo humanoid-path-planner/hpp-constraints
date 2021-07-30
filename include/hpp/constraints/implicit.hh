@@ -114,10 +114,7 @@ namespace hpp {
     class HPP_CONSTRAINTS_DLLAPI Implicit {
       public:
 	/// Operator equality
-	bool operator== (const Implicit& other) const
-	{
-	  return isEqual (other, true);
-	}
+        bool operator== (const Implicit& other) const;
         /// Copy object and return shared pointer to copy
         virtual ImplicitPtr_t copy () const;
         /// Create a shared pointer to a new instance.
