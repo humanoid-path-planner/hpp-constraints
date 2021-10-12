@@ -78,7 +78,7 @@ namespace hpp {
           if (!DifferentiableFunction::isEqual(other))
             return false;
           
-          if (name_ != castother.name_)
+          if (name() != castother.name())
             return false;
           if (robot_ != castother.robot_)
             return false;
