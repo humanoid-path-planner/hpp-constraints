@@ -166,6 +166,7 @@ namespace hpp {
           if (Ls_ != other.Ls_) return false;
           if (MinJoint_ != other.MinJoint_) return false;
           if (joint_ != other.joint_) return false;
+	  return true;
         }
         bool operator!=(ConvexShape const & other) const {
           return !(this->operator==(other));
