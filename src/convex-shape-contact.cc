@@ -58,6 +58,22 @@ namespace hpp {
       computeRadius();
     }
 
+    bool ConvexShapeContact::isEqual(const DifferentiableFunction& other) const
+    {
+      const ConvexShapeContact& castother = dynamic_cast
+        <const ConvexShapeContact&>(other);
+      if (!DifferentiableFunction::isEqual(other))
+        return false;
+      if (robot_ != castother.robot_)
+        return false;
+      if (objectConvexShapes_.size() != castother.objectConvexShapes_.size())
+        return false;
+      for (std::size_t i = 0; i < objectConvexShapes_.size(); i++)
+        if (floorConvexShapes_[i] != castother.floorConvexShapes_[i])
+          return false;
+      return true;
+    }
+
     ConvexShapeContactPtr_t ConvexShapeContact::create (
            const std::string& name, DevicePtr_t robot,
            const JointAndShapes_t& floorSurfaces,
@@ -339,6 +355,16 @@ namespace hpp {
     {
     }
 
+    bool ConvexShapeContactComplement::isEqual
+    (const DifferentiableFunction& other) const
+    {
+      const ConvexShapeContactComplement& castother = dynamic_cast
+        <const ConvexShapeContactComplement&>(other);
+        if (!DifferentiableFunction::isEqual(other))
+          return false;
+        return (*sibling_ != *(castother.sibling_));
+    }
+
     std::pair < ConvexShapeContactPtr_t,
 		ConvexShapeContactComplementPtr_t >
     ConvexShapeContactComplement::createPair
@@ -493,6 +519,20 @@ namespace hpp {
     {
       constraint_->impl_jacobian(jacobian.topRows<5>(), arg);
       complement_->impl_jacobian(jacobian.bottomRows<3>(), arg);
+    }
+
+    bool ConvexShapeContactHold::isEqual(const DifferentiableFunction& other)
+      const
+    {
+      const ConvexShapeContactHold& castother = dynamic_cast
+        <const ConvexShapeContactHold&>(other);
+      if (!DifferentiableFunction::isEqual(other))
+        return false;
+      if (constraint_ != castother.constraint_)
+        return false;
+      if (complement_ != castother.complement_)
+        return false;
+      return true;
     }
 
   } // namespace constraints
