@@ -362,7 +362,8 @@ namespace hpp {
         <const ConvexShapeContactComplement&>(other);
         if (!DifferentiableFunction::isEqual(other))
           return false;
-        return (*sibling_ != *(castother.sibling_));
+        if (sibling_ == castother.sibling_) return true;
+        return (*sibling_ == *(castother.sibling_));
     }
 
     std::pair < ConvexShapeContactPtr_t,
