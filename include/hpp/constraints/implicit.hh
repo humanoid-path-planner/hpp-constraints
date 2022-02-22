@@ -242,9 +242,17 @@ namespace hpp {
         /// Set the comparison type
         void comparisonType (const ComparisonTypes_t& comp);
 
+        /// Return the active rows taken into account
+        /// to determine whether the constraint is satisfied
         const segments_t& activeRows() const
         {
           return activeRows_;
+        }
+
+        /// Check if all rows are active (no inactive rows)
+        bool checkAllRowsActive() const
+        {
+          return inactiveRows_.nbRows() == 0;
         }
 
         /// Get indices of constraint coordinates that are equality
@@ -269,6 +277,21 @@ namespace hpp {
         {
           return function_;
         }
+
+        /// Get pair of joints whose relative pose is fully constrained
+        ///
+        /// If the function value depends on the relative pose between j1 and j2
+        /// and if the relative pose between j1 and j2 is fully constrained
+        /// because of Implicit constraint (relative transformation may still
+        /// differ from one path to another), return these two joints.
+        /// \param robot the device that this constraint is applied to
+        /// \return the pair of joints constrained, in order of increasing
+        /// joint index, or a pair of empty shared pointers
+        /// \note absolute pose is considered relative pose with respect to
+        /// "universe". "universe" is returned as a nullpointer
+        /// as the first element of the pair, if applicable.
+        virtual std::pair<JointConstPtr_t, JointConstPtr_t> doesConstrainRelPoseBetween
+          (DeviceConstPtr_t robot) const;
 
       protected:
         /// Constructor

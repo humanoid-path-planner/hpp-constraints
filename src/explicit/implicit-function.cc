@@ -35,6 +35,7 @@
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/serialization.hh>
 #include <hpp/pinocchio/liegroup-space.hh>
+#include <hpp/pinocchio/joint.hh>
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/tools.hh>
@@ -308,6 +309,36 @@ namespace hpp {
                       inputToOutput_->inputDerivativeSize ());
           // should we recompute them instead of storing them ?
           // computeJacobianBlocks ();
+        }
+      }
+
+      std::pair<JointConstPtr_t, JointConstPtr_t> ImplicitFunction::dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const
+      {
+        // check that this is a constant function
+        if (inputToOutput_->inputSize() != 0) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+        }
+
+        // get the joints involved in the output config
+        JointConstPtr_t j1;
+        // check that output interval matches with the config range of one joint
+        if (outputConfIntervals_.nbRows() != 1) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+        }
+        segment_t row = outputConfIntervals_.rows()[0];
+        j1 = robot->getJointAtConfigRank(row.first);
+        if (!j1 || row.second != j1->configSize()) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+        }
+
+        JointConstPtr_t j2 = j1->parentJoint();
+        size_type index1 = j1->index();
+        size_type index2 = (j2? j2->index(): 0);
+        if (index1 <= index2) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(j1, j2);
+        } else {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(j2, j1);
         }
       }
 

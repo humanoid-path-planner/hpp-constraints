@@ -37,6 +37,7 @@
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/joint.hh>
+#include <pinocchio/multibody/model.hpp>
 
 #include <hpp/constraints/affine-function.hh>
 #include <hpp/constraints/explicit/implicit-function.hh>
@@ -146,6 +147,7 @@ namespace hpp {
                 ComparisonTypes_t(joint->numberDof(), Equality),
                 std::vector<bool>(joint->numberDof(), true)),
       jointName_ (joint->name ()),
+      joint_ (joint),
       configSpace_ (joint->configurationSpace ())
     {
       assert (HPP_DYNAMIC_PTR_CAST (explicit_::ImplicitFunction,
@@ -245,6 +247,25 @@ namespace hpp {
 	return true;
       } catch (const std::bad_cast& err) {
 	return false;
+      }
+    }
+
+    std::pair<JointConstPtr_t, JointConstPtr_t> LockedJoint::doesConstrainRelPoseBetween
+        (DeviceConstPtr_t robot) const
+    {
+      if (!robot->model().existJointName(jointName())) {
+        // Extra dofs and partial locked joints have a name that won't be
+        // recognized by Device::getJointByName. So they can be filtered
+        // this way.
+        return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+      }
+      JointConstPtr_t j1 = joint_->parentJoint();
+      size_type index1 = Joint::index(j1); // parent joint may be universe
+      size_type index2 = joint_->index();
+      if (index1 <= index2) {
+        return std::pair<JointConstPtr_t, JointConstPtr_t>(j1, joint_);
+      } else {
+        return std::pair<JointConstPtr_t, JointConstPtr_t>(joint_, j1);
       }
     }
 

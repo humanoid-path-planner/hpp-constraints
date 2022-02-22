@@ -47,7 +47,7 @@ namespace hpp {
     /** The function returns a relative transformation between the two "closest"
         convex shapes it contains.
 
-        Twos set of convex shapes can be given to this class:
+        Two sets of convex shapes can be given to this class:
         \li a set of object contact surfaces, \f$ (o_i)_{i \in I } \f$, which can be in contact with the environment,
         \li a set of floor contact surfaces, \f$ (f_j)_{j \in J } \f$, which can support objects.
 
@@ -156,6 +156,53 @@ namespace hpp {
 
       /// Display object in a stream
       std::ostream& print (std::ostream& o) const;
+
+      /// Return pair of joints the relative pose between which
+      /// modifies the function value if any
+      ///
+      /// Currently only supports the case when all the joints for floors are the same
+      /// and all the joints for objects involved are the same
+      /// \param robot the robot the constraints are applied on,
+      /// \return pair of joints whose relative pose determines the value
+      /// of the contact function, arranged in order of increasing joint index,
+      /// or a pair of empty shared pointers.
+      std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const
+      {
+        if ((floorConvexShapes_.size() == 0) || (objectConvexShapes_.size() == 0)) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+        }
+        JointConstPtr_t floor0_joint = floorConvexShapes_[0].joint_;
+        JointConstPtr_t object0_joint = objectConvexShapes_[0].joint_;
+
+        size_type index1 = Joint::index(floor0_joint);
+        size_type index2 = Joint::index(object0_joint);
+        // check that all the joints involved are the same
+        for (ConvexShapes_t::const_iterator it (floorConvexShapes_.begin());
+            it != floorConvexShapes_.end(); ++it)
+        {
+          size_type jointIndex = Joint::index(it->joint_);
+          if (jointIndex != index1) {
+            return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+          }
+        }
+
+        for (ConvexShapes_t::const_iterator it (objectConvexShapes_.begin());
+            it != objectConvexShapes_.end(); ++it)
+        {
+          size_type jointIndex = Joint::index(it->joint_);
+          if (jointIndex != index2) {
+            return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+          }
+        }
+
+        if (index1 <= index2) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(floor0_joint, object0_joint);
+        } else {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(object0_joint, floor0_joint);
+        }
+      };
+
     protected:
       /// Constructor
       /// \param name name of the constraint,
@@ -257,6 +304,22 @@ namespace hpp {
       void computeRelativePoseRightHandSide
         (LiegroupElementConstRef rhs, std::size_t& ifloor, std::size_t& iobject,
          LiegroupElementRef relativePoseRhs) const;
+
+      /// Return pair of joints the relative pose between which
+      /// modifies the function value if any
+      ///
+      /// Currently only supports the case when all the joints for floors are the same
+      /// and all the joints for objects involved are the same
+      /// \param robot the robot the constraints are applied on,
+      /// \return pair of joints whose relative pose determines the value
+      /// of the contact function, arranged in order of increasing joint index,
+      /// or a pair of empty shared pointers.
+      std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const
+      {
+        return sibling_->dependsOnRelPoseBetween(robot);
+      };
+
     protected:
       /// Constructor
       /// \param name name of the sibling ConvexShapeContact constraint,
@@ -309,6 +372,21 @@ namespace hpp {
       ConvexShapeContactComplementPtr_t complement() const
       {
         return complement_;
+      }
+
+      /// Return pair of joints the relative pose between which
+      /// modifies the function value if any
+      ///
+      /// Currently only supports the case when all the joints for floors are the same
+      /// and all the joints for objects involved are the same
+      /// \param robot the robot the constraints are applied on,
+      /// \return pair of joints whose relative pose determines the value
+      /// of the contact function, arranged in order of increasing joint index,
+      /// or a pair of empty shared pointers.
+      std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const
+      {
+        return constraint_->dependsOnRelPoseBetween(robot);
       }
 
     protected:
