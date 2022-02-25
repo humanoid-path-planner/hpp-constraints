@@ -175,18 +175,8 @@ namespace hpp {
           DevicePtr_t robot = DevicePtr_t (),
           value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon())) const;
 
-      inline bool operator== (DifferentiableFunction const & other) const
-      {
-        try {
-          return isEqual(other) && other.isEqual(*this);
-        } catch (const std::bad_cast& exc) {
-          return false;
-        }
-      }
-      inline bool operator!= (DifferentiableFunction const & b) const
-      {
-        return !(*this == b);
-      }
+      bool operator== (DifferentiableFunction const & other) const;
+      bool operator!= (DifferentiableFunction const & b) const;
       //virtual bool isEqual(DifferentiableFunctionPtr_t const &, bool) const {return true;}
     protected:
       /// \brief Concrete class constructor should call this constructor.

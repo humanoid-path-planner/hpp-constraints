@@ -507,13 +507,6 @@ namespace Eigen {
         m_nbRows(BlockIndex::cardinal(rows)),
         m_nbCols(BlockIndex::cardinal(cols)), m_rows(rows), m_cols(cols)
       {
-# ifndef NDEBUG
-        // test that input is sorted
-        segments_t r (rows); BlockIndex::sort (r);
-        assert (r == rows);
-        segments_t c (cols); BlockIndex::sort (c);
-        assert (c == cols);
-#endif
       }
 
       /// Constructor by vectors of segments
@@ -526,13 +519,6 @@ namespace Eigen {
                     const size_type& nbCols, const ColIndices_t& cols) :
         m_nbRows(nbRows), m_nbCols(nbCols), m_rows(rows), m_cols(cols)
       {
-# ifndef NDEBUG
-        // test that input is sorted
-        segments_t r (rows); BlockIndex::sort (r);
-        assert (r == rows);
-        segments_t c (cols); BlockIndex::sort (c);
-        assert (c == cols);
-#endif
       }
 
       /// Constructor of single block

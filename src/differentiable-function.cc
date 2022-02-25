@@ -204,6 +204,21 @@ namespace hpp {
           finiteDiffCentral(jacobian, x, FiniteDiffVectorSpaceOp(eps), *this);
       }
 
+    bool DifferentiableFunction::operator==
+    (DifferentiableFunction const & other) const
+    {
+      try {
+        return isEqual(other) && other.isEqual(*this);
+      } catch (const std::bad_cast& exc) {
+        return false;
+      }
+    }
+    bool DifferentiableFunction::operator!=
+    (DifferentiableFunction const & b) const
+    {
+      return !(*this == b);
+    }
+
     DifferentiableFunction::DifferentiableFunction
     (size_type sizeInput, size_type sizeInputDerivative,
      size_type sizeOutput, std::string name) :
