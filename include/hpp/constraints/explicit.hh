@@ -48,7 +48,7 @@ namespace hpp {
 
         Then the differential function is of the form
         \f{eqnarray*}{
-        \mathbf{q}_{out} - f \left(\mathbf{q}_{in}\right)
+        \mathbf{q}_{out} - g \left(\mathbf{q}_{in}\right)
         \ \ &\mbox{with}&
         \mathbf{q}_{out} = \left(q_{oc_{1}} \cdots q_{oc_{n_{oc}}}\right)^T,
         \ \ \ \mathbf{q}_{in} = (q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T
@@ -56,9 +56,9 @@ namespace hpp {
         It is straightforward that an equality constraint with this function can
         solved explicitely:
         \f{align*}{
-        \mathbf{q}_{out} &- f \left(\mathbf{q}_{in}\right) = rhs \\
+        \mathbf{q}_{out} &- g \left(\mathbf{q}_{in}\right) = rhs \\
         & \mbox {if and only if}\\
-        \mathbf{q}_{out} &= f \left(\mathbf{q}_{in}\right) + rhs \\
+        \mathbf{q}_{out} &= g \left(\mathbf{q}_{in}\right) + rhs \\
         \f}
 	If function \f$f\f$ takes values in a Lie group (SO(2), SO(3)),
         the above "+" between a Lie group element and a tangent vector
@@ -89,7 +89,7 @@ namespace hpp {
         \cdots & ov_1 & \cdots & iv_{1} & \cdots & ov_2 & \cdots & iv_2 & \cdots & ov_{n_{ov}} & \cdots \\
                &  1   &        &        &        &  0   &        &      &        &             &        \\
                &  0   &        &        &        &  1   &        &      &        &             &        \\
-               &       &        &  -\frac{\partial f}{q_1} & & &   & -\frac{\partial f}{q_2} \\
+               &       &        &  -\frac{\partial g}{q_1} & & &   & -\frac{\partial g}{q_2} \\
           &&&&&\\
                & 0    &        &       &         &  0   &        &      &        &  1
         \end{array}\right)
@@ -98,13 +98,13 @@ namespace hpp {
         \f{equation*}{
         J = \left(\begin{array}{cccccccccccc}
         ov_1 \ ov_2 \ ov_3 & iv_1 \cdots  iv_{n_{iv}} \\
-        J_{log}(R_{f}^T R_{out}) & -J_{log}(R_{f}^T R_{out})R_{out}^T R_{f} \frac{\partial f}{\partial q_{in}}
+        J_{log}(R_{g}^T R_{out}) & -J_{log}(R_{g}^T R_{out})R_{out}^T R_{g} \frac{\partial g}{\partial q_{in}}
         \end{array}\right)
         \f}
         where
         \li \f$R_{out}\f$ is the rotation matrix corresponding to unit
         quaternion \f$(q_{oc1},q_{oc2},q_{oc3},q_{oc4})\f$,
-        \li \f$R_{f}\f$ is the rotation matrix corresponding to the part of the
+        \li \f$R_{g}\f$ is the rotation matrix corresponding to the part of the
         output value of \f$f\f$ corresponding to SO(3),
         \li \f$J_{log}\f$ is the Jacobian matrix of function that associates
         to a rotation matrix \f$R\f$ the vector \f$\omega\f$ such that
@@ -184,7 +184,7 @@ namespace hpp {
       ///
       /// The default implementation computes
       /// \f{equation}
-      /// f \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right) + rhs
+      /// g \left((q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T\right) + rhs
       /// \f}
       virtual void outputValue(LiegroupElementRef result, vectorIn_t qin,
                                LiegroupElementConstRef rhs) const;
@@ -192,15 +192,15 @@ namespace hpp {
       /// Compute Jacobian of output value
       ///
       /// \f{eqnarray*}
-      /// J &=& \frac{\partial}{\partial\mathbf{q}_{in}}\left(f(\mathbf{q}_{in})
+      /// J &=& \frac{\partial}{\partial\mathbf{q}_{in}}\left(g(\mathbf{q}_{in})
       ///       + rhs\right).
       /// \f}
       /// \param qin vector of input variables,
-      /// \param f_value \f$f(\mathbf{q}_{in})\f$ provided to avoid
+      /// \param g_value \f$f(\mathbf{q}_{in})\f$ provided to avoid
       ///        recomputation,
       /// \param rhs right hand side (of implicit formulation).
       virtual void jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
-                                       f_value, LiegroupElementConstRef rhs,
+                                       g_value, LiegroupElementConstRef rhs,
                                        matrixOut_t jacobian) const;
     protected:
       /// Constructor
@@ -234,7 +234,7 @@ namespace hpp {
       /// \param implicitFunction differentiable function of the implicit
       ///        formulation if different from default expression
       ///        \f{equation}{
-      ///        \mathbf{q}_{out} - f \left(\mathbf{q}_{in}\right),
+      ///        \mathbf{q}_{out} - g \left(\mathbf{q}_{in}\right),
       ///        \f}
       Explicit
 	(const DifferentiableFunctionPtr_t& implicitFunction,

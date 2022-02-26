@@ -72,9 +72,11 @@ namespace hpp {
     /// \addtogroup constraints
     /// \{
 
-    /** GenericTransformation class encapsulates 6 possible differentiable
-     *  functions: Position, Orientation, Transformation and their relative
-     *  versions RelativePosition, RelativeOrientation, RelativeTransformation.
+    /** GenericTransformation class encapsulates 10 possible differentiable
+     *  functions: Position, Orientation, OrientationSO3, Transformation,
+     *  TransformationR3xSO3 and their relative
+     *  versions RelativeTransformationR3xSO3, RelativePosition,
+     *  RelativeOrientation, RelativeOrientationSO3, RelativeTransformation.
      *
      *  These functions compute the position of frame
      *  GenericTransformation::frame2InJoint2 in joint
@@ -83,11 +85,14 @@ namespace hpp {
      *  frame. For absolute functions, GenericTransformation::joint1 is
      *  NULL and joint1 frame is the world frame.
      *
-     *  The value of the RelativeTransformation function is a 6-dimensional
+     *  The value of the RelativeTransformation function is
+     *  a 6-dimensional
      *  vector. The 3 first coordinates are the position of the center of the
      *  second frame expressed in the first frame.
      *  The 3 last coordinates are the log of the orientation of frame 2 in
      *  frame 1.
+     *  The values of RelativePosition and RelativeOrientation are respectively
+     *  the 3 first and the 3 last components of the above 6 dimensional vector.
      *
      *  \f{equation*}
      *  f (\mathbf{q}) = \left(\begin{array}{c}
@@ -106,6 +111,9 @@ namespace hpp {
      *  (R_2 J_{2\,\omega} - R_1 J_{1\,\omega})
      *  \end{array}\right)
      *  \f}
+     *
+     *  For RelativeTransformationR3xSO3, OrientationSO3, the 3 last components
+     *  are replaced by a quaternion.
     */
     template <int _Options>
     class HPP_CONSTRAINTS_DLLAPI GenericTransformation :
