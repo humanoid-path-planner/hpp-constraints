@@ -24,6 +24,42 @@ namespace hpp {
   namespace constraints {
     namespace explicit_ {
       /// Constraint of relative pose between two frames on a kinematic chain
+      ///
+      /// Given an input configuration \f$\mathbf{q}\f$, solving this constraint
+      /// consists in computing output variables with respect to input
+      /// variables:
+      /// \f[
+      /// \mathbf{q}_{out} = g(\mathbf{q}_{in})
+      ///\f]
+      /// where \f$\mathbf{q}_{out}\f$ are the configuration variables of
+      /// input joint2, \f${q}_{in}\f$ are the configuration variables
+      /// of input joint1 and parent joints, and \f$g\f$ is a mapping
+      /// with values is SE(3). Note that joint2 should be a
+      /// freeflyer joint.
+      ///
+      /// \note According to the documentation of class Explicit, the
+      /// implicit formulation should be
+      /// \f[
+      /// f(\mathbf{q}) = \mathbf{q}_{out} - g(\mathbf{q}_{in}).
+      /// \f]
+      /// As function \f$g\f$ takes values in SE(3), the above expression is
+      /// equivalent to
+      /// \f[
+      /// f(\mathbf{q}) = \log_{SE(3)}\left(g(\mathbf{q}_{in})^{-1}
+      ///                 \mathbf{q}_{out}\right)
+      /// \f]
+      /// that represents the log of the error of input joint2 pose
+      /// (\f$\mathbf{q}_{out}\f$) with respect to its desired value
+      /// (\f$g(\mathbf{q}_{in}\f$). The problem with this expression is
+      /// that it is different from the corresponding implicit formulation
+      /// hpp::constraints::RelativeTransformationR3xSO3 that compares the poses of input
+      /// joint1 and joint2. For manipulation planning applications where pairs
+      /// of constraints and complements are replaced by an explicit constraint,
+      /// this difference of formulation results in inconsistencies such as a
+      /// configuration satisfying one formulation (the error being below the
+      /// threshold) but not the other one. To cope with this issue, the default
+      /// implicit formulation is replaced by the one defined by class
+      /// hpp::constraints::RelativeTransformationR3xSO3.
       class HPP_CONSTRAINTS_DLLAPI RelativePose : public Explicit
       {
       public:

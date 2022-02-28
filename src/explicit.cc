@@ -113,7 +113,7 @@ namespace hpp {
     }
 
     void Explicit::jacobianOutputValue(vectorIn_t qin, LiegroupElementConstRef
-                                       f_value, LiegroupElementConstRef rhs,
+                                       g_value, LiegroupElementConstRef rhs,
                                        matrixOut_t jacobian) const
     {
       assert(rhs.space()->isVectorSpace());
@@ -121,7 +121,7 @@ namespace hpp {
       if (!rhs.vector().isZero())
       {
         explicitFunction ()->outputSpace ()->dIntegrate_dq
-          <pinocchio::DerivativeTimesInput> (f_value, rhs.vector(), jacobian);
+          <pinocchio::DerivativeTimesInput> (g_value, rhs.vector(), jacobian);
       }
     }
     
