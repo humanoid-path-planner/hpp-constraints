@@ -36,7 +36,7 @@ namespace hpp {
     /**
         This class represents a parameterizable numerical constraint that
         compares the output of a function \f$h\f$ to a right hand side Lie
-	group element.
+        group element.
 
         \par Definition
 
@@ -46,7 +46,7 @@ namespace hpp {
         respectively \f$(n_q,n_v)\f$.
         \li The comparison is represented by a vector \f$\mathbf{c}\f$ of
         dimension \f$n_v\f$ with values in
-        enum hpp::contraints::ComparisonType = {
+        enum hpp::constraints::ComparisonType = {
         \f$\mathbf{Equality}\f$, \f$\mathbf{EqualToZero}\f$,
         \f$\mathbf{Inferior}\f$, \f$\mathbf{Superior}\f$ }.
         \li The right hand side is Lie group element of dimension \f$n_q\f$.
@@ -71,23 +71,24 @@ namespace hpp {
         \f$e_i = \Delta_i\f$,
         \li if \f$c_i\f$ is \f$\mathbf{EqualToZero}\f$, \f$e_i = \Delta_i\f$.
 
-	\par Mask
+        \par Mask
 
-	A mask is a vector of Boolean values of size \f$n_v\f$. Values set to
-	false means that the corresponding component of the error defined above
-	is not taken into account to determine whether the constraint is
-	satisfied. The active rows of the constraint may be accessed via
-	method activeRows.
+        A mask is a vector of Boolean values of size \f$n_v\f$. Values set to
+        false means that the corresponding component of the error defined above
+        is not taken into account to determine whether the constraint is
+        satisfied. The active rows of the constraint may be accessed via
+        method activeRows.
 
         \par Parameterizable right hand side
 
-        Lines with \textbf{Equality} comparator in the above definition of the
-        error need a parameter, while lines with comparators \textbf{Inferior},
-        \textbf{Superior}, or \textbf{EqualToZero} do not.
-        As a consequence, the right hand side of the constraint is defined by
-        a vector \f$\lambda\f$ of parameters of size the number of
-        \textbf{Equality} occurences in vector \f$\mathbf{c}\f$. The right hand
-        side is then defined as in the following example:
+        Lines with \f$\mathbf{Equality}\f$ comparator in the above definition
+        of the error need a parameter, while lines with comparators
+        \f$\mathbf{Inferior}\f$, \f$\mathbf{Superior}\f$, or
+        \f$\mathbf{EqualToZero}\f$ do not. As a consequence, the right hand
+        side of the constraint is defined by a vector \f$\lambda\f$
+        of parameters of size the number of \f$\mathbf{Equality}\f$ occurences
+        in vector \f$\mathbf{c}\f$. The right hand side is then defined as in
+        the following example:
         \f[
         rhs = \exp\left(\begin{array}{c}\lambda_1 \\ 0 \\ 0 \\ \lambda_2 \\
         \vdots \end{array}\right)
