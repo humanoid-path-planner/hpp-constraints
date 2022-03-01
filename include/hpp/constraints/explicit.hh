@@ -72,7 +72,8 @@ namespace hpp {
         & \mbox {if and only if}\\
         \mathbf{q}_{out} &= g \left(\mathbf{q}_{in}\right) + rhs \\
         \f}
-	If function \f$f\f$ takes values in a Lie group (SO(2), SO(3)),
+
+        If function \f$f\f$ takes values in a Lie group (SO(2), SO(3)),
         the above "+" between a Lie group element and a tangent vector
         has to be undestood as the integration of the constant velocity from
         the Lie group element:
