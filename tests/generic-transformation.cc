@@ -57,6 +57,8 @@ using hpp::pinocchio::DevicePtr_t;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::LiegroupSpace;
 using hpp::pinocchio::Transform3f;
+using hpp::constraints::EqualToZero;
+using hpp::pinocchio::JointIndex;
 
 using hpp::pinocchio::urdf::loadModelFromString;
 
@@ -307,9 +309,9 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3)
   std::vector<bool> mask = {false, false, false, false, false, true};
   ImplicitPtr_t constraint
     (Implicit::create (RelativeTransformationR3xSO3::create
-		       ("RelativeTransformationR3xSO3", robot, j1, j2,
-			tf1, tf2),
-		       6 * Equality, mask));
+           ("RelativeTransformationR3xSO3", robot, j1, j2,
+      tf1, tf2),
+           6 * Equality, mask));
   BasicConfigurationShooter cs (robot);
   solver::BySubstitution solver(robot->configSpace());
   solver.errorThreshold(1e-10);
@@ -328,15 +330,15 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3)
   // Create grasp constraint with one degree of freedom in rotation along z
   mask = {true, true, true, true, true, false};
   ImplicitPtr_t c1 (Implicit::create(RelativeTransformationR3xSO3::create
-				     ("RelativeTransformationR3xSO3", robot,
-				      j1, j2, tf1, tf2), 6*EqualToZero, mask));
+             ("RelativeTransformationR3xSO3", robot,
+              j1, j2, tf1, tf2), 6*EqualToZero, mask));
   solver::BySubstitution s1(robot->configSpace());
   s1.errorThreshold(1e-10);
   s1.add(c1);
   // Create grasp + complement as an explicit constraint
   ExplicitPtr_t c2(explicit_::RelativePose::create
-		   ("ExplicitRelativePose", robot, j1, j2, tf1, tf2,
-		    5 * EqualToZero << Equality));
+       ("ExplicitRelativePose", robot, j1, j2, tf1, tf2,
+        5 * EqualToZero << Equality));
   solver::BySubstitution s2(robot->configSpace());
   s2.errorThreshold(1e-4);
   s2.add(c2);
@@ -353,17 +355,17 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3)
       // satisfy c1.
       // Configuration q_new below satisfies c2 but not c1.
       *q_near << 0.18006349590534418, 0.3627623741970175, 0.9567759630330663,
-	0.044416054309488175, 0.31532356328825556, 0.4604329042168087,
-	0.8286131819306576,
-	0.45813483973344404, 0.23514459283216355, 0.7573015903787429,
-	0.8141495491430896, 0.1383820163733335, 0.3806970356973106,
-	0.4160296818567576;
+  0.044416054309488175, 0.31532356328825556, 0.4604329042168087,
+  0.8286131819306576,
+  0.45813483973344404, 0.23514459283216355, 0.7573015903787429,
+  0.8141495491430896, 0.1383820163733335, 0.3806970356973106,
+  0.4160296818567576;
       *q_new << 0.16026892741853033, 0.33925098736439646, 0.8976880203169203,
-	-0.040130835169737825, 0.37473431876437147, 0.4405275981290593,
-	0.8148000624051422,
-	0.43787674119234027, 0.18316291571416676, 0.7189377922181226,
-	0.7699579340925136, 0.1989432638510445, 0.35960786236482944,
-	0.4881275886709128;
+  -0.040130835169737825, 0.37473431876437147, 0.4405275981290593,
+  0.8148000624051422,
+  0.43787674119234027, 0.18316291571416676, 0.7189377922181226,
+  0.7699579340925136, 0.1989432638510445, 0.35960786236482944,
+  0.4881275886709128;
     }
     s2.rightHandSideFromConfig(*q_near);
     vector6_t error;
@@ -407,4 +409,168 @@ BOOST_AUTO_TEST_CASE (equality) {
   BOOST_CHECK (*functions[0] != *functions[2]); // a lot of things are different
   BOOST_CHECK (*functions[2] != *functions[4]); // only the names are different
   BOOST_CHECK (*functions[0] != *functions[1]); // only the names are equal
+}
+
+BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
+  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
+      hpp::pinocchio::unittest::HumanoidSimple);
+  device->numberDeviceData (4);
+  JointPtr_t ee1 = device->getJointByName ("lleg5_joint"),
+             ee2 = device->getJointByName ("rleg5_joint");
+  BOOST_REQUIRE (device);
+  // ensure that the joint indices are as expected
+  BOOST_REQUIRE (ee1->index() < ee2->index());
+  BasicConfigurationShooter cs (device);
+
+  device->currentConfiguration (*cs.shoot ());
+  device->computeForwardKinematics ();
+  Transform3f tf1 (ee1->currentTransformation ());
+  Transform3f tf2 (ee2->currentTransformation ());
+
+  DifferentiableFunctionPtr_t function;
+  std::pair<JointConstPtr_t, JointConstPtr_t> joints;
+  std::pair<JointConstPtr_t, JointConstPtr_t> jointsConstrained;
+  ImplicitPtr_t constraint;
+
+  function = Orientation::create            ("Orientation"           , device, ee2, tf2);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK (!joints.first);
+  BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
+  // constraint does not fully constrain the relative pose
+  // since it only involves the orientation
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK (!jointsConstrained.second);
+
+  function = Position::create               ("Position"              , device, ee2, tf2, tf1);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK (!joints.first);
+  BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
+  // constraint does not fully constrain the relative pose
+  // since it only involves the position
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK (!jointsConstrained.second);
+
+  function = Transformation::create         ("Transformation"        , device, ee1, tf1);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK (!joints.first);
+  BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
+  // constraint does not fully constrain the relative pose
+  // since the mask is not full
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), false));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK (!jointsConstrained.second);
+  // constraint fully constrains the relative pose
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK_EQUAL (jointsConstrained.second->index(), ee1->index());
+
+  function = RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK_EQUAL (joints.first->index(), ee1->index());
+  BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
+  // constraint does not fully constrain the relative pose
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK (!jointsConstrained.second);
+
+  function = RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK_EQUAL (joints.first->index(), ee1->index());
+  BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
+  // constraint does not fully constrain the relative pose
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK (!jointsConstrained.second);
+
+  function = RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK_EQUAL (joints.first->index(), ee1->index());
+  BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
+  // constraint does not fully constrain the relative pose
+  // since mask is not full
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), false));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK (!jointsConstrained.second);
+  // constraint fully constrains the relative pose
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK_EQUAL (jointsConstrained.first->index(), ee1->index());
+  BOOST_CHECK_EQUAL (jointsConstrained.second->index(), ee2->index());
+
+  function = RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, JointPtr_t(), tf1);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK (!joints.first);
+  BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
+
+  function = RelativePosition::create       ("RelativePosition"      , device, ee1, JointPtr_t(), tf1, tf2);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK (!joints.first);
+  BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
+
+  function = RelativeTransformationR3xSO3::create (
+    "RelativeTransformationR3xSO3", device, ee1, JointPtr_t(), tf1, tf2);
+  joints = function->dependsOnRelPoseBetween (device);
+  BOOST_CHECK (!joints.first);
+  BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
+  // constraint fully constrains the relative pose
+  constraint = Implicit::create(function,
+    ComparisonTypes_t(function->outputSpace()->nv(), EqualToZero),
+    std::vector<bool>(function->outputSpace()->nv(), true));
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  BOOST_CHECK (!jointsConstrained.first);
+  BOOST_CHECK_EQUAL (jointsConstrained.second->index(), ee1->index());
+
+  /// test the locked joint constraint as well
+  constraint = LockedJoint::create
+    (ee1, ee1->configurationSpace ()->neutral ());
+  JointIndex parentIndex = Joint::index(ee1->parentJoint());
+  JointIndex index1, index2;
+  // ensure that index1 <= index2
+  if (parentIndex <= ee1->index()) {
+    index1 = parentIndex;
+    index2 = ee1->index();
+  } else {
+    index1 = ee1->index();
+    index2 = parentIndex;
+  }
+  std::cout << constraint->functionPtr()->name() << std::endl;
+  joints = constraint->functionPtr()->dependsOnRelPoseBetween (device);
+  if (index1 == 0) {
+    BOOST_CHECK (!joints.first);
+  } else {
+    BOOST_CHECK_EQUAL (joints.first->index(), index1);
+  }
+  BOOST_CHECK_EQUAL (joints.second->index(), index2);
+  // constraint fully locks the joint
+  jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
+  if (index1 == 0) {
+    BOOST_CHECK (!jointsConstrained.first);
+  } else {
+    BOOST_CHECK_EQUAL (jointsConstrained.second->index(), index2);
+  }
 }
