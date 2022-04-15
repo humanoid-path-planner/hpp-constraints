@@ -168,7 +168,8 @@ namespace hpp {
       /// priority than 1.
       ///
       /// The algorithm used is a Newton-Raphson like algorithm that works as
-      /// follows: let \f$f (\mathbf{q}) = 0\f$ be the system of equations where
+      /// follows: for a single level of priority, let \f$f (\mathbf{q}) = 0\f$
+      /// be the system of equations where
       /// \f$f\f$ is a \f$C^1\f$ mapping from the robot configuration space to
       /// a Lie group space \f$\mathcal{L}\f$.
       ///
@@ -191,11 +192,23 @@ namespace hpp {
       /// \li the residual \f$\|f(\mathbf{q})\|\f$ is below an error threshold, or
       /// \li the maximal number of iterations has been reached.
       ///
+      /// The computation of the direction of descent in the case of multiple
+      /// level of hierarchy is described in
+      /// <a href="https://hal.archives-ouvertes.fr/lirmm-00796736">this paper</a>.
+      ///
       /// The error threshold can be accessed by methods
       /// HierarchicalIterative::errorThreshold. The maximal number of
       /// iterations can be accessed by methods
       /// HierarchicalIterative::maxIterations.
       ///
+      /// \note Solving equations one after the other
+      ///
+      /// For some applications, it can be more efficient to solve a set of
+      /// equations one after the other. In other words, an equation is ignored
+      /// until the previous one is solved (norm below the threshold). To do so,
+      /// introduce the equations using method HierarchicalIterative::add with
+      /// increasing value of \c priority, and call method
+      /// \c HierarchicalIterative::solveLevelByLevel(true).
       /// \note Lie group
       ///
       /// The unknowns \f$\mathbf{q}\f$ may take values in a more general set
@@ -454,6 +467,21 @@ namespace hpp {
           return lastIsOptional_;
         }
 
+        // Set whether the constraints are solved level by level
+        //
+        // If true, the solver will consider only the higher level of
+        // priority that is not satisfied when computing the direction
+        // of descent.
+        void solveLevelByLevel(bool solveLevelByLevel)
+        {
+          solveLevelByLevel_ = solveLevelByLevel;
+        }
+
+        // Get whether the constraints are solved level by level
+        bool solveLevelByLevel() const
+        {
+          return solveLevelByLevel_;
+        }
         /// \}
 
         /// \name Stack
@@ -644,6 +672,7 @@ namespace hpp {
         LiegroupSpacePtr_t configSpace_;
         size_type dimension_, reducedDimension_;
         bool lastIsOptional_;
+        bool solveLevelByLevel_;
         /// Unknown of the set of implicit constraints
         Indices_t freeVariables_;
         Saturation_t saturate_;

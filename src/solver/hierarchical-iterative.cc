@@ -198,6 +198,7 @@ namespace hpp {
         squaredErrorThreshold_ (0), inequalityThreshold_ (0),
         maxIterations_ (0), stacks_ (), configSpace_ (configSpace),
         dimension_ (0), reducedDimension_ (0), lastIsOptional_ (false),
+        solveLevelByLevel_(false),
         freeVariables_ (), saturate_ (new saturation::Base()), constraints_ (),
         iq_ (), iv_ (), priority_ (),
         sigma_ (0), dq_ (), dqSmall_ (), reducedJ_ (),
@@ -820,7 +821,8 @@ namespace hpp {
             d.maxRank = std::max(d.maxRank, rank);
             if (d.maxRank > 0)
               sigma_ = std::min(sigma_, d.svd.singularValues()[d.maxRank - 1]);
-
+            if(solveLevelByLevel_ && err.squaredNorm() > squaredErrorThreshold_)
+              break;
             if (last) break; // No need to compute projector for next step.
 
             if (d.svd.matrixV().cols() == rank) break; // The kernel is { 0 }
