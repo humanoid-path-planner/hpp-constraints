@@ -300,6 +300,30 @@ namespace hpp {
 	return m_.F2inJ2;
       }
 
+      /// Return pair of joints the relative pose between which
+      /// modifies the function value if any
+      ///
+      /// This method is useful to know whether an instance of Implicit constrains
+      /// the relative pose between two joints.
+      /// \param robot the robot the constraints are applied on,
+      /// \return the pair of joints involved, arranged in order of increasing
+      /// joint index, or a pair of empty shared pointers. or a pair of empty shared pointers.
+      /// \note if absolute pose (relative pose with respect to "universe"),
+      /// "universe" is returned as empty shared pointer
+      std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const
+      {
+        JointConstPtr_t j1 = joint1();
+        JointConstPtr_t j2 = joint2();
+        size_type index1 = Joint::index(j1);
+        size_type index2 = Joint::index(j2);
+        if (index1 <= index2) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(j1, j2);
+        } else {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(j2, j1);
+        }
+      };
+
       virtual std::ostream& print (std::ostream& o) const;
 
       ///Constructor

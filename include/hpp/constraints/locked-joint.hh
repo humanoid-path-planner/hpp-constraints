@@ -139,6 +139,18 @@ namespace hpp {
       }
       /// Print object in a stream
       std::ostream& print (std::ostream& os) const;
+
+      /// Get pair of joints whose relative pose is fully constrained
+      ///
+      /// \param robot the device that this constraint is applied to
+      /// \return pair of pointers to the parent joint and the locked joint,
+      /// arranged in order of increasing joint index
+      /// \note absolute pose is considered relative pose with respect to
+      /// "universe". "universe" is returned as a nullpointer
+      /// as the first element of the pair, if applicable.
+      virtual std::pair<JointConstPtr_t, JointConstPtr_t> doesConstrainRelPoseBetween
+        (DeviceConstPtr_t robot) const;
+
     protected:
       /// Constructor
       /// \param joint joint that is locked,

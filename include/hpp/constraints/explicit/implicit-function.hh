@@ -42,7 +42,7 @@ namespace hpp {
     ///      q,
     ///  \li q_in is the vector composed of other configuration variables of
     ///      q,
-    ///  f, g are differentiable functions with values in  a Lie group.
+    ///  \li f, g are differentiable functions with values in a Lie group.
     ///
     ///  This class is mainly used to create hpp::constraints::Explicit
     ///  instances.
@@ -111,6 +111,22 @@ namespace hpp {
 
         return true;
       }
+
+      /// Return pair of joints the relative pose between which
+      /// modifies the function value if any
+      ///
+      /// Currently checks if the implicit function specifies a joint
+      /// where
+      ///  \li q_out is a vector corresponding to only 1 joint
+      ///  \li q_in is an empty vector (since f is constant and specifies
+      ///      the whole or part of the pose of the joint)
+      /// \param robot the robot the constraints are applied on,
+      /// \return pair of pointers to the lock joint and its parent joint,
+      /// arranged in order of increasing joint index, or a pair of empty
+      /// shared pointers if the implicit function does not specify a locked
+      /// joint.
+      std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const;
 
     private:
       void computeJacobianBlocks ();

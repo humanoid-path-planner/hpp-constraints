@@ -48,6 +48,7 @@ namespace hpp {
     typedef pinocchio::value_type value_type;
     typedef pinocchio::JointPtr_t JointPtr_t;
     typedef pinocchio::JointConstPtr_t JointConstPtr_t;
+    typedef pinocchio::Joint Joint;
     typedef pinocchio::vector3_t vector3_t;
     typedef pinocchio::matrix3_t matrix3_t;
     typedef Eigen::Matrix<value_type, 6, 6> matrix6_t;
@@ -106,6 +107,7 @@ namespace hpp {
     typedef pinocchio::ConfigurationOut_t ConfigurationOut_t;
     typedef pinocchio::Device Device;
     typedef pinocchio::DevicePtr_t DevicePtr_t;
+    typedef pinocchio::DeviceConstPtr_t DeviceConstPtr_t;
     typedef pinocchio::CenterOfMassComputation CenterOfMassComputation;
     typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
     typedef shared_ptr <DifferentiableFunction>

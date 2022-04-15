@@ -285,6 +285,21 @@ namespace hpp {
       }
     }
 
+    std::pair<JointConstPtr_t, JointConstPtr_t> Implicit::doesConstrainRelPoseBetween
+        (DeviceConstPtr_t robot) const
+    {
+      std::pair<JointConstPtr_t, JointConstPtr_t> joints =
+          function_->dependsOnRelPoseBetween(robot);
+      // check that the constraint fully constrains the relative pose
+      if (function_->outputSpace()->nv() != 6 ||
+          !checkAllRowsActive()) {
+        hppDout (info, "Constraint " << function_->name ()
+                << " does not fully constrain the relative pose of joints");
+        return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
+      }
+      return joints;
+    }
+
     template<class Archive>
     void Implicit::serialize(Archive & ar, const unsigned int version)
     {

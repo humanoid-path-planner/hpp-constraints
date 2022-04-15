@@ -45,9 +45,9 @@ namespace hpp {
     /// Relative transformation as a mapping between configuration variables
     ///
     /// When the positions of two joints are constrained by a full
-    /// transformation constraint, if the second joint is hold by a freeflyer
+    /// transformation constraint, if the second joint is held by a freeflyer
     /// joint, the position of this latter joint can be
-    /// explicitely expressed with respect to the position of the first joint.
+    /// explicitly expressed with respect to the position of the first joint.
     ///
     /// This class provides this expression. The input configuration variables
     /// are the joint values of all joints except the above mentioned freeflyer
@@ -83,6 +83,29 @@ namespace hpp {
       {
         return joint2_;
       }
+
+      /// Return pair of joints the relative pose between which
+      /// modifies the function value if any
+      ///
+      /// This method is useful to know whether an instance of Implicit constrains
+      /// the relative pose between two joints.
+      /// \param robot the robot the constraints are applied on,
+      /// \return the pair of joints involved, arranged in order of increasing
+      /// joint index, or a pair of empty shared pointers.
+      /// \note if absolute pose (relative pose with respect to "universe"),
+      /// "universe" is returned as empty shared pointer
+      std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
+          (DeviceConstPtr_t robot) const {
+        JointConstPtr_t j1 = joint1();
+        JointConstPtr_t j2 = joint2();
+        size_type index1 = (j1? j1->index(): 0);
+        size_type index2 = (j2? j2->index(): 0);
+        if (index1 <= index2) {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(j1, j2);
+        } else {
+          return std::pair<JointConstPtr_t, JointConstPtr_t>(j2, j1);
+        }
+      };
 
     protected:
       typedef Eigen::BlockIndex BlockIndex;
