@@ -50,16 +50,13 @@ namespace hpp {
         static const Eigen::Matrix <value_type, 6, 1> Gravity;
 
         struct Contact_t {
-          JointPtr_t joint1, joint2;
-          vector3_t point1, point2;
-          vector3_t normal1, normal2;
+          JointPtr_t joint;
+          vector3_t point;
+          vector3_t normal;
           bool operator==(Contact_t const& other) const {
-            if (joint1 != other.joint1) return false;
-            if (joint2 != other.joint2) return false;
-            if (point1 != other.point1) return false;
-            if (point2 != other.point2) return false;
-            if (normal1 != other.normal1) return false;
-            if (normal2 != other.normal2) return false;
+            if (joint != other.joint) return false;
+            if (point != other.point) return false;
+            if (normal != other.normal) return false;
             return true;
           }
         };

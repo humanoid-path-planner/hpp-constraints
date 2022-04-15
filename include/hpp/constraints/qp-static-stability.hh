@@ -42,6 +42,17 @@ namespace hpp {
 
     /// \addtogroup constraints
     /// \{
+    ///
+
+    /// Quasi static equilibrium constraint defined as a QP program
+    ///
+    /// This class defines a function whose value is equal to zero
+    /// if and only if there exists a set of non-negative forces applied
+    /// at some given contact points along some given normals that
+    //  counter-balance the gravity force and momentum of a kinematics chain.
+    ///
+    /// \sa https://hal.archives-ouvertes.fr/tel-01516897 Chapter 2, Sections
+    ///     3.1 and 3.2.
     class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {
       public:
         static const Eigen::Matrix <value_type, 6, 1> Gravity;
@@ -51,7 +62,9 @@ namespace hpp {
         typedef ConvexShapeContact::ForceData ForceData;
 
         /// Constructor
+        /// \param name name of the constraint
         /// \param robot the robot the constraints is applied to,
+        /// \param contacts set of contact points
         /// \param com COM of the robot
         QPStaticStability (const std::string& name, const DevicePtr_t& robot,
             const Contacts_t& contacts,
@@ -89,7 +102,7 @@ namespace hpp {
           const QPStaticStability& castother = dynamic_cast<const QPStaticStability&>(other);
           if (!DifferentiableFunction::isEqual(other))
             return false;
-          
+
           if (name() != castother.name())
             return false;
           if (robot_ != castother.robot_)
@@ -102,7 +115,7 @@ namespace hpp {
             return false;
           if (nWSR != castother.nWSR)
             return false;
-          
+
           return true;
         }
       private:
