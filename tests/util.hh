@@ -99,6 +99,7 @@
             << "]");                                                           \
   }
 
+#include <boost/test/included/unit_test.hpp>
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/matrix-view.hh>

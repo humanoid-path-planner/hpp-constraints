@@ -47,7 +47,6 @@
 
 #include <../tests/convex-shape-contact-function.hh>
 #include <../tests/util.hh>
-#include <boost/test/included/unit_test.hpp>
 #include <limits>
 
 using hpp::pinocchio::BodyPtr_t;

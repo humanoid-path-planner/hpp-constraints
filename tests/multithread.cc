@@ -32,7 +32,6 @@
 
 #include <../tests/convex-shape-contact-function.hh>
 #include <../tests/util.hh>
-#include <boost/test/included/unit_test.hpp>
 #include <hpp/constraints/configuration-constraint.hh>
 #include <hpp/constraints/convex-shape-contact.hh>
 #include <hpp/constraints/generic-transformation.hh>
