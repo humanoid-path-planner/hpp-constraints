@@ -29,89 +29,74 @@
 #ifndef HPP_CONSTRAINTS_ACTIVE_SET_DIFFERENTIABLE_FUNCTION_HH
 #define HPP_CONSTRAINTS_ACTIVE_SET_DIFFERENTIABLE_FUNCTION_HH
 
-#include <hpp/constraints/fwd.hh>
 #include <hpp/constraints/config.hh>
 #include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+namespace constraints {
 
-    /// Handle bounds on input variables of a differentiable function.
-    ///
-    /// This class is a decorator of class DifferentiableFunction that
-    /// sets to 0 some columns of the Jacobian of the function.
-    ///
-    /// The class is used to handle saturation of input variables of
-    /// the function during numerical resolution of implicit constraints
-    /// built with the function.
-    class HPP_CONSTRAINTS_DLLAPI ActiveSetDifferentiableFunction :
-      public DifferentiableFunction
-    {
-      public:
-        /// Constructor
-        /// \param f initial differentiable function,
-        /// \param intervals set of intervals of indices corresponding to saturated
-        ///            input variables.
-        ActiveSetDifferentiableFunction (const DifferentiableFunctionPtr_t& f,
-            segments_t intervals)
-          : DifferentiableFunction(
-              f->inputSize(), f->inputDerivativeSize(),
-              f->outputSpace (),
-              "ActiveSet_on_" + f->name ())
-          , function_(f)
-          , intervals_(intervals)
-        {
-          context (f->context());
-        }
+/// Handle bounds on input variables of a differentiable function.
+///
+/// This class is a decorator of class DifferentiableFunction that
+/// sets to 0 some columns of the Jacobian of the function.
+///
+/// The class is used to handle saturation of input variables of
+/// the function during numerical resolution of implicit constraints
+/// built with the function.
+class HPP_CONSTRAINTS_DLLAPI ActiveSetDifferentiableFunction
+    : public DifferentiableFunction {
+ public:
+  /// Constructor
+  /// \param f initial differentiable function,
+  /// \param intervals set of intervals of indices corresponding to saturated
+  ///            input variables.
+  ActiveSetDifferentiableFunction(const DifferentiableFunctionPtr_t& f,
+                                  segments_t intervals)
+      : DifferentiableFunction(f->inputSize(), f->inputDerivativeSize(),
+                               f->outputSpace(), "ActiveSet_on_" + f->name()),
+        function_(f),
+        intervals_(intervals) {
+    context(f->context());
+  }
 
-        /// Get the original function
-        const DifferentiableFunction& function() const
-        {
-          return *function_;
-        }
+  /// Get the original function
+  const DifferentiableFunction& function() const { return *function_; }
 
-        /// Get the original function
-        const DifferentiableFunctionPtr_t& functionPtr() const
-        {
-          return function_;
-        }
+  /// Get the original function
+  const DifferentiableFunctionPtr_t& functionPtr() const { return function_; }
 
-      protected:
-        typedef std::vector < segments_t > intervalss_t;
+ protected:
+  typedef std::vector<segments_t> intervalss_t;
 
-        /// User implementation of function evaluation
-        virtual void impl_compute (LiegroupElementRef result,
-                                   vectorIn_t argument) const
-        {
-          function_->value(result, argument);
-        }
+  /// User implementation of function evaluation
+  virtual void impl_compute(LiegroupElementRef result,
+                            vectorIn_t argument) const {
+    function_->value(result, argument);
+  }
 
-        virtual void impl_jacobian (matrixOut_t jacobian,
-                                    vectorIn_t arg) const
-        {
-          function_->jacobian(jacobian, arg);
-          for (segments_t::const_iterator _int = intervals_.begin ();
-              _int != intervals_.end (); ++_int)
-            jacobian.middleCols (_int->first, _int->second).setZero ();
-        }
+  virtual void impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
+    function_->jacobian(jacobian, arg);
+    for (segments_t::const_iterator _int = intervals_.begin();
+         _int != intervals_.end(); ++_int)
+      jacobian.middleCols(_int->first, _int->second).setZero();
+  }
 
-        bool isEqual(const DifferentiableFunction& other) const {
-          const ActiveSetDifferentiableFunction& castother = dynamic_cast<const ActiveSetDifferentiableFunction&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
-          
-          if (function_ != castother.function_)
-            return false;
-          if (intervals_ != castother.intervals_)
-            return false;
-          
-          return true;
-        }
+  bool isEqual(const DifferentiableFunction& other) const {
+    const ActiveSetDifferentiableFunction& castother =
+        dynamic_cast<const ActiveSetDifferentiableFunction&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
 
-        DifferentiableFunctionPtr_t function_;
-        segments_t intervals_;
-    }; // class ActiveSetDifferentiableFunction
-  } // namespace constraints
-} // namespace hpp
+    if (function_ != castother.function_) return false;
+    if (intervals_ != castother.intervals_) return false;
 
-#endif // HPP_CONSTRAINTS_ACTIVE_SET_DIFFERENTIABLE_FUNCTION_HH
+    return true;
+  }
+
+  DifferentiableFunctionPtr_t function_;
+  segments_t intervals_;
+};  // class ActiveSetDifferentiableFunction
+}  // namespace constraints
+}  // namespace hpp
+
+#endif  // HPP_CONSTRAINTS_ACTIVE_SET_DIFFERENTIABLE_FUNCTION_HH

@@ -26,34 +26,35 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-#include <hpp/pinocchio/liegroup-space.hh>
 #include <hpp/constraints/affine-function.hh>
 #include <hpp/constraints/implicit.hh>
+#include <hpp/pinocchio/liegroup-space.hh>
 
 #define BOOST_TEST_MODULE ComparisonTypes
 #include <boost/test/included/unit_test.hpp>
 
-using hpp::constraints::Implicit;
-using hpp::constraints::ImplicitPtr_t;
-using hpp::constraints::DifferentiableFunctionPtr_t;
 using hpp::constraints::ComparisonType;
 using hpp::constraints::ComparisonTypes_t;
+using hpp::constraints::DifferentiableFunctionPtr_t;
 using hpp::constraints::Equality;
 using hpp::constraints::EqualToZero;
-using hpp::constraints::Superior;
-using hpp::constraints::Inferior;
 using hpp::constraints::Identity;
+using hpp::constraints::Implicit;
+using hpp::constraints::ImplicitPtr_t;
+using hpp::constraints::Inferior;
+using hpp::constraints::Superior;
 using hpp::pinocchio::LiegroupSpace;
 
-BOOST_AUTO_TEST_CASE (operators)
-//int main()
+BOOST_AUTO_TEST_CASE(operators)
+// int main()
 {
   // [Inferior]
   ComparisonTypes_t expected, actual(1, Inferior);
   expected.push_back(Inferior);
   BOOST_CHECK_EQUAL(expected, actual);
   // [Equality, EqualToZero]
-  expected.clear(); actual.clear();
+  expected.clear();
+  actual.clear();
   expected.push_back(Equality);
   expected.push_back(EqualToZero);
   actual = ComparisonTypes_t(Equality << EqualToZero);
@@ -61,7 +62,8 @@ BOOST_AUTO_TEST_CASE (operators)
   BOOST_CHECK_EQUAL(expected, Equality << EqualToZero);
 
   // [Equality, EqualToZero, Inferior]
-  expected.clear(); actual.clear();
+  expected.clear();
+  actual.clear();
   expected.push_back(Equality);
   expected.push_back(EqualToZero);
   expected.push_back(Inferior);
@@ -70,7 +72,8 @@ BOOST_AUTO_TEST_CASE (operators)
   BOOST_CHECK_EQUAL(expected, Equality << EqualToZero << Inferior);
 
   // [Equality, EqualToZero, 4 * Inferior]
-  expected.clear(); actual.clear();
+  expected.clear();
+  actual.clear();
   expected.push_back(Equality);
   expected.push_back(EqualToZero);
   expected.push_back(Inferior);
@@ -83,7 +86,8 @@ BOOST_AUTO_TEST_CASE (operators)
   BOOST_CHECK_EQUAL(expected, Equality << EqualToZero << 4 * Inferior);
   // [EqualToZero, EqualToZero, EqualToZero, EqualToZero, EqualToZero,
   //  Equality, Equality, Equality] -> ConvexShapeContact
-  expected.clear(); actual.clear();
+  expected.clear();
+  actual.clear();
   expected.push_back(EqualToZero);
   expected.push_back(EqualToZero);
   expected.push_back(EqualToZero);
@@ -94,15 +98,15 @@ BOOST_AUTO_TEST_CASE (operators)
   expected.push_back(Equality);
 
   actual = (EqualToZero << EqualToZero << EqualToZero << EqualToZero
-            << EqualToZero << Equality << Equality << Equality);
+                        << EqualToZero << Equality << Equality << Equality);
   BOOST_CHECK_EQUAL(expected, actual);
-  ImplicitPtr_t constraint(Implicit::create(Identity::create
-                                            (LiegroupSpace::Rn(8), "I8"),
-    EqualToZero << EqualToZero << EqualToZero << EqualToZero << EqualToZero
-    << Equality << Equality << Equality));
+  ImplicitPtr_t constraint(Implicit::create(
+      Identity::create(LiegroupSpace::Rn(8), "I8"),
+      EqualToZero << EqualToZero << EqualToZero << EqualToZero << EqualToZero
+                  << Equality << Equality << Equality));
   BOOST_CHECK_EQUAL(expected, constraint->comparisonType());
   actual = ComparisonTypes_t(EqualToZero << EqualToZero << EqualToZero
-                             << EqualToZero << EqualToZero << Equality
-                             << Equality << Equality);
+                                         << EqualToZero << EqualToZero
+                                         << Equality << Equality << Equality);
   BOOST_CHECK_EQUAL(expected, actual);
 }

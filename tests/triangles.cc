@@ -33,39 +33,42 @@
 
 using hpp::constraints::ConvexShape;
 
-BOOST_AUTO_TEST_CASE (triangleAsConvexShape)
-{
-  fcl::Vec3f p0 (0,0,0),
-             p1 (2,0,0),
-             p2 (0,2,0);
-  ConvexShape t (p0, p1, p2);
+BOOST_AUTO_TEST_CASE(triangleAsConvexShape) {
+  fcl::Vec3f p0(0, 0, 0), p1(2, 0, 0), p2(0, 2, 0);
+  ConvexShape t(p0, p1, p2);
 
-  std::vector <fcl::Vec3f> ptsIn, ptsOut;
-  ptsIn.push_back (p0);
-  ptsIn.push_back (p1);
-  ptsIn.push_back (p2);
-  ptsIn.push_back (fcl::Vec3f (1,1,0));
-  ptsIn.push_back (fcl::Vec3f (0.5,0.5,0));
+  std::vector<fcl::Vec3f> ptsIn, ptsOut;
+  ptsIn.push_back(p0);
+  ptsIn.push_back(p1);
+  ptsIn.push_back(p2);
+  ptsIn.push_back(fcl::Vec3f(1, 1, 0));
+  ptsIn.push_back(fcl::Vec3f(0.5, 0.5, 0));
 
-  ptsOut.push_back (fcl::Vec3f (-1,-1,0));
-  ptsOut.push_back (fcl::Vec3f (1,-1,0));
-  ptsOut.push_back (fcl::Vec3f (3,-0.2,0));
-  ptsOut.push_back (fcl::Vec3f ( 2,2,0));
-  ptsOut.push_back (fcl::Vec3f (-0.2,3,0));
-  ptsOut.push_back (fcl::Vec3f (-1,1,0));
+  ptsOut.push_back(fcl::Vec3f(-1, -1, 0));
+  ptsOut.push_back(fcl::Vec3f(1, -1, 0));
+  ptsOut.push_back(fcl::Vec3f(3, -0.2, 0));
+  ptsOut.push_back(fcl::Vec3f(2, 2, 0));
+  ptsOut.push_back(fcl::Vec3f(-0.2, 3, 0));
+  ptsOut.push_back(fcl::Vec3f(-1, 1, 0));
 
-  for (size_t i = 0; i < ptsIn.size (); i++) {
-    BOOST_CHECK_MESSAGE (t.isInside (ptsIn[i]),
+  for (size_t i = 0; i < ptsIn.size(); i++) {
+    BOOST_CHECK_MESSAGE(
+        t.isInside(ptsIn[i]),
         "Check point inside failed for ptsIn[" << i << "]=" << ptsIn[i]);
-    BOOST_CHECK_MESSAGE (t.distance (ptsIn[i]) <= 0,
-        "Wrong point to triangle distance for ptsIn[" << i << "]=" << ptsIn[i]
-        << ". Distance returned is " << t.distance (ptsIn[i]));
+    BOOST_CHECK_MESSAGE(t.distance(ptsIn[i]) <= 0,
+                        "Wrong point to triangle distance for ptsIn["
+                            << i << "]=" << ptsIn[i]
+                            << ". Distance returned is "
+                            << t.distance(ptsIn[i]));
   }
-  for (size_t i = 0; i < ptsOut.size (); i++) {
-    BOOST_CHECK_MESSAGE (!t.isInside (ptsOut[i]),
+  for (size_t i = 0; i < ptsOut.size(); i++) {
+    BOOST_CHECK_MESSAGE(
+        !t.isInside(ptsOut[i]),
         "Check point inside failed for ptsOut[" << i << "]=" << ptsOut[i]);
-    BOOST_CHECK_MESSAGE (t.distance (ptsOut[i]) >= 0,
-        "Wrong point to triangle distance for ptsOut[" << i << "]=" << ptsOut[i]
-        << ". Distance returned is " << t.distance (ptsOut[i]));
+    BOOST_CHECK_MESSAGE(t.distance(ptsOut[i]) >= 0,
+                        "Wrong point to triangle distance for ptsOut["
+                            << i << "]=" << ptsOut[i]
+                            << ". Distance returned is "
+                            << t.distance(ptsOut[i]));
   }
 }

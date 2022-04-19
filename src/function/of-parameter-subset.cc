@@ -27,42 +27,41 @@
 // DAMAGE.
 
 #include <hpp/constraints/function/of-parameter-subset.hh>
-
 #include <hpp/util/indent.hh>
 
 namespace hpp {
-  namespace constraints {
-    namespace function {
-      namespace {
-        std::string toStr (const segment_t& s)
-        {
-          std::ostringstream os;
-          os << "[ " << s.first << ", " << s.first + s.second << " ]";
-          return os.str();
-        }
-      }
+namespace constraints {
+namespace function {
+namespace {
+std::string toStr(const segment_t& s) {
+  std::ostringstream os;
+  os << "[ " << s.first << ", " << s.first + s.second << " ]";
+  return os.str();
+}
+}  // namespace
 
-      OfParameterSubset::OfParameterSubset (const DifferentiableFunctionPtr_t& g,
-                          const size_type& nArgs, const size_type& nDers,
-                          const segment_t& inArgs, const segment_t& inDers) :
-        DifferentiableFunction (nArgs, nDers, g->outputSpace(),
-                                g->name() + " | " + toStr(inArgs)),
-        g_ (g), sa_ (inArgs), sd_ (inDers)
-      {
-        activeParameters_.setConstant(false);
-        activeParameters_.segment(sa_.first, sa_.second)
-          = g_->activeParameters();
+OfParameterSubset::OfParameterSubset(const DifferentiableFunctionPtr_t& g,
+                                     const size_type& nArgs,
+                                     const size_type& nDers,
+                                     const segment_t& inArgs,
+                                     const segment_t& inDers)
+    : DifferentiableFunction(nArgs, nDers, g->outputSpace(),
+                             g->name() + " | " + toStr(inArgs)),
+      g_(g),
+      sa_(inArgs),
+      sd_(inDers) {
+  activeParameters_.setConstant(false);
+  activeParameters_.segment(sa_.first, sa_.second) = g_->activeParameters();
 
-        activeDerivativeParameters_.setConstant(false);
-        activeDerivativeParameters_.segment(sd_.first, sd_.second)
-          = g_->activeDerivativeParameters();
-      }
+  activeDerivativeParameters_.setConstant(false);
+  activeDerivativeParameters_.segment(sd_.first, sd_.second) =
+      g_->activeDerivativeParameters();
+}
 
-      std::ostream& OfParameterSubset::print (std::ostream& os) const
-      {
-        constraints::DifferentiableFunction::print(os);
-        return os << incindent << iendl << *g_ << decindent;
-      }
-    } // namespace function
-  } // namespace constraints
-} // namespace hpp
+std::ostream& OfParameterSubset::print(std::ostream& os) const {
+  constraints::DifferentiableFunction::print(os);
+  return os << incindent << iendl << *g_ << decindent;
+}
+}  // namespace function
+}  // namespace constraints
+}  // namespace hpp

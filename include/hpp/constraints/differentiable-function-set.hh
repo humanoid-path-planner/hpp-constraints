@@ -28,138 +28,120 @@
 // DAMAGE.
 
 #ifndef HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_SET_HH
-# define HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_SET_HH
+#define HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_SET_HH
 
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
-    /// \{
+namespace constraints {
+/// \addtogroup constraints
+/// \{
 
-    /// Set of differentiable functions
-    ///
-    /// This class also handles selection of cols of the output matrix.
-    class HPP_CONSTRAINTS_DLLAPI DifferentiableFunctionSet :
-      public DifferentiableFunction
-    {
-      public:
-        typedef std::vector<DifferentiableFunctionPtr_t> Functions_t;
+/// Set of differentiable functions
+///
+/// This class also handles selection of cols of the output matrix.
+class HPP_CONSTRAINTS_DLLAPI DifferentiableFunctionSet
+    : public DifferentiableFunction {
+ public:
+  typedef std::vector<DifferentiableFunctionPtr_t> Functions_t;
 
-        /// Return a shared pointer to a new instance
-        ///
-        /// \param name the name of the constraints,
-        static DifferentiableFunctionSetPtr_t create (const std::string& name)
-        {
-          return DifferentiableFunctionSetPtr_t
-            (new DifferentiableFunctionSet(name));
-        }
+  /// Return a shared pointer to a new instance
+  ///
+  /// \param name the name of the constraints,
+  static DifferentiableFunctionSetPtr_t create(const std::string& name) {
+    return DifferentiableFunctionSetPtr_t(new DifferentiableFunctionSet(name));
+  }
 
-        virtual ~DifferentiableFunctionSet () {}
+  virtual ~DifferentiableFunctionSet() {}
 
-        /// \name Function stack management
-        /// \{
+  /// \name Function stack management
+  /// \{
 
-        /// Get the stack of functions
-        const Functions_t& functions () const
-        {
-          return functions_;
-        }
+  /// Get the stack of functions
+  const Functions_t& functions() const { return functions_; }
 
-        void add (const DifferentiableFunctionPtr_t& func)
-        {
-          if (functions_.empty()) {
-            inputSize_           = func->inputSize();
-            inputDerivativeSize_ = func->inputDerivativeSize();
-            activeParameters_ = func->activeParameters();
-            activeDerivativeParameters_ = func->activeDerivativeParameters();
-          } else {
-            assert (inputSize_           == func->inputSize());
-            assert (inputDerivativeSize_ == func->inputDerivativeSize());
+  void add(const DifferentiableFunctionPtr_t& func) {
+    if (functions_.empty()) {
+      inputSize_ = func->inputSize();
+      inputDerivativeSize_ = func->inputDerivativeSize();
+      activeParameters_ = func->activeParameters();
+      activeDerivativeParameters_ = func->activeDerivativeParameters();
+    } else {
+      assert(inputSize_ == func->inputSize());
+      assert(inputDerivativeSize_ == func->inputDerivativeSize());
 
-            activeParameters_ =
-              activeParameters_ || func->activeParameters();
-            activeDerivativeParameters_ =
-              activeDerivativeParameters_ || func->activeDerivativeParameters();
-          }
-          functions_.push_back(func);
-          result_.push_back (LiegroupElement (func->outputSpace ()));
-          *outputSpace_ *= func->outputSpace ();
-        }
+      activeParameters_ = activeParameters_ || func->activeParameters();
+      activeDerivativeParameters_ =
+          activeDerivativeParameters_ || func->activeDerivativeParameters();
+    }
+    functions_.push_back(func);
+    result_.push_back(LiegroupElement(func->outputSpace()));
+    *outputSpace_ *= func->outputSpace();
+  }
 
-        /// The output columns selection of other is not taken into account.
-        void merge (const DifferentiableFunctionSetPtr_t& other)
-        {
-          const Functions_t& functions = other->functions();
-          for (Functions_t::const_iterator _f = functions.begin();
-              _f != functions.end(); ++_f)
-            add (*_f);
-        }
+  /// The output columns selection of other is not taken into account.
+  void merge(const DifferentiableFunctionSetPtr_t& other) {
+    const Functions_t& functions = other->functions();
+    for (Functions_t::const_iterator _f = functions.begin();
+         _f != functions.end(); ++_f)
+      add(*_f);
+  }
 
-        /// \}
+  /// \}
 
-        std::ostream& print (std::ostream& os) const;
+  std::ostream& print(std::ostream& os) const;
 
-        /// Constructor
-        ///
-        /// \param name the name of the constraints,
-        DifferentiableFunctionSet (const std::string& name)
-          : DifferentiableFunction (0, 0, 0, name)
-        {}
+  /// Constructor
+  ///
+  /// \param name the name of the constraints,
+  DifferentiableFunctionSet(const std::string& name)
+      : DifferentiableFunction(0, 0, 0, name) {}
 
-        DifferentiableFunctionSet ()
-          : DifferentiableFunction (0, 0, 0, "Stack")
-        {}
+  DifferentiableFunctionSet() : DifferentiableFunction(0, 0, 0, "Stack") {}
 
-      protected:
-        void impl_compute (LiegroupElementRef result, ConfigurationIn_t arg)
-          const
-        {
-          size_type row = 0;
-          std::size_t i = 0;
-          for (Functions_t::const_iterator _f = functions_.begin();
-              _f != functions_.end(); ++_f) {
-            const DifferentiableFunction& f = **_f;
-            f.impl_compute(result_ [i], arg);
-            result.vector ().segment(row, f.outputSize()) =
-              result_ [i].vector ();
-            row += f.outputSize(); ++i;
-          }
-        }
-        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t arg) const
-        {
-          size_type row = 0;
-          for (Functions_t::const_iterator _f = functions_.begin();
-              _f != functions_.end(); ++_f) {
-            const DifferentiableFunction& f = **_f;
-            f.impl_jacobian(jacobian.middleRows(row, f.outputDerivativeSize()), arg);
-            row += f.outputDerivativeSize();
-          }
-        }
+ protected:
+  void impl_compute(LiegroupElementRef result, ConfigurationIn_t arg) const {
+    size_type row = 0;
+    std::size_t i = 0;
+    for (Functions_t::const_iterator _f = functions_.begin();
+         _f != functions_.end(); ++_f) {
+      const DifferentiableFunction& f = **_f;
+      f.impl_compute(result_[i], arg);
+      result.vector().segment(row, f.outputSize()) = result_[i].vector();
+      row += f.outputSize();
+      ++i;
+    }
+  }
+  void impl_jacobian(matrixOut_t jacobian, ConfigurationIn_t arg) const {
+    size_type row = 0;
+    for (Functions_t::const_iterator _f = functions_.begin();
+         _f != functions_.end(); ++_f) {
+      const DifferentiableFunction& f = **_f;
+      f.impl_jacobian(jacobian.middleRows(row, f.outputDerivativeSize()), arg);
+      row += f.outputDerivativeSize();
+    }
+  }
 
-        bool isEqual(const DifferentiableFunction& other) const {
-          const DifferentiableFunctionSet& castother = dynamic_cast<const DifferentiableFunctionSet&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
-          
-          if (functions_ != castother.functions_)
-            return false;
-          if (result_.size() != castother.result_.size())
-            return false;
-          for (std::size_t i=0; i<result_.size(); i++)
-            if (result_[i] != castother.result_[i])
-              return false;
-          
-          return true; 
-        }
+  bool isEqual(const DifferentiableFunction& other) const {
+    const DifferentiableFunctionSet& castother =
+        dynamic_cast<const DifferentiableFunctionSet&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
 
-      private:
-        Functions_t functions_;
-        mutable std::vector <LiegroupElement> result_;
-    }; // class DifferentiableFunctionSet
-    /// \}
-  } // namespace constraints
-} // namespace hpp
+    if (functions_ != castother.functions_) return false;
+    if (result_.size() != castother.result_.size()) return false;
+    for (std::size_t i = 0; i < result_.size(); i++)
+      if (result_[i] != castother.result_[i]) return false;
 
-#endif // HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_SET_HH
+    return true;
+  }
+
+ private:
+  Functions_t functions_;
+  mutable std::vector<LiegroupElement> result_;
+};  // class DifferentiableFunctionSet
+/// \}
+}  // namespace constraints
+}  // namespace hpp
+
+#endif  // HPP_CONSTRAINTS_DIFFERENTIABLE_FUNCTION_SET_HH

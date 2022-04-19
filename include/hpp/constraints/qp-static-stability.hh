@@ -27,133 +27,123 @@
 // DAMAGE.
 
 #ifndef HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
-# define HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
+#define HPP_CONSTRAINTS_QP_STATIC_STABILITY_HH
 
-# include <hpp/constraints/fwd.hh>
-
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/convex-shape-contact.hh>
-# include <hpp/constraints/static-stability.hh>
-
-# include <qpOASES.hpp>
+#include <hpp/constraints/convex-shape-contact.hh>
+#include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/fwd.hh>
+#include <hpp/constraints/static-stability.hh>
+#include <qpOASES.hpp>
 
 namespace hpp {
-  namespace constraints {
+namespace constraints {
 
-    /// \addtogroup constraints
-    /// \{
-    ///
+/// \addtogroup constraints
+/// \{
+///
 
-    /// Quasi static equilibrium constraint defined as a QP program
-    ///
-    /// This class defines a function whose value is equal to zero
-    /// if and only if there exists a set of non-negative forces applied
-    /// at some given contact points along some given normals that
-    //  counter-balance the gravity force and momentum of a kinematics chain.
-    ///
-    /// \sa https://hal.archives-ouvertes.fr/tel-01516897 Chapter 2, Sections
-    ///     3.1 and 3.2.
-    class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {
-      public:
-        static const Eigen::Matrix <value_type, 6, 1> Gravity;
+/// Quasi static equilibrium constraint defined as a QP program
+///
+/// This class defines a function whose value is equal to zero
+/// if and only if there exists a set of non-negative forces applied
+/// at some given contact points along some given normals that
+//  counter-balance the gravity force and momentum of a kinematics chain.
+///
+/// \sa https://hal.archives-ouvertes.fr/tel-01516897 Chapter 2, Sections
+///     3.1 and 3.2.
+class HPP_CONSTRAINTS_DLLAPI QPStaticStability : public DifferentiableFunction {
+ public:
+  static const Eigen::Matrix<value_type, 6, 1> Gravity;
 
-        typedef StaticStability::Contact_t Contact_t;
-        typedef StaticStability::Contacts_t Contacts_t;
-        typedef ConvexShapeContact::ForceData ForceData;
+  typedef StaticStability::Contact_t Contact_t;
+  typedef StaticStability::Contacts_t Contacts_t;
+  typedef ConvexShapeContact::ForceData ForceData;
 
-        /// Constructor
-        /// \param name name of the constraint
-        /// \param robot the robot the constraints is applied to,
-        /// \param contacts set of contact points
-        /// \param com COM of the robot
-        QPStaticStability (const std::string& name, const DevicePtr_t& robot,
-            const Contacts_t& contacts,
-            const CenterOfMassComputationPtr_t& com);
+  /// Constructor
+  /// \param name name of the constraint
+  /// \param robot the robot the constraints is applied to,
+  /// \param contacts set of contact points
+  /// \param com COM of the robot
+  QPStaticStability(const std::string& name, const DevicePtr_t& robot,
+                    const Contacts_t& contacts,
+                    const CenterOfMassComputationPtr_t& com);
 
-        /// Constructor
-        /// \param robot the robot the constraints is applied to,
-        /// \param com COM of the robot
-        QPStaticStability (const std::string& name, const DevicePtr_t& robot,
-            const std::vector <ForceData>& contacts,
-            const CenterOfMassComputationPtr_t& com);
+  /// Constructor
+  /// \param robot the robot the constraints is applied to,
+  /// \param com COM of the robot
+  QPStaticStability(const std::string& name, const DevicePtr_t& robot,
+                    const std::vector<ForceData>& contacts,
+                    const CenterOfMassComputationPtr_t& com);
 
-        static QPStaticStabilityPtr_t create (
-            const std::string& name,
-            const DevicePtr_t& robot,
-            const Contacts_t& contacts,
-            const CenterOfMassComputationPtr_t& com);
+  static QPStaticStabilityPtr_t create(const std::string& name,
+                                       const DevicePtr_t& robot,
+                                       const Contacts_t& contacts,
+                                       const CenterOfMassComputationPtr_t& com);
 
-        static QPStaticStabilityPtr_t create (
-            const std::string& name,
-            const DevicePtr_t& robot,
-            const std::vector <ForceData>& contacts,
-            const CenterOfMassComputationPtr_t& com);
+  static QPStaticStabilityPtr_t create(const std::string& name,
+                                       const DevicePtr_t& robot,
+                                       const std::vector<ForceData>& contacts,
+                                       const CenterOfMassComputationPtr_t& com);
 
-        static QPStaticStabilityPtr_t create (
-            const DevicePtr_t& robot,
-            const Contacts_t& contacts,
-            const CenterOfMassComputationPtr_t& com);
+  static QPStaticStabilityPtr_t create(const DevicePtr_t& robot,
+                                       const Contacts_t& contacts,
+                                       const CenterOfMassComputationPtr_t& com);
 
-        MatrixOfExpressions<>& phi () {
-          return phi_;
-        }
-      protected:
-        bool isEqual(const DifferentiableFunction& other) const {
-          const QPStaticStability& castother = dynamic_cast<const QPStaticStability&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
+  MatrixOfExpressions<>& phi() { return phi_; }
 
-          if (name() != castother.name())
-            return false;
-          if (robot_ != castother.robot_)
-            return false;
-          if (nbContacts_ != castother.nbContacts_)
-            return false;
-          if (com_ != castother.com_)
-            return false;
-          if (Zeros != castother.Zeros)
-            return false;
-          if (nWSR != castother.nWSR)
-            return false;
+ protected:
+  bool isEqual(const DifferentiableFunction& other) const {
+    const QPStaticStability& castother =
+        dynamic_cast<const QPStaticStability&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
 
-          return true;
-        }
-      private:
-        static const Eigen::Matrix <value_type, 6, 1> MinusGravity;
+    if (name() != castother.name()) return false;
+    if (robot_ != castother.robot_) return false;
+    if (nbContacts_ != castother.nbContacts_) return false;
+    if (com_ != castother.com_) return false;
+    if (Zeros != castother.Zeros) return false;
+    if (nWSR != castother.nWSR) return false;
 
-        qpOASES::real_t* Zeros;
-        const qpOASES::int_t nWSR;
+    return true;
+  }
 
-        void impl_compute (LiegroupElementRef result, ConfigurationIn_t argument)
-          const;
+ private:
+  static const Eigen::Matrix<value_type, 6, 1> MinusGravity;
 
-        void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t argument) const;
+  qpOASES::real_t* Zeros;
+  const qpOASES::int_t nWSR;
 
-        qpOASES::returnValue solveQP (vectorOut_t result) const;
+  void impl_compute(LiegroupElementRef result,
+                    ConfigurationIn_t argument) const;
 
-        bool checkQPSol () const;
-        bool checkStrictComplementarity () const;
+  void impl_jacobian(matrixOut_t jacobian, ConfigurationIn_t argument) const;
 
-        DevicePtr_t robot_;
-        std::size_t nbContacts_;
-        CenterOfMassComputationPtr_t com_;
+  qpOASES::returnValue solveQP(vectorOut_t result) const;
 
-        typedef MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> MoE_t;
-        typedef Eigen::Matrix<qpOASES::real_t, Eigen::Dynamic, Eigen::Dynamic,
-                Eigen::RowMajor> RowMajorMatrix_t;
-        typedef Eigen::Map <RowMajorMatrix_t> InvertStorageOrderMap_t;
-        typedef Eigen::Map <Eigen::Matrix <qpOASES::real_t, Eigen::Dynamic, 1>
-          > VectorMap_t;
-        typedef Eigen::Map <const vector_t> ConstVectorMap_t;
+  bool checkQPSol() const;
+  bool checkStrictComplementarity() const;
 
-        mutable RowMajorMatrix_t H_;
-        mutable vector_t G_;
-        mutable qpOASES::QProblemB qp_;
-        mutable MoE_t phi_;
-        mutable vector_t primal_, dual_;
-    };
-    /// \}
-  } // namespace constraints
-} // namespace hpp
+  DevicePtr_t robot_;
+  std::size_t nbContacts_;
+  CenterOfMassComputationPtr_t com_;
 
-#endif //  HPP_CONSTRAINTS_STATIC_STABILITY_HH
+  typedef MatrixOfExpressions<eigen::vector3_t, JacobianMatrix> MoE_t;
+  typedef Eigen::Matrix<qpOASES::real_t, Eigen::Dynamic, Eigen::Dynamic,
+                        Eigen::RowMajor>
+      RowMajorMatrix_t;
+  typedef Eigen::Map<RowMajorMatrix_t> InvertStorageOrderMap_t;
+  typedef Eigen::Map<Eigen::Matrix<qpOASES::real_t, Eigen::Dynamic, 1> >
+      VectorMap_t;
+  typedef Eigen::Map<const vector_t> ConstVectorMap_t;
+
+  mutable RowMajorMatrix_t H_;
+  mutable vector_t G_;
+  mutable qpOASES::QProblemB qp_;
+  mutable MoE_t phi_;
+  mutable vector_t primal_, dual_;
+};
+/// \}
+}  // namespace constraints
+}  // namespace hpp
+
+#endif  //  HPP_CONSTRAINTS_STATIC_STABILITY_HH

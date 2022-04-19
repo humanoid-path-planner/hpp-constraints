@@ -27,204 +27,176 @@
 // DAMAGE.
 
 #ifndef HPP_CONSTRAINTS_AFFINE_FUNCTION_HH
-# define HPP_CONSTRAINTS_AFFINE_FUNCTION_HH
+#define HPP_CONSTRAINTS_AFFINE_FUNCTION_HH
 
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/config.hh>
-
-# include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/config.hh>
+#include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+namespace constraints {
 
-    /// \addtogroup constraints
-    /// \{
+/// \addtogroup constraints
+/// \{
 
-    /// Identity function
-    /// \f$ q_{out} = q_{in} \f$
-    ///
-    /// \todo should we handle specifically this function is the solvers ?
-    class HPP_CONSTRAINTS_DLLAPI Identity
-      : public constraints::DifferentiableFunction
-    {
-      public:
-        static IdentityPtr_t create (const LiegroupSpacePtr_t space, const std::string& name)
-        {
-          IdentityPtr_t ptr (new Identity (space, name));
-          return ptr;
-        }
+/// Identity function
+/// \f$ q_{out} = q_{in} \f$
+///
+/// \todo should we handle specifically this function is the solvers ?
+class HPP_CONSTRAINTS_DLLAPI Identity
+    : public constraints::DifferentiableFunction {
+ public:
+  static IdentityPtr_t create(const LiegroupSpacePtr_t space,
+                              const std::string& name) {
+    IdentityPtr_t ptr(new Identity(space, name));
+    return ptr;
+  }
 
-        Identity (const LiegroupSpacePtr_t space, const std::string& name) :
-          DifferentiableFunction (space->nq(), space->nv(), space, name) {}
+  Identity(const LiegroupSpacePtr_t space, const std::string& name)
+      : DifferentiableFunction(space->nq(), space->nv(), space, name) {}
 
-      protected:
-        void impl_compute (LiegroupElementRef y, vectorIn_t arg) const
-        {
-          y.vector() = arg;
-        }
+ protected:
+  void impl_compute(LiegroupElementRef y, vectorIn_t arg) const {
+    y.vector() = arg;
+  }
 
-        void impl_jacobian (matrixOut_t J, vectorIn_t) const
-        {
-          J.setIdentity();
-        }
+  void impl_jacobian(matrixOut_t J, vectorIn_t) const { J.setIdentity(); }
 
-        bool isEqual(const DifferentiableFunction& other) const {
-          dynamic_cast<const Identity&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
+  bool isEqual(const DifferentiableFunction& other) const {
+    dynamic_cast<const Identity&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
 
-          return true;
-        }
+    return true;
+  }
 
-      private:
-        Identity() {}
-        HPP_SERIALIZABLE();
-    }; // class Identity
+ private:
+  Identity() {}
+  HPP_SERIALIZABLE();
+};  // class Identity
 
-    /// Affine function
-    /// \f$ f(q) = J * q + b \f$
-    ///
-    /// \todo should we handle specifically this function is the solvers ?
-    class HPP_CONSTRAINTS_DLLAPI AffineFunction
-      : public DifferentiableFunction
-    {
-    public:
-      static AffineFunctionPtr_t create
-        (const matrixIn_t& J, const std::string name = "LinearFunction")
-      {
-        return AffineFunctionPtr_t(new AffineFunction(J, name));
-      }
+/// Affine function
+/// \f$ f(q) = J * q + b \f$
+///
+/// \todo should we handle specifically this function is the solvers ?
+class HPP_CONSTRAINTS_DLLAPI AffineFunction : public DifferentiableFunction {
+ public:
+  static AffineFunctionPtr_t create(const matrixIn_t& J,
+                                    const std::string name = "LinearFunction") {
+    return AffineFunctionPtr_t(new AffineFunction(J, name));
+  }
 
-      static AffineFunctionPtr_t create
-        (const matrixIn_t& J, const vectorIn_t& b,
-         const std::string name = "LinearFunction")
-      {
-        return AffineFunctionPtr_t(new AffineFunction(J, b, name));
-      }
-      protected:
-        AffineFunction (const matrixIn_t& J,
-            const std::string name = "LinearFunction")
-          : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
-                                    (J.rows()), name),
-          J_ (J), b_ (vector_t::Zero(J.rows()))
-        {
-          init();
-        }
+  static AffineFunctionPtr_t create(const matrixIn_t& J, const vectorIn_t& b,
+                                    const std::string name = "LinearFunction") {
+    return AffineFunctionPtr_t(new AffineFunction(J, b, name));
+  }
 
-        AffineFunction (const matrixIn_t& J, const vectorIn_t& b,
-            const std::string name = "LinearFunction")
-          : DifferentiableFunction (J.cols(), J.cols(), LiegroupSpace::Rn
-                                    (J.rows()), name),
-          J_ (J), b_ (b)
-        {
-          init();
-        }
+ protected:
+  AffineFunction(const matrixIn_t& J, const std::string name = "LinearFunction")
+      : DifferentiableFunction(J.cols(), J.cols(), LiegroupSpace::Rn(J.rows()),
+                               name),
+        J_(J),
+        b_(vector_t::Zero(J.rows())) {
+    init();
+  }
 
-        bool isEqual(const DifferentiableFunction& other) const {
-          const AffineFunction& castother = dynamic_cast<const AffineFunction&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
-          
-          if (J_ != castother.J_)
-            return false;
-          if (b_ != castother.b_)
-            return false;
-          
-          return true;
-        }
+  AffineFunction(const matrixIn_t& J, const vectorIn_t& b,
+                 const std::string name = "LinearFunction")
+      : DifferentiableFunction(J.cols(), J.cols(), LiegroupSpace::Rn(J.rows()),
+                               name),
+        J_(J),
+        b_(b) {
+    init();
+  }
 
-      private:
-        /// User implementation of function evaluation
-        void impl_compute (LiegroupElementRef y, vectorIn_t x) const
-        {
-          y.vector ().noalias() = J_ * x + b_;
-        }
+  bool isEqual(const DifferentiableFunction& other) const {
+    const AffineFunction& castother =
+        dynamic_cast<const AffineFunction&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
 
-        void impl_jacobian (matrixOut_t jacobian, vectorIn_t) const
-        {
-          jacobian = J_;
-        }
+    if (J_ != castother.J_) return false;
+    if (b_ != castother.b_) return false;
 
-        void init ()
-        {
-          assert(J_.rows() == b_.rows());
-          activeParameters_ = (J_.array() != 0).colwise().any();
-          activeDerivativeParameters_ = activeParameters_;
-        }
+    return true;
+  }
 
-        const matrix_t J_;
-        const vector_t b_;
+ private:
+  /// User implementation of function evaluation
+  void impl_compute(LiegroupElementRef y, vectorIn_t x) const {
+    y.vector().noalias() = J_ * x + b_;
+  }
 
-        AffineFunction() {}
-        HPP_SERIALIZABLE();
-    }; // class AffineFunction
+  void impl_jacobian(matrixOut_t jacobian, vectorIn_t) const { jacobian = J_; }
 
-    /// Constant function
-    /// \f$ f(q) = C \f$
-    ///
-    /// \todo should we handle specifically this function is the solvers ?
-    struct HPP_CONSTRAINTS_DLLAPI ConstantFunction
-      : public DifferentiableFunction
-    {
-    public:
-      static ConstantFunctionPtr_t create
-        (const vector_t& constant, const size_type& sizeIn,
-         const size_type& sizeInDer, const std::string name="ConstantFunction")
-      {
-        return ConstantFunctionPtr_t(new ConstantFunction(constant, sizeIn,
-                                                          sizeInDer, name));
-      }
-      static ConstantFunctionPtr_t create
-        (const LiegroupElement& element, const size_type& sizeIn,
-         const size_type& sizeInDer, const std::string name="ConstantFunction")
-      {
-        return ConstantFunctionPtr_t(new ConstantFunction(element, sizeIn,
-                                                          sizeInDer, name));
-      }
-    protected:
-        ConstantFunction (const vector_t& constant,
-                          const size_type& sizeIn,
-                          const size_type& sizeInDer,
-                          const std::string name = "ConstantFunction") :
-          DifferentiableFunction (sizeIn, sizeInDer, LiegroupSpace::Rn
-                                  (constant.rows()), name),
-          c_ (constant, outputSpace())
-        {}
+  void init() {
+    assert(J_.rows() == b_.rows());
+    activeParameters_ = (J_.array() != 0).colwise().any();
+    activeDerivativeParameters_ = activeParameters_;
+  }
 
-        ConstantFunction (const LiegroupElement& element,
-                          const size_type& sizeIn,
-                          const size_type& sizeInDer,
-                          const std::string name = "ConstantFunction") :
-          DifferentiableFunction (sizeIn, sizeInDer, element.space(), name),
-          c_ (element)
-        {}
+  const matrix_t J_;
+  const vector_t b_;
 
-        /// User implementation of function evaluation
-        void impl_compute (LiegroupElementRef r, vectorIn_t) const { r = c_; }
+  AffineFunction() {}
+  HPP_SERIALIZABLE();
+};  // class AffineFunction
 
-        void impl_jacobian (matrixOut_t J, vectorIn_t) const { J.setZero(); }
+/// Constant function
+/// \f$ f(q) = C \f$
+///
+/// \todo should we handle specifically this function is the solvers ?
+struct HPP_CONSTRAINTS_DLLAPI ConstantFunction : public DifferentiableFunction {
+ public:
+  static ConstantFunctionPtr_t create(
+      const vector_t& constant, const size_type& sizeIn,
+      const size_type& sizeInDer, const std::string name = "ConstantFunction") {
+    return ConstantFunctionPtr_t(
+        new ConstantFunction(constant, sizeIn, sizeInDer, name));
+  }
+  static ConstantFunctionPtr_t create(
+      const LiegroupElement& element, const size_type& sizeIn,
+      const size_type& sizeInDer, const std::string name = "ConstantFunction") {
+    return ConstantFunctionPtr_t(
+        new ConstantFunction(element, sizeIn, sizeInDer, name));
+  }
 
-        bool isEqual(const DifferentiableFunction& other) const {
-          const ConstantFunction& castother = dynamic_cast<const ConstantFunction&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
-          
-          if (c_.vector() == castother.c_.vector())
-            return false;
-          
-          return true;
-        }
+ protected:
+  ConstantFunction(const vector_t& constant, const size_type& sizeIn,
+                   const size_type& sizeInDer,
+                   const std::string name = "ConstantFunction")
+      : DifferentiableFunction(sizeIn, sizeInDer,
+                               LiegroupSpace::Rn(constant.rows()), name),
+        c_(constant, outputSpace()) {}
 
-        const LiegroupElement c_;
+  ConstantFunction(const LiegroupElement& element, const size_type& sizeIn,
+                   const size_type& sizeInDer,
+                   const std::string name = "ConstantFunction")
+      : DifferentiableFunction(sizeIn, sizeInDer, element.space(), name),
+        c_(element) {}
 
-    private:
-        ConstantFunction () {}
-        HPP_SERIALIZABLE();
-    }; // class ConstantFunction
+  /// User implementation of function evaluation
+  void impl_compute(LiegroupElementRef r, vectorIn_t) const { r = c_; }
 
-    /// \}
-  } // namespace constraints
-} // namespace hpp
+  void impl_jacobian(matrixOut_t J, vectorIn_t) const { J.setZero(); }
 
+  bool isEqual(const DifferentiableFunction& other) const {
+    const ConstantFunction& castother =
+        dynamic_cast<const ConstantFunction&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
 
-#endif // HPP_CONSTRAINTS_AFFINE_FUNCTION_HH
+    if (c_.vector() == castother.c_.vector()) return false;
+
+    return true;
+  }
+
+  const LiegroupElement c_;
+
+ private:
+  ConstantFunction() {}
+  HPP_SERIALIZABLE();
+};  // class ConstantFunction
+
+/// \}
+}  // namespace constraints
+}  // namespace hpp
+
+#endif  // HPP_CONSTRAINTS_AFFINE_FUNCTION_HH

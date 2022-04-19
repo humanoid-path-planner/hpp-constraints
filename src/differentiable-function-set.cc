@@ -27,17 +27,15 @@
 // DAMAGE.
 
 #include <hpp/constraints/differentiable-function-set.hh>
-
 #include <hpp/util/indent.hh>
 
 namespace hpp {
-  namespace constraints {
-    std::ostream& DifferentiableFunctionSet::print (std::ostream& os) const
-    {
-      DifferentiableFunction::print (os) << incindent;
-      for (std::size_t i = 0; i < functions_.size(); ++i)
-        os << iendl << i << ": " << *functions_[i];
-      return os << decindent;
-    }
-  } // namespace constraints
-} // namespace hpp
+namespace constraints {
+std::ostream& DifferentiableFunctionSet::print(std::ostream& os) const {
+  DifferentiableFunction::print(os) << incindent;
+  for (std::size_t i = 0; i < functions_.size(); ++i)
+    os << iendl << i << ": " << *functions_[i];
+  return os << decindent;
+}
+}  // namespace constraints
+}  // namespace hpp

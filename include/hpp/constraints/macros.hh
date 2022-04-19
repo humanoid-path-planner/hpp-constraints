@@ -28,35 +28,41 @@
 // DAMAGE.
 
 #ifndef HPP_CONSTRAINTS_MACROS_HH
-# define HPP_CONSTRAINTS_MACROS_HH
+#define HPP_CONSTRAINTS_MACROS_HH
 
-# ifdef HPP_DEBUG
+#ifdef HPP_DEBUG
 
-#  define HPP_DEBUG_SVDCHECK(svd)                                       \
-  do {                                                                  \
-    if (svd.rank () > 0) {                                              \
-      value_type SSV = svd.singularValues()(svd.rank()-1);              \
-      if (std::abs (SSV) < 1e-8) {                                      \
-        hppDout (warning, "SVD check - low singular value: " << SSV);   \
-      }                                                                 \
-    }                                                                   \
+#define HPP_DEBUG_SVDCHECK(svd)                                      \
+  do {                                                               \
+    if (svd.rank() > 0) {                                            \
+      value_type SSV = svd.singularValues()(svd.rank() - 1);         \
+      if (std::abs(SSV) < 1e-8) {                                    \
+        hppDout(warning, "SVD check - low singular value: " << SSV); \
+      }                                                              \
+    }                                                                \
   } while (0)
 
-#  ifdef HPP_CONSTRAINTS_NUMERIC_DEBUG
+#ifdef HPP_CONSTRAINTS_NUMERIC_DEBUG
 
-#   define hppDnum(channel, data) hppDout (channel, data)
+#define hppDnum(channel, data) hppDout(channel, data)
 
-#  else // HPP_CONSTRAINTS_NUMERIC_DEBUG
+#else  // HPP_CONSTRAINTS_NUMERIC_DEBUG
 
-#   define hppDnum(channel, data) do { } while (0)
+#define hppDnum(channel, data) \
+  do {                         \
+  } while (0)
 
-#  endif // HPP_CONSTRAINTS_NUMERIC_DEBUG
+#endif  // HPP_CONSTRAINTS_NUMERIC_DEBUG
 
-# else // HPP_DEBUG
+#else  // HPP_DEBUG
 
-#  define HPP_DEBUG_SVDCHECK(svd) do { } while (0)
-#  define hppDnum(channel, data) do { } while (0)
+#define HPP_DEBUG_SVDCHECK(svd) \
+  do {                          \
+  } while (0)
+#define hppDnum(channel, data) \
+  do {                         \
+  } while (0)
 
-# endif // HPP_DEBUG
+#endif  // HPP_DEBUG
 
-#endif // HPP_CONSTRAINTS_MACROS_HH
+#endif  // HPP_CONSTRAINTS_MACROS_HH
