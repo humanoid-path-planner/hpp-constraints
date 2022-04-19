@@ -29,7 +29,6 @@
 #define BOOST_TEST_MODULE hpp_constraints
 #include <../tests/convex-shape-contact-function.hh>
 #include <../tests/util.hh>
-#include <boost/test/included/unit_test.hpp>
 #include <hpp/constraints/convex-shape-contact.hh>
 #include <hpp/constraints/explicit/convex-shape-contact.hh>
 #include <hpp/constraints/solver/by-substitution.hh>
