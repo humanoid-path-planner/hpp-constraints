@@ -121,8 +121,8 @@ namespace hpp {
         // Store a vector of explicit relative transforms corresponding to
         // each pair (floor surface, object surface)
         std::vector<RelativePosePtr_t> pose_;
-        // Number of floor surfaces
-        std::size_t nFloor_;
+        // Number of object surfaces
+        std::size_t nObjSurf_;
         // shared pointer to itself
         ConvexShapeContactWkPtr_t weak_;
       }; // class ConvexShapeContact

@@ -103,7 +103,7 @@ namespace hpp {
         Eigen::RowBlockIndices inputIndices(inputConf());
         vector_t q(f->inputSize()); q.fill(sqrt(-1));
         inputIndices.lview(q) = qin;
-        RelativePosePtr_t relativePose(pose_[ifloor*nFloor_ + iobject]);
+        RelativePosePtr_t relativePose(pose_[ifloor*nObjSurf_ + iobject]);
         Eigen::RowBlockIndices relPosInputIndices(relativePose->inputConf());
         vector_t qinRelPose = relPosInputIndices.rview(q);
         assert(!qinRelPose.hasNaN());
@@ -125,7 +125,7 @@ namespace hpp {
         Eigen::RowBlockIndices inputIndices(inputConf());
         vector_t q(f->inputSize()); q.fill(sqrt(-1));
         inputIndices.lview(q) = qin;
-        RelativePosePtr_t relativePose(pose_[ifloor*nFloor_ + iobject]);
+        RelativePosePtr_t relativePose(pose_[ifloor*nObjSurf_ + iobject]);
         Eigen::RowBlockIndices relPosInputIndices(relativePose->inputConf());
         vector_t qinRelPose = relPosInputIndices.rview(q);
         assert(!qinRelPose.hasNaN());
@@ -163,22 +163,22 @@ namespace hpp {
           (f->contactConstraint()->floorContactSurfaces());
         const ConvexShapes_t& os
           (f->contactConstraint()->objectContactSurfaces());
-        nFloor_ = fs.size();
+        nObjSurf_ = os.size();
         // Compute explicit relative poses
-        for (std::size_t j=0; j<fs.size(); ++j)
+        for (std::size_t ifloor=0; ifloor<fs.size(); ++ifloor)
         {
           // move floor surface along x to take into account margin.
-          Transform3f posInJoint(fs[j].positionInJoint());
+          Transform3f posInJoint(fs[ifloor].positionInJoint());
           hppDout(info, "posInJoint" << posInJoint);
           posInJoint.translation() -= margin * posInJoint.rotation().col(0);
           hppDout(info, "posInJoint" << posInJoint);
-          for (std::size_t i=0; i<os.size(); ++i)
+          for (std::size_t iobject=0; iobject<os.size(); ++iobject)
           {
             // Create explicit relative pose for each combination
             // (floor surface, object surface)
             pose_.push_back(RelativePose::create
-                            ("",robot, fs[j].joint_, os[i].joint_,
-                             posInJoint, os[i].positionInJoint(),
+                            ("",robot, fs[ifloor].joint_, os[iobject].joint_,
+                             posInJoint, os[iobject].positionInJoint(),
                              EqualToZero << 3 * Equality << 2 * EqualToZero,
                              std::vector<bool>(6, true)));
           }
