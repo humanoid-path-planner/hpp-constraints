@@ -36,51 +36,12 @@
 namespace hpp {
   namespace constraints {
     namespace explicit_ {
-      // Check that object contact surface
-      //   - belong to the same object (joint),
-      //   - are on a freeflyer joint.
-      // Throw in case these assertions are not true
-      static void checkContactSurfaces(const JointAndShapes_t& objectSurfaces)
-      {
-        JointPtr_t joint(0x0);
-        for(auto js : objectSurfaces){
-          if (!joint) {
-            joint = js.first;
-            // Check that joint is a freeflyer
-            if ((*joint->configurationSpace()!=*pinocchio::LiegroupSpace::SE3())
-                &&
-                (*joint->configurationSpace()!=*pinocchio::LiegroupSpace::R3xSO3
-                 ())){
-              std::ostringstream os;
-              os << "You are trying to build an explicit contact constraint but"
-                " the joint that holds at least on object contact surface is "
-                " not a freeflyer joint: " << joint->name();
-              throw std::logic_error(os.str().c_str());
-              if (joint->parentJoint()){
-                os << "You are trying to build an explicit contact constraint "
-                  "but the joint that holds at least on object contact "
-                  "surface: " << joint->name() <<
-                  " is attached to another joint. This is not supported";
-                throw std::logic_error(os.str().c_str());
-              }
-            }
-          } else if (js.first != joint){
-            std::ostringstream os;
-            os << "You are trying to build an explicit contact constraint "
-              "but several joints hold object contact surface: "
-               << joint->name() << " and " << js.first->name();
-            throw std::logic_error(os.str().c_str());
-          }
-        }
-      }
-
       ConvexShapeContactPtr_t ConvexShapeContact::create
       (const std::string& name, DevicePtr_t robot,
        const JointAndShapes_t& floorSurfaces,
        const JointAndShapes_t& objectSurfaces,
        const value_type& margin)
       {
-        checkContactSurfaces(objectSurfaces);
         ConvexShapeContact* ptr(new ConvexShapeContact
                                 (name, robot, floorSurfaces, objectSurfaces,
                                  margin));
