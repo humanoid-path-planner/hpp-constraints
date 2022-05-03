@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   ImplicitPtr_t constraint;
 
   function = Orientation::create            ("Orientation"           , device, ee2, tf2);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK (!joints.first);
   BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
   // constraint does not fully constrain the relative pose
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   BOOST_CHECK (!jointsConstrained.second);
 
   function = Position::create               ("Position"              , device, ee2, tf2, tf1);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK (!joints.first);
   BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
   // constraint does not fully constrain the relative pose
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   BOOST_CHECK (!jointsConstrained.second);
 
   function = Transformation::create         ("Transformation"        , device, ee1, tf1);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK (!joints.first);
   BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
   // constraint does not fully constrain the relative pose
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   BOOST_CHECK_EQUAL (jointsConstrained.second->index(), ee1->index());
 
   function = RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, ee2, tf1);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK_EQUAL (joints.first->index(), ee1->index());
   BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
   // constraint does not fully constrain the relative pose
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   BOOST_CHECK (!jointsConstrained.second);
 
   function = RelativePosition::create       ("RelativePosition"      , device, ee1, ee2, tf1, tf2);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK_EQUAL (joints.first->index(), ee1->index());
   BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
   // constraint does not fully constrain the relative pose
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   BOOST_CHECK (!jointsConstrained.second);
 
   function = RelativeTransformation::create ("RelativeTransformation", device, ee1, ee2, tf1, tf2);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK_EQUAL (joints.first->index(), ee1->index());
   BOOST_CHECK_EQUAL (joints.second->index(), ee2->index());
   // constraint does not fully constrain the relative pose
@@ -523,18 +523,18 @@ BOOST_AUTO_TEST_CASE (dependsOnRelPoseBetween) {
   BOOST_CHECK_EQUAL (jointsConstrained.second->index(), ee2->index());
 
   function = RelativeOrientation::create    ("RelativeOrientation"   , device, ee1, JointPtr_t(), tf1);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK (!joints.first);
   BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
 
   function = RelativePosition::create       ("RelativePosition"      , device, ee1, JointPtr_t(), tf1, tf2);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK (!joints.first);
   BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
 
   function = RelativeTransformationR3xSO3::create (
     "RelativeTransformationR3xSO3", device, ee1, JointPtr_t(), tf1, tf2);
-  joints = function->dependsOnRelPoseBetween (device);
+  joints = function->dependsOnRelPoseBetween (nullptr);
   BOOST_CHECK (!joints.first);
   BOOST_CHECK_EQUAL (joints.second->index(), ee1->index());
   // constraint fully constrains the relative pose

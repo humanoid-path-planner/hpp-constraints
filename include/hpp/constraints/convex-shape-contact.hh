@@ -162,12 +162,11 @@ namespace hpp {
       ///
       /// Currently only supports the case when all the joints for floors are the same
       /// and all the joints for objects involved are the same
-      /// \param robot the robot the constraints are applied on,
       /// \return pair of joints whose relative pose determines the value
       /// of the contact function, arranged in order of increasing joint index,
       /// or a pair of empty shared pointers.
       std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
-          (DeviceConstPtr_t robot) const
+          (DeviceConstPtr_t /*robot*/) const
       {
         if ((floorConvexShapes_.size() == 0) || (objectConvexShapes_.size() == 0)) {
           return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
@@ -310,14 +309,13 @@ namespace hpp {
       ///
       /// Currently only supports the case when all the joints for floors are the same
       /// and all the joints for objects involved are the same
-      /// \param robot the robot the constraints are applied on,
       /// \return pair of joints whose relative pose determines the value
       /// of the contact function, arranged in order of increasing joint index,
       /// or a pair of empty shared pointers.
       std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
-          (DeviceConstPtr_t robot) const
+          (DeviceConstPtr_t /*robot*/) const
       {
-        return sibling_->dependsOnRelPoseBetween(robot);
+        return sibling_->dependsOnRelPoseBetween(nullptr);
       };
 
     protected:
@@ -379,14 +377,13 @@ namespace hpp {
       ///
       /// Currently only supports the case when all the joints for floors are the same
       /// and all the joints for objects involved are the same
-      /// \param robot the robot the constraints are applied on,
       /// \return pair of joints whose relative pose determines the value
       /// of the contact function, arranged in order of increasing joint index,
       /// or a pair of empty shared pointers.
       std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
-          (DeviceConstPtr_t robot) const
+          (DeviceConstPtr_t /*robot*/) const
       {
-        return constraint_->dependsOnRelPoseBetween(robot);
+        return constraint_->dependsOnRelPoseBetween(nullptr);
       }
 
     protected:

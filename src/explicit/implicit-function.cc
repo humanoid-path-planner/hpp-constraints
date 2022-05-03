@@ -315,6 +315,7 @@ namespace hpp {
       std::pair<JointConstPtr_t, JointConstPtr_t> ImplicitFunction::dependsOnRelPoseBetween
           (DeviceConstPtr_t robot) const
       {
+        assert (robot);
         // check that this is a constant function
         if (inputToOutput_->inputSize() != 0) {
           return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
