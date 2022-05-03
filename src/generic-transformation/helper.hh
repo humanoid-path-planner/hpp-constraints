@@ -319,12 +319,17 @@ namespace hpp {
       template <bool compileTimeRel /* false */, bool ori /* false */> struct relativeTransform {
         template <bool runtimeRel, bool pos, bool ose3> static inline void run (GTDataV<runtimeRel, pos, false, ose3>& d)
         {
+          using hpp::pinocchio::LiegroupElement;
+          using hpp::pinocchio::LiegroupSpace;
           // There is no joint1
           const Transform3f& M2 = d.M2 ();
           d.value.noalias() = M2.act (d.model.F2inJ2.translation());
+          assert(hpp::pinocchio::checkNormalized(LiegroupElement(d.value,LiegroupSpace::R3xSO3())));
           if (!d.model.t1isZero) d.value.noalias() -= d.model.F1inJ1.translation();
+          assert(hpp::pinocchio::checkNormalized(LiegroupElement(d.value,LiegroupSpace::R3xSO3())));
           if (!d.model.R1isID)
             d.value.applyOnTheLeft(d.model.F1inJ1.rotation().transpose());
+          assert(hpp::pinocchio::checkNormalized(LiegroupElement(d.value,LiegroupSpace::R3xSO3())));
         }
       };
       template <> struct relativeTransform<false, true> {
@@ -375,8 +380,13 @@ namespace hpp {
       {
         static inline void error (GTDataV<rel, pos, ori, ose3>& d)
         {
+          using hpp::pinocchio::LiegroupElement;
+          using hpp::pinocchio::LiegroupSpace;
           relativeTransform<rel, ori>::run (d);
           unary<ori>::log(d);
+          if (ose3)
+	    assert(hpp::pinocchio::checkNormalized(LiegroupElement
+		(d.value, LiegroupSpace::R3xSO3())));
         }
 
         static inline void jacobian (GTDataJ<rel, pos, ori, ose3>& d,

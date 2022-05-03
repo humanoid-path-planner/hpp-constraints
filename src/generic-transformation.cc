@@ -219,6 +219,7 @@ namespace hpp {
       compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation, (bool)OutputR3xSO3>::error (data);
 
       result.vector() = Vindices_.rview (data.value);
+      assert(hpp::pinocchio::checkNormalized(result));
     }
 
     template <int _Options>
