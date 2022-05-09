@@ -154,15 +154,15 @@ BOOST_AUTO_TEST_CASE(convexShapeContact)
   BOOST_CHECK(M > sqrt(2));
   // check that the two joints involved can be retrieved correctly
   std::pair<JointConstPtr_t, JointConstPtr_t> joints =
-    f->dependsOnRelPoseBetween(robot);
+    f->dependsOnRelPoseBetween(nullptr);
   BOOST_CHECK_EQUAL (Joint::index(joints.first), Joint::index(j1));
   BOOST_CHECK_EQUAL (Joint::index(joints.second), Joint::index(j2));
 
-  joints = f->contactConstraint()->dependsOnRelPoseBetween(robot);
+  joints = f->contactConstraint()->dependsOnRelPoseBetween(nullptr);
   BOOST_CHECK_EQUAL (Joint::index(joints.first), Joint::index(j1));
   BOOST_CHECK_EQUAL (Joint::index(joints.second), Joint::index(j2));
 
-  joints = f->complement()->dependsOnRelPoseBetween(robot);
+  joints = f->complement()->dependsOnRelPoseBetween(nullptr);
   BOOST_CHECK_EQUAL (Joint::index(joints.first), Joint::index(j1));
   BOOST_CHECK_EQUAL (Joint::index(joints.second), Joint::index(j2));
   // box 1 above box 2: surfaces in contact are

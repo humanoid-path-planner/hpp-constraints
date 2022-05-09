@@ -194,13 +194,15 @@ namespace hpp {
       ///
       /// This method is useful to know whether an instance of Implicit constrains
       /// the relative pose between two joints.
-      /// \param robot the robot the constraints are applied on,
       /// \return the pair of joints involved, arranged in order of increasing
       /// joint index, or a pair of empty shared pointers.
-      /// \note if absolute pose (relative pose with respect to "universe"),
-      /// "universe" is returned as empty shared pointer
+      /// \note
+      ///   \li if absolute pose (relative pose with respect to "universe"),
+      ///       "universe" is returned as empty shared pointer
+      ///   \li child class reimplementing this may require a valid "robot"
+      ///       argument, which the constraints are applied on.
       virtual std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
-          (DeviceConstPtr_t robot) const
+          (DeviceConstPtr_t /*robot*/) const
       {
         return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
       };
@@ -235,7 +237,7 @@ namespace hpp {
       virtual void impl_jacobian (matrixOut_t jacobian,
 				  vectorIn_t arg) const = 0;
 
-      virtual bool isEqual(const DifferentiableFunction& other) const 
+      virtual bool isEqual(const DifferentiableFunction& other) const
       {
         if (name_ != other.name_)
           return false;

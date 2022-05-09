@@ -89,13 +89,12 @@ namespace hpp {
       ///
       /// This method is useful to know whether an instance of Implicit constrains
       /// the relative pose between two joints.
-      /// \param robot the robot the constraints are applied on,
       /// \return the pair of joints involved, arranged in order of increasing
       /// joint index, or a pair of empty shared pointers.
       /// \note if absolute pose (relative pose with respect to "universe"),
       /// "universe" is returned as empty shared pointer
       std::pair<JointConstPtr_t, JointConstPtr_t> dependsOnRelPoseBetween
-          (DeviceConstPtr_t robot) const {
+          (DeviceConstPtr_t /*robot*/) const {
         JointConstPtr_t j1 = joint1();
         JointConstPtr_t j2 = joint2();
         size_type index1 = (j1? j1->index(): 0);
@@ -151,7 +150,7 @@ namespace hpp {
         const RelativeTransformation& castother = dynamic_cast<const RelativeTransformation&>(other);
         if (!DifferentiableFunction::isEqual(other))
           return false;
-        
+
         if (robot_ != castother.robot_)
           return false;
         if (parentJoint_ != castother.parentJoint_)
@@ -174,7 +173,7 @@ namespace hpp {
           return false;
         if (F1inJ1_invF2inJ2_ != castother.F1inJ1_invF2inJ2_)
           return false;
-        
+
         return true;
       }
 

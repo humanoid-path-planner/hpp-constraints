@@ -128,7 +128,7 @@ namespace hpp {
     /// Used to model contact surfaces for manipulation applications
     typedef std::vector<vector3_t> Shape_t;
     typedef std::pair <JointPtr_t, Shape_t> JointAndShape_t;
-    typedef std::list <JointAndShape_t> JointAndShapes_t;
+    typedef std::vector <JointAndShape_t> JointAndShapes_t;
     typedef shared_ptr<ConvexShapeContact>
       ConvexShapeContactPtr_t;
     typedef shared_ptr<ConvexShapeContactComplement>

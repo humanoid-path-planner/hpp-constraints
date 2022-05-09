@@ -637,6 +637,8 @@ namespace hpp {
           Data& d = datas_[i];
 
           f.value   (d.output, config);
+          assert (hpp::pinocchio::checkNormalized(d.output));
+          assert (hpp::pinocchio::checkNormalized(d.rightHandSide));
           d.error = d.output - d.rightHandSide;
 	  constraints.setInactiveRowsToZero(d.error);
           if (ComputeJac) {

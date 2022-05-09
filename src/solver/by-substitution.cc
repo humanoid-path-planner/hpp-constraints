@@ -27,7 +27,7 @@
 // DAMAGE.
 
 #include <hpp/constraints/solver/by-substitution.hh>
-
+#include <hpp/pinocchio/liegroup-element.hh>
 #include <boost/serialization/nvp.hpp>
 
 #include <hpp/util/serialization.hh>
@@ -266,7 +266,9 @@ namespace hpp {
 
         projectVectorOnKernel (from, OM_, OP_);
 
+        assert (hpp::pinocchio::checkNormalized(M));
         Lge_t P (O + OP_);
+        assert (hpp::pinocchio::checkNormalized(P));
         saturate_->saturate (P.vector (), result, saturation_);
       }
 

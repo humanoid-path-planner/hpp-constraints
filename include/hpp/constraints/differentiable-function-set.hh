@@ -122,9 +122,11 @@ namespace hpp {
               _f != functions_.end(); ++_f) {
             const DifferentiableFunction& f = **_f;
             f.impl_compute(result_ [i], arg);
+            assert(hpp::pinocchio::checkNormalized(result_[i]));
             result.vector ().segment(row, f.outputSize()) =
               result_ [i].vector ();
             row += f.outputSize(); ++i;
+            assert(hpp::pinocchio::checkNormalized(result));
           }
         }
         void impl_jacobian (matrixOut_t jacobian, ConfigurationIn_t arg) const

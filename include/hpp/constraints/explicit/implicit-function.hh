@@ -95,7 +95,7 @@ namespace hpp {
         const ImplicitFunction& castother = dynamic_cast<const ImplicitFunction&>(other);
         if (!DifferentiableFunction::isEqual(other))
           return false;
-        
+
         if (robot_ != castother.robot_)
           return false;
         if (inputToOutput_ != castother.inputToOutput_)
@@ -120,6 +120,7 @@ namespace hpp {
       ///  \li q_out is a vector corresponding to only 1 joint
       ///  \li q_in is an empty vector (since f is constant and specifies
       ///      the whole or part of the pose of the joint)
+      ///
       /// \param robot the robot the constraints are applied on,
       /// \return pair of pointers to the lock joint and its parent joint,
       /// arranged in order of increasing joint index, or a pair of empty
