@@ -64,7 +64,7 @@ namespace hpp {
                 throw std::logic_error(os.str().c_str());
               }
             }
-          } else if (js.first != joint){
+          } else if (*(js.first) != *joint){
             std::ostringstream os;
             os << "You are trying to build an explicit contact constraint "
               "but several joints hold object contact surface: "
