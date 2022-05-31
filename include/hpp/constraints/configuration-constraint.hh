@@ -29,81 +29,76 @@
 // DAMAGE.
 
 #ifndef HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
-# define HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
+#define HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
 
-# include <Eigen/Core>
-# include <hpp/constraints/differentiable-function.hh>
-# include <hpp/constraints/config.hh>
-# include <hpp/constraints/fwd.hh>
+#include <Eigen/Core>
+#include <hpp/constraints/config.hh>
+#include <hpp/constraints/differentiable-function.hh>
+#include <hpp/constraints/fwd.hh>
 
 namespace hpp {
-  namespace constraints {
+namespace constraints {
 
-    /// Square distance between input configuration and reference configuration
-    class HPP_CONSTRAINTS_DLLAPI ConfigurationConstraint : public DifferentiableFunction
-    {
-      public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+/// Square distance between input configuration and reference configuration
+class HPP_CONSTRAINTS_DLLAPI ConfigurationConstraint
+    : public DifferentiableFunction {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-        /// Return a shared pointer to a new instance
-        static ConfigurationConstraintPtr_t create (
-            const std::string& name, const DevicePtr_t& robot,
-            ConfigurationIn_t goal,
-            std::vector <bool> mask = std::vector <bool> (0));
+  /// Return a shared pointer to a new instance
+  static ConfigurationConstraintPtr_t create(
+      const std::string& name, const DevicePtr_t& robot, ConfigurationIn_t goal,
+      std::vector<bool> mask = std::vector<bool>(0));
 
-        /// Return a shared pointer to a new instance
-        /// \param weights vector of size robot->numberDof()
-        static ConfigurationConstraintPtr_t create (
-            const std::string& name, const DevicePtr_t& robot,
-            ConfigurationIn_t goal,
-            const vector_t& weights);
+  /// Return a shared pointer to a new instance
+  /// \param weights vector of size robot->numberDof()
+  static ConfigurationConstraintPtr_t create(const std::string& name,
+                                             const DevicePtr_t& robot,
+                                             ConfigurationIn_t goal,
+                                             const vector_t& weights);
 
-        virtual ~ConfigurationConstraint () {}
+  virtual ~ConfigurationConstraint() {}
 
-        /// \param weights vector of size robot->numberDof()
-        ConfigurationConstraint (const std::string& name,
-            const DevicePtr_t& robot, ConfigurationIn_t goal,
-            const vector_t& weights);
+  /// \param weights vector of size robot->numberDof()
+  ConfigurationConstraint(const std::string& name, const DevicePtr_t& robot,
+                          ConfigurationIn_t goal, const vector_t& weights);
 
-        const vector_t& weights () const { return weights_; }
+  const vector_t& weights() const { return weights_; }
 
-        void weights (const vector_t& ws);
+  void weights(const vector_t& ws);
 
-        const LiegroupElement& goal () const { return goal_; }
+  const LiegroupElement& goal() const { return goal_; }
 
-      protected:
-        /// Compute value of error
-        ///
-        /// \param argument configuration of the robot,
-        /// \retval result error vector
-        virtual void impl_compute (LiegroupElementRef result,
-                                   ConfigurationIn_t argument) const;
+ protected:
+  /// Compute value of error
+  ///
+  /// \param argument configuration of the robot,
+  /// \retval result error vector
+  virtual void impl_compute(LiegroupElementRef result,
+                            ConfigurationIn_t argument) const;
 
-        virtual void impl_jacobian (matrixOut_t jacobian,
-            ConfigurationIn_t arg) const;
+  virtual void impl_jacobian(matrixOut_t jacobian, ConfigurationIn_t arg) const;
 
-        std::ostream& print (std::ostream& o) const;
+  std::ostream& print(std::ostream& o) const;
 
-        bool isEqual(const DifferentiableFunction& other) const {
-          const ConfigurationConstraint& castother = dynamic_cast<const ConfigurationConstraint&>(other);
-          if (!DifferentiableFunction::isEqual(other))
-            return false;
-          
-          if (robot_ != castother.robot_)
-            return false;
-          if (goal_.vector() != castother.goal_.vector())
-            return false;
-          if (weights_ != castother.weights_)
-            return false;
-          
-          return true;
-        }
-      private:
-        typedef Eigen::Array <bool, Eigen::Dynamic, 1> EigenBoolVector_t;
-        DevicePtr_t robot_;
-        LiegroupElement goal_;
-        vector_t weights_;
-    }; // class ConfigurationConstraint
-  } // namespace constraints
-} // namespace hpp
-#endif // HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH
+  bool isEqual(const DifferentiableFunction& other) const {
+    const ConfigurationConstraint& castother =
+        dynamic_cast<const ConfigurationConstraint&>(other);
+    if (!DifferentiableFunction::isEqual(other)) return false;
+
+    if (robot_ != castother.robot_) return false;
+    if (goal_.vector() != castother.goal_.vector()) return false;
+    if (weights_ != castother.weights_) return false;
+
+    return true;
+  }
+
+ private:
+  typedef Eigen::Array<bool, Eigen::Dynamic, 1> EigenBoolVector_t;
+  DevicePtr_t robot_;
+  LiegroupElement goal_;
+  vector_t weights_;
+};  // class ConfigurationConstraint
+}  // namespace constraints
+}  // namespace hpp
+#endif  // HPP_CONSTRAINTS_CONFIGURATION_CONSTRAINT_HH

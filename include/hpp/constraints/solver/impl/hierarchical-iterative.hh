@@ -29,160 +29,158 @@
 #ifndef HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
 #define HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
 
-#include <hpp/util/debug.hh>
-
 #include <hpp/constraints/config.hh>
 #include <hpp/constraints/svd.hh>
+#include <hpp/util/debug.hh>
 
 namespace hpp {
-  namespace constraints {
-    namespace solver {
-    namespace lineSearch {
-      template <typename SolverType>
-      inline bool Constant::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
-      {
-        solver.integrate (arg, darg, arg);
+namespace constraints {
+namespace solver {
+namespace lineSearch {
+template <typename SolverType>
+inline bool Constant::operator()(const SolverType& solver, vectorOut_t arg,
+                                 vectorOut_t darg) {
+  solver.integrate(arg, darg, arg);
+  return true;
+}
+
+template <typename SolverType>
+inline bool Backtracking::operator()(const SolverType& solver, vectorOut_t arg,
+                                     vectorOut_t u) {
+  arg_darg.resize(arg.size());
+
+  const value_type slope = computeLocalSlope(solver);
+  const value_type t = 2 * c * slope;
+  const value_type f_arg_norm2 = solver.residualError();
+
+  if (t > 0) {
+    hppDout(error, "The descent direction is not valid: " << t / c);
+  } else {
+    value_type alpha = 1;
+    /* TODO add a threshold to avoid too large steps.
+    const value_type u2 = u.squaredNorm();
+    if (u2 > 1.) alpha = 1. / std::sqrt(u2);
+    */
+
+    while (alpha > smallAlpha) {
+      darg = alpha * u;
+      solver.integrate(arg, darg, arg_darg);
+      solver.template computeValue<false>(arg_darg);
+      solver.computeError();
+      // Check if we are doing better than the linear approximation with coef
+      // multiplied by c < 1
+      // t < 0 must hold
+      const value_type f_arg_darg_norm2 = solver.residualError();
+      if (f_arg_norm2 - f_arg_darg_norm2 >= -alpha * t) {
+        arg = arg_darg;
+        u = darg;
         return true;
       }
-
-      template <typename SolverType>
-      inline bool Backtracking::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t u)
-      {
-        arg_darg.resize(arg.size());
-
-        const value_type slope = computeLocalSlope(solver);
-        const value_type t = 2 * c * slope;
-        const value_type f_arg_norm2 = solver.residualError();
-
-        if (t > 0) {
-          hppDout (error, "The descent direction is not valid: " << t/c);
-        } else {
-          value_type alpha = 1;
-          /* TODO add a threshold to avoid too large steps.
-          const value_type u2 = u.squaredNorm();
-          if (u2 > 1.) alpha = 1. / std::sqrt(u2);
-          */
-
-          while (alpha > smallAlpha) {
-            darg = alpha * u;
-            solver.integrate (arg, darg, arg_darg);
-            solver.template computeValue<false> (arg_darg);
-            solver.computeError ();
-            // Check if we are doing better than the linear approximation with coef
-            // multiplied by c < 1
-            // t < 0 must hold
-            const value_type f_arg_darg_norm2 = solver.residualError();
-            if (f_arg_norm2 - f_arg_darg_norm2 >= - alpha * t) {
-              arg = arg_darg;
-              u = darg;
-              return true;
-            }
-            // Prepare next step
-            alpha *= tau;
-          }
-          hppDout (error, "Could find alpha such that ||f(q)||**2 + "
-              << c << " * 2*(f(q)^T * J * dq) is doing worse than "
-              "||f(q + alpha * dq)||**2");
-        }
-
-        u *= smallAlpha;
-        solver.integrate (arg, u, arg);
-        return false;
-      }
-
-      template <typename SolverType>
-      inline value_type Backtracking::computeLocalSlope(const SolverType& solver) const
-      {
-        value_type slope = 0;
-        for (std::size_t i = 0; i < solver.stacks_.size (); ++i) {
-          typename SolverType::Data& d = solver.datas_[i];
-          const size_type nrows = d.reducedJ.rows();
-          if (df.size() < nrows) df.resize(nrows);
-          df.head(nrows).noalias() = d.reducedJ * solver.dqSmall_;
-          slope += df.head(nrows).dot(d.activeRowsOfJ.keepRows().rview(d.error).eval());
-        }
-        return slope;
-      }
-
-      template <typename SolverType>
-      inline bool FixedSequence::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
-      {
-        darg *= alpha;
-        alpha = alphaMax - K * (alphaMax - alpha);
-        solver.integrate (arg, darg, arg);
-        return true;
-      }
-
-      template <typename SolverType>
-      inline bool ErrorNormBased::operator() (const SolverType& solver, vectorOut_t arg, vectorOut_t darg)
-      {
-        const value_type r = solver.residualError() / solver.squaredErrorThreshold();
-        const value_type alpha = C - K * std::tanh(a * r + b);
-        darg *= alpha;
-        solver.integrate (arg, darg, arg);
-        return true;
-      }
+      // Prepare next step
+      alpha *= tau;
     }
+    hppDout(error, "Could find alpha such that ||f(q)||**2 + "
+                       << c
+                       << " * 2*(f(q)^T * J * dq) is doing worse than "
+                          "||f(q + alpha * dq)||**2");
+  }
 
-    template <typename LineSearchType>
-    inline solver::HierarchicalIterative::Status solver::HierarchicalIterative::solve (
-        vectorOut_t arg,
-        LineSearchType lineSearch) const
-    {
-      hppDout (info, "before projection: " << arg.transpose ());
-      assert (!arg.hasNaN());
+  u *= smallAlpha;
+  solver.integrate(arg, u, arg);
+  return false;
+}
 
-      size_type errorDecreased = 3, iter = 0;
-      value_type previousSquaredNorm =
-	std::numeric_limits<value_type>::infinity();
-      static const value_type dqMinSquaredNorm = Eigen::NumTraits<value_type>::dummy_precision();
+template <typename SolverType>
+inline value_type Backtracking::computeLocalSlope(
+    const SolverType& solver) const {
+  value_type slope = 0;
+  for (std::size_t i = 0; i < solver.stacks_.size(); ++i) {
+    typename SolverType::Data& d = solver.datas_[i];
+    const size_type nrows = d.reducedJ.rows();
+    if (df.size() < nrows) df.resize(nrows);
+    df.head(nrows).noalias() = d.reducedJ * solver.dqSmall_;
+    slope +=
+        df.head(nrows).dot(d.activeRowsOfJ.keepRows().rview(d.error).eval());
+  }
+  return slope;
+}
 
-      // Fill value and Jacobian
-      computeValue<true> (arg);
-      computeError();
+template <typename SolverType>
+inline bool FixedSequence::operator()(const SolverType& solver, vectorOut_t arg,
+                                      vectorOut_t darg) {
+  darg *= alpha;
+  alpha = alphaMax - K * (alphaMax - alpha);
+  solver.integrate(arg, darg, arg);
+  return true;
+}
 
-      if (squaredNorm_ > squaredErrorThreshold_
-          && reducedDimension_ == 0) return INFEASIBLE;
+template <typename SolverType>
+inline bool ErrorNormBased::operator()(const SolverType& solver,
+                                       vectorOut_t arg, vectorOut_t darg) {
+  const value_type r = solver.residualError() / solver.squaredErrorThreshold();
+  const value_type alpha = C - K * std::tanh(a * r + b);
+  darg *= alpha;
+  solver.integrate(arg, darg, arg);
+  return true;
+}
+}  // namespace lineSearch
 
-      Status status;
-      while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
-	     iter < maxIterations_) {
+template <typename LineSearchType>
+inline solver::HierarchicalIterative::Status
+solver::HierarchicalIterative::solve(vectorOut_t arg,
+                                     LineSearchType lineSearch) const {
+  hppDout(info, "before projection: " << arg.transpose());
+  assert(!arg.hasNaN());
 
-        computeSaturation(arg);
-        computeDescentDirection ();
-        if (dq_.squaredNorm () < dqMinSquaredNorm) {
-          // TODO INFEASIBLE means that we have reached a local minima.
-          // The problem may still be feasible from a different starting point.
-          status = INFEASIBLE;
-          break;
-        }
-        lineSearch (*this, arg, dq_);
+  size_type errorDecreased = 3, iter = 0;
+  value_type previousSquaredNorm = std::numeric_limits<value_type>::infinity();
+  static const value_type dqMinSquaredNorm =
+      Eigen::NumTraits<value_type>::dummy_precision();
 
-	computeValue<true> (arg);
-        computeError ();
+  // Fill value and Jacobian
+  computeValue<true>(arg);
+  computeError();
 
-	hppDout (info, "squareNorm = " << squaredNorm_);
-	--errorDecreased;
-	if (squaredNorm_ < previousSquaredNorm)
-          errorDecreased = 3;
-        else
-          status = ERROR_INCREASED;
-	previousSquaredNorm = squaredNorm_;
-	++iter;
+  if (squaredNorm_ > squaredErrorThreshold_ && reducedDimension_ == 0)
+    return INFEASIBLE;
 
-      }
-
-      hppDout (info, "number of iterations: " << iter);
-      if (squaredNorm_ > squaredErrorThreshold_) {
-	hppDout (info, "Projection failed.");
-        return (iter >= maxIterations_) ? MAX_ITERATION_REACHED : status;
-      }
-      hppDout (info, "After projection: " << arg.transpose ());
-      assert (!arg.hasNaN());
-      return SUCCESS;
+  Status status;
+  while (squaredNorm_ > squaredErrorThreshold_ && errorDecreased &&
+         iter < maxIterations_) {
+    computeSaturation(arg);
+    computeDescentDirection();
+    if (dq_.squaredNorm() < dqMinSquaredNorm) {
+      // TODO INFEASIBLE means that we have reached a local minima.
+      // The problem may still be feasible from a different starting point.
+      status = INFEASIBLE;
+      break;
     }
-    } // namespace solver
-  } // namespace constraints
-} // namespace hpp
+    lineSearch(*this, arg, dq_);
 
-#endif //HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH
+    computeValue<true>(arg);
+    computeError();
+
+    hppDout(info, "squareNorm = " << squaredNorm_);
+    --errorDecreased;
+    if (squaredNorm_ < previousSquaredNorm)
+      errorDecreased = 3;
+    else
+      status = ERROR_INCREASED;
+    previousSquaredNorm = squaredNorm_;
+    ++iter;
+  }
+
+  hppDout(info, "number of iterations: " << iter);
+  if (squaredNorm_ > squaredErrorThreshold_) {
+    hppDout(info, "Projection failed.");
+    return (iter >= maxIterations_) ? MAX_ITERATION_REACHED : status;
+  }
+  hppDout(info, "After projection: " << arg.transpose());
+  assert(!arg.hasNaN());
+  return SUCCESS;
+}
+}  // namespace solver
+}  // namespace constraints
+}  // namespace hpp
+
+#endif  // HPP_CONSTRAINTS_SOLVER_IMPL_HIERARCHICAL_ITERATIVE_HH

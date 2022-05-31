@@ -30,28 +30,32 @@
 #define HPP_CONSTRAINTS_SERIALIZATION_HH
 
 #include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
-
+#include <boost/serialization/vector.hpp>
 #include <hpp/constraints/matrix-view.hh>
 
 namespace boost {
 namespace serialization {
 
-template<class Archive> inline void segments_serialize(Archive & ar, const char* n, Eigen::BlockIndex::segments_t& s) { ar & make_nvp(n, s); }
-template<class Archive> inline void segments_serialize(Archive &, const char*, Eigen::internal::empty_struct&) {}
+template <class Archive>
+inline void segments_serialize(Archive& ar, const char* n,
+                               Eigen::BlockIndex::segments_t& s) {
+  ar& make_nvp(n, s);
+}
+template <class Archive>
+inline void segments_serialize(Archive&, const char*,
+                               Eigen::internal::empty_struct&) {}
 
-template<class Archive, bool _allRows, bool _allCols>
-inline void serialize(Archive & ar, Eigen::MatrixBlocks<_allRows, _allCols>& b,
-    const unsigned int version)
-{
-  (void) version;
-  ar & make_nvp("nbRows", b.m_nbRows);
-  ar & make_nvp("nbCols", b.m_nbCols);
+template <class Archive, bool _allRows, bool _allCols>
+inline void serialize(Archive& ar, Eigen::MatrixBlocks<_allRows, _allCols>& b,
+                      const unsigned int version) {
+  (void)version;
+  ar& make_nvp("nbRows", b.m_nbRows);
+  ar& make_nvp("nbCols", b.m_nbCols);
   segments_serialize(ar, "rows", b.m_rows);
   segments_serialize(ar, "cols", b.m_cols);
 }
-} // namespace serialization
-} // namespace boost
+}  // namespace serialization
+}  // namespace boost
 
-#endif // HPP_CONSTRAINTS_SERIALIZATION_HH
+#endif  // HPP_CONSTRAINTS_SERIALIZATION_HH

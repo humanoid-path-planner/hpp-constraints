@@ -28,118 +28,103 @@
 // DAMAGE.
 
 #ifndef HPP_CONSTRAINTS_IMPLICIT_CONSTRAINT_SET_HH
-# define HPP_CONSTRAINTS_IMPLICIT_CONSTRAINT_SET_HH
+#define HPP_CONSTRAINTS_IMPLICIT_CONSTRAINT_SET_HH
 
-# include <hpp/constraints/fwd.hh>
-# include <hpp/constraints/implicit.hh>
-# include <hpp/constraints/differentiable-function-set.hh>
+#include <hpp/constraints/differentiable-function-set.hh>
+#include <hpp/constraints/fwd.hh>
+#include <hpp/constraints/implicit.hh>
 
 namespace hpp {
-  namespace constraints {
-    /// \addtogroup constraints
-    /// \{
+namespace constraints {
+/// \addtogroup constraints
+/// \{
 
-    /// Set of implicit constraints
-    ///
-    /// This class also handles selection of cols of the output matrix.
-    class HPP_CONSTRAINTS_DLLAPI ImplicitConstraintSet :
-      public Implicit
-    {
-      public:
-        typedef std::vector<ImplicitPtr_t> Implicits_t;
+/// Set of implicit constraints
+///
+/// This class also handles selection of cols of the output matrix.
+class HPP_CONSTRAINTS_DLLAPI ImplicitConstraintSet : public Implicit {
+ public:
+  typedef std::vector<ImplicitPtr_t> Implicits_t;
 
-        /// Return a shared pointer to a new instance
-        ///
-        /// \param name the name of the constraints,
-        static ImplicitConstraintSetPtr_t create (const std::string& name)
-        {
-          return ImplicitConstraintSetPtr_t
-            (new ImplicitConstraintSet(name));
-        }
+  /// Return a shared pointer to a new instance
+  ///
+  /// \param name the name of the constraints,
+  static ImplicitConstraintSetPtr_t create(const std::string& name) {
+    return ImplicitConstraintSetPtr_t(new ImplicitConstraintSet(name));
+  }
 
-        virtual ~ImplicitConstraintSet () {}
+  virtual ~ImplicitConstraintSet() {}
 
-        /// \name Function stack management
-        /// \{
+  /// \name Function stack management
+  /// \{
 
-        void add (const ImplicitPtr_t& constraint)
-        {
-          assert (HPP_DYNAMIC_PTR_CAST (DifferentiableFunctionSet,
-                                        function_));
-          DifferentiableFunctionSetPtr_t functions
-            (HPP_STATIC_PTR_CAST (DifferentiableFunctionSet, function_));
-          functions->add (constraint->functionPtr ());
-          constraints_.push_back(constraint);
-          // Handle comparison types
-          const ComparisonTypes_t& comp (constraint->comparisonType ());
-          for (std::size_t i = 0; i < comp.size(); ++i) {
-            comparison_.push_back (comp[i]);
-          }
-	  // Handle mask
-	  mask_.insert(mask_.end(), constraint->mask_.begin(),
-		       constraint->mask_.end());
-	  // Recompute active rows
-	  computeActiveRows();
-	  computeIndices();
-          // Resize temporary variables
-          output_ = LiegroupElement(functions->outputSpace());
-          logOutput_.resize(functions->outputSpace()->nv());
-        }
+  void add(const ImplicitPtr_t& constraint) {
+    assert(HPP_DYNAMIC_PTR_CAST(DifferentiableFunctionSet, function_));
+    DifferentiableFunctionSetPtr_t functions(
+        HPP_STATIC_PTR_CAST(DifferentiableFunctionSet, function_));
+    functions->add(constraint->functionPtr());
+    constraints_.push_back(constraint);
+    // Handle comparison types
+    const ComparisonTypes_t& comp(constraint->comparisonType());
+    for (std::size_t i = 0; i < comp.size(); ++i) {
+      comparison_.push_back(comp[i]);
+    }
+    // Handle mask
+    mask_.insert(mask_.end(), constraint->mask_.begin(),
+                 constraint->mask_.end());
+    // Recompute active rows
+    computeActiveRows();
+    computeIndices();
+    // Resize temporary variables
+    output_ = LiegroupElement(functions->outputSpace());
+    logOutput_.resize(functions->outputSpace()->nv());
+  }
 
-        /// Get constraints
-        const Implicits_t& constraints () const
-        {
-          return constraints_;
-        }
+  /// Get constraints
+  const Implicits_t& constraints() const { return constraints_; }
 
-        /// The output columns selection of other is not taken into account.
-        void merge (const ImplicitConstraintSetPtr_t& other)
-        {
-          const Implicits_t& constraints = other->constraints();
-          for (Implicits_t::const_iterator constraint = constraints.begin();
-              constraint != constraints.end(); ++constraint)
-            add (*constraint);
-        }
+  /// The output columns selection of other is not taken into account.
+  void merge(const ImplicitConstraintSetPtr_t& other) {
+    const Implicits_t& constraints = other->constraints();
+    for (Implicits_t::const_iterator constraint = constraints.begin();
+         constraint != constraints.end(); ++constraint)
+      add(*constraint);
+  }
 
-        /// \}
+  /// \}
 
-        std::ostream& print (std::ostream& os) const
-        {
-          function_->print (os);
-          return os;
-        }
+  std::ostream& print(std::ostream& os) const {
+    function_->print(os);
+    return os;
+  }
 
-        /// Constructor
-        ///
-        /// \param name the name of the constraints,
-        ImplicitConstraintSet (const std::string& name)
-          : Implicit (DifferentiableFunctionSet::create (name),
-                      ComparisonTypes_t (), std::vector<bool>())
-        {
-        }
+  /// Constructor
+  ///
+  /// \param name the name of the constraints,
+  ImplicitConstraintSet(const std::string& name)
+      : Implicit(DifferentiableFunctionSet::create(name), ComparisonTypes_t(),
+                 std::vector<bool>()) {}
 
-        ImplicitConstraintSet ()
-          : Implicit (DifferentiableFunctionSet::create ("Stack"),
-                      ComparisonTypes_t (), std::vector<bool>())
-          {}
+  ImplicitConstraintSet()
+      : Implicit(DifferentiableFunctionSet::create("Stack"),
+                 ComparisonTypes_t(), std::vector<bool>()) {}
 
-        ImplicitConstraintSet (const ImplicitConstraintSet& o)
-          : Implicit (DifferentiableFunctionSet::create ("Stack"),
-                      ComparisonTypes_t (), std::vector<bool>())
-          {
-            const Implicits_t& constraints = o.constraints();
-            for (Implicits_t::const_iterator constraint = constraints.begin();
-                constraint != constraints.end(); ++constraint)
-              add (*constraint);
-          }
-        
-      private:
-        Implicits_t constraints_;
+  ImplicitConstraintSet(const ImplicitConstraintSet& o)
+      : Implicit(DifferentiableFunctionSet::create("Stack"),
+                 ComparisonTypes_t(), std::vector<bool>()) {
+    const Implicits_t& constraints = o.constraints();
+    for (Implicits_t::const_iterator constraint = constraints.begin();
+         constraint != constraints.end(); ++constraint)
+      add(*constraint);
+  }
 
-        HPP_SERIALIZABLE();
-    }; // class ImplicitConstraintSet
-    /// \}
-  } // namespace constraints
-} // namespace hpp
+ private:
+  Implicits_t constraints_;
 
-#endif // HPP_CONSTRAINTS_IMPLICIT_CONSTRAINT_SET_HH
+  HPP_SERIALIZABLE();
+};  // class ImplicitConstraintSet
+/// \}
+}  // namespace constraints
+}  // namespace hpp
+
+#endif  // HPP_CONSTRAINTS_IMPLICIT_CONSTRAINT_SET_HH

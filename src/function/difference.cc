@@ -26,49 +26,51 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-#include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/function/difference.hh>
+#include <hpp/constraints/matrix-view.hh>
 
 namespace hpp {
-  namespace constraints {
-    namespace function {
-      namespace {
-        std::string toStr (const segment_t& s)
-        {
-          std::ostringstream os;
-          os << pretty_print (s);
-          return os.str();
-        }
-      }
+namespace constraints {
+namespace function {
+namespace {
+std::string toStr(const segment_t& s) {
+  std::ostringstream os;
+  os << pretty_print(s);
+  return os.str();
+}
+}  // namespace
 
-      Difference::Difference (const DifferentiableFunctionPtr_t& inner,
-          const size_type& nArgs, const size_type& nDers,
-          const segment_t& lInArgs, const segment_t& lInDers,
-          const segment_t& rInArgs, const segment_t& rInDers) :
-        DifferentiableFunction (nArgs, nDers, LiegroupSpace::Rn(inner->outputSpace()->nv()), inner->name() + " | " + toStr(lInArgs) + " - " + toStr(rInArgs)),
-        inner_ (inner),
-        lsa_ (lInArgs), lsd_ (lInDers),
-        rsa_ (rInArgs), rsd_ (rInDers),
-        l_ (inner->outputSpace()), r_ (inner->outputSpace())
-      {
-        activeParameters_.setConstant(false);
-        activeParameters_.segment(lsa_.first, lsa_.second)
-          = inner_->activeParameters();
-        activeParameters_.segment(rsa_.first, rsa_.second)
-          = inner_->activeParameters();
+Difference::Difference(const DifferentiableFunctionPtr_t& inner,
+                       const size_type& nArgs, const size_type& nDers,
+                       const segment_t& lInArgs, const segment_t& lInDers,
+                       const segment_t& rInArgs, const segment_t& rInDers)
+    : DifferentiableFunction(
+          nArgs, nDers, LiegroupSpace::Rn(inner->outputSpace()->nv()),
+          inner->name() + " | " + toStr(lInArgs) + " - " + toStr(rInArgs)),
+      inner_(inner),
+      lsa_(lInArgs),
+      lsd_(lInDers),
+      rsa_(rInArgs),
+      rsd_(rInDers),
+      l_(inner->outputSpace()),
+      r_(inner->outputSpace()) {
+  activeParameters_.setConstant(false);
+  activeParameters_.segment(lsa_.first, lsa_.second) =
+      inner_->activeParameters();
+  activeParameters_.segment(rsa_.first, rsa_.second) =
+      inner_->activeParameters();
 
-        activeDerivativeParameters_.setConstant(false);
-        activeDerivativeParameters_.segment(lsd_.first, lsd_.second)
-          = inner_->activeDerivativeParameters();
-        activeDerivativeParameters_.segment(rsd_.first, rsd_.second)
-          = inner_->activeDerivativeParameters();
-      }
+  activeDerivativeParameters_.setConstant(false);
+  activeDerivativeParameters_.segment(lsd_.first, lsd_.second) =
+      inner_->activeDerivativeParameters();
+  activeDerivativeParameters_.segment(rsd_.first, rsd_.second) =
+      inner_->activeDerivativeParameters();
+}
 
-      std::ostream& Difference::print (std::ostream& os) const
-      {
-        constraints::DifferentiableFunction::print(os);
-        return os << incindent << iendl << *inner_ << decindent;
-      }
-    } // namespace function
-  } // namespace constraints
-} // namespace hpp
+std::ostream& Difference::print(std::ostream& os) const {
+  constraints::DifferentiableFunction::print(os);
+  return os << incindent << iendl << *inner_ << decindent;
+}
+}  // namespace function
+}  // namespace constraints
+}  // namespace hpp
