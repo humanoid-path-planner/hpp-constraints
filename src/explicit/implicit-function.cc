@@ -304,7 +304,7 @@ ImplicitFunction::dependsOnRelPoseBetween(DeviceConstPtr_t robot) const {
   // get the joints involved in the output config
   JointConstPtr_t j1;
   // check that output interval matches with the config range of one joint
-  if (outputConfIntervals_.nbRows() != 1) {
+  if (outputConfIntervals_.rows().size() != 1) {
     return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
   }
   segment_t row = outputConfIntervals_.rows()[0];

@@ -437,18 +437,80 @@ BOOST_AUTO_TEST_CASE(equality) {
   BOOST_CHECK(*functions[0] != *functions[1]);  // only the names are equal
 }
 
+/* Create a robot with the following kinematic chain. All joints are
+   translations along x.
+
+                               universe
+                                  |Px
+                               test_x
+                             /Px       \Px
+                       joint_a0       joint_b0
+                           |Px            |Px
+                       joint_a1       joint_b1
+                                          |FF
+                                      joint_b2
+
+*/
+DevicePtr_t createRobot() {
+  std::string urdf(
+      "<robot name='test'>"
+      "<link name='base_link'/>"
+      "<link name='link_test_x'/>"
+      "<joint name='test_x' type='prismatic'>"
+      "<parent link='base_link'/>"
+      "<child  link='link_test_x'/>"
+      "<limit effort='30' velocity='1.0' lower='-4' upper='4'/>"
+      "</joint>"
+
+      "<link name='link_a0'/>"
+      "<link name='link_a1'/>"
+      "<joint name='joint_a0' type='prismatic'>"
+      "<parent link='link_test_x'/>"
+      "<child  link='link_a0'/>"
+      "<limit effort='30' velocity='1.0' lower='-4' upper='4'/>"
+      "</joint>"
+      "<joint name='joint_a1' type='prismatic'>"
+      "<parent link='link_a0'/>"
+      "<child  link='link_a1'/>"
+      "<limit effort='30' velocity='1.0' lower='-4' upper='4'/>"
+      "</joint>"
+
+      "<link name='link_b0'/>"
+      "<link name='link_b1'/>"
+      "<link name='link_b2'/>"
+      "<joint name='joint_b0' type='prismatic'>"
+      "<parent link='link_test_x'/>"
+      "<child  link='link_b0'/>"
+      "<limit effort='30' velocity='1.0' lower='-4' upper='4'/>"
+      "</joint>"
+      "<joint name='joint_b1' type='prismatic'>"
+      "<parent link='link_b0'/>"
+      "<child  link='link_b1'/>"
+      "<limit effort='30' velocity='1.0' lower='-4' upper='4'/>"
+      "</joint>"
+      "<joint name='joint_b2' type='floating'>"
+      "<parent link='link_b1'/>"
+      "<child  link='link_b2'/>"
+      "</joint>"
+
+      "</robot>");
+
+  DevicePtr_t robot = Device::create("test");
+  loadModelFromString(robot, 0, "", "anchor", urdf, "");
+  return robot;
+}
+
 BOOST_AUTO_TEST_CASE(dependsOnRelPoseBetween) {
-  DevicePtr_t device = hpp::pinocchio::unittest::makeDevice(
-      hpp::pinocchio::unittest::HumanoidSimple);
-  device->numberDeviceData(4);
-  JointPtr_t ee1 = device->getJointByName("lleg5_joint"),
-             ee2 = device->getJointByName("rleg5_joint");
+  DevicePtr_t device = createRobot();
+  BOOST_REQUIRE(device);
+
+  JointPtr_t ee1 = device->getJointByName("joint_a1"),
+             ee2 = device->getJointByName("joint_b2");
   BOOST_REQUIRE(device);
   // ensure that the joint indices are as expected
   BOOST_REQUIRE(ee1->index() < ee2->index());
-  BasicConfigurationShooter cs(device);
 
-  device->currentConfiguration(*cs.shoot());
+  device->currentConfiguration(device->neutralConfiguration());
   device->computeForwardKinematics();
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
@@ -577,30 +639,13 @@ BOOST_AUTO_TEST_CASE(dependsOnRelPoseBetween) {
   BOOST_CHECK_EQUAL(jointsConstrained.second->index(), ee1->index());
 
   /// test the locked joint constraint as well
-  constraint = LockedJoint::create(ee1, ee1->configurationSpace()->neutral());
-  JointIndex parentIndex = Joint::index(ee1->parentJoint());
-  JointIndex index1, index2;
-  // ensure that index1 <= index2
-  if (parentIndex <= ee1->index()) {
-    index1 = parentIndex;
-    index2 = ee1->index();
-  } else {
-    index1 = ee1->index();
-    index2 = parentIndex;
-  }
+  constraint = LockedJoint::create(ee2, ee2->configurationSpace()->neutral());
+
   std::cout << constraint->functionPtr()->name() << std::endl;
   joints = constraint->functionPtr()->dependsOnRelPoseBetween(device);
-  if (index1 == 0) {
-    BOOST_CHECK(!joints.first);
-  } else {
-    BOOST_CHECK_EQUAL(joints.first->index(), index1);
-  }
-  BOOST_CHECK_EQUAL(joints.second->index(), index2);
+  BOOST_CHECK_EQUAL(joints.first->index(), ee2->parentJoint()->index());
+  BOOST_CHECK_EQUAL(joints.second->index(), ee2->index());
   // constraint fully locks the joint
   jointsConstrained = constraint->doesConstrainRelPoseBetween(device);
-  if (index1 == 0) {
-    BOOST_CHECK(!jointsConstrained.first);
-  } else {
-    BOOST_CHECK_EQUAL(jointsConstrained.second->index(), index2);
-  }
+  BOOST_CHECK_EQUAL(jointsConstrained.second->index(), ee2->index());
 }
