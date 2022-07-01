@@ -42,7 +42,7 @@ find_library(RT_LIB rt)
 
 MACRO(ADD_TESTCASE NAME)
   ADD_UNIT_TEST(${NAME} ${NAME}.cc)
-  TARGET_LINK_LIBRARIES(${NAME} PRIVATE Boost::unit_test_framework)
+  TARGET_LINK_LIBRARIES(${NAME} PRIVATE ${PROJECT_NAME} Boost::unit_test_framework)
   if(RT_LIB)
     TARGET_LINK_LIBRARIES(${NAME} PRIVATE ${RT_LIB})
   endif()
