@@ -112,8 +112,8 @@ class HPP_CONSTRAINTS_DLLAPI DifferentiableFunctionSet
       result.vector().segment(row, f.outputSize()) = result_[i].vector();
       row += f.outputSize();
       ++i;
-      assert(hpp::pinocchio::checkNormalized(result));
     }
+    assert(hpp::pinocchio::checkNormalized(result));
   }
   void impl_jacobian(matrixOut_t jacobian, ConfigurationIn_t arg) const {
     size_type row = 0;
