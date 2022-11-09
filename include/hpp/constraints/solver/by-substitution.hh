@@ -86,9 +86,9 @@ class HPP_CONSTRAINTS_DLLAPI BySubstitution
            const std::size_t& priority = 0);
 
   /// \deprecated use add(const ImplicitPtr_t&, const std::size_t)
-  bool add(const ImplicitPtr_t& numericalConstraint,
+  HPP_CONSTRAINTS_DEPRECATED bool add(const ImplicitPtr_t& numericalConstraint,
            const segments_t& passiveDofs,
-           const std::size_t priority = 0) HPP_CONSTRAINTS_DEPRECATED {
+           const std::size_t priority = 0) {
     if (passiveDofs.size() > 0)
       throw std::invalid_argument(
           "Passive dof in the solver are not "
