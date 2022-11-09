@@ -112,7 +112,8 @@ typedef pinocchio::CenterOfMassComputation CenterOfMassComputation;
 typedef pinocchio::CenterOfMassComputationPtr_t CenterOfMassComputationPtr_t;
 typedef shared_ptr<DifferentiableFunction> DifferentiableFunctionPtr_t;
 typedef shared_ptr<DifferentiableFunctionSet> DifferentiableFunctionSetPtr_t;
-HPP_CONSTRAINTS_DEPRECATED typedef DifferentiableFunctionSet DifferentiableFunctionStack;
+HPP_CONSTRAINTS_DEPRECATED typedef DifferentiableFunctionSet
+    DifferentiableFunctionStack;
 typedef shared_ptr<ActiveSetDifferentiableFunction>
     ActiveSetDifferentiableFunctionPtr_t;
 typedef shared_ptr<DistanceBetweenBodies> DistanceBetweenBodiesPtr_t;
