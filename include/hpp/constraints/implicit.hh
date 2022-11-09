@@ -180,7 +180,8 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   /// \deprecated storing the right hand side in the constraint is
   /// deprecated. Users should handle themselves the right hand sides.
   /// Note that the solvers provided in this package already do.
-  HPP_CONSTRAINTS_DEPRECATED void rightHandSideFromConfig(ConfigurationIn_t config);
+  HPP_CONSTRAINTS_DEPRECATED void rightHandSideFromConfig(
+      ConfigurationIn_t config);
 
   /// Set the right hand side of the equation.
   /// \param rhs the right hand side.
