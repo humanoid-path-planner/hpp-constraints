@@ -180,21 +180,20 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   /// \deprecated storing the right hand side in the constraint is
   /// deprecated. Users should handle themselves the right hand sides.
   /// Note that the solvers provided in this package already do.
-  void rightHandSideFromConfig(ConfigurationIn_t config)
-      HPP_CONSTRAINTS_DEPRECATED;
+  HPP_CONSTRAINTS_DEPRECATED void rightHandSideFromConfig(ConfigurationIn_t config);
 
   /// Set the right hand side of the equation.
   /// \param rhs the right hand side.
   /// \deprecated storing the right hand side in the constraint is
   /// deprecated. Users should handle themselves the right hand sides.
   /// Note that the solvers provided in this package already do.
-  void rightHandSide(vectorIn_t rhs) HPP_CONSTRAINTS_DEPRECATED;
+  HPP_CONSTRAINTS_DEPRECATED void rightHandSide(vectorIn_t rhs);
 
   /// Return the right hand side of the equation.
   /// \deprecated storing the right hand side in the constraint is
   /// deprecated. Users should handle themselves the right hand sides.
   /// Note that the solvers provided in this package already do.
-  vectorIn_t rightHandSide() const HPP_CONSTRAINTS_DEPRECATED;
+  HPP_CONSTRAINTS_DEPRECATED vectorIn_t rightHandSide() const;
 
   /// Get size of parameter defining the right hand side of the constraint
   ///
@@ -210,7 +209,7 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   /// \deprecated storing the right hand side in the constraint is
   /// deprecated. Users should handle themselves the right hand sides.
   /// Note that the solvers provided in this package already do.
-  vectorOut_t rightHandSide() HPP_CONSTRAINTS_DEPRECATED;
+  HPP_CONSTRAINTS_DEPRECATED vectorOut_t rightHandSide();
 
   /// Set time-varying right hand side
   /// \param rhsF Mapping from \f$\mathbf{R}\f$ to output space
