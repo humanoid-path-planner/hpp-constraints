@@ -120,8 +120,7 @@ class HPP_CONSTRAINTS_DLLAPI LockedJoint : public Explicit {
   /// \deprecated storing the right hand side in the constraint is
   /// deprecated. Users should handle themselves the right hand sides.
   /// Note that the solvers provided in this package already do.
-  void rightHandSideFromConfig(ConfigurationIn_t config)
-      HPP_CONSTRAINTS_DEPRECATED;
+  HPP_CONSTRAINTS_DEPRECATED void rightHandSideFromConfig(ConfigurationIn_t config);
 
   /// Return shared pointer to joint
   const JointPtr_t& joint() { return joint_; }
