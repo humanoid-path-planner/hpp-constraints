@@ -1002,8 +1002,7 @@ BOOST_AUTO_TEST_CASE(rightHandSideFromConfig) {
   //           rhs [11]
   //           rhs [12]
   for (size_type i = 0; i < 1000; ++i) {
-    Configuration_t q(device->configSize());
-    q.setRandom();
+    Configuration_t q = ::pinocchio::randomConfiguration(device->model());
     bool success;
     // Set right hand side for both constraints from random configuration
     success = solver.rightHandSideFromConfig(c1, q);
@@ -1024,7 +1023,7 @@ BOOST_AUTO_TEST_CASE(rightHandSideFromConfig) {
     success = solver.getRightHandSide(c2, rhs2);
     BOOST_CHECK(success);
     // Set right hand side for both constraints from other random configuration
-    q.setRandom();
+    q = ::pinocchio::randomConfiguration(device->model());
     success = solver.rightHandSideFromConfig(c1, q);
     BOOST_CHECK(success);
     success = solver.rightHandSideFromConfig(c2, q);
