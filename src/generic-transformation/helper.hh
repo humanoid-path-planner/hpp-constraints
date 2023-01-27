@@ -348,33 +348,36 @@ struct relativeTransform {
     const Transform3f& M2 = d.M2();
     d.value.noalias() = M2.act(d.model.F2inJ2.translation());
 #ifndef NDEBUG
-    if (ose3){
+    if (ose3) {
       hpp::pinocchio::vector4_t quat;
-      size_type n=d.value.size();
-      assert(n>=4);
-      quat << d.value[n-4], d.value[n-3], d.value[n-2], d.value[n-1];
-      assert(hpp::pinocchio::checkNormalized(LiegroupElement(quat, LiegroupSpace::SO3())));
+      size_type n = d.value.size();
+      assert(n >= 4);
+      quat << d.value[n - 4], d.value[n - 3], d.value[n - 2], d.value[n - 1];
+      assert(hpp::pinocchio::checkNormalized(
+          LiegroupElement(quat, LiegroupSpace::SO3())));
     }
 #endif
     if (!d.model.t1isZero) d.value.noalias() -= d.model.F1inJ1.translation();
 #ifndef NDEBUG
-    if (ose3){
+    if (ose3) {
       hpp::pinocchio::vector4_t quat;
-      size_type n=d.value.size();
-      assert(n>=4);
-      quat << d.value[n-4], d.value[n-3], d.value[n-2], d.value[n-1];
-      assert(hpp::pinocchio::checkNormalized(LiegroupElement(quat, LiegroupSpace::SO3())));
+      size_type n = d.value.size();
+      assert(n >= 4);
+      quat << d.value[n - 4], d.value[n - 3], d.value[n - 2], d.value[n - 1];
+      assert(hpp::pinocchio::checkNormalized(
+          LiegroupElement(quat, LiegroupSpace::SO3())));
     }
 #endif
     if (!d.model.R1isID)
       d.value.applyOnTheLeft(d.model.F1inJ1.rotation().transpose());
 #ifndef NDEBUG
-    if (ose3){
+    if (ose3) {
       hpp::pinocchio::vector4_t quat;
-      size_type n=d.value.size();
-      assert(n>=4);
-      quat << d.value[n-4], d.value[n-3], d.value[n-2], d.value[n-1];
-      assert(hpp::pinocchio::checkNormalized(LiegroupElement(quat, LiegroupSpace::SO3())));
+      size_type n = d.value.size();
+      assert(n >= 4);
+      quat << d.value[n - 4], d.value[n - 3], d.value[n - 2], d.value[n - 1];
+      assert(hpp::pinocchio::checkNormalized(
+          LiegroupElement(quat, LiegroupSpace::SO3())));
     }
 #endif
   }
@@ -431,12 +434,13 @@ struct compute {
     relativeTransform<rel, ori>::run(d);
     unary<ori>::log(d);
 #ifndef NDEBUG
-    if (ose3){
+    if (ose3) {
       hpp::pinocchio::vector4_t quat;
-      size_type n=d.value.size();
-      assert(n>=4);
-      quat << d.value[n-4], d.value[n-3], d.value[n-2], d.value[n-1];
-      assert(hpp::pinocchio::checkNormalized(LiegroupElement(quat, LiegroupSpace::SO3())));
+      size_type n = d.value.size();
+      assert(n >= 4);
+      quat << d.value[n - 4], d.value[n - 3], d.value[n - 2], d.value[n - 1];
+      assert(hpp::pinocchio::checkNormalized(
+          LiegroupElement(quat, LiegroupSpace::SO3())));
     }
 #endif
   }
