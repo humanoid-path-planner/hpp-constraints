@@ -616,12 +616,11 @@ class MatrixBlocks
   }
 
   MatrixBlocks(const MatrixBlocks& other)
-    : MatrixBlocksBase<MatrixBlocks>(other),
+      : MatrixBlocksBase<MatrixBlocks>(other),
         m_nbRows(other.nbRows()),
         m_nbCols(other.nbCols()),
         m_rows(other.rows()),
-        m_cols(other.cols()) {
-  }
+        m_cols(other.cols()) {}
 
   MatrixBlocks& operator=(const MatrixBlocks& other) {
     m_nbRows = other.m_nbRows;
