@@ -46,6 +46,14 @@ class HPP_CONSTRAINTS_LOCAL Difference
     : public constraints::DifferentiableFunction {
  public:
   typedef shared_ptr<Difference> Ptr_t;
+  /// Constructor
+  ///
+  /// \param inner function f,
+  /// \param nArgs, nDers size of the input space of this function,
+  /// \param lInArgs, lInders configuration and velocity intervals defining
+  ///        \f$q_{left}\f$,
+  /// \param rInArgs, rInders configuration and velocity intervals defining
+  ///        \f$q_{right}\f$,
   Difference(const DifferentiableFunctionPtr_t& inner, const size_type& nArgs,
              const size_type& nDers, const segment_t& lInArgs,
              const segment_t& lInDers, const segment_t& rInArgs,

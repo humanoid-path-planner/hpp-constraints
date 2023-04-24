@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(mask) {
     }
 
     bool isEqual(const DifferentiableFunction& other) const {
-      const Identity& castother = dynamic_cast<const Identity&>(other);
+      dynamic_cast<const Identity&>(other);
       if (!DifferentiableFunction::isEqual(other)) return false;
 
       return true;
