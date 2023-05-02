@@ -140,7 +140,7 @@ bool Bounds::saturate(vectorIn_t q, vectorOut_t qSat,
                       Eigen::VectorXi& saturation) {
   bool sat = false;
   for (size_type i = 0; i < q.size(); ++i)
-    if (clamp(lb[i], ub[i], q[i], qSat[i], saturation[i])) sat = true;
+    if (clamp(lb[i], ub[i], q[i], qSat[i], saturation[iq2iv_[i]])) sat = true;
   return sat;
 }
 

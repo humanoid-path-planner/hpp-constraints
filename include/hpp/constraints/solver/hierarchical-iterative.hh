@@ -132,8 +132,16 @@ struct Function : Base {
 struct Bounds : Base {
   bool saturate(vectorIn_t q, vectorOut_t qSat, Eigen::VectorXi& saturation);
   Bounds() {}
-  Bounds(const vector_t& lb, const vector_t& ub) : lb(lb), ub(ub) {}
+  Bounds(const vector_t& lb, const vector_t& ub) : lb(lb), ub(ub), iq2iv_() {
+    iq2iv_.resize(ub.size());
+    for (size_type i = 0; i < ub.size(); ++i) {
+      iq2iv_[i] = i;
+    }
+  }
+  Bounds(const vector_t& lb, const vector_t& ub, const Eigen::VectorXi& iq2iv)
+      : lb(lb), ub(ub), iq2iv_(iq2iv) {}
   vector_t lb, ub;
+  Eigen::VectorXi iq2iv_;
 };
 /// \brief Box constraints use a Device joint limits.
 struct Device : Base {
