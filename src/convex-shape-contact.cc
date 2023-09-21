@@ -135,7 +135,7 @@ ConvexShapeContact::computeContactPoints(ConfigurationIn_t q,
                                          const value_type& normalMargin) const {
   pinocchio::DeviceSync device(robot_);
   device.currentConfiguration(q);
-  device.computeForwardKinematics();
+  device.computeForwardKinematics(pinocchio::JOINT_POSITION);
 
   std::vector<ForceData> forceDatas;
   ForceData forceData;
@@ -171,7 +171,7 @@ void ConvexShapeContact::computeInternalValue(const ConfigurationIn_t& argument,
   GTDataV<true, true, true, false> data(relativeTransformationModel_, robot_);
 
   data.device.currentConfiguration(argument);
-  data.device.computeForwardKinematics();
+  data.device.computeForwardKinematics(pinocchio::JOINT_POSITION);
 
   isInside = selectConvexShapes(data.device.d(), iobject, ifloor);
   const ConvexShape &object(objectConvexShapes_[iobject]),
@@ -230,7 +230,7 @@ void ConvexShapeContact::computeInternalJacobian(
   GTDataJ<true, true, true, false> data(relativeTransformationModel_, robot_);
 
   data.device.currentConfiguration(argument);
-  data.device.computeForwardKinematics();
+  data.device.computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
 
   std::size_t ifloor, iobject;
   isInside = selectConvexShapes(data.device.d(), iobject, ifloor);

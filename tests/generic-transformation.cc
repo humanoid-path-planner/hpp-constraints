@@ -57,6 +57,7 @@ using hpp::pinocchio::JointIndex;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::LiegroupSpace;
 using hpp::pinocchio::Transform3f;
+using hpp::pinocchio::JOINT_POSITION;
 
 using hpp::pinocchio::urdf::loadModelFromString;
 
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(print) {
   BasicConfigurationShooter cs(device);
 
   device->currentConfiguration(*cs.shoot());
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 
@@ -172,7 +173,7 @@ BOOST_AUTO_TEST_CASE(multithread) {
   BasicConfigurationShooter cs(device);
 
   device->currentConfiguration(*cs.shoot());
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 
@@ -224,7 +225,7 @@ BOOST_AUTO_TEST_CASE(serialization) {
   BOOST_REQUIRE(device);
 
   device->currentConfiguration(device->neutralConfiguration());
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 
@@ -411,7 +412,7 @@ BOOST_AUTO_TEST_CASE(equality) {
   BasicConfigurationShooter cs(device);
 
   device->currentConfiguration(*cs.shoot());
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 
@@ -511,7 +512,7 @@ BOOST_AUTO_TEST_CASE(dependsOnRelPoseBetween) {
   BOOST_REQUIRE(ee1->index() < ee2->index());
 
   device->currentConfiguration(device->neutralConfiguration());
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 

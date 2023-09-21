@@ -428,7 +428,7 @@ REFER_NAMESPACE_QPOASES returnValue solve(DevicePtr_t& device,
   REFER_NAMESPACE_QPOASES int_t nWSR = 10;
 
   device->currentConfiguration(c);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(pinocchio::JOINT_POSITION);
   f.phi().invalidate();
   f.phi().computeValue();
   f.phi().computeSVD();
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(static_stability_phi) {
   Configuration_t c(3);
   c << 1, 0, 0;
   device->currentConfiguration(c);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(pinocchio::JOINT_POSITION);
 
   BOOST_CHECK_MESSAGE(slider->currentTransformation().isIdentity(),
                       "This transform shoud be identity:\n"
@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE(static_stability_jacobian) {
   Configuration_t c(3);
   c << 1, 0, 0;
   device->currentConfiguration(c);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(pinocchio::JOINT_POSITION);
 
   StaticStabilityPtr_t fptr =
       createStaticStabilityHard4(device, device->rootJoint());

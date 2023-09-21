@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(multithread) {
   Configuration_t q;
   randomConfig(device, q);
   device->currentConfiguration(q);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(hpp::pinocchio::JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 

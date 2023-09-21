@@ -128,7 +128,7 @@ void RelativeTransformation::forwardKinematics(vectorIn_t arg) const {
     inConf_.lview(q_) = arg;
     robot_->currentConfiguration(q_);
   }
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
 }
 
 void RelativeTransformation::impl_compute(LiegroupElementRef result,
@@ -165,7 +165,7 @@ void RelativeTransformation::impl_jacobian(matrixOut_t jacobian,
   Configuration_t q(robot_->currentConfiguration());
   outConf_.lview(q) = result.vector();
   robot_->currentConfiguration(q);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
 
   bool absolute = !joint1_;
   bool hasParent = (parentJoint_ && parentJoint_->index() > 0);

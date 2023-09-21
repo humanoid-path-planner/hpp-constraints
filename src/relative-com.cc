@@ -112,7 +112,7 @@ std::ostream& RelativeCom::print(std::ostream& o) const {
 void RelativeCom::impl_compute(LiegroupElementRef result,
                                ConfigurationIn_t argument) const {
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
   comc_->compute(hpp::pinocchio::COM);
   const Transform3f& M = joint_->currentTransformation();
   const vector3_t& x = comc_->com();
@@ -135,7 +135,7 @@ void RelativeCom::impl_compute(LiegroupElementRef result,
 void RelativeCom::impl_jacobian(matrixOut_t jacobian,
                                 ConfigurationIn_t arg) const {
   robot_->currentConfiguration(arg);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
   comc_->compute(hpp::pinocchio::COMPUTE_ALL);
   const ComJacobian_t& Jcom = comc_->jacobian();
   const JointJacobian_t& Jjoint(joint_->jacobian());

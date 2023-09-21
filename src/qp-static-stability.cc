@@ -158,7 +158,7 @@ QPStaticStabilityPtr_t QPStaticStability::create(
 void QPStaticStability::impl_compute(LiegroupElementRef result,
                                      ConfigurationIn_t argument) const {
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
 
   phi_.invalidate();
   phi_.computeValue(argument);
@@ -176,7 +176,7 @@ void QPStaticStability::impl_compute(LiegroupElementRef result,
 void QPStaticStability::impl_jacobian(matrixOut_t jacobian,
                                       ConfigurationIn_t argument) const {
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
 
   phi_.invalidate();
   // phi_.computeSVD (argument);
