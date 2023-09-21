@@ -111,11 +111,12 @@ std::ostream& RelativeCom::print(std::ostream& o) const {
 
 void RelativeCom::impl_compute(LiegroupElementRef result,
                                ConfigurationIn_t argument) const {
-  robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
-  comc_->compute(hpp::pinocchio::COM);
+  pinocchio::DeviceSync device(robot_);
+  device.currentConfiguration(argument);
+  device.computeForwardKinematics(pinocchio::JOINT_POSITION);
+  comc_->compute(device.d(), hpp::pinocchio::COM);
   const Transform3f& M = joint_->currentTransformation();
-  const vector3_t& x = comc_->com();
+  const vector3_t& x = comc_->com(device.d());
   const matrix3_t& R = M.rotation();
   const vector3_t& t = M.translation();
 
@@ -134,14 +135,15 @@ void RelativeCom::impl_compute(LiegroupElementRef result,
 
 void RelativeCom::impl_jacobian(matrixOut_t jacobian,
                                 ConfigurationIn_t arg) const {
-  robot_->currentConfiguration(arg);
-  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
-  comc_->compute(hpp::pinocchio::COMPUTE_ALL);
-  const ComJacobian_t& Jcom = comc_->jacobian();
-  const JointJacobian_t& Jjoint(joint_->jacobian());
-  const Transform3f& M = joint_->currentTransformation();
+  pinocchio::DeviceSync device(robot_);
+  device.currentConfiguration(arg);
+  device.computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+  comc_->compute(device.d(), hpp::pinocchio::COMPUTE_ALL);
+  const ComJacobian_t& Jcom = comc_->jacobian(device.d());
+  const JointJacobian_t& Jjoint(joint_->jacobian(device.d()));
+  const Transform3f& M = joint_->currentTransformation(device.d());
   const matrix3_t& R(M.rotation());
-  const vector3_t& x(comc_->com());
+  const vector3_t& x(comc_->com(device.d()));
   const vector3_t& t(M.translation());
 
   // Right part
