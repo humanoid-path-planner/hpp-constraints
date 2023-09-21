@@ -92,7 +92,7 @@ StaticStabilityPtr_t StaticStability::create(
 void StaticStability::impl_compute(LiegroupElementRef result,
                                    ConfigurationIn_t argument) const {
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
 
   phi_.invalidate();
 
@@ -116,7 +116,7 @@ void StaticStability::impl_compute(LiegroupElementRef result,
 void StaticStability::impl_jacobian(matrixOut_t jacobian,
                                     ConfigurationIn_t argument) const {
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
 
   phi_.invalidate();
 

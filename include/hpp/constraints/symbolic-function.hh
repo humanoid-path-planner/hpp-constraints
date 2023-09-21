@@ -113,7 +113,7 @@ class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction {
                             ConfigurationIn_t argument) const {
     if (robot_) {
       robot_->currentConfiguration(argument);
-      robot_->computeForwardKinematics();
+      robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
     }
     expr_->invalidate();
     expr_->computeValue(argument);
@@ -127,7 +127,7 @@ class HPP_CONSTRAINTS_DLLAPI SymbolicFunction : public DifferentiableFunction {
                              ConfigurationIn_t arg) const {
     if (robot_) {
       robot_->currentConfiguration(arg);
-      robot_->computeForwardKinematics();
+      robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
     }
     expr_->invalidate();
     expr_->computeJacobian(arg);

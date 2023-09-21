@@ -102,7 +102,7 @@ ComBetweenFeet::ComBetweenFeet(const std::string& name,
 void ComBetweenFeet::impl_compute(LiegroupElementRef result,
                                   ConfigurationIn_t argument) const {
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION);
   size_t index = 0;
   if (mask_[0]) {
     com_->invalidate();
@@ -129,7 +129,7 @@ void ComBetweenFeet::impl_compute(LiegroupElementRef result,
 void ComBetweenFeet::impl_jacobian(matrixOut_t jacobian,
                                    ConfigurationIn_t arg) const {
   robot_->currentConfiguration(arg);
-  robot_->computeForwardKinematics();
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
   size_t index = 0;
   if (mask_[0]) {
     com_->invalidate();

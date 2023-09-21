@@ -90,6 +90,8 @@ using hpp::pinocchio::unittest::HumanoidRomeo;
 using hpp::pinocchio::unittest::HumanoidSimple;
 using hpp::pinocchio::unittest::makeDevice;
 using hpp::pinocchio::unittest::ManipulatorArm2;
+using hpp::pinocchio::JOINT_POSITION;
+using hpp::pinocchio::JACOBIAN;
 
 namespace saturation = hpp::constraints::solver::saturation;
 
@@ -388,7 +390,7 @@ class Frame : public DifferentiableFunction {
   void impl_compute(LiegroupElementRef result, vectorIn_t arg) const {
     hpp::pinocchio::DeviceSync robot(joint_->robot());
     robot.currentConfiguration(arg);
-    robot.computeForwardKinematics();
+    robot.computeForwardKinematics(JOINT_POSITION);
 
     const Transform3f& oMi = joint_->currentTransformation(robot.d());
     se3ToConfig(oMi, result.vector());
@@ -398,7 +400,7 @@ class Frame : public DifferentiableFunction {
     // finiteDifferenceCentral(J, arg, joint_->robot(), 1e-6);
     hpp::pinocchio::DeviceSync robot(joint_->robot());
     robot.currentConfiguration(arg);
-    robot.computeForwardKinematics();
+    robot.computeForwardKinematics(JOINT_POSITION | JACOBIAN);
 
     J = joint_->jacobian(robot.d(), true);
   }
@@ -686,7 +688,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver) {
 
   Configuration_t q0 = device->neutralConfiguration();
   device->currentConfiguration(q0);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
 
   JointPtr_t lleg6Joint(device->getJointByName("lleg6_joint"));
   BOOST_CHECK_EQUAL(lleg6Joint->rankInConfiguration(), 12);
@@ -707,7 +709,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver) {
   solver.saturation(hpp::make_shared<saturation::Device>(device));
 
   device->currentConfiguration(q0);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
   Transform3f tf3(ee3->currentTransformation());
@@ -774,7 +776,7 @@ BOOST_AUTO_TEST_CASE(by_substitution_serialization) {
   solver.saturation(hpp::make_shared<saturation::Device>(device));
 
   device->currentConfiguration(q);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
   Transform3f tf3(ee3->currentTransformation());
@@ -867,7 +869,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs) {
     q = ::pinocchio::randomConfiguration(device->model()),
 
     device->currentConfiguration(q);
-    device->computeForwardKinematics();
+    device->computeForwardKinematics(JOINT_POSITION);
     Transform3f tf_expected(left->currentTransformation());
     vector_t rhs_expected(7), rhs(7);
     se3ToConfig(tf_expected, rhs_expected);
@@ -902,7 +904,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs) {
 
     if (status == BySubstitution::SUCCESS) {
       device->currentConfiguration(qrand);
-      device->computeForwardKinematics();
+      device->computeForwardKinematics(JOINT_POSITION);
       Transform3f tf_result(left->currentTransformation());
 
       Transform3f id = tf_expected.actInv(tf_result);

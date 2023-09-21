@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(one_layer) {
   solver.saturation(hpp::make_shared<solver::saturation::Device>(device));
 
   device->currentConfiguration(q);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(hpp::pinocchio::JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 

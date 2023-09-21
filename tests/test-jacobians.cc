@@ -57,6 +57,8 @@ using hpp::pinocchio::DevicePtr_t;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::JointVector_t;
 using hpp::pinocchio::SE3;
+using hpp::pinocchio::JOINT_POSITION;
+using hpp::pinocchio::JACOBIAN;
 
 using std::numeric_limits;
 
@@ -153,7 +155,7 @@ BOOST_AUTO_TEST_CASE(jacobian) {
   Configuration_t q1;
   randomConfig(device, q1);
   device->currentConfiguration(q1);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
 
@@ -198,7 +200,7 @@ BOOST_AUTO_TEST_CASE(jacobian) {
 
   randomConfig(device, q1);
   device->currentConfiguration(q1);
-  device->computeForwardKinematics();
+  device->computeForwardKinematics(JOINT_POSITION);
   tf1 = ee1->currentTransformation();
   tf2 = ee2->currentTransformation();
 
@@ -283,7 +285,7 @@ BOOST_AUTO_TEST_CASE(SymbolicCalculus_position) {
   for (int i = 0; i < 100; i++) {
     randomConfig(device, q1);
     device->currentConfiguration(q1);
-    device->computeForwardKinematics();
+    device->computeForwardKinematics(JOINT_POSITION | JACOBIAN);
 
     pij->invalidate();
     relpos_sb_ptr->invalidate();
@@ -332,7 +334,7 @@ BOOST_AUTO_TEST_CASE(SymbolicCalculus_jointframe) {
   for (int i = 0; i < 100; i++) {
     randomConfig(device, q1);
     device->currentConfiguration(q1);
-    device->computeForwardKinematics();
+    device->computeForwardKinematics(JOINT_POSITION | JACOBIAN);
 
     LiegroupElement value1 = (*trans)(q1);
     LiegroupElement value2 = (*sf)(q1);
