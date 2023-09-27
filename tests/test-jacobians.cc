@@ -54,11 +54,11 @@ using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
 using hpp::pinocchio::Device;
 using hpp::pinocchio::DevicePtr_t;
+using hpp::pinocchio::JACOBIAN;
+using hpp::pinocchio::JOINT_POSITION;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::JointVector_t;
 using hpp::pinocchio::SE3;
-using hpp::pinocchio::JOINT_POSITION;
-using hpp::pinocchio::JACOBIAN;
 
 using std::numeric_limits;
 

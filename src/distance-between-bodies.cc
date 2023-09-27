@@ -118,7 +118,8 @@ void DistanceBetweenBodies::impl_compute(LiegroupElementRef result,
     return;
   }
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION |
+                                   pinocchio::JACOBIAN);
   ::pinocchio::updateGeometryPlacements(robot_->model(), robot_->data(),
                                         robot_->geomModel(), data_);
   minIndex_ = ::pinocchio::computeDistances(robot_->geomModel(), data_);

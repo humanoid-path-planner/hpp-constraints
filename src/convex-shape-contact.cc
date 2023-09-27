@@ -230,7 +230,8 @@ void ConvexShapeContact::computeInternalJacobian(
   GTDataJ<true, true, true, false> data(relativeTransformationModel_, robot_);
 
   data.device.currentConfiguration(argument);
-  data.device.computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+  data.device.computeForwardKinematics(pinocchio::JOINT_POSITION |
+                                       pinocchio::JACOBIAN);
 
   std::size_t ifloor, iobject;
   isInside = selectConvexShapes(data.device.d(), iobject, ifloor);

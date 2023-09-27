@@ -86,12 +86,12 @@ using hpp::constraints::solver::lineSearch::Constant;
 using hpp::constraints::solver::lineSearch::ErrorNormBased;
 using hpp::constraints::solver::lineSearch::FixedSequence;
 using hpp::pinocchio::displayConfig;
+using hpp::pinocchio::JACOBIAN;
+using hpp::pinocchio::JOINT_POSITION;
 using hpp::pinocchio::unittest::HumanoidRomeo;
 using hpp::pinocchio::unittest::HumanoidSimple;
 using hpp::pinocchio::unittest::makeDevice;
 using hpp::pinocchio::unittest::ManipulatorArm2;
-using hpp::pinocchio::JOINT_POSITION;
-using hpp::pinocchio::JACOBIAN;
 
 namespace saturation = hpp::constraints::solver::saturation;
 
