@@ -53,11 +53,11 @@ using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::ConfigurationPtr_t;
 using hpp::pinocchio::Device;
 using hpp::pinocchio::DevicePtr_t;
+using hpp::pinocchio::JOINT_POSITION;
 using hpp::pinocchio::JointIndex;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::LiegroupSpace;
 using hpp::pinocchio::Transform3f;
-using hpp::pinocchio::JOINT_POSITION;
 
 using hpp::pinocchio::urdf::loadModelFromString;
 

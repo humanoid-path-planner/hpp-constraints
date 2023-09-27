@@ -165,7 +165,8 @@ void RelativeTransformation::impl_jacobian(matrixOut_t jacobian,
   Configuration_t q(robot_->currentConfiguration());
   outConf_.lview(q) = result.vector();
   robot_->currentConfiguration(q);
-  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION |
+                                   pinocchio::JACOBIAN);
 
   bool absolute = !joint1_;
   bool hasParent = (parentJoint_ && parentJoint_->index() > 0);

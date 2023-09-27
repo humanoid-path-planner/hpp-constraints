@@ -105,7 +105,8 @@ void DistanceBetweenPointsInBodies::impl_compute(
     return;
   }
   robot_->currentConfiguration(argument);
-  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+  robot_->computeForwardKinematics(pinocchio::JOINT_POSITION |
+                                   pinocchio::JACOBIAN);
   global1_ = joint1_->currentTransformation().act(point1_);
   if (joint2_) {
     global2_ = joint2_->currentTransformation().act(point2_);

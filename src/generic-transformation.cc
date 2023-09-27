@@ -245,7 +245,8 @@ void GenericTransformation<_Options>::impl_jacobian(
         data(m_, robot_);
 
     data.device.currentConfiguration(arg);
-    data.device.computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+    data.device.computeForwardKinematics(pinocchio::JOINT_POSITION |
+                                         pinocchio::JACOBIAN);
     compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation,
             (bool)OutputR3xSO3>::error(data);
     compute<IsRelative, (bool)ComputePosition, (bool)ComputeOrientation,

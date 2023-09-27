@@ -137,7 +137,8 @@ void RelativeCom::impl_jacobian(matrixOut_t jacobian,
                                 ConfigurationIn_t arg) const {
   pinocchio::DeviceSync device(robot_);
   device.currentConfiguration(arg);
-  device.computeForwardKinematics(pinocchio::JOINT_POSITION | pinocchio::JACOBIAN);
+  device.computeForwardKinematics(pinocchio::JOINT_POSITION |
+                                  pinocchio::JACOBIAN);
   comc_->compute(device.d(), hpp::pinocchio::COMPUTE_ALL);
   const ComJacobian_t& Jcom = comc_->jacobian(device.d());
   const JointJacobian_t& Jjoint(joint_->jacobian(device.d()));
