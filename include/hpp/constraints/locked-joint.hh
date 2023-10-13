@@ -116,13 +116,6 @@ class HPP_CONSTRAINTS_DLLAPI LockedJoint : public Explicit {
   /// Set the value of the locked joint.
   void value(vectorIn_t value);
 
-  /// Set the value of the locked joint from a configuration.
-  /// \deprecated storing the right hand side in the constraint is
-  /// deprecated. Users should handle themselves the right hand sides.
-  /// Note that the solvers provided in this package already do.
-  HPP_CONSTRAINTS_DEPRECATED void rightHandSideFromConfig(
-      ConfigurationIn_t config);
-
   /// Return shared pointer to joint
   const JointPtr_t& joint() { return joint_; }
   /// Return the joint name.

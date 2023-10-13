@@ -85,18 +85,6 @@ class HPP_CONSTRAINTS_DLLAPI BySubstitution
   bool add(const ImplicitPtr_t& numericalConstraint,
            const std::size_t& priority = 0);
 
-  /// \deprecated use add(const ImplicitPtr_t&, const std::size_t)
-  HPP_CONSTRAINTS_DEPRECATED bool add(const ImplicitPtr_t& numericalConstraint,
-                                      const segments_t& passiveDofs,
-                                      const std::size_t priority = 0) {
-    if (passiveDofs.size() > 0)
-      throw std::invalid_argument(
-          "Passive dof in the solver are not "
-          "supported anymore. You must build an "
-          "ActiveSetDifferentiableFunction yourself.");
-    return add(numericalConstraint, priority);
-  }
-
   /// Get the numerical constraints implicit and explicit
   const NumericalConstraints_t& numericalConstraints() const {
     return constraints_;

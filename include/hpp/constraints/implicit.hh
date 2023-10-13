@@ -115,11 +115,6 @@ namespace constraints {
     if the constraint is associated to a trajectory following task.
     In this case, the right hand side is a function from \f$\mathbf{R}\f$
     to \f$\mathbf{L}\f$.
-
-    To set or get a time varying right hand side, use methods
-    Implicit::rightHandSideFunction, Implicit::rightHandSideFromConfig.
-    To get the value of the right hand
-    side for a given time, use method Implicit::rightHandSideAt.
 */
 class HPP_CONSTRAINTS_DLLAPI Implicit {
  public:
@@ -166,36 +161,6 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   /// to 0.
   bool checkRightHandSide(LiegroupElementConstRef rhs) const;
 
-  /// Set the right hand side from a configuration
-  ///
-  /// in such a way that the configuration satisfies the numerical
-  /// constraints
-  /// \param config the input configuration.
-  ///
-  /// \warning Only values of the right hand side corresponding to
-  /// \link Equality "equality constraints" \endlink are set. As a
-  /// result, the input configuration may not satisfy the other
-  /// constraints.
-  ///
-  /// \deprecated storing the right hand side in the constraint is
-  /// deprecated. Users should handle themselves the right hand sides.
-  /// Note that the solvers provided in this package already do.
-  HPP_CONSTRAINTS_DEPRECATED void rightHandSideFromConfig(
-      ConfigurationIn_t config);
-
-  /// Set the right hand side of the equation.
-  /// \param rhs the right hand side.
-  /// \deprecated storing the right hand side in the constraint is
-  /// deprecated. Users should handle themselves the right hand sides.
-  /// Note that the solvers provided in this package already do.
-  HPP_CONSTRAINTS_DEPRECATED void rightHandSide(vectorIn_t rhs);
-
-  /// Return the right hand side of the equation.
-  /// \deprecated storing the right hand side in the constraint is
-  /// deprecated. Users should handle themselves the right hand sides.
-  /// Note that the solvers provided in this package already do.
-  HPP_CONSTRAINTS_DEPRECATED vectorIn_t rightHandSide() const;
-
   /// Get size of parameter defining the right hand side of the constraint
   ///
   /// See class documentation for details.
@@ -205,12 +170,6 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   ///
   /// This is the dimension (nq) of the output space of the function
   size_type rightHandSideSize() const;
-
-  /// Return a modifiable reference to right hand side of equation.
-  /// \deprecated storing the right hand side in the constraint is
-  /// deprecated. Users should handle themselves the right hand sides.
-  /// Note that the solvers provided in this package already do.
-  HPP_CONSTRAINTS_DEPRECATED vectorOut_t rightHandSide();
 
   /// Set time-varying right hand side
   /// \param rhsF Mapping from \f$\mathbf{R}\f$ to output space
