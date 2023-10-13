@@ -50,22 +50,6 @@ size_type computeParameterSize(const ComparisonTypes_t& comp) {
   }
   return size;
 }
-void Implicit::rightHandSide(vectorIn_t rightHandSide) {
-  LiegroupSpacePtr_t space(function_->outputSpace());
-  assert(rightHandSide.size() == space->nq());
-  pinocchio::LiegroupElementConstRef output(
-      space->elementConstRef(rightHandSide));
-  LiegroupElementRef rhs(space->elementRef(rhs_));
-  vector_t error = output - space->neutral();  // log (rightHandSide)
-  for (size_type k = 0; k < space->nv(); ++k) {
-    if (comparison_[k] != Equality) assert(error[k] == 0);
-  }
-  rhs = space->neutral() + error;  // exp (error)
-}
-
-vectorIn_t Implicit::rightHandSide() const { return rhs_; }
-
-vectorOut_t Implicit::rightHandSide() { return rhs_; }
 
 void Implicit::rightHandSideFunction(const DifferentiableFunctionPtr_t& rhsF) {
   if (rhsF) {
@@ -242,23 +226,6 @@ bool Implicit::checkRightHandSide(LiegroupElementConstRef rhs) const {
     if ((comparison_[i] != Equality) && (logOutput_[i] != 0)) return false;
 
   return true;
-}
-
-void Implicit::rightHandSideFromConfig(ConfigurationIn_t config) {
-  if (parameterSize() > 0) {
-    LiegroupSpacePtr_t space(function_->outputSpace());
-    LiegroupElement output(space);
-    LiegroupElementRef rhs(space->elementRef(rhs_));
-
-    function_->value(output, config);
-    // d.error is used here as an intermediate storage. The value
-    // computed is not exactly the error
-    vector_t error = output - rhs;
-    for (size_type k = 0; k < space->nv(); ++k) {
-      if (comparison_[k] != Equality) error[k] = 0;
-    }
-    rhs += error;
-  }
 }
 
 std::pair<JointConstPtr_t, JointConstPtr_t>

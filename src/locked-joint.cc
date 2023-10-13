@@ -100,19 +100,6 @@ const LiegroupSpacePtr_t& LockedJoint::configSpace() const {
   return configSpace_;
 }
 
-void LockedJoint::rightHandSideFromConfig(ConfigurationIn_t config) {
-  Implicit::rightHandSideFromConfig(config);
-#ifndef NDEBUG
-  vector_t rhs(rightHandSide());
-  if (parameterSize() != 0) {
-    LiegroupElement q(config.segment(rankInConfiguration(), configSize()),
-                      configSpace_);
-    rightHandSide(q - configSpace_->neutral());
-  }
-  assert(rhs == rightHandSide());
-#endif
-}
-
 LockedJoint::LockedJoint(const JointPtr_t& joint, const LiegroupElement& value)
     : Explicit(
           joint->robot()->configSpace(),
