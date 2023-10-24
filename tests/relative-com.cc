@@ -26,23 +26,22 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-#include <hpp/pinocchio/simple-device.hh>
-
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/relative-com.hh>
+#include <hpp/pinocchio/simple-device.hh>
 
 #define BOOST_TEST_MODULE RelativeCom
 #include <boost/test/included/unit_test.hpp>
 
+using hpp::pinocchio::Configuration_t;
 using hpp::pinocchio::DevicePtr_t;
 using hpp::pinocchio::JointPtr_t;
-using hpp::pinocchio::unittest::makeDevice;
-using hpp::pinocchio::unittest::HumanoidRomeo;
-using hpp::pinocchio::LiegroupSpacePtr_t;
 using hpp::pinocchio::LiegroupElement;
-using hpp::pinocchio::vector3_t;
-using hpp::pinocchio::Configuration_t;
+using hpp::pinocchio::LiegroupSpacePtr_t;
 using hpp::pinocchio::Transform3f;
+using hpp::pinocchio::vector3_t;
+using hpp::pinocchio::unittest::HumanoidRomeo;
+using hpp::pinocchio::unittest::makeDevice;
 
 using hpp::constraints::DifferentiableFunctionPtr_t;
 using hpp::constraints::GenericTransformation;
@@ -52,31 +51,32 @@ using hpp::constraints::RelativeBit;
 using hpp::constraints::RelativeCom;
 using hpp::constraints::RelativeComPtr_t;
 
-BOOST_AUTO_TEST_CASE(relative_com)
-{
+BOOST_AUTO_TEST_CASE(relative_com) {
   DevicePtr_t robot(makeDevice(HumanoidRomeo));
   JointPtr_t leftAnkle(robot->getJointByName("LAnkleRoll"));
   JointPtr_t rightAnkle(robot->getJointByName("RAnkleRoll"));
   assert(leftAnkle);
   assert(rightAnkle);
   // Create relative com constraint
-  vector3_t reference; reference.setZero();
-  RelativeComPtr_t rc(RelativeCom::create("relative-com", robot, leftAnkle,
-                                          reference));
-  Configuration_t q0 (robot->neutralConfiguration());
+  vector3_t reference;
+  reference.setZero();
+  RelativeComPtr_t rc(
+      RelativeCom::create("relative-com", robot, leftAnkle, reference));
+  Configuration_t q0(robot->neutralConfiguration());
   // Create relative pose constraint between ankles.
   Transform3f ref1, ref2;
   ref1.setIdentity();
-  ref2.setIdentity(); ref2.translation() << 0, -0.2, 0;
+  ref2.setIdentity();
+  ref2.translation() << 0, -0.2, 0;
   std::vector<bool> mask(6, true);
-  DifferentiableFunctionPtr_t fp
-    (GenericTransformation<PositionBit | OrientationBit | RelativeBit>::create
-     ("foot-pose", robot, leftAnkle, rightAnkle, ref1, ref2, mask));
+  DifferentiableFunctionPtr_t fp(
+      GenericTransformation<PositionBit | OrientationBit | RelativeBit>::create(
+          "foot-pose", robot, leftAnkle, rightAnkle, ref1, ref2, mask));
 
   // Get function values in neutral configuration.
   LiegroupElement rc0(rc->outputSpace());
   LiegroupElement fp0(fp->outputSpace());
-  
+
   rc->value(rc0, q0);
   fp->value(fp0, q0);
 
@@ -87,6 +87,6 @@ BOOST_AUTO_TEST_CASE(relative_com)
   LiegroupElement fp1(fp->outputSpace());
   rc->value(rc1, q1);
   fp->value(fp1, q1);
-  BOOST_CHECK((rc1-rc0).norm() < 1e-8);  
-  BOOST_CHECK((fp1-fp0).norm() < 1e-8);  
+  BOOST_CHECK((rc1 - rc0).norm() < 1e-8);
+  BOOST_CHECK((fp1 - fp0).norm() < 1e-8);
 }
