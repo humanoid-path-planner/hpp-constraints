@@ -1,6 +1,7 @@
+from math import atanh
+
 import matplotlib.pyplot as plt
 import numpy as np
-from math import atanh
 from numpy import tanh
 
 
