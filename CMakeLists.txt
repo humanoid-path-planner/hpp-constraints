@@ -155,8 +155,10 @@ install(
   EXPORT ${TARGETS_EXPORT_NAME}
   DESTINATION lib)
 
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
-add_subdirectory(tests)
+if(BUILD_TESTING)
+  find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+  add_subdirectory(tests)
+endif()
 
 pkg_config_append_libs("hpp-constraints")
 
