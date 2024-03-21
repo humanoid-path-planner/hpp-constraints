@@ -39,6 +39,10 @@ find_library(RT_LIB rt)
 
 macro(ADD_TESTCASE NAME)
   add_unit_test(${NAME} ${NAME}.cc)
+  set_tests_properties(
+    ${NAME}
+    PROPERTIES ENVIRONMENT
+               "ROS_PACKAGE_PATH=${example-robot-data_DIR}/../../../share")
   target_link_libraries(${NAME} PRIVATE ${PROJECT_NAME}
                                         Boost::unit_test_framework)
   if(RT_LIB)

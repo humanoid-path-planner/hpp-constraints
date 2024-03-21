@@ -157,6 +157,7 @@ install(
 
 if(BUILD_TESTING)
   find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+  find_package(example-robot-data REQUIRED)
   add_subdirectory(tests)
 endif()
 
