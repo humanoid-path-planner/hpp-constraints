@@ -1,5 +1,23 @@
-[tool.black]
-exclude = "cmake"
+[build-system]
+build-backend = "cmeel.build"
+requires = [
+  "cmeel-boost ~= 1.83.0",
+  "cmeel[build]",
+  "cmeel-qpoases[build]",
+  "hpp-pinocchio[build]",
+  "example-robot-data[build]"
+]
+
+[project]
+dependencies = [
+  "cmeel-boost ~= 1.83.0",
+  "cmeel-qpoases",
+  "hpp-pinocchio"
+]
+description = "Definition of basic geometric constraints for motion planning"
+license = "BSD-2-Clause"
+name = "hpp-constraints"
+version = "5.0.0"
 
 [tool.isort]
 profile = "black"
