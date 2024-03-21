@@ -96,9 +96,9 @@ bool BySubstitution::add(const ImplicitPtr_t& nm, const std::size_t& priority) {
     constraints_.push_back(nm);
     hppDout(info,
             "Numerical constraint added as explicit function: "
-                << enm->explicitFunction()->name() << "with "
-                << "input conf " << Eigen::RowBlockIndices(enm->inputConf())
-                << "input vel" << Eigen::RowBlockIndices(enm->inputVelocity())
+                << enm->explicitFunction()->name() << "with " << "input conf "
+                << Eigen::RowBlockIndices(enm->inputConf()) << "input vel"
+                << Eigen::RowBlockIndices(enm->inputVelocity())
                 << "output conf " << Eigen::RowBlockIndices(enm->outputConf())
                 << "output vel "
                 << Eigen::RowBlockIndices(enm->outputVelocity()));
