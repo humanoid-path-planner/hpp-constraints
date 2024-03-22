@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Make Boost.Test generates the main function in test cases.
-add_definitions(-DBOOST_TEST_DYN_LINK -DBOOST_TEST_MAIN)
+add_definitions(-DBOOST_TEST_MAIN)
 
 # ADD_TESTCASE(NAME)
 # ------------------------

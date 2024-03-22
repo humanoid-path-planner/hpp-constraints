@@ -29,7 +29,7 @@
 #define EIGEN_RUNTIME_NO_MALLOC
 #define BOOST_TEST_MODULE EIGEN_SVD_FEATURE
 #include <Eigen/Dense>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <hpp/constraints/svd.hh>
 
 using hpp::constraints::matrix_t;
