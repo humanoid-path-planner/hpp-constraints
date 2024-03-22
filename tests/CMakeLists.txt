@@ -43,8 +43,7 @@ macro(ADD_TESTCASE NAME)
     ${NAME}
     PROPERTIES ENVIRONMENT
                "ROS_PACKAGE_PATH=${example-robot-data_DIR}/../../../share")
-  target_link_libraries(${NAME} PRIVATE ${PROJECT_NAME}
-                                        Boost::unit_test_framework)
+  target_link_libraries(${NAME} PRIVATE ${PROJECT_NAME})
   if(RT_LIB)
     target_link_libraries(${NAME} PRIVATE ${RT_LIB})
   endif()
