@@ -873,13 +873,24 @@ class MatrixBlockView
     }
     // ++it
     block_iterator& operator++() {
-      _ro.setValue(_ro.value() + rs());
+      if (!AllRows) {
+        _ro.setValue(_ro.value() + rs());
+      } else {
+        assert(view.m_rows.size() == 1);
+        assert(row == 0);
+      }
       ++row;
       if (row == (size_type)view.m_rows.size()) {
         row = 0;
         _ro.setValue(0);
-        _co.setValue(_co.value() + cs());
+        if (!AllCols) {
+          _co.setValue(_co.value() + cs());
+        }
         ++col;
+        if (AllCols) {
+          // All the blocks have been iterated on.
+          assert(!valid());
+        }
         // if (col < (size_type)view.m_cols.size()) _co.setValue(0);
       }
       return *this;
