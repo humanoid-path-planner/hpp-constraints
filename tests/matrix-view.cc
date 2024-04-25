@@ -353,62 +353,62 @@ BOOST_AUTO_TEST_CASE(matrix_block_view_iterator) {
 
   // Extract 2x2 = 4 blocks.
   MatrixBlocks_t blocks(rows.rows(), cols.cols());
-  typedef MatrixBlockView<MatrixXd, Dynamic, Dynamic, false, false> MatrixBlockView_t;
+  typedef MatrixBlockView<MatrixXd, Dynamic, Dynamic, false, false>
+      MatrixBlockView_t;
   MatrixBlockView_t mbv(blocks.lview(m));
-  int i=0;
+  int i = 0;
   typedef MatrixBlockView_t::block_iterator Iterator_t;
   // blocks are traveled by increasing column number. This is quite unexpected.
-  for (Iterator_t it(mbv); it.valid(); ++it)
-  {
+  for (Iterator_t it(mbv); it.valid(); ++it) {
     MatrixXd b;
-    switch(i) {
-    case 0:
-      BOOST_CHECK_EQUAL(it.ri(), 2);
-      BOOST_CHECK_EQUAL(it.ci(), 2);
-      BOOST_CHECK_EQUAL(it.ro(), 0);
-      BOOST_CHECK_EQUAL(it.co(), 0);
-      BOOST_CHECK_EQUAL(it.rs(), 2);
-      BOOST_CHECK_EQUAL(it.cs(), 2);
-      b.resize(2, 2);
-      b << 24, 25, 35, 36;
-      BOOST_CHECK_EQUAL(mbv._block(it), b);
-      break;
-    case 1:
-      BOOST_CHECK_EQUAL(it.ri(), 6);
-      BOOST_CHECK_EQUAL(it.ci(), 2);
-      BOOST_CHECK_EQUAL(it.ro(), 2);
-      BOOST_CHECK_EQUAL(it.co(), 0);
-      BOOST_CHECK_EQUAL(it.rs(), 4);
-      BOOST_CHECK_EQUAL(it.cs(), 2);
-      b.resize(4, 2);
-      b << 68, 69, 79, 80, 90, 91, 101, 102;
-      BOOST_CHECK_EQUAL(mbv._block(it), b);
-      break;
-    case 2:
-      BOOST_CHECK_EQUAL(it.ri(), 2);
-      BOOST_CHECK_EQUAL(it.ci(), 5);
-      BOOST_CHECK_EQUAL(it.ro(), 0);
-      BOOST_CHECK_EQUAL(it.co(), 2);
-      BOOST_CHECK_EQUAL(it.rs(), 2);
-      BOOST_CHECK_EQUAL(it.cs(), 2);
-      b.resize(2, 2);
-      b << 27, 28, 38, 39;
-      BOOST_CHECK_EQUAL(mbv._block(it), b);
-      break;
-    case 3:
-      BOOST_CHECK_EQUAL(it.ri(), 6);
-      BOOST_CHECK_EQUAL(it.ci(), 5);
-      BOOST_CHECK_EQUAL(it.ro(), 2);
-      BOOST_CHECK_EQUAL(it.co(), 2);
-      BOOST_CHECK_EQUAL(it.rs(), 4);
-      BOOST_CHECK_EQUAL(it.cs(), 2);
-      b.resize(4, 2);
-      b << 71, 72, 82, 83, 93, 94, 104, 105;
-      BOOST_CHECK_EQUAL(mbv._block(it), b);
-      break;
-    default:
-      BOOST_TEST_MESSAGE("This line should not be reached");
-      break;
+    switch (i) {
+      case 0:
+        BOOST_CHECK_EQUAL(it.ri(), 2);
+        BOOST_CHECK_EQUAL(it.ci(), 2);
+        BOOST_CHECK_EQUAL(it.ro(), 0);
+        BOOST_CHECK_EQUAL(it.co(), 0);
+        BOOST_CHECK_EQUAL(it.rs(), 2);
+        BOOST_CHECK_EQUAL(it.cs(), 2);
+        b.resize(2, 2);
+        b << 24, 25, 35, 36;
+        BOOST_CHECK_EQUAL(mbv._block(it), b);
+        break;
+      case 1:
+        BOOST_CHECK_EQUAL(it.ri(), 6);
+        BOOST_CHECK_EQUAL(it.ci(), 2);
+        BOOST_CHECK_EQUAL(it.ro(), 2);
+        BOOST_CHECK_EQUAL(it.co(), 0);
+        BOOST_CHECK_EQUAL(it.rs(), 4);
+        BOOST_CHECK_EQUAL(it.cs(), 2);
+        b.resize(4, 2);
+        b << 68, 69, 79, 80, 90, 91, 101, 102;
+        BOOST_CHECK_EQUAL(mbv._block(it), b);
+        break;
+      case 2:
+        BOOST_CHECK_EQUAL(it.ri(), 2);
+        BOOST_CHECK_EQUAL(it.ci(), 5);
+        BOOST_CHECK_EQUAL(it.ro(), 0);
+        BOOST_CHECK_EQUAL(it.co(), 2);
+        BOOST_CHECK_EQUAL(it.rs(), 2);
+        BOOST_CHECK_EQUAL(it.cs(), 2);
+        b.resize(2, 2);
+        b << 27, 28, 38, 39;
+        BOOST_CHECK_EQUAL(mbv._block(it), b);
+        break;
+      case 3:
+        BOOST_CHECK_EQUAL(it.ri(), 6);
+        BOOST_CHECK_EQUAL(it.ci(), 5);
+        BOOST_CHECK_EQUAL(it.ro(), 2);
+        BOOST_CHECK_EQUAL(it.co(), 2);
+        BOOST_CHECK_EQUAL(it.rs(), 4);
+        BOOST_CHECK_EQUAL(it.cs(), 2);
+        b.resize(4, 2);
+        b << 71, 72, 82, 83, 93, 94, 104, 105;
+        BOOST_CHECK_EQUAL(mbv._block(it), b);
+        break;
+      default:
+        BOOST_TEST_MESSAGE("This line should not be reached");
+        break;
     }
     ++i;
   }
@@ -422,99 +422,81 @@ BOOST_AUTO_TEST_CASE(matrix_block_view_iterator) {
 
   typedef MatrixBlockView<matrix_10_11_t, 10, 11, false, true> MatrixRowView_t;
   MatrixRowView_t mbvCol(rows.lview(m1));
-  i=0;
+  i = 0;
   typedef MatrixRowView_t::block_iterator IteratorRow_t;
   // blocks are traveled by increasing column number. This is quite unexpected.
-  for (IteratorRow_t it(mbvCol); it.valid(); ++it)
-  {
+  for (IteratorRow_t it(mbvCol); it.valid(); ++it) {
     MatrixXd b;
-    switch(i) {
-    case 0:
-      BOOST_CHECK_EQUAL(it.ri(), 2);
-      BOOST_CHECK_EQUAL(it.ci(), 0);
-      BOOST_CHECK_EQUAL(it.ro(), 0);
-      BOOST_CHECK_EQUAL(it.co(), 0);
-      BOOST_CHECK_EQUAL(it.rs(), 2);
-      BOOST_CHECK_EQUAL(it.cs(), 11);
-      b.resize(2, 11);
-      b << 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-    33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43;
-      BOOST_CHECK_EQUAL(mbvCol._block(it), b);
-      break;
-    case 1:
-      BOOST_CHECK_EQUAL(it.ri(), 6);
-      BOOST_CHECK_EQUAL(it.ci(), 0);
-      BOOST_CHECK_EQUAL(it.ro(), 2);
-      BOOST_CHECK_EQUAL(it.co(), 0);
-      BOOST_CHECK_EQUAL(it.rs(), 4);
-      BOOST_CHECK_EQUAL(it.cs(), 11);
-      b.resize(4, 11);
-      b << 66,  67,  68,  69,  70,  71,  72,  73,  74, 75,  76,
-       77,  78,  79,  80,  81,  82,  83,  84,  85, 86,  87,
-       88,  89,  90,  91,  92,  93,  94,  95,  96, 97,  98,
-       99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109;
-      BOOST_CHECK_EQUAL(mbvCol._block(it), b);
-      break;
-    default:
-      BOOST_TEST_MESSAGE("This line should not be reached");
-      break;
+    switch (i) {
+      case 0:
+        BOOST_CHECK_EQUAL(it.ri(), 2);
+        BOOST_CHECK_EQUAL(it.ci(), 0);
+        BOOST_CHECK_EQUAL(it.ro(), 0);
+        BOOST_CHECK_EQUAL(it.co(), 0);
+        BOOST_CHECK_EQUAL(it.rs(), 2);
+        BOOST_CHECK_EQUAL(it.cs(), 11);
+        b.resize(2, 11);
+        b << 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
+            39, 40, 41, 42, 43;
+        BOOST_CHECK_EQUAL(mbvCol._block(it), b);
+        break;
+      case 1:
+        BOOST_CHECK_EQUAL(it.ri(), 6);
+        BOOST_CHECK_EQUAL(it.ci(), 0);
+        BOOST_CHECK_EQUAL(it.ro(), 2);
+        BOOST_CHECK_EQUAL(it.co(), 0);
+        BOOST_CHECK_EQUAL(it.rs(), 4);
+        BOOST_CHECK_EQUAL(it.cs(), 11);
+        b.resize(4, 11);
+        b << 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+            83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+            100, 101, 102, 103, 104, 105, 106, 107, 108, 109;
+        BOOST_CHECK_EQUAL(mbvCol._block(it), b);
+        break;
+      default:
+        BOOST_TEST_MESSAGE("This line should not be reached");
+        break;
     }
     ++i;
   }
   // Extract 2 columns of full rows
   // We use the dynamic size matrix m again in this test.
-  typedef MatrixBlockView<MatrixXd, Dynamic, Dynamic, true, false> MatrixColView_t;
+  typedef MatrixBlockView<MatrixXd, Dynamic, Dynamic, true, false>
+      MatrixColView_t;
   MatrixColView_t mbvRow(cols.lview(m));
-  i=0;
+  i = 0;
   typedef MatrixColView_t::block_iterator IteratorCol_t;
   // blocks are traveled by increasing column number. This is quite unexpected.
-  for (IteratorCol_t it(mbvRow); it.valid(); ++it)
-  {
+  for (IteratorCol_t it(mbvRow); it.valid(); ++it) {
     MatrixXd b;
-    switch(i) {
-    case 0:
-      BOOST_CHECK_EQUAL(it.ri(), 0);
-      BOOST_CHECK_EQUAL(it.ci(), 2);
-      BOOST_CHECK_EQUAL(it.ro(), 0);
-      BOOST_CHECK_EQUAL(it.co(), 0);
-      BOOST_CHECK_EQUAL(it.rs(), 10);
-      BOOST_CHECK_EQUAL(it.cs(), 2);
-      b.resize(10, 2);
-      b <<  2,   3,
-           13,  14,
-           24,  25,
-           35,  36,
-           46,  47,
-           57,  58,
-           68,  69,
-           79,  80,
-           90,  91,
-          101, 102;
-      BOOST_CHECK_EQUAL(mbvRow._block(it), b);
-      break;
-    case 1:
-      BOOST_CHECK_EQUAL(it.ri(), 0);
-      BOOST_CHECK_EQUAL(it.ci(), 5);
-      BOOST_CHECK_EQUAL(it.ro(), 0);
-      BOOST_CHECK_EQUAL(it.co(), 2);
-      BOOST_CHECK_EQUAL(it.rs(), 10);
-      BOOST_CHECK_EQUAL(it.cs(), 2);
-      b.resize(10, 2);
-      b <<  5,   6,
-           16,  17,
-           27,  28,
-           38,  39,
-           49,  50,
-           60,  61,
-           71,  72,
-           82,  83,
-           93,  94,
-          104, 105;
-      BOOST_CHECK_EQUAL(mbvRow._block(it), b);
-      break;
-    default:
-      BOOST_TEST_MESSAGE("This line should not be reached");
-      break;
+    switch (i) {
+      case 0:
+        BOOST_CHECK_EQUAL(it.ri(), 0);
+        BOOST_CHECK_EQUAL(it.ci(), 2);
+        BOOST_CHECK_EQUAL(it.ro(), 0);
+        BOOST_CHECK_EQUAL(it.co(), 0);
+        BOOST_CHECK_EQUAL(it.rs(), 10);
+        BOOST_CHECK_EQUAL(it.cs(), 2);
+        b.resize(10, 2);
+        b << 2, 3, 13, 14, 24, 25, 35, 36, 46, 47, 57, 58, 68, 69, 79, 80, 90,
+            91, 101, 102;
+        BOOST_CHECK_EQUAL(mbvRow._block(it), b);
+        break;
+      case 1:
+        BOOST_CHECK_EQUAL(it.ri(), 0);
+        BOOST_CHECK_EQUAL(it.ci(), 5);
+        BOOST_CHECK_EQUAL(it.ro(), 0);
+        BOOST_CHECK_EQUAL(it.co(), 2);
+        BOOST_CHECK_EQUAL(it.rs(), 10);
+        BOOST_CHECK_EQUAL(it.cs(), 2);
+        b.resize(10, 2);
+        b << 5, 6, 16, 17, 27, 28, 38, 39, 49, 50, 60, 61, 71, 72, 82, 83, 93,
+            94, 104, 105;
+        BOOST_CHECK_EQUAL(mbvRow._block(it), b);
+        break;
+      default:
+        BOOST_TEST_MESSAGE("This line should not be reached");
+        break;
     }
     ++i;
   }
