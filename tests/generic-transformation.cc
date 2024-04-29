@@ -66,7 +66,7 @@ using namespace hpp::constraints;
 class BasicConfigurationShooter {
  public:
   BasicConfigurationShooter(const DevicePtr_t& robot) : robot_(robot) {}
-  virtual ConfigurationPtr_t shoot() const {
+  virtual Configuration_t shoot() const {
     size_type extraDim = robot_->extraConfigSpace().dimension();
     size_type offset = robot_->configSize() - extraDim;
 
@@ -85,7 +85,7 @@ class BasicConfigurationShooter {
       }
       config[offset + i] = lower + (upper - lower) * rand() / RAND_MAX;
     }
-    return hpp::make_shared<Configuration_t>(config);
+    return config;
   }
 
  private:
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(print) {
   BOOST_REQUIRE(device);
   BasicConfigurationShooter cs(device);
 
-  device->currentConfiguration(*cs.shoot());
+  device->currentConfiguration(cs.shoot());
   device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(print) {
   functions.push_back(RelativeTransformation::create(
       "RelativeTransformation", device, ee1, ee2, tf1, tf2));
 
-  Configuration_t q1 = *cs.shoot(), q2 = *cs.shoot();
+  Configuration_t q1 = cs.shoot(), q2 = cs.shoot();
   for (std::size_t i = 0; i < functions.size(); ++i) {
     DifferentiableFunctionPtr_t f = functions[i];
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(multithread) {
   BOOST_REQUIRE(device);
   BasicConfigurationShooter cs(device);
 
-  device->currentConfiguration(*cs.shoot());
+  device->currentConfiguration(cs.shoot());
   device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(multithread) {
       "RelativeTransformation", device, ee1, JointPtr_t(), tf1, tf2));
 
   const int N = 10;
-  Configuration_t q = *cs.shoot();
+  Configuration_t q = cs.shoot();
   for (std::size_t i = 0; i < functions.size(); ++i) {
     DifferentiableFunctionPtr_t f = functions[i];
 
@@ -344,10 +344,10 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3) {
   // the configuration satisfies the constraint since comparison type is
   // Equality.
   for (size_type i = 0; i < 1000; ++i) {
-    ConfigurationPtr_t q(cs.shoot());
+    Configuration_t q(cs.shoot());
     vector6_t error;
-    solver.rightHandSideFromConfig(*q);
-    BOOST_CHECK(solver.isSatisfied(*q, error));
+    solver.rightHandSideFromConfig(q);
+    BOOST_CHECK(solver.isSatisfied(q, error));
   }
 
   // Create grasp constraint with one degree of freedom in rotation along z
@@ -368,34 +368,34 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3) {
   s2.add(c2);
 
   for (size_type i = 0; i < 0; ++i) {
-    ConfigurationPtr_t q_near(cs.shoot());
-    ConfigurationPtr_t q_new(cs.shoot());
+    Configuration_t q_near(cs.shoot());
+    Configuration_t q_new(cs.shoot());
     if (i == 0) {
       // These configuration reproduce a numerical issue encountered with
       // benhmark romeo-placard.
       // If computation was exact, any configuration satisfying c2 should
       // satisfy c1.
       // Configuration q_new below satisfies c2 but not c1.
-      *q_near << 0.18006349590534418, 0.3627623741970175, 0.9567759630330663,
+      q_near << 0.18006349590534418, 0.3627623741970175, 0.9567759630330663,
           0.044416054309488175, 0.31532356328825556, 0.4604329042168087,
           0.8286131819306576, 0.45813483973344404, 0.23514459283216355,
           0.7573015903787429, 0.8141495491430896, 0.1383820163733335,
           0.3806970356973106, 0.4160296818567576;
-      *q_new << 0.16026892741853033, 0.33925098736439646, 0.8976880203169203,
+      q_new << 0.16026892741853033, 0.33925098736439646, 0.8976880203169203,
           -0.040130835169737825, 0.37473431876437147, 0.4405275981290593,
           0.8148000624051422, 0.43787674119234027, 0.18316291571416676,
           0.7189377922181226, 0.7699579340925136, 0.1989432638510445,
           0.35960786236482944, 0.4881275886709128;
     }
-    s2.rightHandSideFromConfig(*q_near);
+    s2.rightHandSideFromConfig(q_near);
     vector6_t error;
-    BOOST_CHECK(s1.isSatisfied(*q_near, error));
+    BOOST_CHECK(s1.isSatisfied(q_near, error));
     hppDout(info, error);
-    BOOST_CHECK(s2.isSatisfied(*q_near, error));
+    BOOST_CHECK(s2.isSatisfied(q_near, error));
     hppDout(info, error);
-    BOOST_CHECK(s1.isSatisfied(*q_new, error));
+    BOOST_CHECK(s1.isSatisfied(q_new, error));
     hppDout(info, error);
-    BOOST_CHECK(s2.isSatisfied(*q_new, error));
+    BOOST_CHECK(s2.isSatisfied(q_new, error));
     hppDout(info, error);
 
     hppDout(info, s1);
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(equality) {
   BOOST_REQUIRE(device);
   BasicConfigurationShooter cs(device);
 
-  device->currentConfiguration(*cs.shoot());
+  device->currentConfiguration(cs.shoot());
   device->computeForwardKinematics(JOINT_POSITION);
   Transform3f tf1(ee1->currentTransformation());
   Transform3f tf2(ee2->currentTransformation());

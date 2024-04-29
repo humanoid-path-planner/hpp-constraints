@@ -401,8 +401,6 @@ BOOST_AUTO_TEST_CASE(jacobian2) {
 
 BOOST_AUTO_TEST_CASE(locked_joints) {
   DevicePtr_t device(makeDevice(HumanoidSimple));
-  device->controlComputation((hpp::pinocchio::Computation_t)(
-      hpp::pinocchio::JOINT_POSITION | hpp::pinocchio::JACOBIAN));
 
   BOOST_REQUIRE(device);
   device->rootJoint()->lowerBound(0, -1);
