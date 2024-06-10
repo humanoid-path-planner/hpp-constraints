@@ -131,7 +131,7 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   /// Create a copy and return shared pointer
   static ImplicitPtr_t createCopy(const ImplicitPtr_t& other);
 
-  virtual ~Implicit(){};
+  virtual ~Implicit() {};
 
   /// \name Right hand side
   /// \{
