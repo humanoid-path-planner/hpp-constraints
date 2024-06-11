@@ -88,7 +88,7 @@ project(${PROJECT_NAME} ${PROJECT_ARGS})
 
 add_project_dependency(hpp-pinocchio REQUIRED)
 if(USE_QPOASES)
-  set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/find-external/qpOASES")
+  set(CMAKE_MODULE_PATH "${JRL_CMAKE_MODULES}/find-external/qpOASES")
   find_package(qpOASES REQUIRED)
 endif()
 
