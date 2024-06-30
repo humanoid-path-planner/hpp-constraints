@@ -49,9 +49,12 @@
           ...
         }:
         {
-          packages.default = pkgs.callPackage ./. {
-            hpp-pinocchio = inputs.hpp-pinocchio.packages.${system}.default;
-            hpp-statistics = inputs.hpp-statistics.packages.${system}.default;
+          packages = {
+            inherit (pkgs) cachix;
+            default = pkgs.callPackage ./. {
+              hpp-pinocchio = inputs.hpp-pinocchio.packages.${system}.default;
+              hpp-statistics = inputs.hpp-statistics.packages.${system}.default;
+            };
           };
           devShells.default = pkgs.mkShell { inputsFrom = [ self'.packages.default ]; };
         };
