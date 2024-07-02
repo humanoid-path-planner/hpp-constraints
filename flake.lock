@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1717285511,
-        "narHash": "sha256-iKzJcpdXih14qYVcZ9QC9XuZYnPc6T8YImb6dX166kw=",
+        "lastModified": 1719877454,
+        "narHash": "sha256-g5N1yyOSsPNiOlFfkuI/wcUjmtah+nxdImJqrSATjOU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "2a55567fcf15b1b1c7ed712a2c6fadaec7412ea8",
+        "rev": "4e3583423212f9303aa1a6337f8dffb415920e4f",
         "type": "github"
       },
       "original": {
@@ -60,16 +60,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1719582071,
-        "narHash": "sha256-sRWf973UZIdyrS0fhd+vXdTucR9d7Eks9yU85kcFxfo=",
+        "lastModified": 1719769593,
+        "narHash": "sha256-OIsz2L4Dg1J5jMKGi4VHjRdstS7kvFJzfjnHVtFe9DE=",
         "owner": "humanoid-path-planner",
         "repo": "hpp-pinocchio",
-        "rev": "4ec6186223ce18f4c48605421a7ef583fe827352",
+        "rev": "2099630d76bd1189df5def3d58d1a8d81ac0f9fc",
         "type": "github"
       },
       "original": {
         "owner": "humanoid-path-planner",
-        "ref": "release/5.1.0",
         "repo": "hpp-pinocchio",
         "type": "github"
       }
@@ -87,16 +86,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1719582334,
-        "narHash": "sha256-bzGI7z6hTGkuNs71Vcb3vsVpey1SuR7Okx4rJU1LHFs=",
+        "lastModified": 1719769578,
+        "narHash": "sha256-B4rfJYCXtLjSDnCp8olmKn8or69NVVmrmJu4OMXui1I=",
         "owner": "humanoid-path-planner",
         "repo": "hpp-statistics",
-        "rev": "613b1f9c2788cb33097c1f1c0e4216420665a1e0",
+        "rev": "c1eb8540d1cd9bbbc61da0465d4b208478162ba0",
         "type": "github"
       },
       "original": {
         "owner": "humanoid-path-planner",
-        "ref": "release/5.1.0",
         "repo": "hpp-statistics",
         "type": "github"
       }
@@ -111,27 +109,26 @@
         ]
       },
       "locked": {
-        "lastModified": 1719580825,
-        "narHash": "sha256-trfl8A+P7a1gnACnTXNK98TYWWDAOM3PKfkXxpC3X/8=",
+        "lastModified": 1719769497,
+        "narHash": "sha256-cYONa7WTagNZCITtocdII+WcfdzZnvznFUyb7YLodIw=",
         "owner": "humanoid-path-planner",
         "repo": "hpp-util",
-        "rev": "0504f15818a92c7a257cd6b60cd8b6092bd6dbfa",
+        "rev": "8811dcadeec6b1e52b4cd59da39ad2e170f17ad7",
         "type": "github"
       },
       "original": {
         "owner": "humanoid-path-planner",
-        "ref": "release/5.1.0",
         "repo": "hpp-util",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1719575122,
-        "narHash": "sha256-1x3SNH6GtWgpHmhxO4pCz6nidxjCAheF0FpSXSjqRrg=",
+        "lastModified": 1719674427,
+        "narHash": "sha256-z2hCpVyfnmYTA5iabf1SW4peFV9itE1JJcXNBKIFkDg=",
         "owner": "nim65s",
         "repo": "nixpkgs",
-        "rev": "5206f72d0fadec6f15e6130a86c0695ceb5ec92d",
+        "rev": "b81610d293fac26c2ec6a81718a979bc25f8c155",
         "type": "github"
       },
       "original": {

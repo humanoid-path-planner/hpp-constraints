@@ -13,19 +13,19 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     hpp-pinocchio = {
-      url = "github:humanoid-path-planner/hpp-pinocchio/release/5.1.0";
+      url = "github:humanoid-path-planner/hpp-pinocchio";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.hpp-util.follows = "hpp-util";
     };
     hpp-statistics = {
-      url = "github:humanoid-path-planner/hpp-statistics/release/5.1.0";
+      url = "github:humanoid-path-planner/hpp-statistics";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.hpp-util.follows = "hpp-util";
     };
     hpp-util = {
-      url = "github:humanoid-path-planner/hpp-util/release/5.1.0";
+      url = "github:humanoid-path-planner/hpp-util";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
