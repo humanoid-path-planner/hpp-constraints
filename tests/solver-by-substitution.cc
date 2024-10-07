@@ -724,7 +724,9 @@ BOOST_AUTO_TEST_CASE(hybrid_solver) {
   BOOST_CHECK(solver.numberStacks() == 1);
 
   ExplicitTransformationPtr_t et;
-  { et.reset(new ExplicitTransformation(lleg6Joint, 7, 6, 6, 6)); }
+  {
+    et.reset(new ExplicitTransformation(lleg6Joint, 7, 6, 6, 6));
+  }
   // Add an explicit constraint that computes the pose of the root joint (FF)
   // output variables are [0:7] for configurations and [0:6] for velocities
   // output value is equal to relative pose of "lleg6_joint" with respect to
