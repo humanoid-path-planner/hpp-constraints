@@ -73,7 +73,7 @@ using hpp::constraints::RelativeTransformationPtr_t;
 using hpp::constraints::segment_t;
 using hpp::constraints::segments_t;
 using hpp::constraints::size_type;
-using hpp::constraints::Transform3f;
+using hpp::constraints::Transform3s;
 using hpp::constraints::Transformation;
 using hpp::constraints::value_type;
 using hpp::constraints::vector3_t;
@@ -370,10 +370,10 @@ BOOST_AUTO_TEST_CASE(quadratic) {
   test_quadratic3<1, 4, 2, 6>();
 }
 
-void se3ToConfig(const Transform3f& oMi, vectorOut_t v) {
+void se3ToConfig(const Transform3s& oMi, vectorOut_t v) {
   assert(v.size() == 7);
   v.head<3>() = oMi.translation();
-  Eigen::Map<Transform3f::Quaternion> q(v.tail<4>().data());
+  Eigen::Map<Transform3s::Quaternion> q(v.tail<4>().data());
   q = oMi.rotation();
 }
 
@@ -392,7 +392,7 @@ class Frame : public DifferentiableFunction {
     robot.currentConfiguration(arg);
     robot.computeForwardKinematics(JOINT_POSITION);
 
-    const Transform3f& oMi = joint_->currentTransformation(robot.d());
+    const Transform3s& oMi = joint_->currentTransformation(robot.d());
     se3ToConfig(oMi, result.vector());
   }
 
@@ -456,7 +456,7 @@ class ExplicitTransformation : public DifferentiableFunction {
         inDer_(inDer) {
     rt_ = RelativeTransformation::create("RT", joint_->robot(),
                                          joint_->robot()->rootJoint(), joint_,
-                                         Transform3f::Identity());
+                                         Transform3s::Identity());
   }
 
   ExplicitConstraintSet::RowBlockIndices inArg() const {
@@ -504,9 +504,9 @@ class ExplicitTransformation : public DifferentiableFunction {
         Eigen::Quaternion<value_type>(exponential(transform.vector().tail<3>()))
             .coeffs();
 
-    // Transform3f tf1 = joint_->robot()->rootJoint()->currentTransformation();
-    // Transform3f tf2 = joint_->currentTransformation();
-    // Transform3f tf = tf2.inverse() * tf1;
+    // Transform3s tf1 = joint_->robot()->rootJoint()->currentTransformation();
+    // Transform3s tf2 = joint_->currentTransformation();
+    // Transform3s tf = tf2.inverse() * tf1;
 
     // result.head<3> = tf.translation();
     // result.tail<4> = Eigen::Quaternion<value_type>(tf.rotation());
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver) {
   DevicePtr_t device(makeDevice(HumanoidSimple));
   BOOST_REQUIRE(device);
   BOOST_CHECK_EQUAL(device->rootJoint()->positionInParentFrame(),
-                    Transform3f::Identity());
+                    Transform3s::Identity());
   device->rootJoint()->lowerBound(0, -1);
   device->rootJoint()->lowerBound(1, -1);
   device->rootJoint()->lowerBound(2, -1);
@@ -697,9 +697,9 @@ BOOST_AUTO_TEST_CASE(hybrid_solver) {
   BOOST_CHECK_EQUAL(lleg6Joint->numberDof(), 1);
   // Compute a configuration that satisfies the constaints.
   // Compute relative position of "lleg6_joint" wrt root
-  Transform3f Mlleg6(lleg6Joint->currentTransformation());
-  Transform3f Mroot(device->rootJoint()->currentTransformation());
-  Transform3f M(Mroot.inverse() * Mlleg6);
+  Transform3s Mlleg6(lleg6Joint->currentTransformation());
+  Transform3s Mroot(device->rootJoint()->currentTransformation());
+  Transform3s M(Mroot.inverse() * Mlleg6);
   q0.segment<3>(0) = M.translation();
   q0.segment<4>(3) = Eigen::Quaternion<value_type>(M.rotation()).coeffs();
 
@@ -710,9 +710,9 @@ BOOST_AUTO_TEST_CASE(hybrid_solver) {
 
   device->currentConfiguration(q0);
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
-  Transform3f tf3(ee3->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
+  Transform3s tf3(ee3->currentTransformation());
 
   solver.add(Implicit::create(
       Orientation::create("Orientation lleg6_joint", device, ee2, tf2),
@@ -779,9 +779,9 @@ BOOST_AUTO_TEST_CASE(by_substitution_serialization) {
 
   device->currentConfiguration(q);
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
-  Transform3f tf3(ee3->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
+  Transform3s tf3(ee3->currentTransformation());
 
   solver.add(Implicit::create(
       Orientation::create("Orientation RAnkleRoll", device, ee2, tf2),
@@ -825,9 +825,9 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs) {
 
   JointPtr_t left = device->getJointByName("LWristPitch");
   TransformationR3xSO3::Ptr_t frame(TransformationR3xSO3::create(
-      "LWristPitch", device, left, Transform3f::Identity()));
+      "LWristPitch", device, left, Transform3s::Identity()));
   Transformation::Ptr_t logFrame(Transformation::create(
-      "LWristPitch", device, left, Transform3f::Identity()));
+      "LWristPitch", device, left, Transform3s::Identity()));
 
   // Check the logFrame if the log6 of frame.
   LiegroupElement valueFrame(frame->outputSpace()),
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs) {
 
     device->currentConfiguration(q);
     device->computeForwardKinematics(JOINT_POSITION);
-    Transform3f tf_expected(left->currentTransformation());
+    Transform3s tf_expected(left->currentTransformation());
     vector_t rhs_expected(7), rhs(7);
     se3ToConfig(tf_expected, rhs_expected);
 
@@ -907,9 +907,9 @@ BOOST_AUTO_TEST_CASE(hybrid_solver_rhs) {
     if (status == BySubstitution::SUCCESS) {
       device->currentConfiguration(qrand);
       device->computeForwardKinematics(JOINT_POSITION);
-      Transform3f tf_result(left->currentTransformation());
+      Transform3s tf_result(left->currentTransformation());
 
-      Transform3f id = tf_expected.actInv(tf_result);
+      Transform3s id = tf_expected.actInv(tf_result);
       BOOST_CHECK_MESSAGE(id.isIdentity(1e-3), "Right hand side is different:\n"
                                                    << tf_result << '\n'
                                                    << tf_expected << '\n'
@@ -970,10 +970,10 @@ BOOST_AUTO_TEST_CASE(rightHandSideFromConfig) {
   assert(comp2[4] == Equality);
   assert(comp2[5] == Equality);
   // Create two relative transformation constraints
-  Transform3f tf1(Transform3f::Identity());
+  Transform3s tf1(Transform3s::Identity());
   vector3_t u;
   u << 0, -.2, 0;
-  Transform3f tf2(Transform3f::Identity());
+  Transform3s tf2(Transform3s::Identity());
   tf2.translation(u);
 
   DifferentiableFunctionPtr_t h(
@@ -1060,10 +1060,10 @@ BOOST_AUTO_TEST_CASE(merge) {
   ComparisonTypes_t comp2(6 * Equality);
   comp2[1] = comp2[2] = EqualToZero;
   // Create two relative transformation constraints
-  Transform3f tf1(Transform3f::Identity());
+  Transform3s tf1(Transform3s::Identity());
   vector3_t u;
   u << 0, -.2, 0;
-  Transform3f tf2(Transform3f::Identity());
+  Transform3s tf2(Transform3s::Identity());
   tf2.translation(u);
   DifferentiableFunctionPtr_t h(RelativeTransformation::create(
       "RelativeTransformation", device, ee1, ee2, tf1, tf2));

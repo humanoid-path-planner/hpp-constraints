@@ -57,7 +57,7 @@ using hpp::pinocchio::JOINT_POSITION;
 using hpp::pinocchio::JointIndex;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::LiegroupSpace;
-using hpp::pinocchio::Transform3f;
+using hpp::pinocchio::Transform3s;
 
 using hpp::pinocchio::urdf::loadModelFromString;
 
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(print) {
 
   device->currentConfiguration(cs.shoot());
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
 
   std::vector<DifferentiableFunctionPtr_t> functions;
   functions.push_back(Orientation::create("Orientation", device, ee2, tf2));
@@ -174,8 +174,8 @@ BOOST_AUTO_TEST_CASE(multithread) {
 
   device->currentConfiguration(cs.shoot());
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
 
   std::vector<DifferentiableFunctionPtr_t> functions;
   functions.push_back(Orientation::create("Orientation", device, ee2, tf2));
@@ -226,8 +226,8 @@ BOOST_AUTO_TEST_CASE(serialization) {
 
   device->currentConfiguration(device->neutralConfiguration());
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
 
   std::vector<DifferentiableFunctionPtr_t> functions;
   functions.push_back(Orientation::create("Orientation", device, ee2, tf2));
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(RelativeTransformation_R3xSO3) {
       -0.029999999776482582509;
   R2.setIdentity();
   p2 << 0, 0, -0.34999999403953552246;
-  Transform3f tf1(R1, p1), tf2(R2, p2);
+  Transform3s tf1(R1, p1), tf2(R2, p2);
   std::vector<bool> mask = {false, false, false, false, false, true};
   ImplicitPtr_t constraint(Implicit::create(
       RelativeTransformationR3xSO3::create("RelativeTransformationR3xSO3",
@@ -413,8 +413,8 @@ BOOST_AUTO_TEST_CASE(equality) {
 
   device->currentConfiguration(cs.shoot());
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
 
   std::vector<DifferentiableFunctionPtr_t> functions;
   functions.push_back(Orientation::create("Orientation", device, ee2, tf2));
@@ -513,8 +513,8 @@ BOOST_AUTO_TEST_CASE(dependsOnRelPoseBetween) {
 
   device->currentConfiguration(device->neutralConfiguration());
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
 
   DifferentiableFunctionPtr_t function;
   std::pair<JointConstPtr_t, JointConstPtr_t> joints;

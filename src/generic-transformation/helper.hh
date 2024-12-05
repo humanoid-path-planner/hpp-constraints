@@ -41,8 +41,8 @@ namespace hpp {
 namespace constraints {
 
 namespace {
-inline const Transform3f& Id() {
-  static const Transform3f id(Transform3f::Identity());
+inline const Transform3s& Id() {
+  static const Transform3s id(Transform3s::Identity());
   return id;
 }
 
@@ -51,7 +51,7 @@ template <bool rel>
 struct GTOriDataV {};
 template <>
 struct GTOriDataV<true> {
-  Transform3f M;
+  Transform3s M;
   value_type theta;
 };
 template <bool rel>
@@ -68,7 +68,7 @@ struct GTDataBase {
   hpp::pinocchio::DeviceData& ddata() { return device.d(); }
 
   const JointJacobian_t& J2() { return model.joint2->jacobian(ddata()); }
-  const Transform3f& M2() {
+  const Transform3s& M2() {
     if (model.joint2)
       return model.joint2->currentTransformation(ddata());
     else
@@ -80,7 +80,7 @@ struct GTDataBase {
   const JointJacobian_t& J1() {
     return model.getJoint1()->jacobian(this->ddata());
   }
-  const Transform3f& M1() {
+  const Transform3s& M1() {
     return model.getJoint1()->currentTransformation(this->ddata());
   }
   const matrix3_t& R1() { return M1().rotation(); }
@@ -345,7 +345,7 @@ struct relativeTransform {
     using hpp::pinocchio::LiegroupElement;
     using hpp::pinocchio::LiegroupSpace;
     // There is no joint1
-    const Transform3f& M2 = d.M2();
+    const Transform3s& M2 = d.M2();
     d.value.noalias() = M2.act(d.model.F2inJ2.translation());
 #ifndef NDEBUG
     if (ose3) {
@@ -386,7 +386,7 @@ template <>
 struct relativeTransform<false, true> {
   template <bool runtimeRel, bool pos, bool ose3>
   static inline void run(GTDataV<runtimeRel, pos, true, ose3>& d) {
-    const Transform3f& M2 = d.M2();
+    const Transform3s& M2 = d.M2();
     d.M = d.model.F1inJ1.actInv(M2 * d.model.F2inJ2);
     if (pos) d.value.template head<3>().noalias() = d.M.translation();
   }
@@ -400,8 +400,8 @@ struct relativeTransform<true, true> {
       relativeTransform<false, true>::run(d);
       return;
     }
-    const Transform3f& M1 = d.M1();
-    const Transform3f& M2 = d.M2();
+    const Transform3s& M1 = d.M1();
+    const Transform3s& M2 = d.M2();
     d.M = d.model.F1inJ1.actInv(M1.actInv(M2 * d.model.F2inJ2));
     if (pos) d.value.template head<3>().noalias() = d.M.translation();
   }
@@ -415,8 +415,8 @@ struct relativeTransform<true, false> {
       relativeTransform<false, false>::run(d);
       return;
     }
-    const Transform3f& M2 = d.M2();
-    const Transform3f& M1 = d.M1();
+    const Transform3s& M2 = d.M2();
+    const Transform3s& M1 = d.M1();
     d.value.noalias() = M2.act(d.model.F2inJ2.translation()) - M1.translation();
     d.value.applyOnTheLeft(M1.rotation().transpose());
 
@@ -448,7 +448,7 @@ struct compute {
   static inline void jacobian(GTDataJ<rel, pos, ori, ose3>& d,
                               matrixOut_t jacobian,
                               const std::vector<bool>& mask) {
-    const Transform3f& M2 = d.M2();
+    const Transform3s& M2 = d.M2();
     const vector3_t& t2inJ2(d.model.F2inJ2.translation());
     const vector3_t& t2(M2.translation());
     const matrix3_t& R2(M2.rotation());
@@ -460,7 +460,7 @@ struct compute {
     // rel:           relative known at compile time
     // d.getJoint1(): relative known at run time
     if (rel && d.model.getJoint1()) {
-      const Transform3f& M1 = d.M1();
+      const Transform3s& M1 = d.M1();
       const vector3_t& t1(M1.translation());
       d.cross1.noalias() = d.cross2 + t2 - t1;
       binary<rel, pos>::Jtranslation(d, jacobian);

@@ -115,7 +115,7 @@ void RelativeCom::impl_compute(LiegroupElementRef result,
   device.currentConfiguration(argument);
   device.computeForwardKinematics(pinocchio::JOINT_POSITION);
   comc_->compute(device.d(), hpp::pinocchio::COM);
-  const Transform3f& M = joint_->currentTransformation(device.d());
+  const Transform3s& M = joint_->currentTransformation(device.d());
   const vector3_t& x = comc_->com(device.d());
   const matrix3_t& R = M.rotation();
   const vector3_t& t = M.translation();
@@ -142,7 +142,7 @@ void RelativeCom::impl_jacobian(matrixOut_t jacobian,
   comc_->compute(device.d(), hpp::pinocchio::COMPUTE_ALL);
   const ComJacobian_t& Jcom = comc_->jacobian(device.d());
   const JointJacobian_t& Jjoint(joint_->jacobian(device.d()));
-  const Transform3f& M = joint_->currentTransformation(device.d());
+  const Transform3s& M = joint_->currentTransformation(device.d());
   const matrix3_t& R(M.rotation());
   const vector3_t& x(comc_->com(device.d()));
   const vector3_t& t(M.translation());

@@ -85,7 +85,7 @@ BlockIndex::segments_t jointVelInterval(JointConstPtr_t j) {
 RelativeTransformationPtr_t RelativeTransformation::create(
     const std::string& name, const DevicePtr_t& robot,
     const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
-    const Transform3f& frame1, const Transform3f& frame2) {
+    const Transform3s& frame1, const Transform3s& frame2) {
   std::vector<bool> conf(robot->configSize(), false);
   std::vector<bool> vel(robot->numberDof(), false);
   inputVariable(joint1, conf, vel);
@@ -103,7 +103,7 @@ RelativeTransformationPtr_t RelativeTransformation::create(
 RelativeTransformation::RelativeTransformation(
     const std::string& name, const DevicePtr_t& robot,
     const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
-    const Transform3f& frame1, const Transform3f& frame2,
+    const Transform3s& frame1, const Transform3s& frame2,
     const segments_t inConf, const segments_t outConf, const segments_t inVel,
     const segments_t outVel, std::vector<bool> /*mask*/)
     : DifferentiableFunction(BlockIndex::cardinal(inConf),
@@ -142,7 +142,7 @@ void RelativeTransformation::impl_compute(LiegroupElementRef result,
   // J2 = J2_{parent} * T
   // T = J2_{parent}^{-1} * J2
   // T = J2_{parent}^{-1} * J1 * F1/J1 * F2/J2^{-1}
-  Transform3f freeflyerPose;
+  Transform3s freeflyerPose;
   if (!joint1_)
     freeflyerPose = F1inJ1_invF2inJ2_;
   else
@@ -153,7 +153,7 @@ void RelativeTransformation::impl_compute(LiegroupElementRef result,
 
   freeflyerPose = joint2_->positionInParentFrame().actInv(freeflyerPose);
 
-  typedef Transform3f::Quaternion Q_t;
+  typedef Transform3s::Quaternion Q_t;
   result.vector().head<3>() = freeflyerPose.translation();
   result.vector().tail<4>() = Q_t(freeflyerPose.rotation()).coeffs();
 }

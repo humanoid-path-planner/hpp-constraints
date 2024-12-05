@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(Jlog_SO3) {
 BOOST_AUTO_TEST_CASE(Jlog_SE3) {
   for (size_type i = 0; i < 100; ++i) {
     // Generate random rigid body motion
-    Transform3f M0;
+    Transform3s M0;
     M0.setRandom();
     if (i == 0) M0.setIdentity();
     vector6_t log0, log;
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(Jlog_SE3) {
       v.setZero();
       v[i] = 1;
       ::pinocchio::Motion nu(v);
-      Transform3f M(M0 * ::pinocchio::exp6(dt * nu));
+      Transform3s M(M0 * ::pinocchio::exp6(dt * nu));
       logSE3(M, log);
       std::cout << "(log-log0)/dt=" << ((log - log0) / dt).transpose()
                 << std::endl;

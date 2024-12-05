@@ -111,7 +111,7 @@ typename GenericTransformation<_Options>::Ptr_t
 GenericTransformation<_Options>::create(const std::string& name,
                                         const DevicePtr_t& robot,
                                         const JointConstPtr_t& joint2,
-                                        const Transform3f& reference,
+                                        const Transform3s& reference,
                                         std::vector<bool> mask) {
   GenericTransformation<_Options>* ptr =
       new GenericTransformation<_Options>(name, robot, mask);
@@ -128,7 +128,7 @@ typename GenericTransformation<_Options>::Ptr_t
 GenericTransformation<_Options>::create(
     const std::string& name, const DevicePtr_t& robot,
     /* World frame          */ const JointConstPtr_t& joint2,
-    const Transform3f& frame2, const Transform3f& frame1,
+    const Transform3s& frame2, const Transform3s& frame1,
     std::vector<bool> mask) {
   GenericTransformation<_Options>* ptr =
       new GenericTransformation<_Options>(name, robot, mask);
@@ -146,7 +146,7 @@ GenericTransformation<_Options>::create(const std::string& name,
                                         const DevicePtr_t& robot,
                                         const JointConstPtr_t& joint1,
                                         const JointConstPtr_t& joint2,
-                                        const Transform3f& reference,
+                                        const Transform3s& reference,
                                         std::vector<bool> mask) {
   GenericTransformation<_Options>* ptr =
       new GenericTransformation<_Options>(name, robot, mask);
@@ -164,8 +164,8 @@ GenericTransformation<_Options>::create(const std::string& name,
                                         const DevicePtr_t& robot,
                                         const JointConstPtr_t& joint1,
                                         const JointConstPtr_t& joint2,
-                                        const Transform3f& frame1,
-                                        const Transform3f& frame2,
+                                        const Transform3s& frame1,
+                                        const Transform3s& frame2,
                                         std::vector<bool> mask) {
   GenericTransformation<_Options>* ptr =
       new GenericTransformation<_Options>(name, robot, mask);

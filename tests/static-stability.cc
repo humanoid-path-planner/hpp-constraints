@@ -64,8 +64,8 @@ static matrix3_t identity() {
   R.setIdentity();
   return R;
 }
-static coal::Transform3f transform3f_id() {
-  coal::Transform3f T;
+static coal::Transform3s transform3f_id() {
+  coal::Transform3s T;
   T.setIdentity();
   return T;
 }
@@ -118,7 +118,7 @@ JointPtr_t createRotationJoint(DevicePtr_t robot) {
   JointPtr_t joint;
   std::string jointName = name + "_rz";
 
-  coal::Transform3f mat;
+  coal::Transform3s mat;
   mat.setIdentity();
   coal::Matrix3f orient;
   orient(0, 0) = 0;
@@ -148,7 +148,7 @@ DevicePtr_t createRobot() {
 
   BodyPtr_t body;
 
-  coal::Transform3f mat;
+  coal::Transform3s mat;
   mat.setIdentity();
   coal::Matrix3f orient;
   orient(0, 0) = 1;

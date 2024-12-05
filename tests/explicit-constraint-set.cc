@@ -76,7 +76,7 @@ using hpp::constraints::RelativeTransformationPtr_t;
 using hpp::constraints::segment_t;
 using hpp::constraints::segments_t;
 using hpp::constraints::size_type;
-using hpp::constraints::Transform3f;
+using hpp::constraints::Transform3s;
 using hpp::constraints::value_type;
 using hpp::constraints::vector3_t;
 using hpp::constraints::vector_t;
@@ -180,7 +180,7 @@ class ExplicitTransformation : public DifferentiableFunction {
         inDer_(inDer) {
     rt_ = RelativeTransformation::create("RT", joint_->robot(),
                                          joint_->robot()->rootJoint(), joint_,
-                                         Transform3f::Identity());
+                                         Transform3s::Identity());
   }
 
   ExplicitConstraintSet::RowBlockIndices inArg() const {
@@ -597,8 +597,8 @@ BOOST_AUTO_TEST_CASE(RelativePose) {
   vector_t up(device->configSize());
   up.fill(1);
 
-  hpp::constraints::Transform3f frame1(pinocchio::SE3::Random());
-  hpp::constraints::Transform3f frame2(pinocchio::SE3::Random());
+  hpp::constraints::Transform3s frame1(pinocchio::SE3::Random());
+  hpp::constraints::Transform3s frame2(pinocchio::SE3::Random());
   // explicit relative pose
   hpp::constraints::ExplicitPtr_t constraint(
       hpp::constraints::explicit_::RelativePose::create(

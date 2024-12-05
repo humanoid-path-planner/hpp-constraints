@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(jacobian) {
   randomConfig(device, q1);
   device->currentConfiguration(q1);
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3f tf1(ee1->currentTransformation());
-  Transform3f tf2(ee2->currentTransformation());
+  Transform3s tf1(ee1->currentTransformation());
+  Transform3s tf2(ee2->currentTransformation());
 
   /// Create the constraints
   typedef std::list<DifferentiableFunctionPtr_t> DFs;

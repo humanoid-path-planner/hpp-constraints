@@ -38,7 +38,7 @@ using hpp::pinocchio::DevicePtr_t;
 using hpp::pinocchio::JointPtr_t;
 using hpp::pinocchio::LiegroupElement;
 using hpp::pinocchio::LiegroupSpacePtr_t;
-using hpp::pinocchio::Transform3f;
+using hpp::pinocchio::Transform3s;
 using hpp::pinocchio::vector3_t;
 using hpp::pinocchio::unittest::HumanoidRomeo;
 using hpp::pinocchio::unittest::makeDevice;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(relative_com) {
       RelativeCom::create("relative-com", robot, leftAnkle, reference));
   Configuration_t q0(robot->neutralConfiguration());
   // Create relative pose constraint between ankles.
-  Transform3f ref1, ref2;
+  Transform3s ref1, ref2;
   ref1.setIdentity();
   ref2.setIdentity();
   ref2.translation() << 0, -0.2, 0;
