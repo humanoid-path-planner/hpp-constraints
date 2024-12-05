@@ -124,7 +124,7 @@ void DistanceBetweenPointsInBodies::impl_jacobian(matrixOut_t jacobian,
   LiegroupElement dist(outputSpace());
   impl_compute(dist, arg);
   const JointJacobian_t& J1(joint1_->jacobian());
-  const Transform3f& M1(joint1_->currentTransformation());
+  const Transform3s& M1(joint1_->currentTransformation());
   const matrix3_t& R1(M1.rotation());
 
   // P1 - P2
@@ -145,7 +145,7 @@ void DistanceBetweenPointsInBodies::impl_jacobian(matrixOut_t jacobian,
                     J1.bottomRows(3));
   if (joint2_) {
     const JointJacobian_t& J2(joint2_->jacobian());
-    const Transform3f& M2(joint2_->currentTransformation());
+    const Transform3s& M2(joint2_->currentTransformation());
     const matrix3_t& R2(M2.rotation());
     // P2 - t2
     vector3_t P2_minus_t2(global2_ - M2.translation());

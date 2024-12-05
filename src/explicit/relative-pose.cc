@@ -44,7 +44,7 @@ LiegroupSpacePtr_t RelativePose::R3xSO3(LiegroupSpace::R3xSO3());
 RelativePosePtr_t RelativePose::create(
     const std::string& name, const DevicePtr_t& robot,
     const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
-    const Transform3f& frame1, const Transform3f& frame2,
+    const Transform3s& frame1, const Transform3s& frame2,
     ComparisonTypes_t comp, std::vector<bool> mask) {
   if (mask.empty()) {
     mask = std::vector<bool>(6, true);
@@ -95,12 +95,12 @@ void RelativePose::implicitToExplicitRhs(LiegroupElementConstRef implicitRhs,
                                          vectorOut_t explicitRhs) const {
   assert(*(implicitRhs.space()) == *R3xSO3 || *(implicitRhs.space()) == *SE3);
   assert(explicitRhs.size() == 6);
-  // convert implicitRhs to Transform3f M1
-  Transform3f M1(
+  // convert implicitRhs to Transform3s M1
+  Transform3s M1(
       (Quaternion_t(implicitRhs.vector().tail<4>())).toRotationMatrix(),
       implicitRhs.vector().head<3>());
   // M2 = F_{2/J_2} M1 F_{2/J_2}^{-1}
-  Transform3f M2(frame2_ * M1 * frame2_.inverse());
+  Transform3s M2(frame2_ * M1 * frame2_.inverse());
   // convert M2 to LiegroupElement p2
   vector7_t v2;
   v2.head<3>() = M2.translation();
@@ -115,11 +115,11 @@ void RelativePose::explicitToImplicitRhs(vectorIn_t explicitRhs,
   assert(explicitRhs.size() == 6);
   // p1 = exp_{SE(3)} (explicitRhs)
   LiegroupElement p1(SE3->exp(explicitRhs));
-  // convert p1 to Transform3f M1
-  Transform3f M1((Quaternion_t(p1.vector().tail<4>())).toRotationMatrix(),
+  // convert p1 to Transform3s M1
+  Transform3s M1((Quaternion_t(p1.vector().tail<4>())).toRotationMatrix(),
                  p1.vector().head<3>());
   // M2 = F_{2/J_2}^{-1} M1 F_{2/J_2}
-  Transform3f M2(frame2_.inverse() * M1 * frame2_);
+  Transform3s M2(frame2_.inverse() * M1 * frame2_);
   // convert M2 to LiegroupElement p2
   vector7_t v2;
   implicitRhs.vector().head<3>() = M2.translation();
@@ -129,7 +129,7 @@ void RelativePose::explicitToImplicitRhs(vectorIn_t explicitRhs,
 RelativePose::RelativePose(const std::string& name, const DevicePtr_t& robot,
                            const JointConstPtr_t& joint1,
                            const JointConstPtr_t& joint2,
-                           const Transform3f& frame1, const Transform3f& frame2,
+                           const Transform3s& frame1, const Transform3s& frame2,
                            ComparisonTypes_t comp, std::vector<bool> mask)
     : Explicit(RelativeTransformationR3xSO3::create(name, robot, joint1, joint2,
                                                     frame1, frame2,

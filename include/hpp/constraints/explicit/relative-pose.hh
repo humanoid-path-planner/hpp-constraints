@@ -95,7 +95,7 @@ class HPP_CONSTRAINTS_DLLAPI RelativePose : public Explicit {
   static RelativePosePtr_t create(
       const std::string& name, const DevicePtr_t& robot,
       const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
-      const Transform3f& frame1, const Transform3f& frame2,
+      const Transform3s& frame1, const Transform3s& frame2,
       ComparisonTypes_t comp, std::vector<bool> mask = std::vector<bool>());
 
   static RelativePosePtr_t createCopy(const RelativePosePtr_t& other);
@@ -149,7 +149,7 @@ class HPP_CONSTRAINTS_DLLAPI RelativePose : public Explicit {
   ///       frame.
   RelativePose(const std::string& name, const DevicePtr_t& robot,
                const JointConstPtr_t& joint1, const JointConstPtr_t& joint2,
-               const Transform3f& frame1, const Transform3f& frame2,
+               const Transform3s& frame1, const Transform3s& frame2,
                ComparisonTypes_t comp = ComparisonTypes_t(),
                std::vector<bool> mask = std::vector<bool>(6, true));
 
@@ -207,8 +207,8 @@ class HPP_CONSTRAINTS_DLLAPI RelativePose : public Explicit {
   static LiegroupSpacePtr_t SE3;
   static LiegroupSpacePtr_t R3xSO3;
   JointConstPtr_t joint1_, joint2_;
-  Transform3f frame1_;
-  Transform3f frame2_;
+  Transform3s frame1_;
+  Transform3s frame2_;
   RelativePoseWkPtr_t weak_;
 
   RelativePose() {}

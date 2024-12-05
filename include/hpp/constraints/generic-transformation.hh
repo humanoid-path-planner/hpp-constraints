@@ -46,7 +46,7 @@ template <bool rel>
 struct GenericTransformationModel {
   JointConstPtr_t joint2;
   bool R1isID, R2isID, t1isZero, t2isZero;
-  Transform3f F1inJ1, F2inJ2;
+  Transform3s F1inJ1, F2inJ2;
   bool fullPos, fullOri;
   size_type rowOri;
   const size_type cols;
@@ -180,7 +180,7 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
   ///        account.
   static Ptr_t create(const std::string& name, const DevicePtr_t& robot,
                       const JointConstPtr_t& joint2,
-                      const Transform3f& reference,
+                      const Transform3s& reference,
                       std::vector<bool> mask = std::vector<bool>(DerSize,
                                                                  true));
 
@@ -200,7 +200,7 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
   ///       has no effect.
   static Ptr_t create(const std::string& name, const DevicePtr_t& robot,
                       /* World frame          */ const JointConstPtr_t& joint2,
-                      const Transform3f& frame2, const Transform3f& frame1,
+                      const Transform3s& frame2, const Transform3s& frame1,
                       std::vector<bool> mask = std::vector<bool>(DerSize,
                                                                  true));
 
@@ -219,7 +219,7 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
   static Ptr_t create(const std::string& name, const DevicePtr_t& robot,
                       const JointConstPtr_t& joint1,
                       const JointConstPtr_t& joint2,
-                      const Transform3f& reference,
+                      const Transform3s& reference,
                       std::vector<bool> mask = std::vector<bool>(DerSize,
                                                                  true));
 
@@ -243,8 +243,8 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
   ///       has no effect.
   static Ptr_t create(const std::string& name, const DevicePtr_t& robot,
                       const JointConstPtr_t& joint1,
-                      const JointConstPtr_t& joint2, const Transform3f& frame1,
-                      const Transform3f& frame2,
+                      const JointConstPtr_t& joint2, const Transform3s& frame1,
+                      const Transform3s& frame2,
                       std::vector<bool> mask = std::vector<bool>(DerSize,
                                                                  true));
 
@@ -252,7 +252,7 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
 
   /// Set desired relative transformation of joint2 in joint1
   ///
-  inline void reference(const Transform3f& reference) {
+  inline void reference(const Transform3s& reference) {
     m_.F1inJ1 = reference;
     m_.checkIsIdentity1();
     m_.F2inJ2.setIdentity();
@@ -260,7 +260,7 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
   }
 
   /// Get desired relative orientation
-  inline Transform3f reference() const { return m_.F1inJ1.actInv(m_.F2inJ2); }
+  inline Transform3s reference() const { return m_.F1inJ1.actInv(m_.F2inJ2); }
 
   /// Set joint 1
   inline void joint1(const JointConstPtr_t& joint) {
@@ -284,19 +284,19 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
   inline JointConstPtr_t joint2() const { return m_.joint2; }
 
   /// Set position of frame 1 in joint 1
-  inline void frame1InJoint1(const Transform3f& M) {
+  inline void frame1InJoint1(const Transform3s& M) {
     m_.F1inJ1 = M;
     m_.checkIsIdentity1();
   }
   /// Get position of frame 1 in joint 1
-  inline const Transform3f& frame1InJoint1() const { return m_.F1inJ1; }
+  inline const Transform3s& frame1InJoint1() const { return m_.F1inJ1; }
   /// Set position of frame 2 in joint 2
-  inline void frame2InJoint2(const Transform3f& M) {
+  inline void frame2InJoint2(const Transform3s& M) {
     m_.F2inJ2 = M;
     m_.checkIsIdentity2();
   }
   /// Get position of frame 2 in joint 2
-  inline const Transform3f& frame2InJoint2() const { return m_.F2inJ2; }
+  inline const Transform3s& frame2InJoint2() const { return m_.F2inJ2; }
 
   /// Return pair of joints the relative pose between which
   /// modifies the function value if any

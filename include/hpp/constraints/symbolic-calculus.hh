@@ -837,7 +837,7 @@ class JointFrame
 
   const JointPtr_t& joint() const { return joint_; }
   void impl_value(const ConfigurationIn_t) {
-    const Transform3f& M = joint_->currentTransformation();
+    const Transform3s& M = joint_->currentTransformation();
     this->value_.head<3>() = M.translation();
     logSO3(M.rotation(), theta_, this->value_.tail<3>());
   }

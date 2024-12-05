@@ -197,7 +197,7 @@ ConvexShapeContact::ConvexShapeContact(const std::string& name,
   // Compute explicit relative poses
   for (std::size_t ifloor = 0; ifloor < fs.size(); ++ifloor) {
     // move floor surface along x to take into account margin.
-    Transform3f posInJoint(fs[ifloor].positionInJoint());
+    Transform3s posInJoint(fs[ifloor].positionInJoint());
     hppDout(info, "posInJoint" << posInJoint);
     posInJoint.translation() -= margin * posInJoint.rotation().col(0);
     hppDout(info, "posInJoint" << posInJoint);

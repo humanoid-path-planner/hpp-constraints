@@ -61,7 +61,7 @@ typedef pinocchio::vectorIn_t vectorIn_t;
 typedef pinocchio::vectorOut_t vectorOut_t;
 typedef pinocchio::ComJacobian_t ComJacobian_t;
 typedef pinocchio::JointJacobian_t JointJacobian_t;
-typedef pinocchio::Transform3f Transform3f;
+typedef pinocchio::Transform3s Transform3s;
 typedef pinocchio::LiegroupElement LiegroupElement;
 typedef pinocchio::LiegroupElementRef LiegroupElementRef;
 typedef pinocchio::LiegroupElementConstRef LiegroupElementConstRef;

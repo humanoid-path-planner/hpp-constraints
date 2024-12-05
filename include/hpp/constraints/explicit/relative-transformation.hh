@@ -70,8 +70,8 @@ class HPP_CONSTRAINTS_DLLAPI RelativeTransformation
                                             const DevicePtr_t& robot,
                                             const JointConstPtr_t& joint1,
                                             const JointConstPtr_t& joint2,
-                                            const Transform3f& frame1,
-                                            const Transform3f& frame2);
+                                            const Transform3s& frame1,
+                                            const Transform3s& frame2);
 
   /// Get joint 1
   const JointConstPtr_t& joint1() const { return joint1_; }
@@ -109,7 +109,7 @@ class HPP_CONSTRAINTS_DLLAPI RelativeTransformation
   RelativeTransformation(const std::string& name, const DevicePtr_t& robot,
                          const JointConstPtr_t& joint1,
                          const JointConstPtr_t& joint2,
-                         const Transform3f& frame1, const Transform3f& frame2,
+                         const Transform3s& frame1, const Transform3s& frame2,
                          const segments_t inConf, const segments_t outConf,
                          const segments_t inVel, const segments_t outVel,
                          std::vector<bool> mask = std::vector<bool>(6, true));
@@ -164,11 +164,11 @@ class HPP_CONSTRAINTS_DLLAPI RelativeTransformation
   // Parent of the R3 joint.
   JointConstPtr_t parentJoint_;
   JointConstPtr_t joint1_, joint2_;
-  Transform3f frame1_, frame2_;
+  Transform3s frame1_, frame2_;
   RowBlockIndices inConf_;
   ColBlockIndices inVel_;
   RowBlockIndices outConf_, outVel_;
-  Transform3f F1inJ1_invF2inJ2_;
+  Transform3s F1inJ1_invF2inJ2_;
 
   RelativeTransformationWkPtr_t weak_;
 

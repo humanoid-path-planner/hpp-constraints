@@ -161,7 +161,7 @@ void JlogSO3(const value_type& theta, const Eigen::MatrixBase<Derived>& log,
 /// expressed in the moving frame and of angular velocity \f$\mathbf{r}\f$
 /// expressed in the moving reaches $M$ in unit time.
 template <typename Derived>
-inline void logSE3(const Transform3f& M, Eigen::MatrixBase<Derived>& result) {
+inline void logSE3(const Transform3s& M, Eigen::MatrixBase<Derived>& result) {
   assert(result.size() == 6);
   Eigen::MatrixBase<Derived>& value =
       const_cast<Eigen::MatrixBase<Derived>&>(result);
@@ -185,7 +185,7 @@ inline void logSE3(const Transform3f& M, Eigen::MatrixBase<Derived>& result) {
 }
 
 template <typename Derived>
-void JlogSE3(const Transform3f& M, Eigen::MatrixBase<Derived> const& Jlog) {
+void JlogSE3(const Transform3s& M, Eigen::MatrixBase<Derived> const& Jlog) {
   Eigen::MatrixBase<Derived>& value =
       const_cast<Eigen::MatrixBase<Derived>&>(Jlog);
   const matrix3_t& R = M.rotation();
@@ -231,12 +231,12 @@ void matrixToQuat(const Eigen::MatrixBase<Derived1>& M,
                   Eigen::MatrixBase<Derived2> const& q) {
   Derived2& _q = const_cast<Derived2&>(q.derived());
   assert(q.size() == 4);
-  Eigen::Map<Transform3f::Quaternion> quat(_q.data());
+  Eigen::Map<Transform3s::Quaternion> quat(_q.data());
   quat = M;
 }
 
 template <typename Derived>
-void se3ToConfig(const Transform3f& M, Eigen::MatrixBase<Derived> const& q) {
+void se3ToConfig(const Transform3s& M, Eigen::MatrixBase<Derived> const& q) {
   Derived& _q = const_cast<Derived&>(q.derived());
   assert(q.size() == 7);
   _q.template head<3>() = M.translation();

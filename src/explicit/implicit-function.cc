@@ -119,12 +119,12 @@ inline void JacobianVisitor::operator()<SE3>(const SE3&) {
   assert(f_qIn_.size() == 7);
   matrix3_t Rout(Eigen::Quaterniond(qOut_.tail<4>()).toRotationMatrix());
   vector3_t pOut(qOut_.head<3>());
-  Transform3f Mout(Rout, pOut);
+  Transform3s Mout(Rout, pOut);
   matrix3_t Rf(Eigen::Quaterniond(f_qIn_.tail<4>()).toRotationMatrix());
   vector3_t pf(f_qIn_.head<3>());
-  Transform3f Mf(Rf, pf);
+  Transform3s Mf(Rf, pf);
   // \f$Mf^{-1} M_{out}\f$
-  Transform3f Mf_inverse_Mout(Mf.inverse() * Mout);
+  Transform3s Mf_inverse_Mout(Mf.inverse() * Mout);
   matrix6_t Jlog_Mf_inverse_Mout;
   constraints::JlogSE3(Mf_inverse_Mout, Jlog_Mf_inverse_Mout);
   outJacobian_.lview(result_) = Jlog_Mf_inverse_Mout;

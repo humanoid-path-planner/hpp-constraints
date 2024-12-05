@@ -157,7 +157,7 @@ class HPP_CONSTRAINTS_DLLAPI ConvexShape {
   }
 
   /// Transform of the shape in the joint frame
-  inline const Transform3f& positionInJoint() const { return MinJoint_; }
+  inline const Transform3s& positionInJoint() const { return MinJoint_; }
 
   bool operator==(ConvexShape const& other) const {
     if (Pts_ != other.Pts_) return false;
@@ -188,7 +188,7 @@ class HPP_CONSTRAINTS_DLLAPI ConvexShape {
   /// Ns_[i] is a vector director of edge i.
   std::vector<vector3_t> Ns_, Us_;
   vector_t Ls_;
-  Transform3f MinJoint_;
+  Transform3s MinJoint_;
   JointPtr_t joint_;
 
  private:
@@ -296,7 +296,7 @@ struct HPP_CONSTRAINTS_DLLAPI ConvexShapeData {
   // center in the world frame
   vector3_t center_;
   // Current joint position
-  Transform3f oMj_;
+  Transform3s oMj_;
 
   /// Compute center and normal in world frame
   inline void updateToCurrentTransform(const ConvexShape& cs) {
@@ -355,7 +355,7 @@ struct HPP_CONSTRAINTS_DLLAPI ConvexShapeData {
   }
 
   /// \param yaxis vector in world frame to which we should try to align
-  inline Transform3f alignedPositionInJoint(const ConvexShape& cs,
+  inline Transform3s alignedPositionInJoint(const ConvexShape& cs,
                                             vector3_t yaxis) const {
     assert(cs.shapeDimension_ > 2);
     // Project vector onto the plane
@@ -364,7 +364,7 @@ struct HPP_CONSTRAINTS_DLLAPI ConvexShapeData {
     if (yproj.isZero())
       return cs.MinJoint_;
     else {
-      Transform3f M;
+      Transform3s M;
       M.translation() = cs.C_;
       M.rotation().col(0) = cs.N_;
       M.rotation().col(1) = yaxis;
