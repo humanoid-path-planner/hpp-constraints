@@ -29,7 +29,7 @@
 #ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 #define HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 
-#include <hpp/fcl/shape/geometric_shapes.h>
+#include <coal/shape/geometric_shapes.h>
 
 #include <vector>
 
@@ -86,7 +86,7 @@ class HPP_CONSTRAINTS_DLLAPI ConvexShape {
     init();
   }
 
-  ConvexShape(const fcl::TriangleP& t, const JointPtr_t& joint = JointPtr_t())
+  ConvexShape(const coal::TriangleP& t, const JointPtr_t& joint = JointPtr_t())
       : Pts_(triangleToPoints(t)), joint_(joint) {
     init();
   }
@@ -207,7 +207,7 @@ class HPP_CONSTRAINTS_DLLAPI ConvexShape {
     return u.dot(w);
   }
 
-  static std::vector<vector3_t> triangleToPoints(const fcl::TriangleP& t) {
+  static std::vector<vector3_t> triangleToPoints(const coal::TriangleP& t) {
     // TODO
     // return points (t.a, t.b, t.c);
     std::vector<vector3_t> ret(3);

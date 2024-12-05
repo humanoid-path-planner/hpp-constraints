@@ -7,7 +7,7 @@
 using namespace hpp::constraints;
 
 // This unit test was used to write function
-// hpp::fcl::details::GJK::projectTetrahedraOrigin.
+// coal::details::GJK::projectTetrahedraOrigin.
 
 #define DECLARE_EXPRESSION(Class) typedef typename Traits<Class>::Ptr_t Ptr_t;
 
