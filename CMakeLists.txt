@@ -28,7 +28,6 @@ set(PROJECT_DESCRIPTION
     "Definition of basic geometric constraints for motion planning")
 
 set(CXX_DISABLE_WERROR TRUE)
-set(DOXYGEN_USE_MATHJAX YES)
 set(PROJECT_USE_CMAKE_EXPORT TRUE)
 
 # Check if the submodule cmake have been initialized
