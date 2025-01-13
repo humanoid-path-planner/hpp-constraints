@@ -216,7 +216,7 @@ void BySubstitution::computeActiveRowsOfJ(std::size_t iStack) {
       active = adpF.any();
     }
     if (active) {  // If at least one element of adp is true
-      for (const segment_t s : constraints[i]->activeRows()) {
+      for (const segment_t& s : constraints[i]->activeRows()) {
         rows.emplace_back(s.first + row, s.second);
       }
     }

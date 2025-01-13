@@ -135,7 +135,7 @@ struct Bounds : Base {
   Bounds(const vector_t& lb, const vector_t& ub) : lb(lb), ub(ub), iq2iv_() {
     iq2iv_.resize(ub.size());
     for (size_type i = 0; i < ub.size(); ++i) {
-      iq2iv_[i] = i;
+      iq2iv_[i] = (Eigen::VectorXi::Scalar)i;
     }
   }
   Bounds(const vector_t& lb, const vector_t& ub, const Eigen::VectorXi& iq2iv)

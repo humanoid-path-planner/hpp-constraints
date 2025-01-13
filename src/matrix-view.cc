@@ -216,8 +216,9 @@ BlockIndex::segments_t BlockIndex::extract(const segments_t& segments,
   segments_t result;
   size_type remainingToStart = start;
   size_type startIndex;
-  size_type remainingToEnd;
+  size_type remainingToEnd=0;
   segments_t::const_iterator it(segments.begin());
+  assert(remainingToStart >= 0);
   while (it != segments.end()) {
     if (remainingToStart >= 0) {
       // looking for start
