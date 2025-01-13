@@ -402,7 +402,7 @@ void HierarchicalIterative::computeActiveRowsOfJ(std::size_t iStack) {
                                  .matrix())
                       .eval();
     if (adp.any())  // If at least one element of adp is true
-      for (const segment_t s : constraints[i]->activeRows()) {
+      for (const segment_t& s : constraints[i]->activeRows()) {
         rows.emplace_back(s.first + offset, s.second);
       }
     offset += constraints[i]->function().outputDerivativeSize();

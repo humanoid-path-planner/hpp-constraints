@@ -120,6 +120,20 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
  public:
   /// Operator equality
   bool operator==(const Implicit& other) const;
+  /// Operator assignation
+  Implicit& operator=(const Implicit& other){
+    comparison_ = other.comparison_;
+    rhs_ = other.rhs_;
+    parameterSize_ = other.parameterSize_;
+    function_ = other.function_;
+    rhsFunction_ = other.rhsFunction_;
+    mask_ = other.mask_;
+    activeRows_ = other.activeRows_;
+    inactiveRows_ = other.inactiveRows_;
+    inequalityIndices_ = other.inequalityIndices_;
+    equalityIndices_ = other.equalityIndices_;
+    return *this;
+  }
   /// Copy object and return shared pointer to copy
   virtual ImplicitPtr_t copy() const;
   /// Create a shared pointer to a new instance.
