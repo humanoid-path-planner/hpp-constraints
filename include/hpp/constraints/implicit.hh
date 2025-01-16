@@ -121,7 +121,7 @@ class HPP_CONSTRAINTS_DLLAPI Implicit {
   /// Operator equality
   bool operator==(const Implicit& other) const;
   /// Operator assignation
-  Implicit& operator=(const Implicit& other){
+  Implicit& operator=(const Implicit& other) {
     comparison_ = other.comparison_;
     rhs_ = other.rhs_;
     parameterSize_ = other.parameterSize_;

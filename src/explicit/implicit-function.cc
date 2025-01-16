@@ -100,7 +100,8 @@ inline void JacobianVisitor::operator()<R3xSO3>(const R3xSO3&) {
   // \f$R_f^T R_{out}\f$
   matrix3_t R_f_T_R_out(R_f.transpose() * R_out);
   matrix3_t Jlog_R_f_T_R_out;
-  vector3_t r; r.setZero();
+  vector3_t r;
+  r.setZero();
   value_type theta;
   constraints::logSO3(R_f_T_R_out, theta, r);
   constraints::JlogSO3(theta, r, Jlog_R_f_T_R_out);
@@ -125,7 +126,8 @@ inline void JacobianVisitor::operator()<SE3>(const SE3&) {
   Transform3s Mf(Rf, pf);
   // \f$Mf^{-1} M_{out}\f$
   Transform3s Mf_inverse_Mout(Mf.inverse() * Mout);
-  matrix6_t Jlog_Mf_inverse_Mout; Jlog_Mf_inverse_Mout.setZero();
+  matrix6_t Jlog_Mf_inverse_Mout;
+  Jlog_Mf_inverse_Mout.setZero();
   constraints::JlogSE3(Mf_inverse_Mout, Jlog_Mf_inverse_Mout);
   outJacobian_.lview(result_) = Jlog_Mf_inverse_Mout;
   JointJacobian_t inJ(6, Jf_.cols());
