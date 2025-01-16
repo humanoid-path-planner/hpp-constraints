@@ -191,7 +191,8 @@ void JlogSE3(const Transform3s& M, Eigen::MatrixBase<Derived> const& Jlog) {
   const matrix3_t& R = M.rotation();
   const vector3_t& p = M.translation();
   value_type theta;
-  vector3_t r; r.setZero();
+  vector3_t r;
+  r.setZero();
   logSO3(R, theta, r);
   matrix3_t Jlog3;
   JlogSO3(theta, r, Jlog3);
