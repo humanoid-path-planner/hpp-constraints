@@ -1,32 +1,38 @@
-<?xml version='1.0'?>
- <package format='2'>
- <name>hpp-constraints</name>
- <version>6.0.0</version>
- <description>Definition of basic geometric constraints for motion planning </description>
+<?xml version="1.0"?>
+<package format="3">
+  <name>hpp-constraints</name>
+  <version>6.0.0</version>
+  <description>Definition of basic geometric constraints for motion planning </description>
 
- <maintainer email='hpp@laas.fr'>Joseph Mirabel</maintainer>
- <license>LGPL</license>
+  <maintainer email="guilhem.saurel@laas.fr">Guilhem Saurel</maintainer>
 
- <!-- <url type='website'>https://github.com/humanoid-path-planner/hpp-constraints </url> -->
+  <author>Joseph Mirabel</author>
+  <author>Florent Lamiraux et al.</author>
 
- <author>Joseph Mirabel</author>
- <author>Florent Lamiraux et al.</author>
+  <license>BSD-2</license>
 
- <buildtool_depend>catkin</buildtool_depend>
- <build_depend>hpp-pinocchio</build_depend>
- <exec_depend>hpp-pinocchio</exec_depend>
- <build_export_depend>hpp-pinocchio</build_export_depend>
- <build_depend>hpp-statistics</build_depend>
- <exec_depend>hpp-statistics</exec_depend>
- <build_export_depend>hpp-statistics</build_export_depend>
- <build_depend>eigen3</build_depend>
- <exec_depend>eigen3</exec_depend>
- <build_export_depend>eigen3</build_export_depend>
- <build_depend>urdfdom</build_depend>
- <exec_depend>urdfdom</exec_depend>
- <build_export_depend>urdfdom</build_export_depend>
- <build_depend>coal</build_depend>
- <exec_depend>coal</exec_depend>
- <build_export_depend>coal</build_export_depend>
- <test_depend>romeo_description</test_depend>
- </package>
+  <url type="website">https://github.com/humanoid-path-planner/hpp-constraints</url>
+  <url type="repository">https://github.com/humanoid-path-planner/hpp-constraints</url>
+  <url type="bugtracker">https://github.com/humanoid-path-planner/hpp-constraints/issues</url>
+
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+  <buildtool_depend>cmake</buildtool_depend>
+
+  <build_depend>doxygen</build_depend>
+
+  <depend>coal</depend>
+  <depend>boost</depend>
+  <depend>eigen</depend>
+  <depend>hpp-pinocchio</depend>
+  <depend>hpp-statistics</depend>
+  <depend>urdfdom</depend>
+  <!-- Required by CMake, but not available in rosdep -->
+  <!-- <depend>qpoases</depend> -->
+
+  <test_depend>example-robot-data</test_depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>
