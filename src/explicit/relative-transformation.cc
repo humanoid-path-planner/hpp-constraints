@@ -210,7 +210,7 @@ void RelativeTransformation::impl_jacobian(matrixOut_t jacobian,
 
     tmpJac_.noalias() =
         (R2_inParentFrame.transpose() * R2_parent.transpose()) *
-        (cross1 * (omega(J2_parent_minus_J1_))-cross2 * omega(J2_parent) -
+        (cross1 * (omega(J2_parent_minus_J1_)) - cross2 * omega(J2_parent) -
          trans(J2_parent_minus_J1_));
     jacobian.topRows<3>() = inVel_.rview(tmpJac_);
   } else {

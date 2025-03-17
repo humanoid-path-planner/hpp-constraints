@@ -70,9 +70,8 @@ BOOST_AUTO_TEST_CASE(relative_com) {
   ref2.translation() << 0, -0.2, 0;
   std::vector<bool> mask(6, true);
   DifferentiableFunctionPtr_t fp(
-      GenericTransformation < PositionBit | OrientationBit |
-      RelativeBit > ::create("foot-pose", robot, leftAnkle, rightAnkle, ref1,
-                             ref2, mask));
+      GenericTransformation<PositionBit | OrientationBit | RelativeBit>::create(
+          "foot-pose", robot, leftAnkle, rightAnkle, ref1, ref2, mask));
 
   // Get function values in neutral configuration.
   LiegroupElement rc0(rc->outputSpace());
