@@ -41,8 +41,18 @@ inline HierarchicalIterative::Status BySubstitution::impl_solve(
   bool optimize = _optimize && lastIsOptional_;
   assert(!arg.hasNaN());
 
-  explicit_.solve(arg);
+  // An explicit constraint may be defined over only a subspace of its input
+  // space. If the input value is outside the definition interval, the explicit
+  // constraint throws an exception of type FunctionNotDefinedForThisValue.
+  try {
+    explicit_.solve(arg);
+  } catch (const FunctionNotDefinedForThisValue& exc) {
+    return INFEASIBLE;
+  }
   assert(!arg.hasNaN());
+  // An explicit constraint may be defined over only a subspace of its input
+  // space. If the input value is outside the definition interval, the explicit
+  // constraint throws an exception of type FunctionNotDefinedForThisValue.
 
   size_type errorDecreased = 3, iter = 0;
   value_type previousSquaredNorm;
@@ -98,8 +108,12 @@ inline HierarchicalIterative::Status BySubstitution::impl_solve(
       break;
     }
     // 3. Apply line search algorithm for the computed step
-    lineSearch(*this, arg, dq_);
-    explicit_.solve(arg);
+    try {
+      lineSearch(*this, arg, dq_);
+      explicit_.solve(arg);
+    } catch (const FunctionNotDefinedForThisValue& exc) {
+      return INFEASIBLE;
+    }
     assert(!arg.hasNaN());
 
     // 4. Evaluate the error at the new point.

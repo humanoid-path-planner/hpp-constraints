@@ -31,6 +31,7 @@
 #include <Eigen/Geometry>
 #include <boost/test/unit_test.hpp>
 #include <hpp/constraints/affine-function.hh>
+#include <hpp/constraints/explicit.hh>
 #include <hpp/constraints/explicit/relative-pose.hh>
 #include <hpp/constraints/generic-transformation.hh>
 #include <hpp/constraints/solver/by-substitution.hh>
@@ -88,6 +89,7 @@ using hpp::constraints::solver::lineSearch::FixedSequence;
 using hpp::pinocchio::displayConfig;
 using hpp::pinocchio::JACOBIAN;
 using hpp::pinocchio::JOINT_POSITION;
+using hpp::pinocchio::vector4_t;
 using hpp::pinocchio::unittest::HumanoidRomeo;
 using hpp::pinocchio::unittest::HumanoidSimple;
 using hpp::pinocchio::unittest::makeDevice;
@@ -1129,4 +1131,92 @@ BOOST_AUTO_TEST_CASE(merge) {
   BySubstitution solver5(device->configSpace());
   solver5.add(c3);
   BOOST_CHECK(solver5.contains(c3->copy()));
+}
+
+class Normalization : public DifferentiableFunction {
+ public:
+  typedef hpp::shared_ptr<Normalization> Ptr_t;
+  static Ptr_t create() { return Ptr_t(new Normalization()); }
+
+ protected:
+  Normalization()
+      : DifferentiableFunction(3, 3, LiegroupSpace::create(1),
+                               "normalization") {}
+  void impl_compute(LiegroupElementRef result, vectorIn_t argument) const {
+    assert(argument.size() == 3);
+    if (argument.squaredNorm() >= 1.)
+      throw hpp::constraints::FunctionNotDefinedForThisValue();
+    result.vector()[0] = sqrt(1 - argument.squaredNorm());
+  }
+  void impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
+    jacobian.topRows<1>() = -arg;
+    jacobian.topRows<1>() /= sqrt(1 - arg.squaredNorm());
+  }
+};  // class Normalization
+
+BOOST_AUTO_TEST_CASE(domain_of_definition) {
+  BySubstitution solver(LiegroupSpace::Rn(4));
+  solver.maxIterations(20);
+  solver.errorThreshold(1e-6);
+  // Insert an implicit constraint of the for x[0:3] = rhs
+  matrix_t A(3, 4);
+  A.setZero();
+  A.block<3, 3>(0, 0).setIdentity();
+  DifferentiableFunctionPtr_t affine(AffineFunction::create(A));
+  ImplicitPtr_t implicit(
+      Implicit::create(affine, ComparisonTypes_t(3 * Equality)));
+  ExplicitPtr_t explicit_(Explicit::create(
+      LiegroupSpace::Rn(4), Normalization::create(),
+      segments_t({segment_t(0, 3)}), segments_t({segment_t(3, 1)}),
+      segments_t({segment_t(0, 3)}), segments_t({segment_t(3, 1)}),
+      ComparisonTypes_t(EqualToZero)));
+  solver.add(explicit_);
+  solver.add(implicit);
+
+  BySubstitution::Status status;
+  // Solver contains two constraints on R^4:
+  // explicit x3 = sqrt(1 - x0^2 - x1^2 - x2^2)
+  // implicit x[0:3] = rhs
+  // Set right hand side of implicit contraint to 0. Solution should be
+  // (0,0,0,1)
+  vector3_t rhs;
+  rhs.setZero();
+  solver.rightHandSide(implicit, rhs);
+  vector4_t x;
+  x.setZero();
+  status = solver.solve(x);
+  vector4_t res;
+  res.setZero();
+  res[3] = 1;
+  BOOST_CHECK_EQUAL(status, BySubstitution::SUCCESS);
+  BOOST_CHECK_EQUAL(x, res);
+  // rhs = (.5, .5, .5)
+  // expected result: x = (.5, .5, .5, .5)
+  rhs.fill(.5);
+  solver.rightHandSide(implicit, rhs);
+  status = solver.solve(x);
+  res[0] = rhs[0];
+  res[1] = rhs[1];
+  res[2] = rhs[2];
+  res[3] = .5;
+  BOOST_CHECK_EQUAL(status, BySubstitution::SUCCESS);
+  BOOST_CHECK((x - res).norm() < 1e-6);
+  // rhs = (-.5, .5, .5)
+  // expected result: x = (-.5, .5, .5, .5)
+  rhs.fill(.5);
+  rhs[0] = -.5;
+  solver.rightHandSide(implicit, rhs);
+  status = solver.solve(x);
+  res[0] = rhs[0];
+  res[1] = rhs[1];
+  res[2] = rhs[2];
+  res[3] = .5;
+  BOOST_CHECK_EQUAL(status, BySubstitution::SUCCESS);
+  BOOST_CHECK((x - res).norm() < 1e-6);
+  // Now an infeasible problem
+  // rhs = (1, 1, 1)
+  rhs.fill(1.);
+  solver.rightHandSide(implicit, rhs);
+  status = solver.solve(x);
+  BOOST_CHECK_EQUAL(status, BySubstitution::INFEASIBLE);
 }
