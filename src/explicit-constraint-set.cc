@@ -259,7 +259,6 @@ void ExplicitConstraintSet::solveExplicitConstraint(const std::size_t& iF,
   d.qin = RowBlockIndices(d.constraint->inputConf()).rview(arg);
   d.constraint->outputValue(d.res_qout, d.qin, d.rhs_implicit);
   RowBlockIndices(d.constraint->outputConf()).lview(arg) = d.res_qout.vector();
-  assert(!arg.hasNaN());
 }
 
 void ExplicitConstraintSet::jacobian(matrixOut_t jacobian,

@@ -29,6 +29,7 @@
 #ifndef HPP_CONSTRAINTS_EXPLICIT_HH
 #define HPP_CONSTRAINTS_EXPLICIT_HH
 
+#include <exception>
 #include <hpp/constraints/implicit.hh>
 
 namespace hpp {
@@ -36,7 +37,12 @@ namespace constraints {
 /// \addtogroup constraints
 /// \{
 
+/// Exception thrown when a function is evaluated outside its definition domain
+class FunctionNotDefinedForThisValue : public std::exception {};
+
 /** Explicit numerical constraint
+
+    \paragraph hpp_constraints_explicit_definition Definition
 
     An explicit numerical constraint is a constraint such that some
     configuration variables called \b output are function of the
@@ -65,7 +71,7 @@ namespace constraints {
     \mathbf{q}_{out} = \left(q_{oc_{1}} \cdots q_{oc_{n_{oc}}}\right)^T,
     \ \ \ \mathbf{q}_{in} = (q_{ic_{1}} \cdots q_{ic_{n_{ic}}})^T
     \f}
-    It is straightforward that an equality constraint with this function can
+    It is straightforward that an equality constraint with this function can be
     solved explicitely:
     \f{align*}{
     \mathbf{q}_{out} &- g \left(\mathbf{q}_{in}\right) = rhs \\
@@ -83,7 +89,7 @@ namespace constraints {
     where \f$\mathbf{q}\f$ is a Lie group element and \f$\mathbf{v}\f$ is a
     tangent vector.
 
-    Considered as a Implicit instance, the expression of the Jacobian of
+    Considered as an Implicit instance, the expression of the Jacobian of
     the DifferentiableFunction above depends on the output space of function
     \f$f\f$. The rows corresponding to values in a vector space are
     expressed as follows.
@@ -126,7 +132,12 @@ corresponding to the part of the output value of \f$f\f$ corresponding to SO(3),
     R = \exp (\left[\omega\right]_{\times})
     \f}
 
+    \paragraph hpp_constraints_explicit_domain_of_definition "Domain of
+definition"
 
+    Some explicit constraints might be defined over only a subspace of the input
+space. If the input value is not in the definition subspace, the explicit
+constraint will throw an exception of type FunctionNotDefinedForThisValue.
 
 **/
 class HPP_CONSTRAINTS_DLLAPI Explicit : public Implicit {
