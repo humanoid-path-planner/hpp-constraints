@@ -29,6 +29,10 @@
 #ifndef HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 #define HPP_CONSTRAINTS_CONVEX_SHAPE_HH
 
+// clang-format off
+#include <pinocchio/multibody/model.hpp>
+// clang-format on
+
 #include <coal/shape/geometric_shapes.h>
 
 #include <vector>
@@ -37,7 +41,6 @@
 #include <hpp/constraints/config.hh>
 #include <hpp/constraints/fwd.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <pinocchio/multibody/model.hpp>
 
 namespace hpp {
 namespace constraints {
