@@ -14,7 +14,23 @@
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import inputs.systems;
-      imports = [ inputs.gepetto.flakeModule ];
+      imports = [
+        inputs.gepetto.flakeModule
+        {
+          gepetto-pkgs.overlays = [
+            (final: prev: {
+              pinocchio = prev.pinocchio.overrideAttrs (super: rec {
+                version = "3.7.0";
+                src = final.fetchFromGitHub {
+                  inherit (super.src) owner repo;
+                  tag = "v${version}";
+                  hash = "sha256-MykHbHSXY/eJ1+8v0hptiXeVmglU9/wImimiuByw0tE=";
+                };
+              });
+            })
+          ];
+        }
+      ];
       perSystem =
         {
           lib,
