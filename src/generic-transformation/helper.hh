@@ -29,13 +29,15 @@
 #ifndef SRC_GENERIC_TRANSFORMATION_HELPER_HH
 #define SRC_GENERIC_TRANSFORMATION_HELPER_HH
 
+// clang-format off
+#include <pinocchio/multibody/model.hpp>
+// clang-format on
+
 #include <hpp/constraints/macros.hh>
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/constraints/tools.hh>  // for logSO3
 #include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/joint.hh>
-#include <pinocchio/multibody/model.hpp>
 
 namespace hpp {
 namespace constraints {
