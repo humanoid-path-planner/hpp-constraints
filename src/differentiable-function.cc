@@ -37,6 +37,8 @@
 #include <hpp/util/serialization.hh>
 #include <pinocchio/multibody/liegroup/liegroup.hpp>
 
+#include <../src/extracted-function.hh>
+
 BOOST_CLASS_EXPORT(hpp::constraints::DifferentiableFunction)
 
 namespace hpp {
@@ -221,6 +223,12 @@ bool DifferentiableFunction::operator==(
 }
 bool DifferentiableFunction::operator!=(DifferentiableFunction const& b) const {
   return !(*this == b);
+}
+
+  DifferentiableFunctionPtr_t DifferentiableFunction::extract(DifferentiableFunctionPtr_t original,
+							      interval_t paramRange) {
+  if ((paramRange.first == 0.) && (paramRange.second > 0.)) return original;
+  return ExtractedFunction::create(original, paramRange);
 }
 
 DifferentiableFunction::DifferentiableFunction(size_type sizeInput,

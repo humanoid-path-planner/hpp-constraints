@@ -81,6 +81,7 @@ typedef pinocchio::ArrayXb ArrayXb;
 typedef ArrayXb bool_array_t;
 
 typedef std::pair<size_type, size_type> segment_t;
+typedef std::pair<value_type, value_type> interval_t;
 typedef std::vector<segment_t> segments_t;
 
 HPP_PREDEF_CLASS(DistanceBetweenBodies);

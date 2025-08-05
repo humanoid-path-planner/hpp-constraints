@@ -176,6 +176,22 @@ class HPP_CONSTRAINTS_DLLAPI DifferentiableFunction {
     return std::pair<JointConstPtr_t, JointConstPtr_t>(nullptr, nullptr);
   };
 
+  /** Return a function defined over a subinterval
+
+      The function on which this method is called should be defined over a vector space of
+      dimension 1. The output function is the same function defined over a subinterval provided
+      as input.
+
+      The input function \f$f_{in}\f$ is assumed to be defined over an interval \f$[0,L]\f$.
+      Let \f$[t_1,t_2]\f$ be the interval provided as input. The output function is defined
+      on interval \f$[0, |t_2-t_1|]\f$ by:
+      \f{eqnarray*}
+      f_{out}(t) = f_{in}(t_1+t) & \mbox{if} & t_2 \leq t_1 \\
+      f_{out}(t) = f_{in}(t_2-t) & \mbox{if} & t_2 < t_1
+      \f}
+  */
+  static DifferentiableFunctionPtr_t extract(DifferentiableFunctionPtr_t original,
+					     interval_t interval);
  protected:
   /// \brief Concrete class constructor should call this constructor.
   ///
