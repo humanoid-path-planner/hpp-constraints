@@ -135,6 +135,7 @@ set(${PROJECT_NAME}_SOURCES
     src/distance-between-points-in-bodies.cc
     src/configuration-constraint.cc
     src/convex-shape-contact.cc
+    src/extracted-function.hh
     src/matrix-view.cc
     src/manipulability.cc
     src/static-stability.cc
