@@ -282,6 +282,16 @@ class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative {
   /// Get the saturation function
   const Saturation_t& saturation() const { return saturate_; }
 
+  /// Return another solver defined over a sub-interval of time
+  ///
+  /// If some constraints have a time varying right hand side, this method will
+  /// build another solver with the same constraints, except that the right hand
+  /// side is defined over a sub-interval of time \sa
+  /// DifferentiableFunction::extract.
+  ///
+  /// \param interval sub-interval of definition
+  HierarchicalIterative extract(interval_t interval) const;
+
   /// \}
 
   /// \name Problem resolution
@@ -550,6 +560,18 @@ class HPP_CONSTRAINTS_DLLAPI HierarchicalIterative {
   typedef Eigen::JacobiSVD<matrix_t> SVD_t;
 
   struct Data {
+    Data()
+        : output(),
+          rightHandSide(),
+          error(),
+          jacobian(),
+          reducedJ(),
+          svd(),
+          PK(),
+          comparison(),
+          inequalityIndices(),
+          equalityIndices(),
+          activeRowsOfJ() {}
     /// \cond
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     /// \endcond

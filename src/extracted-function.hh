@@ -36,27 +36,28 @@ namespace hpp {
 namespace constraints {
 
 class ExtractedFunction : public DifferentiableFunction {
-public:
+ public:
   typedef shared_ptr<ExtractedFunction> Ptr_t;
   typedef weak_ptr<ExtractedFunction> WkPtr_t;
-  static Ptr_t create(const DifferentiableFunctionPtr_t& original, interval_t paramRange) {
+  static Ptr_t create(const DifferentiableFunctionPtr_t& original,
+                      interval_t paramRange) {
     ExtractedFunction* ptr(new ExtractedFunction(original, paramRange));
     Ptr_t shPtr(ptr);
     ptr->weak_ = shPtr;
     return shPtr;
   }
   virtual ~ExtractedFunction() {}
-  virtual void impl_compute(LiegroupElementRef result, vectorIn_t argument) const {
+  virtual void impl_compute(LiegroupElementRef result,
+                            vectorIn_t argument) const {
     assert(argument.rows() == 1);
     assert(argument.cols() == 1);
     Eigen::Matrix<value_type, 1, 1> param;
     if (reversed_) {
-      param[0] = t12_ - argument[0];
-      return original_->value(result, param);
+      param[0] = t1_ - argument[0];
     } else {
-      param[0] = t12_ + argument[0];
-      return original_->value(result, param);
+      param[0] = t1_ + argument[0];
     }
+    return original_->value(result, param);
   }
 
   virtual void impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
@@ -64,41 +65,45 @@ public:
     assert(arg.cols() == 1);
     Eigen::Matrix<value_type, 1, 1> param;
     if (reversed_) {
-      param[0] = t12_ - arg[0];
+      param[0] = t1_ - arg[0];
       original_->jacobian(jacobian, param);
       jacobian *= -1;
     } else {
-      param[0] = arg[0] - t12_;
+      param[0] = arg[0] - t1_;
       return original_->jacobian(jacobian, param);
     }
   }
 
-private:
-  ExtractedFunction(const DifferentiableFunctionPtr_t& original, interval_t paramRange) :
-    DifferentiableFunction(original->inputSize(), original->inputDerivativeSize(),
-			   original->outputSpace(),
-			   std::string("extracted from ") + original->name()),
-    reversed_(paramRange.first > paramRange.second),
-    t12_(reversed_ ? paramRange.second : paramRange.first), original_(original) {
+ private:
+  ExtractedFunction(const DifferentiableFunctionPtr_t& original,
+                    interval_t paramRange)
+      : DifferentiableFunction(
+            original->inputSize(), original->inputDerivativeSize(),
+            original->outputSpace(),
+            std::string("extracted from ") + original->name()),
+        reversed_(paramRange.first > paramRange.second),
+        t1_(paramRange.first),
+        original_(original) {
     if (inputSize_ != 1) {
       std::ostringstream os;
-      os << "hpp::constraints::DifferentiableFunction::extract: input size (=" << inputSize_
-	 << ") should be equal to 1.";
+      os << "hpp::constraints::DifferentiableFunction::extract: input size (="
+         << inputSize_ << ") should be equal to 1.";
       throw std::logic_error(os.str().c_str());
     }
     if (inputDerivativeSize_ != 1) {
       std::ostringstream os;
-      os << "hpp::constraints::DifferentiableFunction::extract: input derivative size (="
-	 << inputDerivativeSize_ << ") should be equal to 1.";
+      os << "hpp::constraints::DifferentiableFunction::extract: input "
+            "derivative size (="
+         << inputDerivativeSize_ << ") should be equal to 1.";
       throw std::logic_error(os.str().c_str());
     }
   }
   bool reversed_;
-  value_type t12_;
+  value_type t1_;
   DifferentiableFunctionPtr_t original_;
   WkPtr_t weak_;
-}; // class ExtractedFunction
+};  // class ExtractedFunction
 
-} // namespace constraints
-} // namespace hpp
+}  // namespace constraints
+}  // namespace hpp
 #endif

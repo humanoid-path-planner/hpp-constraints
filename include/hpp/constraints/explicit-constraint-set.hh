@@ -193,6 +193,24 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
     notOutDers_.addCol(0, space->nv());
   }
 
+  ExplicitConstraintSet(const ExplicitConstraintSet& other)
+      : configSpace_(other.configSpace_),
+        inArgs_(other.inArgs_),
+        notOutArgs_(other.notOutArgs_),
+        inDers_(other.inDers_),
+        notOutDers_(other.notOutDers_),
+        outArgs_(other.outArgs_),
+        outDers_(other.outDers_),
+        inOutDependencies_(other.inOutDependencies_),
+        data_(other.data_),
+        computationOrder_(other.computationOrder_),
+        argFunction_(other.argFunction_),
+        derFunction_(other.derFunction_),
+        errorThreshold_(other.errorThreshold_),
+        errorSize_(other.errorSize_),
+        arg_(other.arg_),
+        diff_(other.diff_),
+        diffSmall_(other.diffSmall_) {}
   /// \}
 
   /// \name Parameters
@@ -415,6 +433,14 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
   /// \}
 
   std::ostream& print(std::ostream& os) const;
+
+  /// Replace constraints in internal storage.
+  ///
+  /// Shared pointer to constraints point to the same Implicit instances as in
+  /// BySubstitution class. When constraints are modified in the latter class
+  /// (when extracting a sub interval of right hand side function for instance),
+  /// The same substitution should happen in this class.
+  void replace(const std::map<ImplicitPtr_t, ImplicitPtr_t>& oldToNew);
 
  private:
   typedef std::vector<bool> Computed_t;
