@@ -85,6 +85,16 @@ class HPP_CONSTRAINTS_DLLAPI BySubstitution
   bool add(const ImplicitPtr_t& numericalConstraint,
            const std::size_t& priority = 0);
 
+  /// Return another solver defined over a sub-interval of time
+  ///
+  /// If some constraints have a time varying right hand side, this method will
+  /// build another solver with the same constraints, except that the right hand
+  /// side is defined over a sub-interval of time \sa
+  /// DifferentiableFunction::extract.
+  ///
+  /// \param interval sub-interval of definition
+  BySubstitution extract(interval_t interval);
+
   /// Get the numerical constraints implicit and explicit
   const NumericalConstraints_t& numericalConstraints() const {
     return constraints_;

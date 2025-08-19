@@ -26,6 +26,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
+#include <../src/extracted-function.hh>
 #include <boost/serialization/string.hpp>
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/pinocchio/configuration.hh>
@@ -36,8 +37,6 @@
 #include <hpp/pinocchio/serialization.hh>
 #include <hpp/util/serialization.hh>
 #include <pinocchio/multibody/liegroup/liegroup.hpp>
-
-#include <../src/extracted-function.hh>
 
 BOOST_CLASS_EXPORT(hpp::constraints::DifferentiableFunction)
 
@@ -225,8 +224,8 @@ bool DifferentiableFunction::operator!=(DifferentiableFunction const& b) const {
   return !(*this == b);
 }
 
-  DifferentiableFunctionPtr_t DifferentiableFunction::extract(DifferentiableFunctionPtr_t original,
-							      interval_t paramRange) {
+DifferentiableFunctionPtr_t DifferentiableFunction::extract(
+    DifferentiableFunctionPtr_t original, interval_t paramRange) {
   if ((paramRange.first == 0.) && (paramRange.second > 0.)) return original;
   return ExtractedFunction::create(original, paramRange);
 }

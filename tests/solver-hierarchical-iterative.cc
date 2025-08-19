@@ -251,6 +251,67 @@ BOOST_AUTO_TEST_CASE(affine_opt) {
   EIGEN_VECTOR_IS_APPROX(test.optimize(0.5, 0.5), VECTOR2(0.5, 0.5));
 }
 
+// Test a solver with time varying right hand side when extracting a
+// sub-interval of time.
+BOOST_AUTO_TEST_CASE(extract) {
+  std::cout << "Starting test \"extract\"." << std::endl;
+  std::cout << "---------------------------------------------------------------"
+            << std::endl;
+  matrix_t A(1, 2);
+  A << 1, 1;
+  matrix_t B(2, 2);
+  B << 1, 0, 0, 1;
+
+  // min  X^T * B * X
+  // s.t. A * X - 1 = t
+  //      0 <= X <= 1
+  test_affine_opt<> test(A, B);
+
+  // rhs(t) = t
+  AffineFunctionPtr_t rhs(AffineFunction::create(matrix_t::Constant(1, 1, 1),
+                                                 vector_t::Constant(1, 0)));
+  test.solver.constraints()[0]->rightHandSideFunction(rhs);
+  test.solver.rightHandSideAt(0);
+
+  test.success(0, 0);
+  test.success(0.1, 0);
+  test.success(0, 0.1);
+  test.success(0.5, 0.5);
+
+  EIGEN_VECTOR_IS_APPROX(test.optimize(0.1, 0), VECTOR2(0.5, 0.5));
+  EIGEN_VECTOR_IS_APPROX(test.optimize(0, 0.1), VECTOR2(0.5, 0.5));
+  EIGEN_VECTOR_IS_APPROX(test.optimize(0.5, 0.5), VECTOR2(0.5, 0.5));
+
+  test.solver.rightHandSideAt(.5);
+
+  test.success(0, 0);
+  test.success(0.2, 0);
+  test.success(0, 0.2);
+  test.success(0.75, 0.75);
+
+  EIGEN_VECTOR_IS_APPROX(test.optimize(0.2, 0), VECTOR2(.75, .75));
+  EIGEN_VECTOR_IS_APPROX(test.optimize(0, 0.2), VECTOR2(.75, .75));
+  EIGEN_VECTOR_IS_APPROX(test.optimize(0.75, 0.75), VECTOR2(.75, .75));
+
+  std::cout << "test.solver: " << test.solver << std::endl;
+
+  solver::HierarchicalIterative solver1(test.solver.extract(interval_t(.5, 1)));
+  std::cout << "solver1: " << solver1 << std::endl;
+  test_affine_opt<> test1(A, B);
+  test1.solver = solver1;
+  test1.solver.rightHandSideAt(0);
+
+  std::cout << "test1.solver: " << test1.solver << std::endl;
+  test1.success(0, 0);
+  test1.success(0.2, 0);
+  test1.success(0, 0.2);
+  test1.success(0.75, 0.75);
+
+  EIGEN_VECTOR_IS_APPROX(test1.optimize(0.2, 0), VECTOR2(.75, .75));
+  EIGEN_VECTOR_IS_APPROX(test1.optimize(0, 0.2), VECTOR2(.75, .75));
+  EIGEN_VECTOR_IS_APPROX(test1.optimize(0.75, 0.75), VECTOR2(.75, .75));
+}
+
 // build an implicit constraint with values in SE3 and with non trivial mask
 BOOST_AUTO_TEST_CASE(mask) {
   struct Identity : public DifferentiableFunction {

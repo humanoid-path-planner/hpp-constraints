@@ -450,6 +450,18 @@ std::ostream& ExplicitConstraintSet::print(std::ostream& os) const {
   return os << decindent << decindent;
 }
 
+void ExplicitConstraintSet::replace(
+    const std::map<ImplicitPtr_t, ImplicitPtr_t>& oldToNew) {
+  for (auto& d : data_) {
+    std::map<ImplicitPtr_t, ImplicitPtr_t>::const_iterator it =
+        oldToNew.find(d.constraint);
+    assert(it != oldToNew.end());
+    assert(HPP_DYNAMIC_PTR_CAST(Explicit, it->second));
+    ExplicitPtr_t expl(HPP_STATIC_PTR_CAST(Explicit, it->second));
+    d.constraint = expl;
+  }
+}
+
 Eigen::MatrixXi ExplicitConstraintSet::inOutDofDependencies() const {
   Eigen::MatrixXi iod(nv(), inDers_.nbCols());
   if (inDers_.nbCols() == 0) return iod;

@@ -220,9 +220,10 @@ HierarchicalIterative::HierarchicalIterative(const HierarchicalIterative& other)
       dimension_(other.dimension_),
       reducedDimension_(other.reducedDimension_),
       lastIsOptional_(other.lastIsOptional_),
+      solveLevelByLevel_(other.solveLevelByLevel_),
       freeVariables_(other.freeVariables_),
       saturate_(other.saturate_),
-      constraints_(other.constraints_.size()),
+      constraints_(other.constraints_),
       iq_(other.iq_),
       iv_(other.iv_),
       priority_(other.priority_),
@@ -238,10 +239,7 @@ HierarchicalIterative::HierarchicalIterative(const HierarchicalIterative& other)
       datas_(other.datas_),
       svd_(other.svd_),
       OM_(other.OM_),
-      OP_(other.OP_) {
-  for (std::size_t i = 0; i < constraints_.size(); ++i)
-    constraints_[i] = other.constraints_[i]->copy();
-}
+      OP_(other.OP_) {}
 
 bool HierarchicalIterative::contains(
     const ImplicitPtr_t& numericalConstraint) const {
@@ -312,6 +310,18 @@ void HierarchicalIterative::merge(const HierarchicalIterative& other) {
       this->add(*it, priority);
     }
   }
+}
+
+HierarchicalIterative HierarchicalIterative::extract(
+    interval_t interval) const {
+  HierarchicalIterative res(*this);
+  for (ImplicitPtr_t c : res.constraints()) {
+    if (c->rightHandSideFunction()) {
+      c->rightHandSideFunction(DifferentiableFunction::extract(
+          c->rightHandSideFunction(), interval));
+    }
+  }
+  return res;
 }
 
 ArrayXb HierarchicalIterative::activeParameters() const {

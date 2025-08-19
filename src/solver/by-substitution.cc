@@ -64,12 +64,7 @@ BySubstitution::BySubstitution(const BySubstitution& other)
     : HierarchicalIterative(other),
       explicit_(other.explicit_),
       Je_(other.Je_),
-      JeExpanded_(other.JeExpanded_) {
-  for (NumericalConstraints_t::iterator it(constraints_.begin());
-       it != constraints_.end(); ++it) {
-    // assert (contains (*it));
-  }
-}
+      JeExpanded_(other.JeExpanded_) {}
 
 bool BySubstitution::add(const ImplicitPtr_t& nm, const std::size_t& priority) {
   if (contains(nm)) {
@@ -91,7 +86,7 @@ bool BySubstitution::add(const ImplicitPtr_t& nm, const std::size_t& priority) {
   }
 
   if (addedAsExplicit) {
-    // If added as explicit, add to the list of constraint of Hierarchical
+    // If added as explicit, add to the list of constraints of Hierarchical
     // iterative
     constraints_.push_back(nm);
     hppDout(info,
@@ -109,6 +104,29 @@ bool BySubstitution::add(const ImplicitPtr_t& nm, const std::size_t& priority) {
 
   assert(contains(nm));
   return true;
+}
+
+// We need to replace each numerical constraint by its extracted copy as in
+// HierachicalIterative, but also to replace shared pointers to initial
+// constraints by shared pointer to extracted constraints in explicit constraint
+// set.
+BySubstitution BySubstitution::extract(interval_t interval) {
+  BySubstitution res(*this);
+  std::map<ImplicitPtr_t, ImplicitPtr_t> oldToNew;
+  NumericalConstraints_t::const_iterator oldIt = constraints_.begin();
+  for (NumericalConstraints_t::iterator newIt = res.constraints_.begin();
+       newIt != res.constraints_.end(); ++newIt) {
+    ImplicitPtr_t newC(*newIt);
+    ImplicitPtr_t oldC(*oldIt);
+    oldToNew[oldC] = newC;
+    if (newC->rightHandSideFunction()) {
+      newC->rightHandSideFunction(DifferentiableFunction::extract(
+          newC->rightHandSideFunction(), interval));
+    }
+    ++oldIt;
+  }
+  explicit_.replace(oldToNew);
+  return res;
 }
 
 void BySubstitution::explicitConstraintSetHasChanged() {
