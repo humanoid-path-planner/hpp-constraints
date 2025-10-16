@@ -242,7 +242,7 @@ HierarchicalIterative::HierarchicalIterative(const HierarchicalIterative& other)
       OP_(other.OP_) {
   // Copy the constraints and build a map between old and new constraints
   ConstraintReplacement_t oldToNew;
-  for (auto c: other.constraints_) {
+  for (auto c : other.constraints_) {
     ImplicitPtr_t newConstraint = c->copy();
     constraints_.push_back(newConstraint);
     oldToNew[c] = newConstraint;
