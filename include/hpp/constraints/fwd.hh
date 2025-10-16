@@ -184,6 +184,8 @@ HPP_PREDEF_CLASS(Explicit);
 typedef shared_ptr<Explicit> ExplicitPtr_t;
 typedef shared_ptr<const Explicit> ExplicitConstPtr_t;
 
+// Map to replace constraints by their copies when copying solvers
+typedef std::map<ImplicitPtr_t, ImplicitPtr_t> ConstraintReplacement_t;
 class ExplicitConstraintSet;
 namespace solver {
 class HierarchicalIterative;

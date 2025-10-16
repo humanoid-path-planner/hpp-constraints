@@ -223,7 +223,7 @@ HierarchicalIterative::HierarchicalIterative(const HierarchicalIterative& other)
       solveLevelByLevel_(other.solveLevelByLevel_),
       freeVariables_(other.freeVariables_),
       saturate_(other.saturate_),
-      constraints_(other.constraints_),
+      constraints_(),
       iq_(other.iq_),
       iv_(other.iv_),
       priority_(other.priority_),
@@ -239,7 +239,19 @@ HierarchicalIterative::HierarchicalIterative(const HierarchicalIterative& other)
       datas_(other.datas_),
       svd_(other.svd_),
       OM_(other.OM_),
-      OP_(other.OP_) {}
+      OP_(other.OP_) {
+  // Copy the constraints and build a map between old and new constraints
+  ConstraintReplacement_t oldToNew;
+  for (auto c: other.constraints_) {
+    ImplicitPtr_t newConstraint = c->copy();
+    constraints_.push_back(newConstraint);
+    oldToNew[c] = newConstraint;
+  }
+  // Replace old by new constraints in ImplicitConstraintSet
+  for (auto& ics : stacks_) {
+    ics.replace(oldToNew);
+  }
+}
 
 bool HierarchicalIterative::contains(
     const ImplicitPtr_t& numericalConstraint) const {

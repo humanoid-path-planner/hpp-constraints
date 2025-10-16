@@ -119,9 +119,20 @@ class HPP_CONSTRAINTS_DLLAPI ImplicitConstraintSet : public Implicit {
   }
 
  private:
+    /// Replace constraints by their copies after copying HierarchicalIterative instance
+  void replace(const ConstraintReplacement_t& oldToNew) {
+    for (auto& c : constraints_) {
+      auto it = oldToNew.find(c);
+      if (it!= oldToNew.end()) {
+	c = it->second;
+      }
+    }
+  }
+
   Implicits_t constraints_;
 
   HPP_SERIALIZABLE();
+  friend class solver::HierarchicalIterative;
 };  // class ImplicitConstraintSet
 /// \}
 }  // namespace constraints
