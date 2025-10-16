@@ -64,7 +64,17 @@ BySubstitution::BySubstitution(const BySubstitution& other)
     : HierarchicalIterative(other),
       explicit_(other.explicit_),
       Je_(other.Je_),
-      JeExpanded_(other.JeExpanded_) {}
+      JeExpanded_(other.JeExpanded_) {
+  // Replace old by new constraints in ExplicitConstraintSet
+  ConstraintReplacement_t oldToNew;
+  NumericalConstraints_t::const_iterator itOld = other.constraints_.begin();
+  NumericalConstraints_t::const_iterator itNew;
+  for (itNew = constraints_.begin(); itNew != constraints_.end(); ++itNew) {
+    oldToNew[*itOld] = *itNew;
+    ++itOld;
+  }
+  explicit_.replace(oldToNew);
+}
 
 bool BySubstitution::add(const ImplicitPtr_t& nm, const std::size_t& priority) {
   if (contains(nm)) {

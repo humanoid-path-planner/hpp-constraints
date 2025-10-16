@@ -450,15 +450,14 @@ std::ostream& ExplicitConstraintSet::print(std::ostream& os) const {
   return os << decindent << decindent;
 }
 
-void ExplicitConstraintSet::replace(
-    const std::map<ImplicitPtr_t, ImplicitPtr_t>& oldToNew) {
+void ExplicitConstraintSet::replace(const ConstraintReplacement_t& oldToNew) {
   for (auto& d : data_) {
-    std::map<ImplicitPtr_t, ImplicitPtr_t>::const_iterator it =
-        oldToNew.find(d.constraint);
-    assert(it != oldToNew.end());
-    assert(HPP_DYNAMIC_PTR_CAST(Explicit, it->second));
-    ExplicitPtr_t expl(HPP_STATIC_PTR_CAST(Explicit, it->second));
-    d.constraint = expl;
+    auto it = oldToNew.find(d.constraint);
+    if (it != oldToNew.end()) {
+      assert(HPP_DYNAMIC_PTR_CAST(Explicit, it->second));
+      ExplicitPtr_t expl(HPP_STATIC_PTR_CAST(Explicit, it->second));
+      d.constraint = expl;
+    }
   }
 }
 

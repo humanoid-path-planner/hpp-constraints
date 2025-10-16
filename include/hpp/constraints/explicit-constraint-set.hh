@@ -434,14 +434,6 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
 
   std::ostream& print(std::ostream& os) const;
 
-  /// Replace constraints in internal storage.
-  ///
-  /// Shared pointer to constraints point to the same Implicit instances as in
-  /// BySubstitution class. When constraints are modified in the latter class
-  /// (when extracting a sub interval of right hand side function for instance),
-  /// The same substitution should happen in this class.
-  void replace(const std::map<ImplicitPtr_t, ImplicitPtr_t>& oldToNew);
-
  private:
   typedef std::vector<bool> Computed_t;
 
@@ -467,6 +459,14 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
   void computeJacobian(const std::size_t& i, matrixOut_t J) const;
   void computeOrder(const std::size_t& iF, std::size_t& iOrder,
                     Computed_t& computed);
+
+  /// Replace constraints in internal storage.
+  ///
+  /// Shared pointer to constraints point to the same Implicit instances as in
+  /// BySubstitution class. When constraints are modified in the latter class
+  /// (when extracting a sub interval of right hand side function for instance),
+  /// The same substitution should happen in this class.
+  void replace(const ConstraintReplacement_t& oldToNew);
 
   LiegroupSpacePtr_t configSpace_;
 
