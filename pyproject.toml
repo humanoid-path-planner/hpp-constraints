@@ -17,7 +17,7 @@ dependencies = [
 description = "Definition of basic geometric constraints for motion planning"
 license = "BSD-2-Clause"
 name = "hpp-constraints"
-version = "6.0.0"
+version = "6.1.0"
 
 [tool.ruff]
 extend-exclude = ["cmake"]
