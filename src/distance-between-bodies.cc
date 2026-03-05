@@ -31,7 +31,6 @@
 #include <hpp/constraints/distance-between-bodies.hh>
 #include <hpp/pinocchio/body.hh>
 #include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <pinocchio/algorithm/geometry.hpp>
 

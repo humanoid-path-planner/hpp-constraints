@@ -34,7 +34,6 @@
 #include <hpp/constraints/solver/impl/hierarchical-iterative.hh>
 #include <hpp/constraints/svd.hh>
 #include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/liegroup-element.hh>
 #include <hpp/pinocchio/serialization.hh>
 #include <hpp/pinocchio/util.hh>

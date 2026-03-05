@@ -105,7 +105,6 @@
 #include <hpp/constraints/matrix-view.hh>
 #include <hpp/pinocchio/device.hh>
 #include <hpp/pinocchio/extra-config-space.hh>
-#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/util.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
