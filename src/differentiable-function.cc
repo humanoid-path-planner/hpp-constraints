@@ -31,7 +31,6 @@
 #include <hpp/constraints/differentiable-function.hh>
 #include <hpp/pinocchio/configuration.hh>
 #include <hpp/pinocchio/device.hh>
-#include <hpp/pinocchio/joint-collection.hh>
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/liegroup.hh>
 #include <hpp/pinocchio/serialization.hh>
