@@ -21,6 +21,7 @@
           inputs.gepetto.flakeModule
           {
             gazebros2nix.overrides.hpp-constraints = _final: {
+              patches = [ ]; # drop on next release after 7.0.0
               src = lib.fileset.toSource {
                 root = ./.;
                 fileset = lib.fileset.unions [
