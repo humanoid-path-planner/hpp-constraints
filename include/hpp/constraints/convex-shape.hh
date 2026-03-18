@@ -64,7 +64,8 @@ inline void closestPointToSegment(const vector3_t& P, const vector3_t& A,
 
 /// \param A, u point and vector defining the line \f$ A + t*u \f$
 /// \param P, n point and normal vector defining the plane \f$ Q \in plane
-/// \Rightleftarrow (P - Q) . n = 0 \f$ \return the intesection point. \warning
+/// \Leftrightarrow (P - Q) \cdot n = 0 \f$ \return the intesection point.
+/// \warning
 /// \c u and \c n are expected not to be orthogonal. \todo make this function
 /// robust to orthogonal inputs.
 inline vector3_t linePlaneIntersection(const vector3_t& A, const vector3_t& u,
