@@ -31,7 +31,7 @@
 #include <hpp/pinocchio/joint.hh>
 #include <hpp/pinocchio/simple-device.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
-#include <pinocchio/parsers/sample-models.hpp>
+#include <pinocchio/multibody/sample-models.hpp>
 
 #include "hpp/constraints/configuration-constraint.hh"
 #include "hpp/constraints/convex-shape-contact.hh"
