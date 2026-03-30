@@ -34,6 +34,7 @@
 #include <hpp/constraints/deprecated.hh>
 #include <hpp/pinocchio/fwd.hh>
 #include <list>
+#include <map>
 
 namespace Eigen {
 struct BlockIndex;
