@@ -106,6 +106,7 @@ set(${PROJECT_NAME}_HEADERS
     include/hpp/constraints/generic-transformation.hh
     include/hpp/constraints/macros.hh
     include/hpp/constraints/manipulability.hh
+    include/hpp/constraints/min-manipulability.hh
     include/hpp/constraints/convex-shape.hh
     include/hpp/constraints/convex-shape-contact.hh
     include/hpp/constraints/static-stability.hh
@@ -148,6 +149,7 @@ set(${PROJECT_NAME}_SOURCES
     src/extracted-function.hh
     src/matrix-view.cc
     src/manipulability.cc
+    src/min-manipulability.cc
     src/static-stability.cc
     src/explicit-constraint-set.cc
     src/implicit.cc
