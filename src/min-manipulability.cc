@@ -26,12 +26,12 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-#include <hpp/constraints/manipulability.hh>
+#include <hpp/constraints/min-manipulability.hh>
 
 namespace hpp {
 namespace constraints {
-Manipulability::Manipulability(DifferentiableFunctionPtr_t function,
-                               DevicePtr_t robot, std::string name)
+MinManipulability::MinManipulability(DifferentiableFunctionPtr_t function,
+                                     DevicePtr_t robot, std::string name)
     : DifferentiableFunction(function->inputSize(),
                              function->inputDerivativeSize(), 1, name),
       function_(function),
@@ -43,8 +43,8 @@ Manipulability::Manipulability(DifferentiableFunctionPtr_t function,
   J_JT_.resize(J_.rows(), J_.rows());
 }
 
-void Manipulability::impl_compute(LiegroupElementRef res,
-                                  vectorIn_t arg) const {
+void MinManipulability::impl_compute(LiegroupElementRef res,
+                                     vectorIn_t arg) const {
   assert(cols_.cols().size() > 0);
 
   function_->jacobian(J_, arg);
@@ -97,10 +97,10 @@ void Manipulability::impl_compute(LiegroupElementRef res,
 
   // This funcion will be used as a cost function whose squared norm is to
   // be minimized.
-  res.vector()[0] = logAbsDeterminant;
+  res.vector()[0] = std::max(-logAbsDeterminant, 0.);
 }
 
-void Manipulability::impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
+void MinManipulability::impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
   finiteDifferenceCentral(jacobian, arg, robot_, 1e-8);
 }
 }  // namespace constraints
