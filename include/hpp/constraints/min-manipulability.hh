@@ -44,8 +44,9 @@ typedef shared_ptr<MinManipulability> MinManipulabilityPtr_t;
 
 /// Enforce minimal manipulability
 ///
-/// This function takes as input another differentiable function \f$f_1\f$ defined over
-/// the same configuration space and computes a one dimensional value as follows:
+/// This function takes as input another differentiable function \f$f_1\f$
+/// defined over the same configuration space and computes a one dimensional
+/// value as follows:
 ///
 /// \f[
 /// f(\mathbf{q}) = \max \left(-\log\det(J_1 J_1^T), 0\right)
@@ -56,10 +57,12 @@ typedef shared_ptr<MinManipulability> MinManipulabilityPtr_t;
 ///   \li \f$\det(J_1 J_1^T) \geq 1\f$, the function is uniformly equal to 0,
 ///   \li \f$\det(J_1 J_1^T) < 1\f$, the function is positive.
 ///
-/// Inserting a \link hpp::constraints::Implicit constraint  \endlink with this function
-/// with comparison type EQUAL_TO_ZERO into a numerical solver will make the solution
-/// lie in the domain defined by \f$\det(J_1 J_1^T) \geq 1\f$, where the Jacobian of
-/// \f$f_1\f$ has a manipulability index (product of singular values) greater than 1.
+/// Inserting a \link hpp::constraints::Implicit constraint  \endlink with this
+/// function with comparison type EQUAL_TO_ZERO into a numerical solver will
+/// make the solution lie in the domain defined by \f$\det(J_1 J_1^T) \geq 1\f$,
+/// where the Jacobian of
+/// \f$f_1\f$ has a manipulability index (product of singular values) greater
+/// than 1.
 ///
 /// \note The Jacobian of this function is computed by finite difference.
 class HPP_CONSTRAINTS_DLLAPI MinManipulability : public DifferentiableFunction {
@@ -67,7 +70,7 @@ class HPP_CONSTRAINTS_DLLAPI MinManipulability : public DifferentiableFunction {
   virtual ~MinManipulability() {}
 
   static MinManipulabilityPtr_t create(DifferentiableFunctionPtr_t function,
-                                    DevicePtr_t robot, std::string name) {
+                                       DevicePtr_t robot, std::string name) {
     return MinManipulabilityPtr_t(new MinManipulability(function, robot, name));
   }
 
@@ -77,7 +80,7 @@ class HPP_CONSTRAINTS_DLLAPI MinManipulability : public DifferentiableFunction {
   /// \param function the function which must be analysed
   /// \param name function's name
   MinManipulability(DifferentiableFunctionPtr_t function, DevicePtr_t robot,
-                 std::string name);
+                    std::string name);
 
   void impl_compute(LiegroupElementRef result, vectorIn_t argument) const;
 
