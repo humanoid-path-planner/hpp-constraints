@@ -100,7 +100,8 @@ void MinManipulability::impl_compute(LiegroupElementRef res,
   res.vector()[0] = std::max(-logAbsDeterminant, 0.);
 }
 
-void MinManipulability::impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
+void MinManipulability::impl_jacobian(matrixOut_t jacobian,
+                                      vectorIn_t arg) const {
   finiteDifferenceCentral(jacobian, arg, robot_, 1e-8);
 }
 }  // namespace constraints
