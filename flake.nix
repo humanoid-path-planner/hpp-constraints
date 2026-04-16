@@ -9,7 +9,6 @@
       { lib, ... }:
       {
         overrideAttrs.hpp-constraints = {
-          patches = [ ]; # drop on next release after 7.0.0
           src = lib.fileset.toSource {
             root = ./.;
             fileset = lib.fileset.unions [
