@@ -38,21 +38,23 @@ add_definitions(-DBOOST_TEST_MAIN)
 find_library(RT_LIB rt)
 
 macro(ADD_TESTCASE NAME)
-  add_unit_test(${NAME} ${NAME}.cc)
-  set_tests_properties(
-    ${NAME}
-    PROPERTIES ENVIRONMENT
-               "ROS_PACKAGE_PATH=${example-robot-data_DIR}/../../../share")
-  target_link_libraries(${NAME} PRIVATE ${PROJECT_NAME})
-  if(RT_LIB)
-    target_link_libraries(${NAME} PRIVATE ${RT_LIB})
-  endif()
+    add_unit_test(${NAME} ${NAME}.cc)
+    set_tests_properties(
+        ${NAME}
+        PROPERTIES
+            ENVIRONMENT
+                "ROS_PACKAGE_PATH=${example-robot-data_DIR}/../../../share"
+    )
+    target_link_libraries(${NAME} PRIVATE ${PROJECT_NAME})
+    if(RT_LIB)
+        target_link_libraries(${NAME} PRIVATE ${RT_LIB})
+    endif()
 endmacro(ADD_TESTCASE)
 
 find_package(OpenMP)
 if(OPENMP_FOUND)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  add_testcase(multithread)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    add_testcase(multithread)
 endif()
 
 add_testcase(comparison-types)

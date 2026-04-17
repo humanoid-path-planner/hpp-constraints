@@ -340,7 +340,7 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
   /// \f}
   /// where in general
   ///\f{equation}
-  /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in),
+  /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in}),
   /// \f}
   /// in such a way that all \f$\mathbf{q}\f$ satisfies the explicit
   /// constraint.
@@ -362,7 +362,7 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
   /// \f}
   /// where in general
   ///\f{equation}
-  /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in),
+  /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in}),
   /// \f}
   /// in such a way that all \f$\mathbf{q}\f$ satisfies the explicit
   /// constraint.
@@ -384,7 +384,7 @@ class HPP_CONSTRAINTS_DLLAPI ExplicitConstraintSet {
   /// \f}
   /// where in general
   ///\f{equation}
-  /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in),
+  /// f(\mathbf{q}) = \mathbf{p}_{out} - f(\mathbf{q}_{in}),
   /// \f}
   /// in such a way that all \f$\mathbf{q}\f$ satisfies the explicit
   /// constraint.
