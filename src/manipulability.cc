@@ -97,7 +97,7 @@ void Manipulability::impl_compute(LiegroupElementRef res,
 
   // This funcion will be used as a cost function whose squared norm is to
   // be minimized.
-  res.vector()[0] = logAbsDeterminant;
+  res.vector()[0] = std::max(-logAbsDeterminant, 0.);
 }
 
 void Manipulability::impl_jacobian(matrixOut_t jacobian, vectorIn_t arg) const {
