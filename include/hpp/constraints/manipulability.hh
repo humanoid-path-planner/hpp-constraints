@@ -42,7 +42,31 @@ typedef shared_ptr<Manipulability> ManipulabilityPtr_t;
 /// \addtogroup constraints
 /// \{
 
-/// Differentiable function
+/// Manipulability index
+///
+/// This function takes as input another differentiable function \f$f_1\f$
+/// defined over the same configuration space and computes a one dimensional
+/// value as follows:
+///
+/// \f[
+/// f(\mathbf{q}) = \log\det(J_1 J_1^T)
+/// \f]
+/// where \f$J_1\f$ is the Jacobian matrix of \f$f_1\f$.
+///
+/// Inserting a \link hpp::constraints::Implicit constraint  \endlink with this
+/// function with comparison type EQUALITY into a numerical solver will
+/// make the solution reach a manipulability index specified by the right hand side of
+/// the constraint.
+///
+/// \par Lock joints
+///
+/// In some cases, it is useful not to consider some joints in the kinematic chain. For
+/// example, when evaluating the manipulability of a robotic arm moving on a prismatic rail,
+/// it can be useful to consider the manipulability of the system when the rail is locked.
+/// To do so, call method Manipulability::lockJoint.
+///
+/// \note The Jacobian of this function is computed by finite difference.
+
 class HPP_CONSTRAINTS_DLLAPI Manipulability : public DifferentiableFunction {
  public:
   virtual ~Manipulability() {}
@@ -51,6 +75,14 @@ class HPP_CONSTRAINTS_DLLAPI Manipulability : public DifferentiableFunction {
                                     DevicePtr_t robot, std::string name) {
     return ManipulabilityPtr_t(new Manipulability(function, robot, name));
   }
+
+  /// Lock a joint
+  ///
+  /// Consider this joint as fixed when computing the manipulability
+  void lockJoint(const JointPtr_t& joint);
+
+  /// Get robot
+  const DevicePtr_t& robot() const { return robot_;}
 
  protected:
   /// \brief Concrete class constructor should call this constructor.
@@ -83,7 +115,7 @@ class HPP_CONSTRAINTS_DLLAPI Manipulability : public DifferentiableFunction {
   DevicePtr_t robot_;
 
   Eigen::ColBlockIndices cols_;
-
+  ArrayXb activeAndNonLockedDerivParams_;
   mutable matrix_t J_, J_JT_;
 };  // class Manipulability
 /// \}
