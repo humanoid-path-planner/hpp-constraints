@@ -55,15 +55,16 @@ typedef shared_ptr<Manipulability> ManipulabilityPtr_t;
 ///
 /// Inserting a \link hpp::constraints::Implicit constraint  \endlink with this
 /// function with comparison type EQUALITY into a numerical solver will
-/// make the solution reach a manipulability index specified by the right hand side of
-/// the constraint.
+/// make the solution reach a manipulability index specified by the right hand
+/// side of the constraint.
 ///
 /// \par Lock joints
 ///
-/// In some cases, it is useful not to consider some joints in the kinematic chain. For
-/// example, when evaluating the manipulability of a robotic arm moving on a prismatic rail,
-/// it can be useful to consider the manipulability of the system when the rail is locked.
-/// To do so, call method Manipulability::lockJoint.
+/// In some cases, it is useful not to consider some joints in the kinematic
+/// chain. For example, when evaluating the manipulability of a robotic arm
+/// moving on a prismatic rail, it can be useful to consider the manipulability
+/// of the system when the rail is locked. To do so, call method
+/// Manipulability::lockJoint.
 ///
 /// \note The Jacobian of this function is computed by finite difference.
 
@@ -82,7 +83,7 @@ class HPP_CONSTRAINTS_DLLAPI Manipulability : public DifferentiableFunction {
   void lockJoint(const JointPtr_t& joint);
 
   /// Get robot
-  const DevicePtr_t& robot() const { return robot_;}
+  const DevicePtr_t& robot() const { return robot_; }
 
  protected:
   /// \brief Concrete class constructor should call this constructor.
