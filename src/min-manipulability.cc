@@ -27,9 +27,23 @@
 // DAMAGE.
 
 #include <hpp/constraints/min-manipulability.hh>
+#include <hpp/pinocchio/device.hh>
+#include <hpp/pinocchio/joint.hh>
+#include <pinocchio/multibody/joint/fwd.hpp>
+#include <pinocchio/multibody/model.hpp>
 
 namespace hpp {
 namespace constraints {
+
+void MinManipulability::lockJoint(const JointPtr_t& joint) {
+  ArrayXb active = activeAndNonLockedDerivParams_;
+  ::pinocchio::JointModel j(robot_->model().joints[joint->index()]);
+  for (size_type i=(size_type)j.idx_v(); i < (size_type)j.nv(); ++i) {
+    activeAndNonLockedDerivParams_[i] = false;
+  }
+  cols_ = Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
+}
+
 MinManipulability::MinManipulability(DifferentiableFunctionPtr_t function,
                                      DevicePtr_t robot, std::string name)
     : DifferentiableFunction(function->inputSize(),
@@ -39,7 +53,8 @@ MinManipulability::MinManipulability(DifferentiableFunctionPtr_t function,
       J_(function->outputDerivativeSize(), function->inputDerivativeSize()) {
   activeParameters_ = function->activeParameters();
   activeDerivativeParameters_ = function->activeDerivativeParameters();
-  cols_ = Eigen::BlockIndex::fromLogicalExpression(activeDerivativeParameters_);
+  activeAndNonLockedDerivParams_ = activeDerivativeParameters_;
+  cols_ = Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
   J_JT_.resize(J_.rows(), J_.rows());
 }
 

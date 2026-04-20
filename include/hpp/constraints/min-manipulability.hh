@@ -64,6 +64,13 @@ typedef shared_ptr<MinManipulability> MinManipulabilityPtr_t;
 /// \f$f_1\f$ has a manipulability index (product of singular values) greater
 /// than 1.
 ///
+/// \par Lock joints
+///
+/// In some cases, it is useful not to consider some joints in the kinematic chain. For
+/// example, when evaluating the manipulability of a robotic arm moving on a prismatic rail,
+/// it can be useful to consider the manipulability of the system when the rail is locked.
+/// To do so, call method MinManipulability::lockJoint.
+///
 /// \note The Jacobian of this function is computed by finite difference.
 class HPP_CONSTRAINTS_DLLAPI MinManipulability : public DifferentiableFunction {
  public:
@@ -73,6 +80,14 @@ class HPP_CONSTRAINTS_DLLAPI MinManipulability : public DifferentiableFunction {
                                        DevicePtr_t robot, std::string name) {
     return MinManipulabilityPtr_t(new MinManipulability(function, robot, name));
   }
+
+  /// Lock a joint
+  ///
+  /// Consider this joint as fixed when computing the manipulability
+  void lockJoint(const JointPtr_t& joint);
+
+  /// Get robot
+  const DevicePtr_t& robot() const { return robot_;}
 
  protected:
   /// \brief Concrete class constructor should call this constructor.
@@ -105,7 +120,7 @@ class HPP_CONSTRAINTS_DLLAPI MinManipulability : public DifferentiableFunction {
   DevicePtr_t robot_;
 
   Eigen::ColBlockIndices cols_;
-
+  ArrayXb activeAndNonLockedDerivParams_;
   mutable matrix_t J_, J_JT_;
 };  // class MinManipulability
 /// \}
