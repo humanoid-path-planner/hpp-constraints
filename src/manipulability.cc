@@ -38,10 +38,11 @@ namespace constraints {
 void Manipulability::lockJoint(const JointPtr_t& joint) {
   ArrayXb active = activeAndNonLockedDerivParams_;
   ::pinocchio::JointModel j(robot_->model().joints[joint->index()]);
-  for (size_type i=(size_type)j.idx_v(); i < (size_type)j.nv(); ++i) {
+  for (size_type i = (size_type)j.idx_v(); i < (size_type)j.nv(); ++i) {
     activeAndNonLockedDerivParams_[i] = false;
   }
-  cols_ = Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
+  cols_ =
+      Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
 }
 
 Manipulability::Manipulability(DifferentiableFunctionPtr_t function,
@@ -54,7 +55,8 @@ Manipulability::Manipulability(DifferentiableFunctionPtr_t function,
   activeParameters_ = function->activeParameters();
   activeDerivativeParameters_ = function->activeDerivativeParameters();
   activeAndNonLockedDerivParams_ = activeDerivativeParameters_;
-  cols_ = Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
+  cols_ =
+      Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
   J_JT_.resize(J_.rows(), J_.rows());
 }
 
