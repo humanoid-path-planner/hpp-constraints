@@ -1,36 +1,29 @@
-<?xml version="1.0"?>
-<package format="3">
-  <name>hpp-constraints</name>
+<?xml version='1.0'?>
+<package format='3'>
+  <name>hpp_constraints</name>
   <version>8.0.0</version>
-  <description>Definition of basic geometric constraints for motion planning </description>
-
-  <maintainer email="guilhem.saurel@laas.fr">Guilhem Saurel</maintainer>
-
+  <description>Definition of basic geometric constraints for motion planning</description>
   <author>Joseph Mirabel</author>
-  <author>Florent Lamiraux et al.</author>
-
-  <license>BSD-2</license>
+  <author>Florent Lamiraux</author>
+  <maintainer email='guilhem.saurel@laas.fr'>Guilhem Saurel</maintainer>
+  <license>BSD-2-Clause</license>
 
   <url type="website">https://github.com/humanoid-path-planner/hpp-constraints</url>
   <url type="repository">https://github.com/humanoid-path-planner/hpp-constraints</url>
   <url type="bugtracker">https://github.com/humanoid-path-planner/hpp-constraints/issues</url>
 
-  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
-  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
-  <buildtool_depend>cmake</buildtool_depend>
-
-  <build_depend>doxygen</build_depend>
-
   <depend>coal</depend>
   <depend>boost</depend>
   <depend>eigen</depend>
-  <depend>hpp-pinocchio</depend>
-  <depend>hpp-statistics</depend>
+  <depend>hpp_pinocchio</depend>
+  <depend>hpp_statistics</depend>
   <depend>urdfdom</depend>
-  <!-- Required by CMake, but not available in rosdep -->
-  <!-- <depend>qpoases</depend> -->
 
-  <test_depend>example-robot-data</test_depend>
+  <test_depend>example_robot_data</test_depend>
+
+  <buildtool_depend>cmake</buildtool_depend>
+  <build_depend>doxygen</build_depend>
+  <build_depend>jrl_cmakemodules</build_depend>
 
   <export>
     <build_type>cmake</build_type>

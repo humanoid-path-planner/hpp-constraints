@@ -80,16 +80,16 @@ if(CHECK_JACOBIANS)
     add_definitions(-DCHECK_JACOBIANS)
 endif(CHECK_JACOBIANS)
 
-# Add a cache variable to remove dependency to qpOASES
-set(USE_QPOASES TRUE CACHE BOOL "Use qpOASES solver for static stability")
-
 compute_project_args(PROJECT_ARGS LANGUAGES CXX)
 project(${PROJECT_NAME} ${PROJECT_ARGS})
 
 add_project_dependency(hpp-pinocchio REQUIRED)
-if(USE_QPOASES)
-    set(CMAKE_MODULE_PATH "${JRL_CMAKE_MODULES}/find-external/qpOASES")
-    find_package(qpOASES REQUIRED)
+add_project_dependency(qpOASES QUIET FIND_EXTERNAL qpOASES)
+
+if(qpOASES_FOUND)
+    message(STATUS "Building with qpOASES")
+else()
+    message(STATUS "Building without qpOASES")
 endif()
 
 set(${PROJECT_NAME}_HEADERS
@@ -166,17 +166,16 @@ set(${PROJECT_NAME}_SOURCES
     src/solver/hierarchical-iterative.cc
 )
 
-if(USE_QPOASES)
+if(qpOASES_FOUND)
     set(${PROJECT_NAME}_HEADERS
         ${${PROJECT_NAME}_HEADERS}
         include/hpp/constraints/qp-static-stability.hh
     )
-    pkg_config_append_cflags(-DHPP_CONSTRAINTS_USE_QPOASES)
     set(${PROJECT_NAME}_SOURCES
         ${${PROJECT_NAME}_SOURCES}
         src/qp-static-stability.cc
     )
-endif(USE_QPOASES)
+endif()
 
 add_library(
     ${PROJECT_NAME}
@@ -190,14 +189,14 @@ target_include_directories(
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC hpp-pinocchio::hpp-pinocchio)
 
-if(USE_QPOASES)
+if(qpOASES_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${qpOASES_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${qpOASES_LIBRARIES})
     target_compile_definitions(
         ${PROJECT_NAME}
-        PUBLIC -DHPP_CONSTRAINTS_USE_QPOASES
+        PUBLIC HPP_CONSTRAINTS_USE_QPOASES
     )
-endif(USE_QPOASES)
+endif()
 
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
 
@@ -206,5 +205,3 @@ if(BUILD_TESTING)
     find_package(example-robot-data REQUIRED)
     add_subdirectory(tests)
 endif()
-
-pkg_config_append_libs("hpp-constraints")
