@@ -1,0 +1,9 @@
+[hpp-constraints]
+src_deps = ["hpp-pinocchio", "hpp-statistics"]
+url = "."
+
+[hpp-pinocchio]
+url = "github:humanoid-path-planner"
+
+[hpp-statistics]
+url = "github:humanoid-path-planner"
