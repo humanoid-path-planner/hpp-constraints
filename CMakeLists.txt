@@ -178,8 +178,7 @@ target_include_directories(
 target_link_libraries(${PROJECT_NAME} PUBLIC hpp-pinocchio::hpp-pinocchio)
 
 if(qpOASES_FOUND)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${qpOASES_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${qpOASES_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC qpOASES::qpOASES)
     target_compile_definitions(
         ${PROJECT_NAME}
         PUBLIC HPP_CONSTRAINTS_USE_QPOASES
