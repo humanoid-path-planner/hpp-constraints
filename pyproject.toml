@@ -1,7 +1,7 @@
 [build-system]
 build-backend = "cmeel.build"
 requires = [
-  "cmeel-boost ~= 1.83.0",
+  "cmeel-boost ~= 1.90.0",
   "cmeel-qpoases[build]",
   "cmeel[build]",
   "example-robot-data[build]",
@@ -10,7 +10,7 @@ requires = [
 
 [project]
 dependencies = [
-  "cmeel-boost ~= 1.83.0",
+  "cmeel-boost ~= 1.90.0",
   "cmeel-qpoases",
   "hpp-pinocchio"
 ]
@@ -19,8 +19,8 @@ license = "BSD-2-Clause"
 name = "hpp-constraints"
 version = "9.0.0"
 
-[tool.ruff]
-extend-exclude = ["cmake"]
+[tool.cmeel]
+has-sitelib = false
 
 [tool.ruff.lint]
 extend-select = ["I", "NPY", "RUF", "UP", "W"]
