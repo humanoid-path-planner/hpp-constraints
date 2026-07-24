@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <package format='3'>
   <name>hpp_constraints</name>
-  <version>9.0.0</version>
+  <version>9.0.2</version>
   <description>Definition of basic geometric constraints for motion planning</description>
   <author>Joseph Mirabel</author>
   <author>Florent Lamiraux</author>
