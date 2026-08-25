@@ -38,8 +38,8 @@ namespace constraints {
 void MinManipulability::lockJoint(const JointPtr_t& joint) {
   ArrayXb active = activeAndNonLockedDerivParams_;
   ::pinocchio::JointModel j(robot_->model().joints[joint->index()]);
-  for (size_type i = (size_type)j.idx_v(); i < (size_type)j.nv(); ++i) {
-    activeAndNonLockedDerivParams_[i] = false;
+  for (size_type i = 0; i < (size_type)j.nv(); ++i) {
+    activeAndNonLockedDerivParams_[(size_type)j.idx_v() + i] = false;
   }
   cols_ =
       Eigen::BlockIndex::fromLogicalExpression(activeAndNonLockedDerivParams_);
