@@ -32,6 +32,7 @@
 #include <hpp/pinocchio/simple-device.hh>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/multibody/sample-models.hpp>
+#include <pinocchio/spatial/se3.hpp>
 
 #include "hpp/constraints/configuration-constraint.hh"
 #include "hpp/constraints/convex-shape-contact.hh"
@@ -66,7 +67,7 @@ typedef std::vector<bool> BoolVector_t;
 
 using namespace hpp::constraints;
 
-const static size_t NUMBER_JACOBIAN_CALCULUS = 5;
+const static size_t NUMBER_JACOBIAN_CALCULUS = 50;
 const static double HESSIAN_MAXIMUM_COEF = 1e1;
 const static double DQ_MAX = 1e-2;
 const static size_t MAX_NB_ERROR = 5;
@@ -156,9 +157,8 @@ BOOST_AUTO_TEST_CASE(jacobian) {
   randomConfig(device, q1);
   device->currentConfiguration(q1);
   device->computeForwardKinematics(JOINT_POSITION);
-  Transform3s tf1(ee1->currentTransformation());
-  Transform3s tf2(ee2->currentTransformation());
-
+  Transform3s tf1(SE3::Random());
+  Transform3s tf2(SE3::Random());
   /// Create the constraints
   typedef std::list<DifferentiableFunctionPtr_t> DFs;
   std::vector<bool> mask011(3, true);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(jacobian) {
       jacobian.setZero();
       f.jacobian(jacobian, q1);
 
-      const value_type eps = std::sqrt(Eigen::NumTraits<value_type>::epsilon());
+      const value_type eps = 1e-6;
 
       // fdForward.setZero(); f.finiteDifferenceForward(fdForward, q1, device,
       // eps);
