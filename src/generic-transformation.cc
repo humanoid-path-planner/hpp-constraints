@@ -191,7 +191,12 @@ GenericTransformation<_Options>::GenericTransformation(const std::string& name,
       Vindices_(indices<(bool)ComputePosition, (bool)ComputeOrientation,
                         (bool)OutputR3xSO3>(mask)),
       mask_(mask) {
-  assert(mask.size() == DerSize);
+  if (mask.size() != DerSize) {
+    std::ostringstream os;
+    os << "hpp::constraints::GenericTransformation: mask size (" << mask.size()
+       << ") should be equal to output derivative dimension (" << DerSize << ")";
+    throw std::logic_error(os.str().c_str());
+  }
   std::size_t iOri = 0;
   m_.rowOri = 0;
   if (ComputePosition) {

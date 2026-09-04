@@ -129,8 +129,20 @@ Implicit::Implicit(const DifferentiableFunctionPtr_t& function,
   // This constructor used to set comparison types to Equality if an
   // empty vector was given as input. Now you should provide the
   // comparison type at construction.
-  assert(function_->outputDerivativeSize() == (size_type)comparison_.size());
-  assert(function_->outputDerivativeSize() == (size_type)mask.size());
+  if (function_->outputDerivativeSize() != (size_type)comparison_.size()) {
+    std::ostringstream os;
+    os << "hpp::constraints::Implicit: size of comparison type vector ("
+       << comparison_.size() << ") should be the same as the dimension of the output derivative ("
+       << function_->outputDerivativeSize() << ") of the function.";
+    throw std::logic_error(os.str().c_str());
+  }
+  if (function_->outputDerivativeSize() != (size_type)mask.size()) {
+    std::ostringstream os;
+    os << "hpp::constraints::Implicit: size of the mask ("
+       << mask.size() << ") should be the same as the dimension of the output derivative ("
+       << function_->outputDerivativeSize() << ") of the function.";
+    throw std::logic_error(os.str().c_str());
+  }
   computeActiveRows();
   computeIndices();
 }
