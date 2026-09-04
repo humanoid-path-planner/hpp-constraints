@@ -194,7 +194,8 @@ GenericTransformation<_Options>::GenericTransformation(const std::string& name,
   if (mask.size() != DerSize) {
     std::ostringstream os;
     os << "hpp::constraints::GenericTransformation: mask size (" << mask.size()
-       << ") should be equal to output derivative dimension (" << DerSize << ")";
+       << ") should be equal to output derivative dimension (" << DerSize
+       << ")";
     throw std::logic_error(os.str().c_str());
   }
   std::size_t iOri = 0;

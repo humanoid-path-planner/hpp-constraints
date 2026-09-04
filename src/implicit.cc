@@ -132,14 +132,15 @@ Implicit::Implicit(const DifferentiableFunctionPtr_t& function,
   if (function_->outputDerivativeSize() != (size_type)comparison_.size()) {
     std::ostringstream os;
     os << "hpp::constraints::Implicit: size of comparison type vector ("
-       << comparison_.size() << ") should be the same as the dimension of the output derivative ("
+       << comparison_.size()
+       << ") should be the same as the dimension of the output derivative ("
        << function_->outputDerivativeSize() << ") of the function.";
     throw std::logic_error(os.str().c_str());
   }
   if (function_->outputDerivativeSize() != (size_type)mask.size()) {
     std::ostringstream os;
-    os << "hpp::constraints::Implicit: size of the mask ("
-       << mask.size() << ") should be the same as the dimension of the output derivative ("
+    os << "hpp::constraints::Implicit: size of the mask (" << mask.size()
+       << ") should be the same as the dimension of the output derivative ("
        << function_->outputDerivativeSize() << ") of the function.";
     throw std::logic_error(os.str().c_str());
   }
