@@ -19,7 +19,7 @@
   <depend>hpp_statistics</depend>
   <depend>urdfdom</depend>
 
-  <test_depend>example_robot_data</test_depend>
+  <test_depend>example_robot_descriptions</test_depend>
 
   <buildtool_depend>cmake</buildtool_depend>
   <build_depend>doxygen</build_depend>
