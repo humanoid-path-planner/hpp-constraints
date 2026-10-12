@@ -376,6 +376,7 @@ struct unary_evaluator<
     : evaluator_base<
           MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> > {
   typedef MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> XprType;
+  typedef typename XprType::Scalar Scalar;
 
   enum {
     CoeffReadCost = evaluator<ArgType>::CoeffReadCost,
@@ -1035,6 +1036,15 @@ class MatrixBlockView
                .isZero(prec))
         return false;
     return true;
+  }
+
+  EIGEN_STRONG_INLINE MatrixBlockView& setZero() {
+    return setConstant(Scalar(0));
+  }
+  EIGEN_STRONG_INLINE MatrixBlockView& setConstant(const Scalar& value) {
+    for (block_iterator block(*this); block.valid(); ++block)
+      _block(block).setConstant(value);
+    return *this;
   }
 
   ArgType& m_arg;
