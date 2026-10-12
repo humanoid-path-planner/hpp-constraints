@@ -159,7 +159,7 @@ class HPP_CONSTRAINTS_DLLAPI GenericTransformation
     IsOrientation = !ComputePosition && ComputeOrientation,
     IsTransform = ComputePosition && ComputeOrientation,
     ValueSize = (ComputePosition ? 3 : 0) +
-                (ComputeOrientation ? (OutputR3xSO3 ? 4 : 3) : 0),
+        (ComputeOrientation ? (OutputR3xSO3 ? 4 : 3) : 0),
     DerSize = (ComputePosition ? 3 : 0) + (ComputeOrientation ? 3 : 0)
   };
 #endif

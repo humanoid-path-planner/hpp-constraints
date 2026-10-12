@@ -213,7 +213,7 @@ struct traits<MatrixBlockView<ArgType, _Rows, _Cols, _allRows, _allCols> > {
     CoeffReadCost = ArgType::CoeffReadCost,
 #endif  // !HPP_EIGEN_USE_EVALUATOR
     Flags = ~PacketAccessBit & ~DirectAccessBit & ~ActualPacketAccessBit &
-            ~LinearAccessBit & ArgType::Flags,
+        ~LinearAccessBit & ArgType::Flags,
     RowsAtCompileTime = (_allRows ? ArgType::RowsAtCompileTime : _Rows),
     ColsAtCompileTime = (_allCols ? ArgType::ColsAtCompileTime : _Cols),
     MaxRowsAtCompileTime = ArgType::MaxRowsAtCompileTime,
@@ -380,7 +380,7 @@ struct unary_evaluator<
   enum {
     CoeffReadCost = evaluator<ArgType>::CoeffReadCost,
     Flags = ~PacketAccessBit & ~DirectAccessBit & ~ActualPacketAccessBit &
-            ~LinearAccessBit & ArgType::Flags,
+        ~LinearAccessBit & ArgType::Flags,
     Alignment = 0
   };
   EIGEN_DEVICE_FUNC explicit unary_evaluator(const XprType& view)
