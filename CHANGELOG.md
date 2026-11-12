@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 - [README] Describe the content of the package
+- [pyproject] Add authors, maintainers and project URLs
+- [CMake] Set the install RPATH of the library, for relocatable installs (pip wheels)
 
 ## [9.0.2] - 2026-07-24
 
