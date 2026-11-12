@@ -9,6 +9,10 @@ requires = [
 ]
 
 [project]
+authors = [
+  {name = "Florent Lamiraux"},
+  {name = "Joseph Mirabel"}
+]
 dependencies = [
   "cmeel-boost ~= 1.90.0",
   "cmeel-qpoases",
@@ -16,8 +20,16 @@ dependencies = [
 ]
 description = "Definition of basic geometric constraints for motion planning"
 license = "BSD-2-Clause"
+maintainers = [
+  {email = "guilhem.saurel@laas.fr", name = "Guilhem Saurel"}
+]
 name = "hpp-constraints"
 version = "9.0.2"
+
+[project.urls]
+homepage = "https://github.com/humanoid-path-planner/hpp-constraints"
+issues = "https://github.com/humanoid-path-planner/hpp-constraints/issues"
+repository = "https://github.com/humanoid-path-planner/hpp-constraints"
 
 [tool.cmeel]
 has-sitelib = false
