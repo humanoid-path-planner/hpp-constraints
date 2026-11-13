@@ -13,7 +13,6 @@ jobs:
           - {ROS_DISTRO: rolling}
     env:
       UPSTREAM_WORKSPACE: |
-        github:gepetto/example-robot-data#devel
         github:humanoid-path-planner/hpp-environments#devel
         github:humanoid-path-planner/hpp-pinocchio#devel
         github:humanoid-path-planner/hpp-statistics#devel
